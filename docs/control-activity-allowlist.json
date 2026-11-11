@@ -2,81 +2,18 @@
   "rule": "A control drawn for a login whose cards its own action refuses (backlog #79sqf). scripts/check-control-activity.mjs fails on any finding not listed here and on any entry that is no longer a finding. Each entry is an unfixed fault or a recorded false positive from the check's first run (2026-11-11): FIX it and delete the entry, never treat it as a ruling that it is fine. Never add an entry to make a new control pass: draw the control only when can() asks the activity its action asks. Shrink-only.",
   "entries": [
     {
-      "file": "src/app/admin/website/ClinicVisitEstimate.tsx",
-      "control": "<form onSubmit> updateClinicVisitEstimate",
-      "found": "no gate; host page(s) admin/website do not imply website.content:edit",
-      "date": "2026-11-11",
-      "reason": "READ, REAL (source read 2026-11-11): /admin/website is guarded at website.content read; the page renders this component ungated and the file has no canEdit, so a read-only login is shown edit controls the action refuses. Fix: pass canEdit={canContent} from the page and draw the controls only under it."
-    },
-    {
-      "file": "src/app/admin/website/CreateSiteContentRow.tsx",
-      "control": "<form onSubmit> createSiteContentRow",
-      "found": "no gate; host page(s) admin/website do not imply website.content:edit",
-      "date": "2026-11-11",
-      "reason": "NOT READ against the source in full: a canEdit/canPropose prop exists but the check could not tie it to this control (or it is the draft-propose path with a second activity). Verify, then fix or delete."
-    },
-    {
-      "file": "src/app/admin/website/DonationChannels.tsx",
-      "control": "<ActionButton onClick> moveDonationChannel",
-      "found": "no gate; host page(s) admin/website do not imply website.content:edit",
-      "date": "2026-11-11",
-      "reason": "READ, REAL (source read 2026-11-11): /admin/website is guarded at website.content read; the page renders this component ungated and the file has no canEdit, so a read-only login is shown edit controls the action refuses. Fix: pass canEdit={canContent} from the page and draw the controls only under it."
-    },
-    {
-      "file": "src/app/admin/website/DonationChannels.tsx",
-      "control": "<ActionButton onClick> setDonationChannelShown",
-      "found": "no gate; host page(s) admin/website do not imply website.content:edit",
-      "date": "2026-11-11",
-      "reason": "READ, REAL (source read 2026-11-11): /admin/website is guarded at website.content read; the page renders this component ungated and the file has no canEdit, so a read-only login is shown edit controls the action refuses. Fix: pass canEdit={canContent} from the page and draw the controls only under it."
-    },
-    {
-      "file": "src/app/admin/website/DonationChannels.tsx",
-      "control": "<ActionButton onClick> deleteDonationChannel",
-      "found": "no gate; host page(s) admin/website do not imply website.content:edit",
-      "date": "2026-11-11",
-      "reason": "READ, REAL (source read 2026-11-11): /admin/website is guarded at website.content read; the page renders this component ungated and the file has no canEdit, so a read-only login is shown edit controls the action refuses. Fix: pass canEdit={canContent} from the page and draw the controls only under it."
-    },
-    {
-      "file": "src/app/admin/website/DonationChannels.tsx",
-      "control": "<form onSubmit> saveDonationChannel",
-      "found": "no gate; host page(s) admin/website do not imply website.content:edit",
-      "date": "2026-11-11",
-      "reason": "READ, REAL (source read 2026-11-11): /admin/website is guarded at website.content read; the page renders this component ungated and the file has no canEdit, so a read-only login is shown edit controls the action refuses. Fix: pass canEdit={canContent} from the page and draw the controls only under it."
-    },
-    {
-      "file": "src/app/admin/website/DonationChannels.tsx",
-      "control": "<ActionButton onClick> removeDonationQr",
-      "found": "no gate; host page(s) admin/website do not imply website.content:edit",
-      "date": "2026-11-11",
-      "reason": "READ, REAL (source read 2026-11-11): /admin/website is guarded at website.content read; the page renders this component ungated and the file has no canEdit, so a read-only login is shown edit controls the action refuses. Fix: pass canEdit={canContent} from the page and draw the controls only under it."
-    },
-    {
-      "file": "src/app/admin/website/ImpactBaselines.tsx",
-      "control": "<form onSubmit> updateImpactBaseline",
-      "found": "no gate; host page(s) admin/website do not imply website.content:edit",
-      "date": "2026-11-11",
-      "reason": "NOT READ against the source in full: a canEdit/canPropose prop exists but the check could not tie it to this control (or it is the draft-propose path with a second activity). Verify, then fix or delete."
-    },
-    {
-      "file": "src/app/admin/website/PublishedProjects.tsx",
-      "control": "<RowActionButton onClick> unpublishProject",
-      "found": "no gate; host page(s) admin/website do not imply website.content:edit",
-      "date": "2026-11-11",
-      "reason": "READ, REAL (source read 2026-11-11): /admin/website is guarded at website.content read; the page renders this component ungated and the file has no canEdit, so a read-only login is shown edit controls the action refuses. Fix: pass canEdit={canContent} from the page and draw the controls only under it."
-    },
-    {
       "file": "src/app/admin/website/SitePageForm.tsx",
       "control": "<form onSubmit> updateSitePage + proposeSitePage",
       "found": "no gate; host page(s) admin/website/pages/[slug], admin/website do not imply website.content:edit, website.propose:edit",
       "date": "2026-11-11",
-      "reason": "NOT READ against the source in full: a canEdit/canPropose prop exists but the check could not tie it to this control (or it is the draft-propose path with a second activity). Verify, then fix or delete."
+      "reason": "READ, FALSE POSITIVE (2026-11-11, #79sqf): the action is chosen by the same prop that gates it (`canEdit ? updateSitePage : proposeSitePage`), the submit button is drawn only under `canEdit || canPropose`, and the fields are readOnly otherwise. The check unions both actions' activities; the control cannot reach the one it lacks. Cause (a/b): a conditional action choice the check does not trace."
     },
     {
       "file": "src/app/admin/website/SiteSettingsForm.tsx",
       "control": "<form onSubmit> updateSiteContent + proposeSiteContent",
       "found": "no gate; host page(s) admin/website do not imply website.content:edit, website.propose:edit",
       "date": "2026-11-11",
-      "reason": "NOT READ against the source in full: a canEdit/canPropose prop exists but the check could not tie it to this control (or it is the draft-propose path with a second activity). Verify, then fix or delete."
+      "reason": "READ, FALSE POSITIVE (2026-11-11, #79sqf): same shape as SitePageForm: `useWriteForm(canEdit ? updateSiteContent : proposeSiteContent)` with the submit drawn only under `canEdit || canPropose`. The check unions both actions' activities."
     },
     {
       "file": "src/app/contacts/[id]/ShelterFriendCard.tsx",
@@ -90,7 +27,7 @@
       "control": "<button onClick> reassignWaitingPhoto",
       "found": "no gate; host page(s) photos/add, medical/weight, medical/photos do not imply photos.approve:edit, photos.resident_manage:edit",
       "date": "2026-11-11",
-      "reason": "NOT READ against the source in full. Verify, then fix or delete."
+      "reason": "READ, FALSE POSITIVE (2026-11-11, #79sqf): this picker only calls `onPick(r)`. reassignWaitingPhoto is called from src/app/photos/approve/ApproveQueue.tsx, not from any of the hosts named; the check attributes a shared component's callback to every host. Cause (c), left unfixed."
     },
     {
       "file": "src/app/my/MyTaskList.tsx",
@@ -125,7 +62,7 @@
       "control": "<ActionButton onClick> deleteConversion",
       "found": "no gate; host page(s) management/medications, management/diets do not imply diets.settings:edit, reference.types:edit",
       "date": "2026-11-11",
-      "reason": "NOT READ against the source in full. Verify, then fix or delete."
+      "reason": "READ, FALSE POSITIVE (2026-11-11, #79sqf): the Delete button is drawn only when `mode === \"conversions\"`, which only /admin/medications passes, and that page refuses unless `canEditItemSettings(perms, \"medication\")`, exactly what mayEditMeasures() asks for a medicine. The diets and management/medications hosts pass `mode=\"price\"` and never draw it. A prop-conditional the check does not trace."
     }
   ]
 }

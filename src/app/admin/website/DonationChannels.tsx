@@ -41,7 +41,8 @@ const FIELDS: Record<DonationWay, readonly ("url" | "bank_name" | "account_name"
  * typed but takes the way off the public page, where the database (not this
  * screen) is what keeps a hidden way's bank details from being read.
  */
-export function DonationChannels({ rows }: { rows: DonationChannelRow[] }) {
+/** `canEdit` is website.content at edit (every action here asks it). Defaults to false: a caller that forgets it offers nothing. */
+export function DonationChannels({ rows, canEdit = false }: { rows: DonationChannelRow[]; canEdit?: boolean }) {
   const { t } = useI18n();
   const d = t.admin.website.donate;
   return (
@@ -56,20 +57,22 @@ export function DonationChannels({ rows }: { rows: DonationChannelRow[] }) {
       <ul className="flex flex-col gap-4">
         {rows.map((row, index) => (
           <li key={row.id} className="rounded border border-border bg-background p-4">
-            <ChannelCard row={row} isFirst={index === 0} isLast={index === rows.length - 1} />
+            <ChannelCard row={row} canEdit={canEdit} isFirst={index === 0} isLast={index === rows.length - 1} />
           </li>
         ))}
       </ul>
 
-      <div className="rounded border border-dashed border-border p-4">
-        <h3 className="mb-3 text-base font-semibold text-foreground">{d.addHeading}</h3>
-        <AddChannel />
-      </div>
+      {canEdit && (
+        <div className="rounded border border-dashed border-border p-4">
+          <h3 className="mb-3 text-base font-semibold text-foreground">{d.addHeading}</h3>
+          <AddChannel canEdit={canEdit} />
+        </div>
+      )}
     </section>
   );
 }
 
-function ChannelCard({ row, isFirst, isLast }: { row: DonationChannelRow; isFirst: boolean; isLast: boolean }) {
+function ChannelCard({ row, isFirst, isLast, canEdit }: { row: DonationChannelRow; isFirst: boolean; isLast: boolean; canEdit: boolean }) {
   const { t } = useI18n();
   const confirm = useConfirm();
   const d = t.admin.website.donate;
@@ -97,6 +100,7 @@ function ChannelCard({ row, isFirst, isLast }: { row: DonationChannelRow; isFirs
         {!row.shown && (
           <span className="rounded bg-warning/15 px-2 py-1 text-xs font-medium text-foreground">{d.hidden}</span>
         )}
+        {canEdit && (<>
         <ActionButton compact icon={ACTION_ICONS.moveUp} disabled={pending || isFirst} onClick={() => run(() => saveMove((requestId) => moveDonationChannel(row.id, "up", requestId)))}>
           {d.moveUp}
         </ActionButton>
@@ -111,13 +115,14 @@ function ChannelCard({ row, isFirst, isLast }: { row: DonationChannelRow; isFirs
         >
           {row.shown ? d.hide : d.show}
         </ActionButton>
+        </>)}
       </div>
 
-      <ChannelForm way={row.way} row={row} />
+      <ChannelForm way={row.way} row={row} canEdit={canEdit} />
 
-      {row.way === "promptpay" && <QrPicture row={row} />}
+      {row.way === "promptpay" && <QrPicture row={row} canEdit={canEdit} />}
 
-      <div>
+      {canEdit && <div>
         <ActionButton
           compact
           variant="danger"
@@ -130,13 +135,13 @@ function ChannelCard({ row, isFirst, isLast }: { row: DonationChannelRow; isFirs
         >
           {d.delete}
         </ActionButton>
-      </div>
+      </div>}
       {error && <p className="text-sm text-danger">{error}</p>}
     </div>
   );
 }
 
-function AddChannel() {
+function AddChannel({ canEdit }: { canEdit: boolean }) {
   const { t } = useI18n();
   const d = t.admin.website.donate;
   const [way, setWay] = useState<DonationWay>("paypal");
@@ -152,13 +157,13 @@ function AddChannel() {
           ))}
         </select>
       </label>
-      <ChannelForm key={way} way={way} row={null} />
+      <ChannelForm key={way} way={way} row={null} canEdit={canEdit} />
     </div>
   );
 }
 
 /** The fields for one way. `row` null = adding. */
-function ChannelForm({ way, row }: { way: DonationWay; row: DonationChannelRow | null }) {
+function ChannelForm({ way, row, canEdit }: { way: DonationWay; row: DonationChannelRow | null; canEdit: boolean }) {
   const { t } = useI18n();
   const d = t.admin.website.donate;
   const [state, onSubmit, pending] = useWriteForm(saveDonationChannel, undefined);
@@ -170,6 +175,7 @@ function ChannelForm({ way, row }: { way: DonationWay; row: DonationChannelRow |
     promptpay_id: d.promptpayId,
   } as const;
 
+  if (!canEdit) return null;
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
       {row && <input type="hidden" name="id" value={row.id} />}
@@ -208,7 +214,7 @@ function ChannelForm({ way, row }: { way: DonationWay; row: DonationChannelRow |
   );
 }
 
-function QrPicture({ row }: { row: DonationChannelRow }) {
+function QrPicture({ row, canEdit }: { row: DonationChannelRow; canEdit: boolean }) {
   const { t } = useI18n();
   const confirm = useConfirm();
   const d = t.admin.website.donate;
@@ -252,7 +258,7 @@ function QrPicture({ row }: { row: DonationChannelRow }) {
       ) : (
         <p className="text-sm text-muted">{d.qrNone}</p>
       )}
-      <div className="flex flex-wrap gap-3">
+      {canEdit && <div className="flex flex-wrap gap-3">
         <ActionButton compact icon={ACTION_ICONS.uploadImage} disabled={pending} onClick={() => inputRef.current?.click()}>
           {row.qr_drive_file_id ? d.qrReplace : d.qrUpload}
         </ActionButton>
@@ -283,7 +289,7 @@ function QrPicture({ row }: { row: DonationChannelRow }) {
             e.target.value = "";
           }}
         />
-      </div>
+      </div>}
       {message && <p className={`text-sm ${message.type === "error" ? "text-danger" : "text-success"}`}>{message.text}</p>}
     </div>
   );

@@ -16,7 +16,8 @@ import { updateClinicVisitEstimate } from "./actions";
  * Blank is a real answer: it clears the figure back to "not priced yet",
  * and the forecast then shows clinic visits as a gap rather than as zero.
  */
-export function ClinicVisitEstimate({ estimate }: { estimate: number | null }) {
+/** `canEdit` is website.content at edit (updateClinicVisitEstimate asks it). Defaults to false. */
+export function ClinicVisitEstimate({ estimate, canEdit = false }: { estimate: number | null; canEdit?: boolean }) {
   const [state, onSubmit, pending] = useWriteForm(
     updateClinicVisitEstimate,
     undefined,
@@ -24,6 +25,7 @@ export function ClinicVisitEstimate({ estimate }: { estimate: number | null }) {
   const { t } = useI18n();
   const v = t.admin.website.vetVisit;
 
+  if (!canEdit) return null;
   return (
     <form
       onSubmit={onSubmit}

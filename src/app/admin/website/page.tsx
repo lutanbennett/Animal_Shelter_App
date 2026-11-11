@@ -38,7 +38,7 @@ function ContentProblem({ read, t, canCreate = false }: { read: SiteContentRead;
       <div className="flex flex-col items-start gap-3">
         <p className="text-sm text-muted">{t.admin.website.nothingSetUp}</p>
         {/* Drawn only for the activity the action asks: website.content (CLAUDE.md, buttons follow cards). */}
-        {canCreate && <CreateSiteContentRow />}
+        {canCreate && <CreateSiteContentRow canEdit />}
       </div>
     );
   }
@@ -258,7 +258,7 @@ export default async function WebsitePage({
             contact: (
               <>
                 <SiteSettingsForm content={content} canEdit={canContent} />
-                <ClinicVisitEstimate estimate={clinicVisitEstimate} />
+                <ClinicVisitEstimate estimate={clinicVisitEstimate} canEdit={canContent} />
               </>
             ),
             pages: (
@@ -268,7 +268,7 @@ export default async function WebsitePage({
                 editors={pageEditors}
               />
             ),
-            donate: <DonationChannels rows={channelsResult.data ?? []} />,
+            donate: <DonationChannels rows={channelsResult.data ?? []} canEdit={canContent} />,
             gallery: (
               <>
                 {/* A photo-strip login has no Home tab, so the hero control sits here for it. */}
@@ -278,7 +278,7 @@ export default async function WebsitePage({
                 <GalleryPhotos photos={photosResult.data ?? []} canEdit={canGallery} />
               </>
             ),
-            projects: <PublishedProjects projects={publishedResult.data ?? []} canOpenProject={can(perms, "projects.folders", "read")} />,
+            projects: <PublishedProjects projects={publishedResult.data ?? []} canOpenProject={can(perms, "projects.folders", "read")} canEdit={canContent} />,
           }}
         />
       )}
