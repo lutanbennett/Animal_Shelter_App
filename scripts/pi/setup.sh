@@ -86,6 +86,20 @@ PathChanged=/usr/bin/cloudflared
 [Install]
 WantedBy=multi-user.target
 EOF
+# After a POWER CUT cloudflared starts the instant the network is "online" but before names resolve, fails on
+# "dial udp <router>:53: network is unreachable", and systemd retries 5 s later (docs/pi-hosting.md, "After a power cut").
+# `cloudflared service install` writes its own unit (step 5), so this is a DROP-IN, not an edit. Two parts:
+#  - ExecStartPre waits (bounded: 15 x 1 s, then starts anyway, so it can never hang the boot) until a Cloudflare
+#    tunnel name resolves, so the first attempt succeeds. The leading "-" and the final "exit 0" mean it cannot fail the unit.
+#    No "$" in it on purpose: systemd expands "$VAR" in ExecStart lines.
+#  - RestartSec=1s is the backstop if the first attempt still fails for any other reason.
+# cloudflared is ONE service for all three clones (test and UAT ride the same tunnel), so only this script installs it.
+sudo mkdir -p /etc/systemd/system/cloudflared.service.d
+sudo tee /etc/systemd/system/cloudflared.service.d/10-wait-for-dns.conf >/dev/null <<'EOF'
+[Service]
+ExecStartPre=-/bin/sh -c 'for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do getent hosts region1.v2.argotunnel.com >/dev/null && exit 0; sleep 1; done; exit 0'
+RestartSec=1s
+EOF
 sudo systemctl daemon-reload
 sudo systemctl enable --now cloudflared-restart.path
 
