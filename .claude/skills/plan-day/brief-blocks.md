@@ -52,7 +52,9 @@ So:
 
 ## B. Directly after it — the STOP rule
 
-The ONE exception to block A, for a session that has already grown large. The two coexist; do not let this cancel A.
+For a session that has already grown large. **CORRECTED 2026-11-11: this block used to tell such a session NOT to open
+the PR, and that was wrong — see the incident note under the block. It now agrees with block A rather than excepting
+it: the PR is always opened. What a large session skips is the GATES and the TEST PLAN, not the PR.**
 
 ```markdown
 ## IF YOU ARE TOLD TO STOP, STOP — and do not tidy up from a large session
@@ -63,20 +65,40 @@ rows or files you listed earlier as not done, and do not start anything new. The
 1. **Commit what you have.** Always. A commit is the only checkpoint that survives.
 2. **Say in your last message** what is done, what is not, and what the next session should do.
 3. **Then judge the size of this session.** If it has grown large — you have been running a long
-   time, or your context is well past halfway — **STOP THERE.** Do **not** merge `origin/main`, do
-   **not** fill in a test plan, and do **not** open the PR. Say plainly: *"the PR is still to
-   open"*, and name the branch.
+   time, or your context is well past halfway — **stop the WORK there.** Do **not** merge
+   `origin/main`, do **not** run the gates, and do **not** fill in the test plan.
+4. **But DO open the PR, and this is not optional.** One `gh pr create`, with **`[unfinished]` at the
+   front of the title** and **your step-2 handover as the body**, listing what is built, what is not,
+   and that the gates and test plan are still to run. **Do not merge it.** Say in your last message
+   that the PR is open and unfinished, and name it.
 
-**Why, and it is not a detail:** every turn re-sends your whole context as input, so the cost of a
-turn is the size of the session, not the size of the work. At 800k, writing one short test plan
+**Why you skip the gates and the plan:** every turn re-sends your whole context as input, so the cost
+of a turn is the size of the session, not the size of the work. At 800k, writing one short test plan
 costs as much as an hour of early work. A session that has already run long is the most expensive
-possible place to do bookkeeping. **The planner will open the PR from a fresh session for a
-fraction of the cost.**
+possible place to do bookkeeping. **The planner will finish it from a fresh session for a fraction of
+the cost.**
 
-**This is the ONE exception to the finish-line block above.** Everywhere else, and in every
-ordinary-sized session, that block governs: never end with a built branch and no PR. Here, saying
-clearly that the PR is still to open *is* the handover.
+**Why you open the PR anyway, which is the part this block got wrong until 2026-11-11:** a handover
+that lives only in a closed session's last message **reaches nobody.** No PR, no notification, no row
+in `gh pr list` or `worktree.mjs streams` — **a stream that handed over correctly and one that died
+look identical from outside.** `gh pr create` is ONE turn; the gates are five minutes and the test
+plan is several expensive turns. **The old wording saved the cheap turn and lost the whole signal.**
+
+**THIS NO LONGER CONTRADICTS THE FINISH-LINE BLOCK ABOVE, AND THAT IS THE POINT OF THE CORRECTION.**
+That block says: never end with a built branch and no PR. **This one now says the same thing.** What a
+large session is excused is the *bookkeeping* — the merge, the gates, the test plan, the merge-on-green
+— never the PR itself. **An open `[unfinished]` PR with your handover in it IS the handover.**
 ```
+
+**The incident, 2026-11-11, which is the only reason this block changed.** `control-drive-fixtures`
+followed the old wording exactly: it committed both commits, wrote a full and accurate handover in its
+last message — what it drove, the fault it fixed, the finding it could not fix, a cost note, a list of
+what it had not done — and stopped without opening the PR, quoting this block as its reason. **It was
+right to stop and it was responsive when nudged.** But nothing outside that session could see any of
+it. The branch sat finished and invisible for about an hour; **Lutan asked twice what had happened, and
+the planner's first answer to him was wrong** — it read the silence as a stalled process and only found
+the truth by reading the session's transcript with `list_events`. **The cheap turn this block saved cost
+two interruptions, an hour, and a wrong diagnosis.** Measured against it: one `gh pr create`.
 
 ---
 
