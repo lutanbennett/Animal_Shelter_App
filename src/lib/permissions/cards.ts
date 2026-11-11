@@ -241,8 +241,8 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
     ],
     opens: "/management/donations",
   },
-  // Card review 2 (0268): it reads maintenance jobs, so the holder can attach a bill to one.
-  bills: { includes: [], bundle: [{ activity: "maintenance.bills" }, { activity: "maintenance.jobs", level: "read" }, { activity: "bills.utilities" }, { activity: "bills.general" }], opens: "/bills" },
+  // Card review 2 (0268), narrowed by 0355 (#n9z65): the holder can list jobs to attach a bill to one (maintenance.job_picker), not open the board.
+  bills: { includes: [], bundle: [{ activity: "maintenance.bills" }, { activity: "maintenance.job_picker" }, { activity: "bills.utilities" }, { activity: "bills.general" }], opens: "/bills" },
   // 0323 (2026-11-06, Lutan): the write side of Projects had no card, so New folder, Rename, Move and Delete were drawn for Admin only and
   // nobody had chosen that. This card is exactly projects.folders at edit and nothing else: not projects.photos (add/remove/caption) and not
   // projects.publish (putting a folder on the public website), which stay their own activities. Edit implies read, so the page opens.

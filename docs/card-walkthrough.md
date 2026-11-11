@@ -332,7 +332,7 @@ Result: pending
 0. Sign in with `--cards bills`. The home screen shows the **Bills** tile (or the tile of a card that includes it).
 1. Open `/bills`: it loads.
 2. **TODO:** Add and see a maintenance job's bills and costs. Do it on a disposable record named `walk-bills`. Question: where should this write show afterwards (which page, which row)?
-3. **See:** Maintenance jobs: log, change, assign, cost (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+3. **TODO:** See the list of jobs, to attach a bill to one (not the job board). Do it on a disposable record named `walk-bills`. Question: where should this write show afterwards (which page, which row)?
 4. **TODO:** Add and see utility bills. Do it on a disposable record named `walk-bills`. Question: where should this write show afterwards (which page, which row)?
 5. **TODO:** Add and see general bills. Do it on a disposable record named `walk-bills`. Question: where should this write show afterwards (which page, which row)?
 6. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
