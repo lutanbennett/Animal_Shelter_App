@@ -16,8 +16,10 @@ import { isPublicSiteLocked, isPublicSiteOff } from "@/lib/public-site";
  * components always see a valid session) and redirects signed-out users
  * away from everything except the public paths/prefixes above.
  */
-export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
+export async function updateSession(request: NextRequest, rewriteTo?: URL) {
+  // rewriteTo: serve a different path than the one asked for (/th/x -> /x), same gate decisions.
+  const pass = () => (rewriteTo ? NextResponse.rewrite(rewriteTo, { request }) : NextResponse.next({ request }));
+  let response = pass();
 
   // Read before getUser(): a refresh the server refuses makes the client
   // clear these cookies, and this is what tells "signed in, now expired"
@@ -37,7 +39,7 @@ export async function updateSession(request: NextRequest) {
           for (const { name, value } of cookiesToSet) {
             request.cookies.set(name, value);
           }
-          response = NextResponse.next({ request });
+          response = pass();
           for (const { name, value, options } of cookiesToSet) {
             response.cookies.set(name, value, options);
           }
