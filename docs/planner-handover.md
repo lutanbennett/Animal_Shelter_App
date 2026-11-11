@@ -75,10 +75,6 @@ one cheap turn against an hour of invisibility. **Block B therefore no longer co
 **THIS IS A HYPOTHESIS: the only real test is a future large session obeying it. CHECK NEXT EDITION
 WHETHER IT FIRED.**
 
-**And a tool worth knowing because it is what settled this: `list_events` reads another session's
-transcript, including an archived one.** When a stream's state is genuinely unclear, read what it did
-rather than inferring from its silence.
-
 ---
 
 ## WHAT `737`'s OWED ITEMS AND WARNINGS DID
@@ -93,15 +89,13 @@ rather than inferring from its silence.
   one, both from streams that did not finish. **Do not price a driven walkthrough from any of them.**
 - **`#etr20` IS STILL OPEN. SIXTH EDITION.** The date gate has now passed (*"not before 2026-11-08"*;
   it is the 11th), so **it is a one-line change waiting for a release cut and nothing else.**
-- **`#ogvcr` IS DONE AND TICKED** — and not by this planner. Steps 1–3 were run with him: **401 ms to
-  the Pi on the Australian Nord exit became 68 ms on a local one, and throughput 1.2–2.6 Mbit/s became
-  4.2–5.0**, SSH re-confirmed on the new exit, all written into his private Desktop report. **Step 4
-  (the iPad off-network) was dropped on his instruction** — *"I only wanted to take my laptop to Chiang
-  Mai so why is this a requirement."* **Another session ticked it correctly within the hour.** **Two
-  sessions worked the same item in one evening and it composed well by luck, not coordination.**
+- **`#ogvcr` IS DONE AND TICKED**, by another session. Steps 1–3 were run with him — **the Nord exit
+  was the whole problem: 401 ms to the Pi became 68 ms on a local server, throughput 1.2–2.6 became
+  4.2–5.0 Mbit/s** — and are in his private Desktop report, not here. **Step 4 was dropped on his
+  instruction** (*"I only wanted to take my laptop to Chiang Mai"*). **Two sessions worked the same
+  item in one evening and it composed well by luck, not coordination.**
 - **`#f56bs`'s tail was marked superseded in place.** Its title had recorded his 2026-11-06 answer
   (*always on*) for four days while its body still read *"the availability choice is Lutan's"*.
-- **`npm ci` / preflight: clean all round.** Everything a planner needs was reachable every time.
 
 ### THE CORRECTION TO `737`: ITS OWN AMENDMENT WAS ACCURATE, AND ONE ITEM IT TRUSTED WAS NOT
 
@@ -205,14 +199,10 @@ per-message work outweighs the cheaper floor. Next edition has the answer.**
   outside the main checkout, so it runs there and correctly refuses with *"run 'git pull' in the main
   checkout instead"*. **Use `git -C <folder> merge --ff-only origin/main`; the post-merge hook pushes.**
   Needed when PR #1467 landed mid-brief-writing and left three new worktrees 3 behind.
-- **`worktree.mjs done` was REFUSED by the auto-mode classifier as irreversible deletion**, on the loop
-  form and bare. Another session cleared the leftovers. **Nothing is blocked by it — `new` takes the
-  next free port — but the planner cannot tidy up.**
-- **`check-stale-titles.mjs` run at step 4, not after.** 9 candidates, **all 9 false positives** (titles
-  that already state their answer, tripping on *decided*/*decide*), **with one real find underneath:
-  `#f56bs`.** Keep running it early; and see the `#n5r7k` lesson for what it structurally cannot see.
-- **DO NOT READ DIALS OFF THE PROCESS TABLE.** The stream's own `stream-usage:` comment is the only
-  source — when there is one.
+- **`worktree.mjs done` is REFUSED by the auto-mode classifier as irreversible deletion**, bare or
+  looped, so the planner cannot tidy up; another session cleared the leftovers. Nothing is blocked.
+- **`check-stale-titles.mjs` run at step 4:** 9 candidates, **all 9 false positives**, **one real find
+  underneath (`#f56bs`)**. Keep running it early, and see the `#n5r7k` lesson for its blind spot.
 
 ---
 
