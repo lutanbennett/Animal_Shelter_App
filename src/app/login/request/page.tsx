@@ -1,12 +1,14 @@
+import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { isInAppBrowser } from "@/lib/auth/in-app-browser";
 import { getT } from "@/lib/i18n/get-t";
 import { loadSiteContent } from "@/lib/site/content";
 import { createClient } from "@/lib/supabase/server";
 import { LanguageSwitcher } from "../../LanguageSwitcher";
 import { signInWithGoogle } from "../actions";
-import { GoogleButton } from "../LoginForm";
+import { GoogleButton, InAppBrowserNotice } from "../LoginForm";
 
 /**
  * "Request access" from the login page. There is no separate mechanism:
@@ -19,6 +21,7 @@ import { GoogleButton } from "../LoginForm";
 export default async function RequestAccessPage() {
   const { t } = await getT();
   const r = t.login.request;
+  const inAppBrowser = isInAppBrowser((await headers()).get("user-agent"));
   const site = await loadSiteContent(await createClient());
   const email = site?.contact_email?.trim();
 
@@ -40,9 +43,13 @@ export default async function RequestAccessPage() {
           <li>{r.step2}</li>
           <li>{r.step3}</li>
         </ol>
-        <form action={signInWithGoogle}>
-          <GoogleButton label={t.login.continueWithGoogle} />
-        </form>
+        {inAppBrowser ? (
+          <InAppBrowserNotice body={t.login.inApp.requestBody} />
+        ) : (
+          <form action={signInWithGoogle}>
+            <GoogleButton label={t.login.continueWithGoogle} />
+          </form>
+        )}
         <p className="text-sm text-muted">
           {r.noGoogle}
           {email ? (
