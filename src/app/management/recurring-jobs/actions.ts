@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { runWriteAction, runAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
+import { dbRefusal } from "@/lib/db-refusal";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { addDaysIso, todayIso } from "@/lib/format";
@@ -61,7 +62,7 @@ export async function recordRecurringJob(
       p_outcome: outcome,
       p_note: note,
     });
-    if (error) return refuse(error.message);
+    if (error) return dbRefusal("recurringJobs.recordRecurringJob", error, t);
     revalidateRecurring();
     return { ok: true };
   });
@@ -365,7 +366,7 @@ export async function handBackRecurringJob(jobId: string, occursOn: string, requ
       p_user_ids: [],
       p_note: null,
     });
-    if (error) return refuse(error.message);
+    if (error) return dbRefusal("recurringJobs.handBackRecurringJob", error, t);
     revalidateRecurring();
     return { ok: true };
   });
@@ -458,7 +459,7 @@ export async function handOverRecurringJobs(input: HandOverInput, requestId: str
         p_user_ids: team,
         p_note: input.note.trim() || null,
       });
-      if (reassignError) failed.push(`${o.job.title}, ${o.occurs_on}: ${reassignError.message}`);
+      if (reassignError) failed.push(`${o.job.title}, ${o.occurs_on}: ${dbRefusal("recurringJobs.handOverRecurringJobs", reassignError, t).error}`);
       else changed += 1;
     }
     revalidateRecurring();
