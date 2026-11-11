@@ -11,7 +11,7 @@
 | PR | pending: opened after this commit |
 | Tested by / date | Claude, 2026-11-11 |
 | Carries a migration? | no |
-| Tested at SHA | b85d9c3a |
+| Tested at SHA | 731410e5 |
 
 ## 1. Scope and risk
 
@@ -61,11 +61,12 @@ indistinguishable from one that passed.
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-**One thing stated rather than glossed, because the run and the tested SHA are not quite the same
-commit.** The gates were started on the handover's content and finished after a second commit
-(`b85d9c3a`) that **trimmed ten lines of `docs/planner-handover.md` and changed nothing else.** **No
-gate reads that file** — typecheck, lint, test and build do not look in `docs/` — so the four exit
-codes above hold for the tested SHA. **Said here rather than left for someone to notice from the
+**One thing stated rather than glossed, because the run and the tested SHA are NOT the same commit.**
+The gates were run once, and `docs/planner-handover.md` changed twice after that run: `b85d9c3a`
+trimmed ten lines, and `731410e5` corrected the document before merging because batch 3 landed while
+it was being written. **Neither touched anything a gate reads** — typecheck, lint, test and build do
+not look in `docs/` — **so the four exit codes above hold for the tested SHA, and the gates were not
+re-run for a markdown edit.** **Said here rather than left for someone to notice from the
 timestamps.**
 
 - [ ] CI green on the PR (runs the same four gates, among its other checks). **This one cannot be true in the commit that creates the PR**, so write it `n/a: not yet — the PR does not exist at this commit` and **leave it there.** Changed 2026-10-20: ticking it in a follow-up commit used to be the rule, and that commit **invalidated its own evidence** — a new HEAD means a new run, so every PR in this repository paid two full CI cycles to transcribe a result GitHub already records permanently against the commit. A tick here attests to nothing a reader can check better by looking at the PR. **What must still happen, and is a merge step rather than a checklist line: before merging, read the run for your current HEAD (`gh run view <id> --json status,conclusion,headSha`) and confirm its `headSha` matches.** Merging on an older run's strength merges a commit whose CI never finished. **Do not pre-tick this line either** — a green you have not seen is the exact failure this checklist exists to prevent — n/a: not yet — the PR does not exist at this commit
@@ -180,7 +181,8 @@ closes (the 2026-09-27 fault, which five release-cut plans hit).
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
 | 1 | low | Edition `737` stated that `#n5r7k`'s mirror check did not exist. It does, it is blocking in CI, and it shipped 2026-11-06 | **fixed** — corrected in `738` with the check's actual output, and the item's title was corrected on the `backlog` branch |
-| 2 | low | `738` is 247 lines against the skill's ~150-line target | **accepted** — every line is delta, no per-stream figures are reproduced, and `737` was 322. Ten of the weakest lines were cut in `b85d9c3a`; the standing-checks section is named in the PR as what to cut next |
+| 3 | medium | `738` itself claimed the `stream-usage` mechanism was decaying and said not to reword it again. **Batch 3 went three for three and disproved it** | **fixed before merging** — `731410e5`. Found by re-running `737`'s PR-state check immediately before `gh pr merge`, which is what that rule is for |
+| 2 | low | `738` is 280 lines against the skill's ~150-line target | **accepted** — every line is delta and `737` was 322. Ten of the weakest lines were cut in `b85d9c3a`, then `731410e5` added 34 net lines of batch-3 findings that were worth more than the brevity. The standing-checks section is named in the PR as what to cut next |
 
 ## Left for manual verification
 
