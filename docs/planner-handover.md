@@ -7,17 +7,19 @@ composition, ports and the dependency notes live in `.plan-day.md` and are **not
 **It outranks nothing.** It is read by one chat, it will be rewritten within one plan, and a wrong line
 in it is corrected by its successor rather than by a reviewer.
 
-**Written at the SETUP of this plan's last batch, so BATCH 3's FIGURES ARE NOT IN IT.** Batch 3 is
-`control-activity-check` (3001), `th-path-alternates` (3003) and `refusal-keys-group-4` (3005, `0353`).
-**`737`'S NARROWED RULE WAS RUN IN THIS TURN, AND IT CAUGHT SOMETHING:** `gh pr list --state all --head
-claude/<slug>` for all eleven slugs this edition names — **`th-path-alternates` already has #1478 open
-and `refusal-keys-group-4` has #1479 open**, both created minutes after hand-over, and
-`control-activity-check` has its first commit. **Had this edition written the obvious sentence — "batch
-3 handed over, no session opened" — it would have been false before the document merged, which is
-exactly the fault `737` was amended for. THE RULE WORKS. KEEP IT, AND RUN IT AGAIN BEFORE `gh pr
-merge`.**
+**Written at the SETUP of this plan's last batch — AND THEN BATCH 3 LANDED BEFORE THIS DOCUMENT COULD
+MERGE, SO ITS FIGURES ARE IN IT AFTER ALL.** That is `737`'s narrowed rule working end to end, twice in
+one hour, and it is worth following the sequence because it is the whole reason the rule exists.
+**`gh pr list --state all --head claude/<slug>` was run for all eleven slugs IN THE WRITING TURN:** it
+found `th-path-alternates` (#1478) and `refusal-keys-group-4` (#1479) **already open** minutes after
+hand-over, so the obvious sentence — *"batch 3 handed over, no session opened"* — would have been false
+the moment it was written. **Then the rule was run AGAIN immediately before `gh pr merge`, and all
+three had MERGED** (#1478 05:17Z, #1479 05:21Z, #1480 05:23Z). **So this edition was corrected twice
+before merging rather than amended once afterwards, which is what `708` and `737` both got wrong.**
+**KEEP THE RULE. Run it in the writing turn and again before the merge; both runs changed this text.**
 
-Batches 1 and 2 are complete: **six streams, six merged PRs, and only TWO usable band readings.**
+All nine streams of this plan are complete: **nine merged PRs, and FIVE usable band readings** — two
+from batches 1 and 2, and **three from batch 3, which went three for three on everything.**
 
 ---
 
@@ -127,20 +129,51 @@ reading catches it. **That is now the second class of stale title found by hand 
 A came in 11% under its lowered band, slice B 3% under its further-lowered one. **Slice C is banded
 130–170k against the item's 150–195k on that evidence. Check it.**
 
-**2. THE `stream-usage` MECHANISM IS DECAYING, AND IT IS NOW THE MAIN OBSTACLE TO BANDING ANYTHING.**
-`brief-blocks.md` records it going **3 of 3** when it was first made a numbered deliverable. **Four of
-the last six streams produced no usable figure, one posting nothing at all.** The wording was
-strengthened twice — including an explicit note that `self` cannot be `unavailable` because the process
-is alive — **and it did not help. DO NOT REWORD IT A THIRD TIME.** The two real options: **the planner
-reads each session's usage with `get_usage` before the session is archived**, or the figure is accepted
-as lost. **An archived session reports unavailable, so after the fact there is no recovery** — that is
-measured, not assumed.
+**2. THE `stream-usage` MECHANISM LOOKED LIKE IT WAS DECAYING AND THEN RECOVERED COMPLETELY, AND THE
+DIFFERENCE IS WORTH READING CAREFULLY.** Batches 1 and 2 gave **two usable figures out of six**: one
+`unmeasured`, one with **no comment at all**, and two spoiled by `finished=blocked` or `rescoped=yes`.
+**This edition first concluded the mechanism was failing and said not to reword it a third time. THAT
+CONCLUSION WAS WRONG, AND BATCH 3 DISPROVED IT BEFORE THIS DOCUMENT MERGED: three streams, three usage
+comments, all `compacted=no rescoped=no finished=yes`.**
 
-**3. A BAND RAISED AGAINST THE FLOOR TREND, STATED SO IT CAN BE TESTED.** `refusal-keys-group-4` is
-banded **165–200k**, above group 3's 160–195k, even though the floor fell. Group 3 was 5 messages and
-landed within **1%** of its band — the best-calibrated row in the programme — and group 4 has **12
-sentences**, each needing a key, a DETAIL object and two dictionary entries. **The hypothesis is that
-per-message work outweighs the cheaper floor. Next edition has the answer.**
+**What was different about batch 3's briefs, stated as the likely cause rather than a proven one:** each
+carried the deliverable with a plea naming the actual consequence — *"four of the last six streams
+produced no usable figure … the planner is now banding on two readings out of six"* — plus the note
+that `self` cannot be `unavailable` because the process is alive. **Three for three after that. KEEP
+THAT WORDING, including the consequence; do not shorten it back to an instruction.** **Whether it was
+the wording or three unusually tidy streams is NOT established — one batch is one batch. Check it
+again.**
+
+**The fallback still holds if it does slip: an archived session reports unavailable, so after the fact
+there is no recovery.** Read a session's usage before it is archived, or accept the figure is lost.
+
+**3. BATCH 3's THREE READINGS, ALL INSIDE THEIR BANDS, AND THEY ANSWER TWO QUESTIONS THIS EDITION
+RAISED.**
+
+| stream | actual | band | verdict |
+|---|---|---|---|
+| `th-path-alternates` (slice C) | 146,471 | 130–170k | **inside** |
+| `refusal-keys-group-4` | 168,010 | 165–200k | **inside, near the bottom** |
+| `control-activity-check` | 207,125 | 190–240k | **inside** |
+
+**(a) THE BAND RAISED AGAINST THE FLOOR TREND WAS RIGHT.** `refusal-keys-group-4` was banded
+**165–200k**, above group 3's 160–195k, *because* it had 12 sentences against group 3's 5 — even though
+the floor had fallen. **It came in at 168,010, inside and near the bottom.** So **per-message work does
+outweigh a cheaper floor on this programme**, and the next group should be banded on its sentence count
+rather than discounted for the floor.
+
+**(b) SLICE C's LOWERED BAND HELD, MAKING IT THREE SLICES IN A ROW.** 146,471 against 130–170k, after A
+at 11% under and B at 3% under. **The ~23k floor correction to the `#t48xh` bands is now validated
+three times. Slice D is banded 230–280k on the item and should come down to about 205–255k.**
+
+**(c) THE INSTRUMENT-WITH-A-TEMPLATE ROW HAS ITS FIRST READING: 207,125 against 190–240k.**
+`control-activity-check` built a new static resolver on a 341-line working template. `CLAUDE.md` bands
+*"builds an instrument from nothing"* at 250–320k; **this landed at 207k with the template, the
+specification and the allow-list pattern all handed over.** **So an instrument built on an existing one
+is about 200–240k, not 250–320k** — a genuinely new row, on one reading.
+
+**THE FLOOR, with batch 3 added: 85,851 · 87,969 · 84,701.** **Ten figures now, all between 84.4k and
+88.0k.** ≈85k is settled; stop re-deriving it from scratch and just confirm it.
 
 ---
 
@@ -226,10 +259,11 @@ my list".** That is `737`'s structural fix, now tested three times.
 Read `.plan-day.md` before anything. **It stands at 9 of 9 and this edition resets the counter, so you
 are planning FROM SCRATCH, not resuming.**
 
-**Batch 3 is in flight with two PRs already open — #1478 (`th-path-alternates`, slice C) and #1479
-(`refusal-keys-group-4`) — and `control-activity-check` has started. Read all three PR bodies when they
-land; this planner has not.** `control-activity-check` is the one to read first: it is building the
-second resolver for `#79sqf` and its result decides whether that item can finally close.
+**Batch 3 has MERGED — #1478 (`th-path-alternates`, slice C), #1479 (`refusal-keys-group-4`) and #1480
+(`control-activity-check`) — all three `finished=yes`. Their figures are in the bands section above, but
+THIS PLANNER HAS NOT READ THEIR PR BODIES: read all three.** **`#1480` first:** it built the second
+resolver for `#79sqf`, and **whether that item can finally close after fourteen sweeps depends on what
+it found and what it says it cannot see.**
 
 **Three things to do before you present anything:** run `node scripts/check-stale-titles.mjs` **at step
 4**; **read the code behind any item whose prose claims a gap**, because an item named the wrong
