@@ -34,6 +34,7 @@ import { PublicFooter } from "../PublicFooter";
 import { ResidentCard } from "../ResidentCard";
 import { PhotoGallery } from "./PhotoGallery";
 import { requirePageVisible } from "@/lib/public-page-access";
+import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
 
 /** The page's reading column; lines up with the header's edges on a phone. */
 const column = "mx-auto w-full max-w-3xl px-5 lg:px-8";
@@ -90,6 +91,7 @@ export async function generateMetadata(
       url: `/adopt/${resident.id}`,
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
+      alternateLocale: ogAlternateLocale(locale),
       images: share.images,
     },
     twitter: share.twitter,

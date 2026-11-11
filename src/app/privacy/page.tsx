@@ -7,6 +7,7 @@ import { defaultShareImage, shareImageMetadata } from "@/lib/site/share";
 import { loadSiteContent } from "@/lib/site/content";
 import { PublicHeader } from "../adopt/PublicHeader";
 import { PublicFooter } from "../adopt/PublicFooter";
+import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
 
 /**
  * The privacy notice. Google requires a public privacy-policy URL before
@@ -34,7 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description: t.privacy.intro,
     ...(origin ? { metadataBase: origin } : {}),
-    alternates: { canonical: "/privacy" },
+    alternates: publicAlternates("/privacy", locale),
     openGraph: {
       type: "website",
       title,
@@ -42,6 +43,7 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "/privacy",
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
+      alternateLocale: ogAlternateLocale(locale),
       images: share.images,
     },
     twitter: share.twitter,

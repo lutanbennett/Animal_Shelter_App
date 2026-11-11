@@ -11,6 +11,7 @@ import { loadPublicShopLinks, shopText } from "@/lib/shop/shop-links";
 import { requirePageVisible } from "@/lib/public-page-access";
 import { PublicHeader } from "../adopt/PublicHeader";
 import { PublicFooter } from "../adopt/PublicFooter";
+import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
 
 export async function generateMetadata(): Promise<Metadata> {
   const [supabase, { t, locale }, origin] = await Promise.all([createClient(), getT(), getSiteOrigin()]);
@@ -22,7 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     ...(origin ? { metadataBase: origin } : {}),
-    alternates: { canonical: "/shop" },
+    alternates: publicAlternates("/shop", locale),
     openGraph: {
       type: "website",
       title,
@@ -30,6 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "/shop",
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
+      alternateLocale: ogAlternateLocale(locale),
       images: share.images,
     },
     twitter: share.twitter,

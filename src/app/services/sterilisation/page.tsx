@@ -10,6 +10,7 @@ import { PublicHeader } from "../../adopt/PublicHeader";
 import { PublicFooter } from "../../adopt/PublicFooter";
 import { SignupForm } from "./SignupForm";
 import { requirePageVisible } from "@/lib/public-page-access";
+import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
 
 // Places left are read live; never baked at build time.
 export const dynamic = "force-dynamic";
@@ -24,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     ...(origin ? { metadataBase: origin } : {}),
-    alternates: { canonical: "/services/sterilisation" },
+    alternates: publicAlternates("/services/sterilisation", locale),
     openGraph: {
       type: "website",
       title,
@@ -32,6 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "/services/sterilisation",
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
+      alternateLocale: ogAlternateLocale(locale),
       images: share.images,
     },
     twitter: share.twitter,

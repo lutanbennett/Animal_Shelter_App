@@ -19,6 +19,7 @@ import { PublicHeader } from "../../adopt/PublicHeader";
 import { PublicFooter } from "../../adopt/PublicFooter";
 import { AppealView } from "../AppealView";
 import { requirePageVisible } from "@/lib/public-page-access";
+import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
 
 // The raised figure is read live and says when it was last updated.
 export const dynamic = "force-dynamic";
@@ -64,6 +65,7 @@ export async function generateMetadata(props: PageProps<"/campaigns/[id]">): Pro
       url: `/campaigns/${appeal.id}`,
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
+      alternateLocale: ogAlternateLocale(locale),
       images: share.images,
     },
     twitter: share.twitter,
