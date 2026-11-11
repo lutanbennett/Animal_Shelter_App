@@ -166,7 +166,7 @@ for (const [f, sf] of sfs) {
     if (ts.isJsxAttribute(n) && n.initializer && ts.isJsxExpression(n.initializer) && n.initializer.expression && /^on[A-Z]/.test(n.name.getText())) {
       const tag = n.parent?.parent && (ts.isJsxOpeningElement(n.parent.parent) || ts.isJsxSelfClosingElement(n.parent.parent)) ? n.parent.parent.tagName.getText() : null;
       const target = tag ? importMap.get(f)?.get(tag.split(".")[0])?.file : null;
-      if (target) { const k = target + "::" + n.name.getText(); (cbSources.get(k) || cbSources.set(k, []).get(k)).push({ expr: n.initializer.expression, file: f }); }
+      if (target) { const k = target + "::" + n.name.getText(); const elx = n.parent.parent; (cbSources.get(k) || cbSources.set(k, []).get(k)).push({ expr: n.initializer.expression, file: f, node: ts.isJsxOpeningElement(elx) ? elx.parent : elx }); }
     }
     ts.forEachChild(n, v);
   })(sf);
@@ -304,7 +304,7 @@ function findFn(file, name) {
  * passed to a call, returned, or a ternary arm that refuses. Counted in OPTIONAL_CAN so the report says how many were skipped.
  */
 const OPTIONAL_CAN = [];
-const REFUSES = /refuse|throw|notFound|redirect|ok:s*false/;
+const REFUSES = /\brefuse\b|\bthrow\b|\bnotFound\b|\bredirect\b|ok:\s*false/;
 function isOptionalCan(call) {
   const decl = call.parent;
   if (!decl || !ts.isVariableDeclaration(decl) || decl.initializer !== call || !ts.isIdentifier(decl.name)) return false;
@@ -366,8 +366,8 @@ function actionActs(file, name, depth = 2, seen = new Set()) {
 // ---- control -> action -------------------------------------------------------------------------
 /** Follow an expression to the server actions / rpcs it can reach. */
 function reach(expr, file, depth = 3, seen = new Set()) {
-  const out = { actions: [], rpcs: [], callbacks: [] }; // actions: {file,name}; rpcs: names
-  const addAll = (r) => { out.actions.push(...r.actions); out.rpcs.push(...r.rpcs); out.callbacks.push(...r.callbacks); };
+  const out = { actions: [], rpcs: [], callbacks: [], callers: [] }; // actions: {file,name}; rpcs: names; callers: {file,node,sub} one per caller of a callback prop
+  const addAll = (r) => { out.actions.push(...r.actions); out.rpcs.push(...r.rpcs); out.callbacks.push(...r.callbacks); out.callers.push(...r.callers); };
   (function v(n) {
     if (ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression) && n.expression.name.text === "rpc" && strLit(n.arguments[0])) out.rpcs.push(strLit(n.arguments[0]));
     if (ts.isIdentifier(n) && !(n.parent && ts.isPropertyAccessExpression(n.parent) && n.parent.name === n) && !(n.parent && ts.isPropertyAssignment(n.parent) && n.parent.name === n)) {
@@ -389,7 +389,15 @@ function reach(expr, file, depth = 3, seen = new Set()) {
         if (decl && ts.isCallExpression(decl.initializer) && ts.isIdentifier(decl.initializer.expression) && FORM_HOOKS.test(decl.initializer.expression.text) && decl.initializer.arguments[0]) addAll(reach(decl.initializer.arguments[0], file, depth - 1, seen));
         else if (/^on[A-Z]/.test(nm)) {
           const srcs = cbSources.get(file + "::" + nm);
-          if (srcs?.length && depth > 1) for (const sc of srcs) addAll(reach(sc.expr, sc.file, depth - 1, seen));
+          if (srcs?.length && depth > 1) {
+            // PATTERN (iii): a callback prop is judged PER CALLER, never as the union of every caller's action. A shared component's
+            // onPick is whatever the caller passed; the caller's own gate and the pages that render the CALLER are what guard it.
+            for (const sc of srcs) {
+              const sub = reach(sc.expr, sc.file, depth - 1, seen);
+              out.callbacks.push(...sub.callbacks); out.callers.push(...sub.callers);
+              if (sub.actions.length || sub.rpcs.length) out.callers.push({ file: sc.file, node: sc.node, sub: { actions: sub.actions, rpcs: sub.rpcs } });
+            }
+          }
           else out.callbacks.push(nm);
         }
       }
@@ -415,31 +423,46 @@ for (const [f, sf] of sfs) {
       const r = reach(n.initializer.expression, f);
       const names = [...new Set([...r.actions.map((a) => a.name), ...r.rpcs.map((x) => `rpc:${x}`)])];
       const label = `<${tag} ${n.name.getText()}> ${names.join(" + ")}`;
-      if (!r.actions.length && !r.rpcs.length) {
+      const el2 = el.parent && ts.isJsxElement(el.parent) ? el.parent : el;
+      const units = [];
+      if (r.actions.length || r.rpcs.length) units.push({ actions: r.actions, rpcs: r.rpcs, caller: null });
+      for (const c of r.callers) units.push({ actions: c.sub.actions, rpcs: c.sub.rpcs, caller: c });
+      if (!units.length) {
         if (r.callbacks.length) R.unresolved.push({ where, label: `<${tag} ${n.name.getText()}> ${[...new Set(r.callbacks)].join(", ")}`, why: `calls a callback prop (${[...new Set(r.callbacks)].join(", ")}); the action it runs is defined by the caller and not followed` });
         else R.none++;
       } else {
         R.withAction++;
-        const need = [], notes = [];
-        for (const a of r.actions) { const x = actionActs(a.file, a.name); need.push(...x.acts); notes.push(...x.rpcNotes); }
-        for (const rp of r.rpcs) { const x = rpcActs(rp); need.push(...x.acts); notes.push(...x.notes); }
-        const needU = uniq(need);
-        if (!needU.length) {
-          if (notes.length) R.unresolved.push({ where, label, why: [...new Set(notes)].join("; ") });
-          else R.noActivity++;
-        } else {
-          const gates = gatesFor(el.parent && ts.isJsxElement(el.parent) ? el.parent : el, f);
-          if (gates.acts.some((g) => needU.some((d) => sat(g, d)))) { R.ok++; okHow.gate++; }
-          else {
-            const hosts = [...hostPages(f)].map((h) => pages.get(h));
-            const hostOk = (hosts.length > 0 && hosts.every((hp) => hp.opens.length && opensAll(hp.opens, needU))) || sameFileOk(el, f, needU);
-            if (hostOk) { R.ok++; okHow.host++; }
-            else if (gates.acts.length) R.findings.push({ where, label, why: `gated on ${show(gates.acts)}; its action asks ${show(needU)}` });
-            else if (gates.unresolved.length) R.unresolved.push({ where, label, why: `gate ${[...new Set(gates.unresolved)].join(", ")} not traced to an activity; action asks ${show(needU)}` });
-            else if (!hosts.length) R.unresolved.push({ where, label, why: `no gate and no page renders this file; action asks ${show(needU)}` });
-            else if (hosts.some((hp) => !hp.opens.length)) R.unresolved.push({ where, label, why: `no gate; a host page has no static guard; action asks ${show(needU)}` });
-            else R.findings.push({ where, label, why: `no gate; host page(s) ${hosts.filter((hp) => !opensAll(hp.opens, needU)).slice(0, 3).map((h) => h.file.replace(/^src\/app\//, "").replace(/\/page\.tsx$/, "") || "/").join(", ")} do not imply ${show(needU)}` });
+        const outcomes = [];
+        for (const u of units) {
+          const unames = [...new Set([...u.actions.map((a) => a.name), ...u.rpcs.map((x) => `rpc:${x}`)])];
+          const ulabel = `<${tag} ${n.name.getText()}> ${unames.join(" + ")}`;
+          const via = u.caller ? ` (passed by ${rel(u.caller.file)})` : "";
+          const need = [], notes = [];
+          for (const a of u.actions) { const x = actionActs(a.file, a.name); need.push(...x.acts); notes.push(...x.rpcNotes); }
+          for (const rp of u.rpcs) { const x = rpcActs(rp); need.push(...x.acts); notes.push(...x.notes); }
+          const needU = uniq(need);
+          if (!needU.length) {
+            if (notes.length) { R.unresolved.push({ where, label: ulabel, why: [...new Set(notes)].join("; ") + via }); outcomes.push("bad"); }
+            else outcomes.push("noact");
+            continue;
           }
+          const gates = gatesFor(el2, f);
+          const callerGates = u.caller ? gatesFor(u.caller.node, u.caller.file) : { acts: [] };
+          const allGate = [...gates.acts, ...callerGates.acts];
+          if (allGate.some((g) => needU.some((d) => sat(g, d)))) { outcomes.push("gate"); continue; }
+          const hosts = [...hostPages(u.caller ? u.caller.file : f)].map((h) => pages.get(h));
+          const hostOk = (hosts.length > 0 && hosts.every((hp) => hp.opens.length && opensAll(hp.opens, needU))) || (u.caller ? sameFileOk(u.caller.node, u.caller.file, needU) : sameFileOk(el, f, needU));
+          if (hostOk) { outcomes.push("host"); continue; }
+          outcomes.push("bad");
+          if (allGate.length) R.findings.push({ where, label: ulabel, why: `gated on ${show(allGate)}; its action asks ${show(needU)}${via}` });
+          else if (gates.unresolved.length) R.unresolved.push({ where, label: ulabel, why: `gate ${[...new Set(gates.unresolved)].join(", ")} not traced to an activity; action asks ${show(needU)}${via}` });
+          else if (!hosts.length) R.unresolved.push({ where, label: ulabel, why: `no gate and no page renders this file; action asks ${show(needU)}${via}` });
+          else if (hosts.some((hp) => !hp.opens.length)) R.unresolved.push({ where, label: ulabel, why: `no gate; a host page has no static guard; action asks ${show(needU)}${via}` });
+          else R.findings.push({ where, label: ulabel, why: `no gate; host page(s) ${hosts.filter((hp) => !opensAll(hp.opens, needU)).slice(0, 3).map((h) => h.file.replace(/^src\/app\//, "").replace(/\/page\.tsx$/, "") || "/").join(", ")} do not imply ${show(needU)}${via}` });
+        }
+        if (!outcomes.includes("bad")) {
+          if (outcomes.every((o) => o === "noact")) R.noActivity++;
+          else { R.ok++; okHow[outcomes.includes("host") ? "host" : "gate"]++; }
         }
       }
     }

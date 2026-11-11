@@ -23,13 +23,6 @@
       "reason": "READ, FALSE POSITIVE of the check: the control sits after an early return on !canManage (line 161); canManage is passed from ContactHub through an expression the check did not trace."
     },
     {
-      "file": "src/app/medical/ResidentPicker.tsx",
-      "control": "<button onClick> reassignWaitingPhoto",
-      "found": "no gate; host page(s) photos/add, medical/weight, medical/photos do not imply photos.approve:edit, photos.resident_manage:edit",
-      "date": "2026-11-11",
-      "reason": "READ, FALSE POSITIVE (2026-11-11, #79sqf): this picker only calls `onPick(r)`. reassignWaitingPhoto is called from src/app/photos/approve/ApproveQueue.tsx, not from any of the hosts named; the check attributes a shared component's callback to every host. Cause (c), left unfixed."
-    },
-    {
       "file": "src/app/my/MyTaskList.tsx",
       "control": "<ActionButton onClick> recordRecurringJob + setMaintenanceStatus",
       "found": "gated on maintenance.progress:edit; its action asks recurring.do_any:edit, recurring.do_own:edit",
@@ -39,16 +32,16 @@
     {
       "file": "src/components/ResidentPicker.tsx",
       "control": "<RowActionButton onClick> setFeaturedResident",
-      "found": "no gate; host page(s) memes/[id]/edit, memes/new, memes/make do not imply website.content:edit",
+      "found": "no gate; host page(s) admin/website do not imply website.content:edit (passed by src/app/admin/website/FeaturedResident.tsx)",
       "date": "2026-11-11",
-      "reason": "READ, FALSE POSITIVE of the check: shared picker; its callback is passed by several callers and the check unions their actions, so setFeaturedResident (admin/website) is attributed to the memes pages too."
+      "reason": "READ, FALSE POSITIVE of the check (2026-11-11, #79sqf, narrowed by claude/control-check-false-positives): the callback is now judged per caller, and the only caller with an action is FeaturedResident.tsx (the memes callers run none). What is left is a gate the check does not trace: /admin/website draws its Home tab, which holds FeaturedResident, only when `tabs={canContent ? WEBSITE_TABS : [\"gallery\"]}` (page.tsx:240), a prop ARRAY, not a JSX condition. Resolving it needs the tab-array gate taught, a fourth pattern."
     },
     {
       "file": "src/components/ResidentPicker.tsx",
       "control": "<ActionButton onClick> setFeaturedResident",
-      "found": "no gate; host page(s) memes/[id]/edit, memes/new, memes/make do not imply website.content:edit",
+      "found": "no gate; host page(s) admin/website do not imply website.content:edit (passed by src/app/admin/website/FeaturedResident.tsx)",
       "date": "2026-11-11",
-      "reason": "READ, FALSE POSITIVE of the check: shared picker; its callback is passed by several callers and the check unions their actions, so setFeaturedResident (admin/website) is attributed to the memes pages too."
+      "reason": "READ, FALSE POSITIVE of the check (2026-11-11, #79sqf, narrowed by claude/control-check-false-positives): the callback is now judged per caller, and the only caller with an action is FeaturedResident.tsx (the memes callers run none). What is left is a gate the check does not trace: /admin/website draws its Home tab, which holds FeaturedResident, only when `tabs={canContent ? WEBSITE_TABS : [\"gallery\"]}` (page.tsx:240), a prop ARRAY, not a JSX condition. Resolving it needs the tab-array gate taught, a fourth pattern."
     },
     {
       "file": "src/components/UnitsPanel.tsx",

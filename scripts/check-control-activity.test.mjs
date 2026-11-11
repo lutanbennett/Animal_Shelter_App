@@ -8,7 +8,8 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 
-const script = resolve("scripts/check-control-activity.mjs");
+// CCA_SCRIPT points the same tests at another copy of the script (e.g. the one before a pattern was taught) to prove they fail without it.
+const script = resolve(process.env.CCA_SCRIPT ?? "scripts/check-control-activity.mjs");
 
 function run(files) {
   const dir = mkdtempSync(join(tmpdir(), "ctlact-"));
@@ -67,4 +68,38 @@ export async function save(id: string) {
 }\n`,
   });
   assert.equal(r.status, 1, r.out);
+});
+
+// ---- (iii) a shared component's callback is judged per caller, not as every caller's actions unioned ------------
+// Picker only calls onPick. Two callers pass different actions; the pages that render each caller guard their own.
+const picker = `"use client";\nexport function Picker({ onPick }: { onPick: (id: string) => void }) { return <button onClick={() => onPick("1")} />; }\n`;
+const callerA = `"use client";\nimport { Picker } from "../shared/Picker";\nimport { doA } from "./actions";\nexport function CallerA() { return <Picker onPick={(id) => doA(id)} />; }\n`;
+const callerB = `"use client";\nimport { Picker } from "../shared/Picker";\nimport { doB } from "./actions";\nexport function CallerB() { return <Picker onPick={(id) => doB(id)} />; }\n`;
+const pageOf = (name, act) => `import { ${name} } from "./${name}";\nexport default async function P() { await requirePermission("${act}"); return <${name} />; }\n`;
+const actionsAB = `"use server";\nexport async function doA(id: string) { if (!can(perms, "area.a")) return; }\nexport async function doB(id: string) { if (!can(perms, "area.b")) return; }\n`;
+
+test("(iii) each caller of a shared picker is guarded by the page that renders THAT caller", () => {
+  const r = run({
+    "src/app/shared/Picker.tsx": picker,
+    "src/app/a/CallerA.tsx": callerA, "src/app/a/actions.ts": actionsAB.split("export async function doB")[0], "src/app/a/page.tsx": pageOf("CallerA", "area.a"),
+    "src/app/b/CallerB.tsx": callerB, "src/app/b/actions.ts": `"use server";\nexport async function doB(id: string) { if (!can(perms, "area.b")) return; }\n`, "src/app/b/page.tsx": pageOf("CallerB", "area.b"),
+    // a third host that passes a callback running NO action, on a page guarding something else: the old union flagged it
+    "src/app/c/CallerC.tsx": `"use client";
+import { Picker } from "../shared/Picker";
+export function CallerC() { return <Picker onPick={() => {}} />; }
+`, "src/app/c/page.tsx": pageOf("CallerC", "area.c"),
+  });
+  assert.equal(r.status, 0, r.out);
+});
+
+test("(iii) a caller whose own page does NOT guard its action is still flagged, and named", () => {
+  const r = run({
+    "src/app/shared/Picker.tsx": picker,
+    "src/app/a/CallerA.tsx": callerA, "src/app/a/actions.ts": actionsAB.split("export async function doB")[0], "src/app/a/page.tsx": pageOf("CallerA", "area.a"),
+    // CallerB's page guards area.a, but doB asks area.b
+    "src/app/b/CallerB.tsx": callerB, "src/app/b/actions.ts": `"use server";\nexport async function doB(id: string) { if (!can(perms, "area.b")) return; }\n`, "src/app/b/page.tsx": pageOf("CallerB", "area.a"),
+  });
+  assert.equal(r.status, 1, r.out);
+  assert.match(r.out, /passed by src\/app\/b\/CallerB\.tsx/);
+  assert.doesNotMatch(r.out, /passed by src\/app\/a\/CallerA\.tsx/);
 });
