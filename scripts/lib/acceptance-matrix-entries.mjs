@@ -40,8 +40,8 @@
 // tester tries both.
 
 const MENU = {
-  doctor: "The menu shows only Appointments and Residents, then Manual, Release notes and Change password. No Operations.",
-  volunteer: "The menu is Home, Residents and Operations, then Manual, Release notes and Change password. Operations has one tile, Enclosures: no Stocktake, no Maintenance, Projects, Contacts or Clinics. No Assistant button, no Management and no Settings.",
+  doctor: "The menu shows only Appointments and Residents, then User manual, Release notes and Change password. No Operations.",
+  volunteer: "The menu is Home, Residents and Operations, then User manual, Release notes and Change password. Operations has one tile, Enclosures: no Stocktake, no Maintenance, Projects, Contacts or Clinics. No Assistant button, no Management and no Settings.",
   management: "The menu has Operations and Management, but no Settings and no Security. Website is a tile on Management.",
   admin: "The menu has Operations, Management, Settings, and Security at the bottom.",
 };
@@ -53,8 +53,8 @@ export const ENTRIES = {
       activity: "Sign in and sign out",
       device: "both",
       audience: "all",
-      do: "Open the app's address, tap Staff & Volunteer Login, sign in with your own email and password, then sign out.",
-      expect: "You land on your home page — Appointments for a doctor, a screen of big job tiles for most other roles — and Sign out brings you back to the public site.",
+      do: "Open the app's address, tap Staff login, sign in with your own email and password, then sign out.",
+      expect: "You land on your home page — Appointments for a doctor, a screen of big job tiles for most other roles — and Sign out lands you on the sign-in page.",
       notes: { management: "On a phone your home has four tiles: Recurring jobs, Intake, Residents and My tasks. Every other page is in the menu. If a tile is missing, the role no longer holds what it needs; it should never be a tile that refuses.", public_viewer: "You land on the public home page; there is no app menu.", visitor: "Signing in is how a visitor becomes one of the roles; test it with any account." },
     },
     {
@@ -134,7 +134,7 @@ export const ENTRIES = {
     {
       activity: "Print the manual as a PDF",
       device: "desktop",
-      do: "Open the Manual and tap Print this as a PDF.",
+      do: "Open the User manual and tap Print this as a PDF.",
       expect: "A PDF opens holding the topics for your role, and it can be saved or printed.",
     },
   ],
@@ -151,7 +151,7 @@ export const ENTRIES = {
       activity: "Find your way around with the menu",
       device: "both",
       do: "If the login has a menu, open it (the ☰ button on a phone) and read it item by item. A login with no menu does not see this topic in the manual.",
-      expect: "A login with a menu sees only the pages its cards open, with Manual, Release notes and Change password last, under a dividing line.",
+      expect: "A login with a menu sees only the pages its cards open, with User manual, Release notes and Change password last, under a dividing line.",
       notes: MENU,
     },
   ],
@@ -273,7 +273,7 @@ export const ENTRIES = {
     {
       activity: "Read what your role can and cannot do",
       device: "both",
-      do: "Open the Manual and read \"Roles — who can do what\".",
+      do: "Open the User manual and read \"Roles — who can do what\".",
       expect: "The manual opens on your own role's view, and topics your role cannot do carry the right role labels.",
     },
   ],
@@ -1460,7 +1460,7 @@ export const ENTRIES = {
     {
       activity: "Find out who to tell when something looks wrong",
       device: "both",
-      do: "Read the Getting help note at the end of the Manual.",
+      do: "Read the Getting help note at the end of the User manual.",
       expect: "It says whom to tell and it is clear what to do.",
     },
   ],
