@@ -1182,25 +1182,34 @@ export const ENTRIES = {
   ],
   bills: [
     {
-      activity: "Photograph a bill when recording a delivery",
-      needs: "stock.delivery",
+      activity: "File a bill against a clinic visit",
+      needs: "bills.general",
       device: "phone",
-      do: "On Record a delivery, at the extras screen tap Add a photo of the bill, take a photo, type the cost, and record the delivery.",
-      expect: "The delivery saves, and under Recent deliveries a small picture of the bill shows on that delivery. Add another page adds a second one.",
+      do: "Open Bills from Home, tap Add bills and take a photo. Tap the picture, type the cost, and under Likely matches tap a clinic visit.",
+      expect: "The card disappears, the waiting count goes down, and the clinic visit shows the bill photo and its cost.",
     },
     {
       activity: "Add the day's bills at night, and match them",
-      needs: "stock.delivery",
+      needs: "bills.general",
       device: "phone",
       do: "Open Bills from Home, tap Add bills and choose several photos at once. On a card, type the cost and tap a likely delivery or clinic visit.",
       expect: "Each photo is its own card and the waiting count goes up. After matching, the card disappears, the count goes down, and the delivery or visit shows the bill and its cost.",
     },
     {
       activity: "Turn a bill into a new delivery",
-      needs: "stock.delivery",
+      needs: "bills.general",
       device: "phone",
       do: "On a card in Bills, type the cost and tap Record a new delivery from this bill, then record the delivery.",
       expect: "Record a delivery opens with the cost filled in. When it is saved the bill is on that delivery and the card is gone.",
+    },
+  ],
+  "bills-utility": [
+    {
+      activity: "File a utility bill by the month it covers",
+      needs: "bills.utilities",
+      device: "phone",
+      do: "Open Bills from Home, tap a waiting bill, choose a utility type, pick the month it covers, and tap File as a utility bill.",
+      expect: "The card disappears and the waiting count goes down. Utility bills by month shows the bill under that month.",
     },
   ],
   "recurring-jobs": [
