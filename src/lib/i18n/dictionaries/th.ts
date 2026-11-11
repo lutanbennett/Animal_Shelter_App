@@ -110,6 +110,22 @@ const th: Dictionary = {
     "stock.correct_not_allowed": () => "สิทธิ์ของคุณไม่รวมการแก้ไขสต็อก",
     "stock.unknown_kind": () => "ไม่รู้จักประเภทรายการ โหลดหน้าใหม่แล้วลองอีกครั้ง",
     "stock.item_not_found": () => "ไม่พบรายการนั้น โหลดหน้าใหม่แล้วลองอีกครั้ง",
+    "intake.not_allowed": () => "สิทธิ์ของคุณไม่รวมการแก้ไขวันที่รับเข้า",
+    "intake.resident_not_found": () => "ไม่พบผู้อยู่อาศัยรายนั้น โหลดหน้าใหม่แล้วลองอีกครั้ง",
+    "intake.no_intake_date": (p: Record<string, string>) => `${p.name} ไม่มีวันที่รับเข้าให้แก้ไข`,
+    "intake.date_required": () => "เลือกวันที่รับเข้าที่ถูกต้อง",
+    "intake.already_that_date": (p: Record<string, string>) => `วันที่รับเข้าเป็น ${p.date} อยู่แล้ว`,
+    "intake.date_in_future": () => "วันที่รับเข้าต้องไม่อยู่ในอนาคต",
+    "intake.blocked_by_record": (p: Record<string, string>) => {
+      const what =
+        p.kind === "move" ? (p.place ? `การย้ายไป ${p.place} เมื่อวันที่ ${p.when}` : `การย้ายไปที่อื่นเมื่อวันที่ ${p.when}`)
+        : p.kind === "diet" ? `อาหารที่เริ่มวันที่ ${p.when}`
+        : p.kind === "weight" ? `น้ำหนักที่บันทึกเมื่อวันที่ ${p.when}`
+        : `การพบสัตวแพทย์วันที่ ${p.when}`;
+      return `ย้ายวันที่รับเข้าไปเป็น ${p.date} ไม่ได้ เพราะมี${what} โปรดแก้ไขหรือลบรายการนั้นก่อน`;
+    },
+    "intake.first_placement_ends": (p: Record<string, string>) =>
+      `ย้ายวันที่รับเข้าไปเป็น ${p.date} ไม่ได้ เพราะที่อยู่แรกสิ้นสุดวันที่ ${p.ends} และจะไม่ได้เริ่มก่อนสิ้นสุด`,
   },
 
   largerScreen: {

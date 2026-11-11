@@ -128,6 +128,22 @@ const en = {
     "stock.correct_not_allowed": () => "Your access does not include editing stock.",
     "stock.unknown_kind": () => "Unknown item kind. Reload the page and try again.",
     "stock.item_not_found": () => "That item was not found. Reload the page and try again.",
+    "intake.not_allowed": () => "Your access does not include correcting an intake date.",
+    "intake.resident_not_found": () => "That resident was not found. Reload the page and try again.",
+    "intake.no_intake_date": (p: Record<string, string>) => `${p.name} has no intake date to correct.`,
+    "intake.date_required": () => "Choose the corrected intake date.",
+    "intake.already_that_date": (p: Record<string, string>) => `The intake date is already ${p.date}.`,
+    "intake.date_in_future": () => "An intake date cannot be in the future.",
+    "intake.blocked_by_record": (p: Record<string, string>) => {
+      const what =
+        p.kind === "move" ? (p.place ? `a move to ${p.place} on ${p.when}` : `a move to another place on ${p.when}`)
+        : p.kind === "diet" ? `a diet that starts on ${p.when}`
+        : p.kind === "weight" ? `a weight recorded on ${p.when}`
+        : `a clinic visit on ${p.when}`;
+      return `The intake date cannot be moved to ${p.date} because of ${what}. Correct or remove that record first.`;
+    },
+    "intake.first_placement_ends": (p: Record<string, string>) =>
+      `The intake date cannot be moved to ${p.date} because the first placement ends on ${p.ends} and would not start before it ends.`,
   },
 
   // The notice a desktop-only Settings/Management page shows on a phone

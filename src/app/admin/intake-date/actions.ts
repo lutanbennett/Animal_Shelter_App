@@ -1,7 +1,8 @@
 "use server";
 
 import { refresh, revalidatePath } from "next/cache";
-import { runWriteAction, unexpectedFailure, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult } from "@/lib/action-result";
+import { dbRefusal } from "@/lib/db-refusal";
 import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -11,8 +12,7 @@ import { can } from "@/lib/permissions/can";
 // Settings → Correct an intake date. ONE write, through runWriteAction() (Pi failover (C)), which is why
 // "/admin/intake-date" is on WRAPPED_WRITE_PATHS. The action asks resident.correct_intake_date, the same
 // activity correct_intake_date() (0302) asks; the database check is the security, this one is the courtesy.
-// The function's refusals (a record in the way, a future date) are plain sentences written for the person,
-// so they are passed through; anything else goes through unexpectedFailure.
+// The function's refusals (a record in the way, a future date) are keys (0358, #3nuwy group 6) worded by dbRefusal().
 
 export type IntakeDateState = ActionResult<{ success: string }> | undefined;
 
@@ -35,10 +35,8 @@ export async function correctIntakeDate(_state: IntakeDateState, formData: FormD
 
       const { data, error } = await supabase.rpc("correct_intake_date", { p_resident_id: residentId, p_new_date: newDate });
       if (error) {
-        if (error.code === "42501") return { ok: false as const, error: s.notAllowed };
-        // P0001: the function's own refusals. 23001: the closed-record lock ("This resident is deceased"), also a plain sentence. Since 0307 the lock lets this one write through for a deceased resident, so it is only reached if that opening is ever withdrawn.
-        if (error.code === "P0001" || error.code === "23001") return { ok: false as const, error: error.message };
-        return unexpectedFailure("intakeDate.correct", error, t.common.somethingWentWrong);
+        // The function's refusals arrive as keys (0358) and are worded here; anything else gets the generic message.
+        return dbRefusal("intakeDate.correct", error, t);
       }
       const r = data as { intake_date: string; new_date: string };
       revalidatePath("/admin/intake-date");

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { dbRefusal } from "@/lib/db-refusal";
 import { getT } from "@/lib/i18n/get-t";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { can } from "@/lib/permissions/can";
@@ -48,7 +49,7 @@ export default async function IntakeDatePage({ searchParams }: { searchParams: P
   let loadError: string | null = null;
   if (id) {
     const { data, error } = await supabase.rpc("correct_intake_date", { p_resident_id: id, p_new_date: null, p_preview: true });
-    if (error) loadError = error.message;
+    if (error) loadError = dbRefusal("intakeDate.preview", error, t).error;
     else records = data as Records;
   }
 
