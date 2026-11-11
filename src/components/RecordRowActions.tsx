@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import { useWriteCall } from "@/lib/use-write-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
+import { useConfirm } from "@/components/ConfirmProvider";
+import { formatDate } from "@/lib/format";
 import { RowActionButton, RowActionLink } from "@/components/RowAction";
 
 /**
@@ -29,13 +31,20 @@ export function RecordRowActions({
   labels: { endToday: string; ending: string };
   subject?: string;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const endWrite = useWriteCall();
 
-  function handleEndToday() {
+  async function handleEndToday() {
     if (!endToday) return;
+    const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Bangkok" });
+    const ok = await confirm({
+      body: t.common.endRecordConfirm(subject ?? labels.endToday, formatDate(today, locale)),
+      confirmLabel: labels.endToday,
+    });
+    if (!ok) return;
     setError(null);
     startTransition(async () => {
       const result = await endWrite(async (requestId) => {

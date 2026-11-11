@@ -10,6 +10,7 @@ const th: Dictionary = {
     saving: "กำลังบันทึก...",
     areYouSure: "แน่ใจหรือไม่?",
     confirm: "ยืนยัน",
+    endRecordConfirm: (subject: string, date: string): string => `สิ้นสุด ${subject} วันนี้ (${date}) หรือไม่? รายการจะถูกบันทึกว่าสิ้นสุดในวันนั้น คุณแก้ไขวันสิ้นสุดภายหลังได้โดยกดแก้ไข`,
     offlineBanner: "คุณออฟไลน์อยู่ การเปลี่ยนแปลงจะไม่ถูกบันทึก",
     cancel: "ยกเลิก",
     edit: "แก้ไข",

@@ -8,6 +8,7 @@ const en = {
     saving: "Saving...",
     areYouSure: "Are you sure?",
     confirm: "Confirm",
+    endRecordConfirm: (subject: string, date: string): string => `End ${subject} today, ${date}? It will be marked as ended on that date. You can change the end date later by editing it.`,
     offlineBanner: "You're offline, changes will not save.",
     cancel: "Cancel",
     edit: "Edit",

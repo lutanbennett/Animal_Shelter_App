@@ -72,6 +72,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 export const unreleased: ReleaseNote[] = [
   { text: "The user manual now has a Bills section of its own. It explains filing a photo of a receipt, filing a utility bill by the month it covers, and the Bills settings, and it is shown to anyone whose cards include Bills. Before, the Bills write-up sat under Deliveries and was hidden from them.", cards: ["bills"] },
   "On a closed resident’s page, the Drive folder button is now Archive files. It opens a list inside the app of the archived files you may open, instead of Google Drive, so no Google sign-in is needed. The offline index page now links each file back to the app (you sign in to open it) rather than to Drive, and the Home screen icons page no longer links to a Drive folder.",
+  "On a phone, the main action buttons (New resident, Book vet visit, Log weight and the rest) now show their words beside the icon instead of the icon alone. And End today on a prescription or diet now asks first, naming the record and the date, so a stray tap no longer ends it.",
 ];
 
 /** Newest first. */
