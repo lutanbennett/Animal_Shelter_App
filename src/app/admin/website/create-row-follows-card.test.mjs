@@ -20,6 +20,7 @@ test("createSiteContentRow asks website.content and inserts only the id", () => 
 
 test("the button is drawn only when the login holds website.content", () => {
   assert.match(page, /canCreate && <CreateSiteContentRow canEdit=\{canCreate\} \/>/);
-  assert.match(page, /canCreate=\{can\(early, "website\.content"\)\}/);
-  assert.doesNotMatch(page, /<ContentProblem read=\{draftRead\} t=\{t\} canCreate/);
+  assert.match(page, /const canCreate = perms \? can\(perms, "website\.content"\) : false/);
+  assert.match(page, /<ContentProblem read=\{contentRead\} t=\{t\} perms=\{early\} \/>/);
+  assert.doesNotMatch(page, /<ContentProblem read=\{draftRead\} t=\{t\} perms/);
 });
