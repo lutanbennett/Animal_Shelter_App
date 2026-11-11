@@ -38,9 +38,9 @@ and still reports 0 findings.
 | UNRESOLVED | 71 | 72 |
 | finding lines | 19 | 9 |
 | allow-list rows | 18 | 9 |
-Explained: OK +1 and UNRESOLVED +1 are controls whose gate the check could now or could no longer see after the components were gated
-(the form inside a component that returns null is one such); finding lines fell by 10 because 9 rows' controls were gated and one row's control
-(`ImpactBaselines`) merged in with them. The 71 UNRESOLVED were not worked.
+Finding lines fell by 10 for 9 rows because `moveDonationChannel` is two lines (up and down). Resolved OK +1 and UNRESOLVED +1: I did not
+establish which controls moved; gating a component changes what the check can trace, and I did not chase it (deliverable 5). Total controls and
+controls reaching an action are unchanged. The 71 UNRESOLVED were not worked.
 
 ## What the check still cannot see
 Prose notices (F2), click-only controls, optional `can()` in an action body, per-branch actions, shared-component callbacks, gates reached through
