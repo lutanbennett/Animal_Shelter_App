@@ -3,6 +3,7 @@
 import { refresh, revalidatePath } from "next/cache";
 import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
+import { dbRefusal } from "@/lib/db-refusal";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { parseUnitCost } from "@/lib/format";
@@ -151,7 +152,7 @@ export async function updateMedicationStock(id: string, count: string, requestId
       p_count: parsed.value,
     });
 
-    if (error) return refuse(error.message);
+    if (error) return dbRefusal("medications.updateMedicationStock", error, t);
     revalidatePath("/management/medications");
     return { ok: true };
   });

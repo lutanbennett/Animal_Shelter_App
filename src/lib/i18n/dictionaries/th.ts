@@ -94,6 +94,21 @@ const th: Dictionary = {
     "recurring_job.reassign_not_allowed": () => "สิทธิ์ของคุณไม่รวมการมอบหมายงานประจำให้คนอื่น",
     "recurring_job.date_already_marked": () => "วันนั้นถูกทำเครื่องหมายว่าเสร็จหรือข้ามไปแล้ว",
     "recurring_job.cannot_sign_in": () => "มอบหมายงานได้เฉพาะผู้ที่ยังเข้าสู่ระบบได้",
+    "stock.count_not_allowed": () => "บัญชีนี้บันทึกการตรวจนับสต็อกไม่ได้ ต้องมีสิทธิ์ \"นับสต็อก\"",
+    "stock.list_invalid": (p: Record<string, string>) => `รายการนับ${p.kind === "medication" ? "ยา" : "อาหาร"}ต้องเป็นรายการ`,
+    "stock.count_row_invalid": (p: Record<string, string>) =>
+      `การนับ${p.kind === "medication" ? "ยา" : "อาหาร"}แต่ละรายการต้องมีรหัสและตัวเลข ไม่ต้องใส่รายการที่ไม่ได้นับ`,
+    "stock.count_negative": () => "จำนวนสต็อกติดลบไม่ได้",
+    "stock.listed_twice": (p: Record<string, string>) => `มี${p.kind === "medication" ? "ยา" : "อาหาร"}รายการเดียวกันซ้ำสองครั้ง`,
+    "stock.units_do_not_add_up": (p: Record<string, string>) =>
+      `หน่วยที่กรอกสำหรับการนับ${p.kind === "medication" ? "ยา" : "อาหาร"}รวมกันไม่เท่ากับจำนวนที่นับ`,
+    "stock.medications_not_found": (p: Record<string, string>) =>
+      `ยังไม่ได้บันทึกการตรวจนับ: พบยา ${p.found} จาก ${p.total} รายการ โหลดหน้าใหม่แล้วนับอีกครั้ง`,
+    "stock.diet_types_not_found": (p: Record<string, string>) =>
+      `ยังไม่ได้บันทึกการตรวจนับ: พบอาหาร ${p.found} จาก ${p.total} รายการ โหลดหน้าใหม่แล้วนับอีกครั้ง`,
+    "stock.correct_not_allowed": () => "สิทธิ์ของคุณไม่รวมการแก้ไขสต็อก",
+    "stock.unknown_kind": () => "ไม่รู้จักประเภทรายการ โหลดหน้าใหม่แล้วลองอีกครั้ง",
+    "stock.item_not_found": () => "ไม่พบรายการนั้น โหลดหน้าใหม่แล้วลองอีกครั้ง",
   },
 
   largerScreen: {
