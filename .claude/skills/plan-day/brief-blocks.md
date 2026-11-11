@@ -173,8 +173,13 @@ The four traps are the whole value; three of six wasted commits were the two-spa
 2. Fill the test plan in **completely** — every box, the header's
    `Tested at SHA` (`git rev-parse --short HEAD`), the gates, both signature
    lines, `Result:`.
-3. Run **`node scripts/check-test-plan.mjs`** and **`node scripts/gates.mjs`**.
-   Fix everything they print, then run them again until clean.
+3. Run **`node scripts/check-test-plan.mjs --base origin/main`** — **with the
+   flag, because that is how CI runs it and the two invocations DO NOT AGREE.**
+   Proven 2026-11-11 on PR #1488: the bare command printed *"the plan is
+   complete and correct"* and CI went red on a malformed `n/a:` the bare one had
+   walked past. **A green you got without the flag is not the green CI will give
+   you.** Then **`node scripts/gates.mjs`**. Fix everything they print, then run
+   them again until clean.
 4. *Then* commit the plan, push, and open the PR.
 
 **The four traps, each of which has already cost a commit:**
