@@ -10,6 +10,7 @@ import {
   House,
   ListTodo,
   PawPrint,
+  Receipt,
   Settings,
   Users,
   Wrench,
@@ -1509,6 +1510,71 @@ const manual: Manual = {
 
     // ------------------------------------------------------------------
     {
+      id: "bills",
+      title: "Bills",
+      icon: Receipt,
+      intro:
+        "Bills are the paper from a shop, a clinic, a tradesman or a utility company, kept as a photo with what it cost. They have their own tile on Home and are not part of Deliveries: a bill arrives with a delivery, at a clinic visit, against a maintenance job, or as a utility bill, and one place files all four.",
+      topics: [
+        {
+          id: "bills",
+          title: "Bills: filing the photo of a receipt",
+          activity: "bills.general",
+          path: "Home → Bills (the Bills tile, where the Bills card is held)",
+          intro:
+            "A bill here is the paper from a shop, a clinic, a tradesman or a utility company, kept as a photo with what it cost. A bill reaches the shelter four ways: with a delivery, at a clinic visit, against a maintenance job, or as a utility bill, and this page files all four. (Donation receipts are something else: those are the shelter's own receipts to donors.) You can photograph a bill when you record the delivery or finish the visit, or do them all at once at night or at the end of the week.",
+          steps: [
+            "At the time: on Record a delivery, tap Add a photo of the bill beside the cost. On a phone this opens the camera. Add another page for a long bill. The photo is filed with the whole bill when you save it, so it belongs to every item on the bill, not just the first. A bill with several items is recorded one item at a time on Record a delivery (see Recording a delivery). On a clinic visit, open its Edit page and use the Bill photos section under the form; type the cost in the Cost box as before.",
+            "Later, in one sitting: open Bills and tap Add bills. Choose many photos at once from the phone's camera roll, or the files from a scanner. Each photo becomes a small picture on the page, so you can see every waiting bill at once. A number on a picture means that bill has several pages.",
+            "Tap a picture to see the bill full size. Answer the one question, What type of bill is this?, and the boxes that type needs appear: the cost (and the date on the bill if it is not today), then tap what it is for. Under Likely matches are deliveries and clinic visits from the last two weeks that have no bill photo and no cost yet, nearest the day of the photo first. Tap one and the photo and cost move onto it and the card disappears.",
+            "If the delivery was never recorded, tap Record a new delivery from this bill. It opens Record a delivery with the cost filled in; when you save, the bill is filed on the new delivery.",
+            "A water, electricity or other utility bill: see Utility bills, below. A bill for a maintenance job: see Maintenance: adding a bill to a job.",
+            "Not sure yet? Leave the card where it is. Save details keeps what you typed, and the card is still there tomorrow. The number of bills waiting shows at the top of the page and, for roles that have the tile, on the Home screen. Delete this bill is for a photo taken by mistake.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "You only see matches for what your role may record: a delivery for someone who records deliveries, a clinic visit for someone who records visits. Bill photos are never shown on the public website.",
+            },
+            {
+              kind: "tip",
+              text: "Reading the cost off the photo automatically is not part of this yet; type it in.",
+            },
+          ],
+        },
+        {
+          id: "bills-utility",
+          title: "Bills: filing a utility bill",
+          activity: "bills.utilities",
+          path: "Home → Bills → choose the bill's type",
+          intro:
+            "Water, electricity, internet and the like are filed by the month they cover, so one month can be compared with another.",
+          steps: [
+            "Open Bills, tap a waiting bill's picture and choose its type.",
+            "Pick the month it covers and tap File as a utility bill. The photo moves onto the bill.",
+            "To type one in with no photo, or to compare one month with another, open Utility bills by month. Cost only: no units or meter readings.",
+          ],
+        },
+        {
+          id: "bill-sites",
+          title: "Bills settings: places, accounts and kinds",
+          activity: "bills.sites",
+          path: "Home → Bills → Bills settings",
+          intro:
+            "The lists a bill is filed against: the places the shelter pays bills for, the accounts at suppliers, and what a bill can be for. Nothing is set up in advance, so the shelter types its own in.",
+          steps: [
+            "Open Bills settings from the Bills page. It has three tabs: Places, Accounts and Kinds of bill.",
+            "Places: type the name of a place the shelter pays bills for, such as the shelter itself or another property, and tap Add place.",
+            "Accounts: type the supplier, the account number if there is one, and tie it to a place and a kind of bill if it belongs to them. Tap Add account.",
+            "Kinds of bill: add a kind, and say where it sits. A kind you add gets the plain bill form.",
+            "Nothing is deleted. A place, account or kind that is no longer used is archived, so bills already filed keep their label, and Restore brings it back.",
+          ],
+        },
+      ],
+    },
+
+    // ------------------------------------------------------------------
+    {
       id: "management",
       title: "Management",
       icon: ClipboardList,
@@ -1972,7 +2038,7 @@ const manual: Manual = {
           activity: "stock.delivery",
           path: "Operations → Deliveries, or Home → Record a Delivery",
           intro:
-            "Record each medication or food as it arrives, so Stock between counts can work out what was actually used. Recording a delivery doesn't change the stock count — the next stocktake does.",
+            "Record each medication or food as it arrives, so Stock between counts can work out what was actually used. Recording a delivery doesn't change the stock count — the next stocktake does. The bill for a delivery is filed from the Bills section of this manual.",
           steps: [
             "Open Operations from the menu and tap Deliveries (it is next to Stocktake), or start from Home, which has a Record a Delivery tile where that card is held. The Stocktake page also has a Record a delivery button at the top.",
             "On a phone it is one question at a time, with a Back button on every screen that keeps what you have typed: what arrived (Medicine or Food), which one (type part of the name; a medicine with a label photo shows it, to match the box in your hand), how much, when, then a few optional details, and last a sentence saying what will be recorded. Tap Record this delivery only when that sentence is right. When it is saved, Record another item starts the next one with the day and supplier already as they were. On a larger screen the same questions are one form: pick Medication or Food, then the item. Enter the quantity. If the item has other units set up under Settings → Medications or → Diets (bags, boxes), pick the unit the delivery came in — the one it is bought in is chosen for you — and the amount in the item's own unit is shown beside it and saved with it. With no other units, the quantity is in the item's own unit, as before. If it came in packs, fill in Came in packs? (2 × 50, say) and the quantity is worked out for you.",
@@ -1988,47 +2054,6 @@ const manual: Manual = {
               kind: "note",
               text: "Counting the stock and recording a delivery are two cards, \"Count the stock\" and \"Record a delivery\", and either can be held without the other. Prices show only where your cards also include \"The medication list: prices, labels, reorder levels\" or \"The diet list and the food forecast\".",
             },
-          ],
-        },
-        {
-          id: "bills",
-          title: "Bills: photos of receipts for purchases and clinic visits",
-          activity: "stock.delivery",
-          path: "Operations → Deliveries → Bills (also a Home tile where the Bills card is held)",
-          intro:
-            "A bill here is the paper from a shop or a clinic, kept as a photo with what it cost. (Donation receipts are something else: those are the shelter's own receipts to donors.) You can photograph a bill when you record the delivery or finish the visit, or do them all at once at night or at the end of the week.",
-          steps: [
-            "At the time: on Record a delivery, tap Add a photo of the bill beside the cost. On a phone this opens the camera. Add another page for a long bill. The photo is filed with the whole bill when you save it, so it belongs to every item on the bill, not just the first. A bill with several items is recorded one item at a time on Record a delivery (see Recording a delivery). On a clinic visit, open its Edit page and use the Bill photos section under the form; type the cost in the Cost box as before.",
-            "Later, in one sitting: open Bills and tap Add bills. Choose many photos at once from the phone's camera roll, or the files from a scanner. Each photo becomes a small picture on the page, so you can see every waiting bill at once. A number on a picture means that bill has several pages.",
-            "Tap a picture to see the bill full size. Answer the one question, What type of bill is this?, and the boxes that type needs appear: the cost (and the date on the bill if it is not today), then tap what it is for. Under Likely matches are deliveries and clinic visits from the last two weeks that have no bill photo and no cost yet, nearest the day of the photo first. Tap one and the photo and cost move onto it and the card disappears.",
-            "If the delivery was never recorded, tap Record a new delivery from this bill. It opens Record a delivery with the cost filled in; when you save, the bill is filed on the new delivery.",
-            "A water, electricity or other utility bill: choose its type, pick the month it covers, and tap File as a utility bill. The photo moves onto the bill. To type one in with no photo, or to compare one month with another, open Utility bills by month (where your cards include the Utility bills card). Cost only: no units or meter readings.",
-            "Not sure yet? Leave the card where it is. Save details keeps what you typed, and the card is still there tomorrow. The number of bills waiting shows at the top of the page and, for roles that have the tile, on the Home screen. Delete this bill is for a photo taken by mistake.",
-          ],
-          callouts: [
-            {
-              kind: "note",
-              text: "You only see matches for what your role may record: a delivery for someone who records deliveries, a clinic visit for someone who records visits. Bill photos are never shown on the public website.",
-            },
-            {
-              kind: "tip",
-              text: "Reading the cost off the photo automatically is not part of this yet; type it in.",
-            },
-          ],
-        },
-        {
-          id: "bill-sites",
-          title: "Bills settings: places, accounts and kinds",
-          activity: "bills.sites",
-          path: "Operations → Deliveries → Bills → Bills settings",
-          intro:
-            "The lists a bill is filed against: the places the shelter pays bills for, the accounts at suppliers, and what a bill can be for. Nothing is set up in advance, so the shelter types its own in.",
-          steps: [
-            "Open Bills settings from the Bills page. It has three tabs: Places, Accounts and Kinds of bill.",
-            "Places: type the name of a place the shelter pays bills for, such as the shelter itself or another property, and tap Add place.",
-            "Accounts: type the supplier, the account number if there is one, and tie it to a place and a kind of bill if it belongs to them. Tap Add account.",
-            "Kinds of bill: add a kind, and say where it sits. A kind you add gets the plain bill form.",
-            "Nothing is deleted. A place, account or kind that is no longer used is archived, so bills already filed keep their label, and Restore brings it back.",
           ],
         },
         {
