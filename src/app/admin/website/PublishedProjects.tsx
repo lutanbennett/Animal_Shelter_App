@@ -30,7 +30,7 @@ export type PublishedProjectRow = {
  * something shouldn't be there, without hunting for the folder in the
  * tree. Each row links to the folder for editing and to the public page.
  */
-export function PublishedProjects({ projects, canOpenProject = false }: { projects: PublishedProjectRow[]; /** projects.folders read: the project links (/projects/[id] asks it). Defaults to false. */ canOpenProject?: boolean }) {
+export function PublishedProjects({ projects, canOpenProject = false, canEdit = false }: { projects: PublishedProjectRow[]; /** website.content at edit: unpublishProject asks it. Defaults to false. */ canEdit?: boolean; /** projects.folders read: the project links (/projects/[id] asks it). Defaults to false. */ canOpenProject?: boolean }) {
   const { t, locale } = useI18n();
   const confirm = useConfirm();
   const p = t.admin.website.published;
@@ -116,13 +116,15 @@ export function PublishedProjects({ projects, canOpenProject = false }: { projec
                   >
                     {p.view}
                   </Link>
-                  <RowActionButton
-                    onClick={() => handleRemove(project)}
-                    disabled={isPending}
-                    label={p.remove}
-                    subject={project.name}
-                    icon={ACTION_ICONS.unpublish}
-                  />
+                  {canEdit && (
+                    <RowActionButton
+                      onClick={() => handleRemove(project)}
+                      disabled={isPending}
+                      label={p.remove}
+                      subject={project.name}
+                      icon={ACTION_ICONS.unpublish}
+                    />
+                  )}
                 </div>
               </li>
             );

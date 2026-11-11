@@ -170,6 +170,7 @@ function BaselineForm({ row, canEdit }: { row: ImpactBaselineRow; canEdit: boole
           ? i.outingsSterilisedNote
           : i.baselineOnlyNote;
 
+  if (!canEdit) return null;
   return (
     <form
       onSubmit={(e) => {
