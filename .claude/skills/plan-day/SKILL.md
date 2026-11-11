@@ -17,13 +17,30 @@ batch 2 list yet - why are we having so many issues with the process"*, and the 
 **the planner had been satisfying this document instead of delivering to him.**
 
 **So the FIRST thing in your reply — before actuals, findings, bands or prose — is the list he copies
-from: per stream, the folder, the port, and the model and effort to set.** **The moment the last `.brief.md` is written, run `node scripts/worktree.mjs streams` and paste its output, before any other tool call.** It reads each `.port` and each brief's first line, so nothing is quoted from memory. Never write "the list is
-above": give it again. Everything else in this file happens **after** that list is in front of him.
+from: per stream, the folder, the port, and the model and effort to set.** It reads each `.port` and each
+brief's first line, so nothing is quoted from memory. Never write "the list is above": give it again.
 
-**This file was 2,176 lines on 2026-11-08 and was cut to this on his instruction** — *"Yes cut down the
-skill and then we can build back in if needed later"*. The evidence, incident history and superseded
-trials are in **`reference.md`** beside this file; the verbatim brief blocks are in **`brief-blocks.md`**.
-**Cite them; do not copy them back in here.** If you add to this file, something else comes out.
+**IT IS A HARD SEQUENCE OF TOOL CALLS, NOT A RULE ABOUT YOUR PROSE** — broken three times in four plans
+by planners who read it, agreed with it, and did the reading first anyway (`reference.md` §1). **Steps 0
+and 1 of this file happen first as written** (resume-or-plan, then the sync); the sequence governs
+everything after them, and is lettered so it cannot be confused with this file's own numbered steps:
+
+- **(a)** `worktree.mjs new` for every stream in the batch.
+- **(b)** Every `.brief.md` written.
+- **(c)** `node scripts/worktree.mjs streams`, **the moment the last brief is written and before any
+  other tool call.**
+- **(d)** The list, first in your reply.
+- **(e)** **Only now**: the actuals, the PR bodies, the backlog filing, the bands, `.plan-day.md`.
+
+**BETWEEN THE SYNC AND (a), THE ONLY READS ALLOWED ARE THREE CHEAP FACTS:** has the current batch merged
+(`gh pr list --state open`, and `--state all --head claude/<slug>` per slug); is the migration slot free;
+and does a brief you are about to write need to QUOTE a merged PR, in which case **name that one PR and
+read only it.** Nothing else. **A PR body you read "while you are there" is paperwork, and it goes after
+the list.**
+
+**Cut from 2,176 lines on his instruction, 2026-11-08.** Evidence, incidents and superseded trials live in
+**`reference.md`**; the verbatim brief blocks in **`brief-blocks.md`**. **Cite them; do not copy them back
+in here. If you add to this file, something else comes out.**
 
 ## HIS DECISIONS — SETTLED, DO NOT RE-OPEN OR PUT TO HIM AGAIN
 
@@ -35,6 +52,9 @@ trials are in **`reference.md`** beside this file; the verbatim brief blocks are
   numeric stop threshold in a brief. (2026-10-14: *"it's actually unethical for you to block the usage I
   paid for."*) **Convert before forecasting: three streams ≈ 2% of the weekly allowance, nine ≈ 6%.**
 - **Never nine worktrees.** Two or three live, because merging is the bottleneck.
+- **Stick to the agreed plan.** Once he has agreed the day's nine, **do not re-check the next batch
+  against the backlog** — a change comes from him. (2026-11-11: *"I will request a change to the daily
+  plan if it's required otherwise you stick to the daily plan"*.) Step 0 has what this does not remove.
 - **`test-plan` is advisory, permanently.** Never list it as a decision he owes. (2026-10-20.)
 - **Every PR merges on green, with no approval round-trip** — feature PRs included (`CLAUDE.md`).
 - **All analysis is by CARD, never by role.** Roles are a transient grouping and will be rebuilt. Before
@@ -49,17 +69,26 @@ Read `C:/Development/Animal_Shelter_App/.plan-day.md`. In a fresh chat read `doc
 first.
 
 **If it holds a batch not yet set up, resume — do not re-plan.** Do step 1, then check the current batch
-has actually landed (if streams are still open, name them and ask), re-check the next batch against the
-backlog **as it is now** (items still open? still disjoint? migration slot free?), report what changed,
-and go to step 2.
+has actually landed (if streams are still open, name them and ask), and go to step 2.
+
+**STICK TO THE AGREED PLAN. DO NOT RE-CHECK THE NEXT BATCH AGAINST THE BACKLOG AT THE END OF EACH
+BATCH.** Lutan, 2026-11-11: *"I will request a change to the daily plan if it's required otherwise you
+stick to the daily plan"*, and *"So no rechecking at the end of each batch"*. **A change to the day's nine
+comes from him.**
+
+**Two things this does NOT remove.** **(1) Checking the current batch actually MERGED** — that is not a
+re-check of the plan, it is what stops six worktrees being live at once. **(2) Every brief's STEP ZERO**,
+which is why dropping the re-check is safe: the stream proves the gap is still there and stops if it has
+already shipped. The re-check was a dearer copy of that guard, paid for in his waiting rather than in a
+stream's turn.
 
 **BUT A SAVED PLAN IS NOT AN AGREED PLAN. If a DIFFERENT conversation wrote `.plan-day.md`, present the
 batch before you set it up** — he cannot see that file, so to him nothing was ever proposed. This cost
 him two interruptions and an apology on 2026-11-08, when two resumes in a row set up batches he had never
 been shown. A resume by the same conversation that planned it may go straight to step 2.
 
-Re-plan from scratch when he asks, when the saved items are all closed, or when the plan predates a
-backlog that has moved under it.
+**Re-plan from scratch ONLY when he asks, or when the saved items are all closed.** "The backlog has
+moved under the plan" is no longer a reason — that is the re-check he removed on 2026-11-11.
 
 ## 1. Sync `main`
 
@@ -99,10 +128,7 @@ with no PR, is not a slot to reuse. Then per stream, in sequence:
    are in `brief-blocks.md`; assemble from there rather than retyping.** Add the task half: the item
    verbatim, **a first line `<!-- stream: slug=<slug> port=<port> model=<model> effort=<effort> band=<lo-hi>k migration=<none|n> -->` (`worktree.mjs streams` reads it)**, the branch, the port, which half of a schema-first item this is, the numbered deliverables,
    what the stream does NOT own and who owns it this batch, and the banding note.
-3. **Send the list (THE ONE RULE above) and stop. Do not start sessions.**
-
-**Then** do steps 3 and 4 — the actuals, the PR bodies, the backlog filing — and say in one line that the
-records are still to write.
+3. Then steps 3 and 4 of the hard sequence above. **Do not start sessions.**
 
 ### Writing a brief: the five rules that earn their space
 
@@ -224,9 +250,10 @@ effort** (never blank — name the default), the band, and one line on why now. 
 what makes it a batch. Under them: *token figures are context-window size, a measure of scale, not a
 bill.* Then **Not today** — his own hands, and anything blocked with the reason.
 
-Then **one** `AskUserQuestion`: multi-select over **batch 1's** streams to confirm or swap, saying that
-batches 2 and 3 are saved and can still change. Bundle any decision he owes into that same question
-rather than spending another round on it.
+Then **one** `AskUserQuestion`. **Confirming a batch is SINGLE-select — "all three" or "I want a swap".**
+A multi-select was used on 2026-11-11 and he unticked two options meaning only to confirm; the planner set
+up one stream and he asked *"is there only one stream for batch 1"*. **Unticking is indistinguishable from
+not meaning to tick.** Bundle any decision he owes into the same question.
 
 ## 7. Save the plan
 
@@ -254,8 +281,9 @@ an unplanned interruption is a briefing defect even when every check is green.
 
 ## 8. Finish
 
-The list he copies from — folder, port, model and effort — then one line that running `/plan-day` again
-after these merge sets up the next batch without re-planning. **Then stop.**
+One line that running `/plan-day` again after these merge sets up the next batch. **Then stop.** (The
+list itself is step 4 of the hard sequence above; this is the third place it used to be restated, and
+restating it three times is what let the sequence be broken.)
 
 **When the plan's LAST batch is set up:** offer to update `docs/planner-handover.md` now, in this chat,
 while the context exists; then he starts a fresh chat. Reset the counter once it is written.
