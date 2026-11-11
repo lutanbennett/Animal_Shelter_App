@@ -14,11 +14,17 @@ expire**; three had not opened a PR when this was written. **A missing set here 
 the lead. `738` could report its own plan's figures because measurement was still per batch; from now on
 each edition reports its predecessor's.
 
-**Written at the SETUP of this plan's last batch.** `gh pr list --state all --head claude/<slug>` was run
-for all nine slugs **in the writing turn**: six merged (#1482–#1487), **batch 3's three had no PR at
-all.** Run it again before `gh pr merge`; it has changed this text twice in two editions.
+**Written at the SETUP of this plan's last batch — AND CORRECTED BEFORE IT COULD MERGE, FOR THE THIRD
+EDITION RUNNING.** `gh pr list --state all --head claude/<slug>` was run for all nine slugs **in the
+writing turn**: six merged (#1482–#1487) and **batch 3's three with no PR at all.** Run **again
+immediately before `gh pr merge`**, it found that **`pi-cloudflared-race` had MERGED (#1489, 11:17Z)
+and the other two had opened** (#1490 `worktree-env-narrowing`, #1491 `refusal-keys-group-5`) — so the
+obvious sentence, *"batch 3 handed over, nothing opened"*, **would have been false the moment it
+merged.**
 
-All nine streams of this plan are set up; **six merged, three handed over and not yet opened.**
+**SEVEN MERGED, TWO OPEN at the time of merging. KEEP THE RULE: run it in the writing turn AND again
+before the merge.** It is `737`'s amendment, and **both runs have changed this text in three
+consecutive editions** — which is a better record than most things in this document.
 
 ---
 
@@ -189,8 +195,9 @@ rather than allow-list past it.
 
 ## STANDING CHECKS — what held
 
-- **`gh pr list --state all --head claude/<slug>` in the writing turn: run for all nine.** Six merged,
-  batch 3's three with no PR. **Run it again before `gh pr merge`.**
+- **`gh pr list --state all --head claude/<slug>`: run for all nine TWICE, and the second run changed
+  this document.** Writing turn: six merged, batch 3's three with no PR. Before the merge: **seven
+  merged, two open.** **Third consecutive edition in which this rule caught something.**
 - **`worktree.mjs list` read for `held` and `ahead` before creating anything**, every batch. **No open
   PRs at any batch boundary and no Dependabot bump all day.**
 - **`check-stale-titles.mjs` at step 4: 10 candidates, NINE FALSE POSITIVES, one real find.** The
@@ -230,10 +237,10 @@ are planning FROM SCRATCH, not resuming.**
 anything else**, because two of today's three process changes alter your first hour:
 
 - **Plan, agree the day's nine, set up batch 1, send the list — and ONLY THEN measure.** Step 3 is now
-  once a day and covers **this plan's nine**: six are on merged PRs (#1482–#1487) and three are
-  `refusal-keys-group-5`, `pi-cloudflared-race`, `worktree-env-narrowing`. **Their PR BODIES are also
-  unread — that is the same step, and two plans' evidence says it is where the best next stream comes
-  from.**
+  once a day and covers **this plan's nine**: **#1482–#1487 and #1489 were merged when this was
+  written, and #1490 (`worktree-env-narrowing`) and #1491 (`refusal-keys-group-5`) were open** — check
+  all nine, because two of them may have merged after this sentence. **Their PR BODIES are also unread —
+  that is the same step, and two plans' evidence says it is where the best next stream comes from.**
 - **Do not re-check batch 2 or 3 against the backlog.** A change comes from him.
 
 **Three things to do before you present anything:** run `node scripts/check-stale-titles.mjs` **at step

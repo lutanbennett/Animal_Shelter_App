@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none. A handover is bookkeeping for one chat and carries no backlog item, as every edition before it has |
 | Branch / worktree | `claude/planner-handover-739` @ `C:\Development\Animal_Shelter_planner-handover-739` |
 | Dev server | not started — no runtime surface |
-| PR | <filled in when `gh pr create` returns> |
+| PR | #1492 |
 | Tested by / date | Claude (planner session) / 2026-11-11 |
 | Carries a migration? | no |
 | Tested at SHA | `9f468982` |
