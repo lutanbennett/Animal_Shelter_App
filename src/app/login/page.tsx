@@ -1,7 +1,9 @@
+import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { safeNextPath } from "@/lib/auth/next-path";
+import { isInAppBrowser } from "@/lib/auth/in-app-browser";
 import { getT } from "@/lib/i18n/get-t";
 import { LoginForm } from "./LoginForm";
 import { LanguageSwitcher } from "../LanguageSwitcher";
@@ -17,6 +19,7 @@ export default async function LoginPage({
 }) {
   const { t } = await getT();
   const { error, next } = await searchParams;
+  const inAppBrowser = isInAppBrowser((await headers()).get("user-agent"));
   const errorMessage =
     error && ERROR_CODES.includes(error as ErrorCode)
       ? error === "no_role"
@@ -47,7 +50,7 @@ export default async function LoginPage({
             {t.login.heading}
           </h1>
         </div>
-        <LoginForm error={errorMessage} next={safeNextPath(next)} />
+        <LoginForm error={errorMessage} next={safeNextPath(next)} inAppBrowser={inAppBrowser} />
         <Link
           href="/"
           className="flex min-h-11 items-center justify-center gap-1.5 text-sm font-medium text-muted hover:text-foreground"

@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Opening the sign-in page from inside LINE, Messenger or another app’s built-in browser no longer shows a Google button that fails with a confusing error. Google doesn’t allow sign-in there, so the page now says so (it is not a fault) and tells you to open it in Chrome; email and password sign-in still works in place.",
   "On a closed resident’s page, the Drive folder button is now Archive files. It opens a list inside the app of the archived files you may open, instead of Google Drive, so no Google sign-in is needed. The offline index page now links each file back to the app (you sign in to open it) rather than to Drive, and the Home screen icons page no longer links to a Drive folder.",
 ];
 

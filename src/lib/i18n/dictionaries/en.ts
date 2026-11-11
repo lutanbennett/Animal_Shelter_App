@@ -812,6 +812,12 @@ const en = {
     forgotPassword: "Forgot password?",
     backToHome: "Back to home page",
     requestAccess: "Request access",
+    /** Shown instead of the Google button inside LINE, Messenger and other in-app browsers (Google refuses to sign in there). */
+    inApp: {
+      title: "Google sign-in isn’t available in this app’s browser",
+      body: "This is not a fault — the sign-in page is working. Google doesn’t allow sign-in inside LINE, Messenger and similar apps. You can still sign in with your email and password above. To use Google instead, open this page in Chrome (or your phone’s own browser): tap the ⋮ or share menu and choose “Open in browser”.",
+      requestBody: "This is not a fault — the page is working. Google doesn’t allow sign-in inside LINE, Messenger and similar apps. To ask for access, open this page in Chrome (or your phone’s own browser): tap the ⋮ or share menu and choose “Open in browser”.",
+    },
     /** /login/request: how someone new asks for an account. */
     request: {
       title: "Request access",

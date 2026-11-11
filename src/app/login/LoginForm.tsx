@@ -16,9 +16,12 @@ const inputClass =
 export function LoginForm({
   error,
   next,
+  inAppBrowser = false,
 }: {
   error?: string;
   next?: string | null;
+  /** Google refuses sign-in in an embedded browser; see src/lib/auth/in-app-browser.ts. */
+  inAppBrowser?: boolean;
 }) {
   const [state, onSubmit, pending] = useKeptForm(login, undefined);
   const { t } = useI18n();
@@ -76,13 +79,27 @@ export function LoginForm({
       </div>
 
       {/* Separate form: the OAuth action needs no fields, and forms can't nest. */}
-      <form action={signInWithGoogle}>
-        {next && <input type="hidden" name="next" value={next} />}
-        <GoogleButton label={t.login.continueWithGoogle} />
-      </form>
+      {inAppBrowser ? (
+        <InAppBrowserNotice body={t.login.inApp.body} />
+      ) : (
+        <form action={signInWithGoogle}>
+          {next && <input type="hidden" name="next" value={next} />}
+          <GoogleButton label={t.login.continueWithGoogle} />
+        </form>
+      )}
       <Link href="/login/request" className="flex min-h-11 items-center justify-center text-sm font-medium text-primary hover:underline">
         {t.login.requestAccess}
       </Link>
+    </div>
+  );
+}
+
+export function InAppBrowserNotice({ body }: { body: string }) {
+  const { t } = useI18n();
+  return (
+    <div role="note" className="rounded border border-border bg-surface px-3 py-3 text-sm text-foreground">
+      <p className="font-medium">{t.login.inApp.title}</p>
+      <p className="mt-1 text-muted">{body}</p>
     </div>
   );
 }
