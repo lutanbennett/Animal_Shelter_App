@@ -14,6 +14,7 @@ import { PublicFooter } from "../adopt/PublicFooter";
 import { ProjectCard } from "./ProjectCard";
 import { HelpUsDoMore } from "./HelpUsDoMore";
 import { requirePageVisible } from "@/lib/public-page-access";
+import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
 
 /** Share tags like /adopt's — this page had none (public site review 2026-10-13, §8.2). */
 export async function generateMetadata(): Promise<Metadata> {
@@ -35,7 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description,
     ...(origin ? { metadataBase: origin } : {}),
     // The whole list is the page; ?category= is a view of it.
-    alternates: { canonical: "/our-work" },
+    alternates: publicAlternates("/our-work", locale),
     openGraph: {
       type: "website",
       title,
@@ -43,6 +44,7 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "/our-work",
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
+      alternateLocale: ogAlternateLocale(locale),
       images: share.images,
     },
     twitter: share.twitter,

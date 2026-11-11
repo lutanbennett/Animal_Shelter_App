@@ -19,6 +19,7 @@ import { PublicFooter } from "./PublicFooter";
 import { ResidentCard, type ResidentCardRow } from "./ResidentCard";
 import { HappyEndings, type RecentAdoption } from "./HappyEndings";
 import { requirePageVisible } from "@/lib/public-page-access";
+import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
 
 export async function generateMetadata(): Promise<Metadata> {
   const [supabase, { t, locale }, origin] = await Promise.all([
@@ -38,7 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: t.adopt.metaDescription,
     ...(origin ? { metadataBase: origin } : {}),
     // The bare list is the page; ?species=, ?size= and ?ready= are views of it.
-    alternates: { canonical: "/adopt" },
+    alternates: publicAlternates("/adopt", locale),
     openGraph: {
       type: "website",
       title,
@@ -46,6 +47,7 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "/adopt",
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
+      alternateLocale: ogAlternateLocale(locale),
       images: share.images,
     },
     twitter: share.twitter,

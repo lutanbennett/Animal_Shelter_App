@@ -14,6 +14,7 @@ import { eventText, loadPublicEvent, loadPublicEventPhotos } from "@/lib/events/
 import { PublicHeader } from "../../adopt/PublicHeader";
 import { PublicFooter } from "../../adopt/PublicFooter";
 import { requirePageVisible } from "@/lib/public-page-access";
+import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,7 @@ export async function generateMetadata(props: PageProps<"/events/[id]">): Promis
       url: `/events/${event.id}`,
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
+      alternateLocale: ogAlternateLocale(locale),
       images: share.images,
     },
     twitter: share.twitter,

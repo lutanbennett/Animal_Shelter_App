@@ -13,6 +13,7 @@ import { FriendCard } from "@/components/FriendCard";
 import { PublicHeader } from "../adopt/PublicHeader";
 import { PublicFooter } from "../adopt/PublicFooter";
 import { requirePageVisible } from "@/lib/public-page-access";
+import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
 
 /**
  * Open Graph for /friends. The first Friend's logo is the share image when
@@ -43,7 +44,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     ...(origin ? { metadataBase: origin } : {}),
-    alternates: { canonical: "/friends" },
+    alternates: publicAlternates("/friends", locale),
     openGraph: {
       type: "website",
       title,
@@ -51,6 +52,7 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "/friends",
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
+      alternateLocale: ogAlternateLocale(locale),
       images: share.images,
     },
     // A logo is a small, square thing: the plain card, as before.

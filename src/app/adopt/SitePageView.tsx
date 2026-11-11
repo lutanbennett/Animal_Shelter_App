@@ -17,6 +17,7 @@ import { PublicPhoto } from "@/components/PublicPhoto";
 import { PublicHeader, type PublicSection } from "./PublicHeader";
 import { PublicFooter } from "./PublicFooter";
 import { requirePageVisible } from "@/lib/public-page-access";
+import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
 
 /**
  * /foster, /volunteer and /donate are the same page with a different
@@ -63,7 +64,7 @@ export async function sitePageMetadata(slug: SitePageSlug): Promise<Metadata> {
     title,
     description,
     ...(origin ? { metadataBase: origin } : {}),
-    alternates: { canonical: SITE_PAGE_PATHS[slug] },
+    alternates: publicAlternates(SITE_PAGE_PATHS[slug], locale),
     openGraph: {
       type: "website",
       title,
@@ -71,6 +72,7 @@ export async function sitePageMetadata(slug: SitePageSlug): Promise<Metadata> {
       url: SITE_PAGE_PATHS[slug],
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
+      alternateLocale: ogAlternateLocale(locale),
       images: share.images,
     },
     twitter: share.twitter,

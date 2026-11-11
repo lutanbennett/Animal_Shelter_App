@@ -40,6 +40,7 @@ import { LockedLanding } from "./LockedLanding";
 import { isPublicSiteLocked, isPublicSiteOff } from "@/lib/public-site";
 import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
 import { redirect } from "next/navigation";
+import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
 
 /** The "Pet of the week" card — read through public_resident_profiles. */
 type FeaturedResident = {
@@ -102,7 +103,7 @@ export async function generateMetadata(): Promise<Metadata> {
     ...(origin ? { metadataBase: origin } : {}),
     // This page's own address, relative so it follows metadataBase to the
     // public site's host (docs/seo-audit-2026-10-14.md, T3).
-    alternates: { canonical: "/" },
+    alternates: publicAlternates("/", locale),
     openGraph: {
       type: "website",
       title,
@@ -110,6 +111,7 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "/",
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
+      alternateLocale: ogAlternateLocale(locale),
       images: share.images,
     },
     twitter: share.twitter,

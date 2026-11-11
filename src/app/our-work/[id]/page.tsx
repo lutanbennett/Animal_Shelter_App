@@ -28,6 +28,7 @@ import { ProjectCard } from "../ProjectCard";
 import { StoryGallery, type StoryPhoto } from "./StoryGallery";
 import { HelpUsDoMore } from "../HelpUsDoMore";
 import { requirePageVisible } from "@/lib/public-page-access";
+import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
 
 /**
  * Open Graph tags so a story pasted into Facebook or LINE previews with
@@ -71,6 +72,7 @@ export async function generateMetadata(
       url: `/our-work/${project.id}`,
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
+      alternateLocale: ogAlternateLocale(locale),
       images: share.images,
       ...(project.project_date ? { publishedTime: project.project_date } : {}),
     },

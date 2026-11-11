@@ -5,6 +5,7 @@ import { hiddenPagesOf, isPageHidden, sitemapPages } from "@/lib/public-pages";
 import { loadSiteContent } from "@/lib/site/content";
 import { hasPublicShopLinks } from "@/lib/shop/shop-links";
 import { getSiteOrigin } from "@/lib/site-origin";
+import { localizedHref } from "@/lib/public-paths";
 
 // PUBLIC_SITE is a Worker var read at request time (src/lib/public-site.ts),
 // and the entries come from the database: never baked at build time.
@@ -31,6 +32,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [origin, supabase] = await Promise.all([getSiteOrigin(), createClient()]);
   if (!origin) return [];
   const abs = (path: string) => new URL(path, origin).toString();
+  // Slice C of #t48xh: every page is listed in both shapes, each entry naming the other.
+  const both = (path: string): MetadataRoute.Sitemap[number]["alternates"] => ({
+    languages: { en: abs(path), th: abs(localizedHref(path, "th")), "x-default": abs(path) },
+  });
+  const twin = (e: MetadataRoute.Sitemap[number], path: string): MetadataRoute.Sitemap => [
+    { ...e, alternates: both(path) },
+    { ...e, url: abs(localizedHref(path, "th")), alternates: both(path) },
+  ];
 
   // A hidden page, or a section it sits in, is not listed, nor are the pages under it.
   const hidden = hiddenPagesOf((await loadSiteContent(supabase))?.hidden_public_pages);
@@ -52,37 +61,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // while it has no entry shown, as the menu leaves it out: an empty page to index.
   const pages: MetadataRoute.Sitemap = sitemapPages()
     .filter((page) => !isPageHidden(page.key, hidden) && (page.key !== "shop" || hasShopLinks))
-    .map((page) => ({
-      url: abs(page.href),
-      changeFrequency: page.sitemap.changeFrequency,
-      priority: page.sitemap.priority,
-    }));
+    .flatMap((page) =>
+      twin({ url: abs(page.href), changeFrequency: page.sitemap.changeFrequency, priority: page.sitemap.priority }, page.href),
+    );
 
-  const animals: MetadataRoute.Sitemap = (isPageHidden("adopt", hidden) ? [] : residents.data ?? []).map((r) => ({
-    url: abs(`/adopt/${r.id}`),
-    changeFrequency: "weekly",
-    priority: 0.7,
-  }));
+  const animals: MetadataRoute.Sitemap = (isPageHidden("adopt", hidden) ? [] : residents.data ?? []).flatMap((r) =>
+    twin({ url: abs(`/adopt/${r.id}`), changeFrequency: "weekly", priority: 0.7 }, `/adopt/${r.id}`),
+  );
 
-  const stories: MetadataRoute.Sitemap = (isPageHidden("our-work", hidden) ? [] : projects.data ?? []).map((p) => ({
-    url: abs(`/our-work/${p.id}`),
-    ...(p.sort_date ? { lastModified: p.sort_date } : {}),
-    changeFrequency: "yearly",
-    priority: 0.5,
-  }));
+  const stories: MetadataRoute.Sitemap = (isPageHidden("our-work", hidden) ? [] : projects.data ?? []).flatMap((p) =>
+    twin({ url: abs(`/our-work/${p.id}`), ...(p.sort_date ? { lastModified: p.sort_date } : {}), changeFrequency: "yearly", priority: 0.5 }, `/our-work/${p.id}`),
+  );
 
-  const drives: MetadataRoute.Sitemap = (isPageHidden("appeals", hidden) ? [] : appeals.data ?? []).map((a) => ({
-    url: abs(`/campaigns/${a.id}`),
-    changeFrequency: "daily",
-    priority: 0.7,
-  }));
+  const drives: MetadataRoute.Sitemap = (isPageHidden("appeals", hidden) ? [] : appeals.data ?? []).flatMap((a) =>
+    twin({ url: abs(`/campaigns/${a.id}`), changeFrequency: "daily", priority: 0.7 }, `/campaigns/${a.id}`),
+  );
 
-  const happenings: MetadataRoute.Sitemap = (isPageHidden("events", hidden) ? [] : events.data ?? []).map((e) => ({
-    url: abs(`/events/${e.id}`),
-    lastModified: e.event_date,
-    changeFrequency: "monthly",
-    priority: 0.5,
-  }));
+  const happenings: MetadataRoute.Sitemap = (isPageHidden("events", hidden) ? [] : events.data ?? []).flatMap((e) =>
+    twin({ url: abs(`/events/${e.id}`), lastModified: e.event_date, changeFrequency: "monthly", priority: 0.5 }, `/events/${e.id}`),
+  );
 
   return [...pages, ...animals, ...drives, ...happenings, ...stories];
 }
