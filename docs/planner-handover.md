@@ -1,257 +1,210 @@
-# Planner handover — edition `739`, 2026-11-11
+# Planner handover — edition `740`, 2026-11-11
 
-**This is a DELTA against `738`.** It says what changed, corrects its predecessor, and reports what each
-of `738`'s warnings and owed items actually did. Per-stream figures, batch composition, ports and the
-dependency notes live in `.plan-day.md` and are **not** reproduced here.
+**This is a DELTA against `739`.** It says what changed, corrects its predecessor, and reports what each
+of `739`'s owed items did. Figures, batch composition and ports live in `.plan-day.md`.
 
-**It outranks nothing.** It is read by one chat, it will be rewritten within one plan, and a wrong line
-in it is corrected by its successor rather than by a reviewer.
+**It outranks nothing.** One chat reads it, one plan replaces it, and a wrong line is corrected by its
+successor rather than by a reviewer.
 
-**WHICH PLAN'S FIGURES THIS EDITION REPORTS: NONE. THAT IS NEW, IT IS DELIBERATE, AND IT IS HIS
-DECISION.** Measurement moved to once a day on 2026-11-11, so **this plan's nine figures are read
-tomorrow morning and reported by edition `740`.** Six of the nine are sitting on merged PRs and **cannot
-expire**; three had not opened a PR when this was written. **A missing set here is not a lost one** — see
-the lead. `738` could report its own plan's figures because measurement was still per batch; from now on
-each edition reports its predecessor's.
-
-**Written at the SETUP of this plan's last batch — AND CORRECTED BEFORE IT COULD MERGE, FOR THE THIRD
-EDITION RUNNING.** `gh pr list --state all --head claude/<slug>` was run for all nine slugs **in the
-writing turn**: six merged (#1482–#1487) and **batch 3's three with no PR at all.** Run **again
-immediately before `gh pr merge`**, it found that **`pi-cloudflared-race` had MERGED (#1489, 11:17Z)
-and the other two had opened** (#1490 `worktree-env-narrowing`, #1491 `refusal-keys-group-5`) — so the
-obvious sentence, *"batch 3 handed over, nothing opened"*, **would have been false the moment it
-merged.**
-
-**SEVEN MERGED, TWO OPEN at the time of merging. KEEP THE RULE: run it in the writing turn AND again
-before the merge.** It is `737`'s amendment, and **both runs have changed this text in three
-consecutive editions** — which is a better record than most things in this document.
+**WHICH PLAN'S FIGURES THIS REPORTS: THE ONE BEFORE IT, ten streams, in full** — read this morning from
+merged PRs whose worktrees had already been cleared, which is the once-a-day model working end to end for
+the first time. **This edition's own plan carries none. Its ten belong to `741`.** A missing set is not a
+lost one.
 
 ---
 
-## THE LEAD: HE CHANGED THE PROCESS THREE TIMES IN ONE HOUR, AND THE FAULT THAT PROMPTED IT WAS THE PLANNER'S
+## THE LEAD: LIST-FIRST WAS BROKEN TWICE MORE IN ONE PLAN — THE SECOND TIME BY THE FIX FOR THE FIRST
 
-**Lutan, mid-plan:** *"Why are we doing paperwork first again in front of setting up streams"*. **He was
-right, and the word *again* is the point: it was the third breach in four plans of a rule the planner
-had read and agreed with in the same session.**
+**Three interruptions, and he said he was annoyed.**
 
-Setting up batch 2, the planner read **three full PR bodies, three `stream-usage` comments and wrote an
-entire band analysis before a single worktree existed.** **Exactly one of those reads was load-bearing**
-— #1482's, whose migration `0354` the `bills-job-link` brief quotes and whose 146,679 figure that band
-was lowered against. The rest was paperwork ahead of delivery.
+1. **Before creating a single worktree**, the planner read `worktree.mjs list`, confirmed four merged PRs
+   and ran four `worktree.mjs done` calls. One delete was slow enough to be backgrounded, and the planner
+   then would not run `worktree.mjs new` beside it — **so the tidying physically blocked the delivery.**
+   *"Can you change the skill instruction to put removing streams after setup of streams please"*.
+2. **Then the fix went in front of the list.** With the worktrees and briefs done, the planner edited
+   `SKILL.md`, made a fourth worktree for it, committed and started its gates — **all before handing over
+   the list.** *"Where are my streams / I'm getting annoyed now"*, then *"You are putting process in front
+   of setting up the streams again"*.
+3. *"you keep doing this, how can we stop you from keeping on making this mistake"*.
 
-**THE DIAGNOSIS, WHICH IS WHY PROSE KEPT FAILING: THE ONE RULE WAS WRITTEN ABOUT THE ORDER OF A REPLY,
-AND A PLANNER CAN OBEY THAT TO THE LETTER WHILE SPENDING TWENTY TOOL CALLS READING FIRST.** The reply was
-correctly ordered. The turn was not. **The list was also restated in three separate places in
-`SKILL.md`, which is itself the evidence that repetition does not work.**
+**WHY PROSE WILL NOT HOLD IT, after four editions of trying: nothing MECHANICAL produces his list.** It
+happens only if the planner chooses it, and the planner keeps choosing wrong **in the same direction —
+toward tidying and recording.** Each edition has answered by writing the rule in one more place, which the
+skill file itself calls evidence that repetition does not work.
 
-**All three changes landed in PR #1488, with `docs/decisions/2026-11-11-plan-day-list-first-sequence.md`:**
+**THREE FIXES ARE WITH HIM, UNANSWERED. DO NOT BUILD ONE UNASKED AND DO NOT RE-ASK** — he was given the
+question and answered with different work, which is neither a refusal nor an answer:
 
-1. **THE LIST-FIRST RULE IS NOW A LETTERED SEQUENCE OF TOOL CALLS (a)–(e)** — worktrees, briefs,
-   `worktree.mjs streams`, the list, and only then the actuals, PR bodies, filing and bands. **The reads
-   allowed between the sync and (a) are a CLOSED LIST OF THREE:** has the batch merged, is the migration
-   slot free, and does a brief need to QUOTE one named PR. **Closed rather than left to judgement,
-   because every breach was judgement wrong in the same direction.**
-2. **STICK TO THE AGREED PLAN** — *"I will request a change to the daily plan if it's required otherwise
-   you stick to the daily plan"*, *"So no rechecking at the end of each batch"*. The per-batch re-check
-   is gone, **and so is re-planning because "the backlog has moved under the plan"**, the same thing
-   under another name. **What stays: checking the batch MERGED** (it stops six live worktrees) **and
-   every brief's STEP ZERO**, the cheaper copy of the same guard.
-3. **MEASUREMENT IS ONCE A DAY, AFTER BATCH 1 IS SET UP, FOR THE PREVIOUS DAY'S COMPLETE SET** — *"That
-   way we always have a complete set"*. **It works because the figures live on the PR and cannot
-   expire**, proven the same day. **Only the day's first batch is banded without them, and a handover
-   now carries none of its own plan's.**
+- **(i) The tool prints the list.** `worktree.mjs batch <slug> <slug> <slug>` creates the batch and prints
+  folder, port, model and effort last. **The list stops depending on memory, and it closes the printer
+  item owed since `736`.**
+- **(ii) Every record leaves the planning turn.** Measurement already moved for this reason; extend it to
+  PR bodies, filing, bands and `.plan-day.md`, so a planning turn holds only sync, choose, set up, list —
+  **nothing available to put first.**
+- **(iii) A hook** refusing tidy-up and PR commands in the main checkout mid-plan. Real enforcement, one
+  more moving part.
 
-**FOR THE NEXT PLANNER: ALL THREE ARE HYPOTHESES AND THE ONLY TEST IS YOU.** Did you create the
-worktrees and send the list before reading a PR body? Did any batch-3 stream report at step zero that
-its item had already closed? **Write down which way each went.**
-
----
-
-## THE CORRECTION TO `738`: A PROOF IT CALLED "OWED" COULD NEVER HAVE BEEN TAKEN
-
-**`738`, `737` and `708` all carried the `/th/` Worker cache HIT/MISS reading as *"owed, the planner's to
-arrange"*. IT IS NOBODY'S, AND THE OFFER WAS WRONG.** The planner offered him a deploy to
-`test.lannacare.org`; **he asked whether that meant making the website active on test, and said the
-Director wants it hidden from current logins.** Reading two files settled it:
-
-- **test sets `PUBLIC_SITE: "off"`** (`wrangler.jsonc`; `docs/decisions/2026-11-09-website-off-on-test.md`,
-  for an outside tester). Per `src/lib/public-site.ts`, `"off"` means **nobody sees the website there,
-  signed in or out** — a signed-in login is sent into the app. **So the `/th/` pages do not render and
-  there is nothing to measure. A deploy would have exposed nothing and given nothing.**
-- **UAT is `"locked"`**, so a signed-in staff login does see the website — but a request carrying a
-  session cookie is exactly what slice A's header-not-cookie design keeps **out** of the edge cache.
-- **It needs a host where the public site is OPEN, which is the Director's call.**
-
-**Filed onto `#t48xh` with *"do not offer this deploy again, and do not carry it as an owed planner
-action"*. IT IS NO LONGER AN OWED ITEM. Do not put it back.**
-
-**THE LESSON IS THE PLANNER'S, NOT HIS:** the offer was made from three editions of inherited prose
-without reading the two files that decide it. **One `grep PUBLIC_SITE wrangler.jsonc` would have caught
-it.** `CLAUDE.md`'s *verify the command, not just the change* covers an offer as well as a command.
+**WHAT WAS BUILT, because he asked in words: PR #1494** — clearing a merged batch's worktrees now sits in
+step (e) in all three places `SKILL.md` names it, incident in `reference.md` §1. **IT FIRED TWICE THE SAME
+DAY**: at batch 2's and batch 3's setup the list went out before any folder was cleared, before #1494
+itself was merged, and before any measurement. **Two firings are not a result. Check it again.**
 
 ---
 
-## WHAT `738`'s OWED ITEMS AND WARNINGS DID
+## WHAT `739`'s OWED ITEMS DID
 
-- **`#etr20` IS DONE AND MERGED (#1486), AFTER SIX EDITIONS OF BEING OWED.** It was never blocked after
-  2026-11-08; it was small enough to keep being deferred. **Nothing is owed on it but a release cut.**
-- **`#m8kq4` IS DONE (#1482).** A `meme_add` login now reaches a resident's approved photos through the
-  `resident_photo_list` view (`0354`), **so `/memes/make` can be driven.** Nobody has driven it yet.
-- **`#t48xh` SLICES C AND D BOTH LANDED (#1478, #1483) AND THE ITEM IS STILL OPEN BY ONE LOOK.** D
-  asserts canonical, three hreflangs and the og alternate on **13 sitemap pages × 2 shapes, 0
-  failures**, re-proves his bare-address constraint on every one, and made `og:url` follow the render
-  language. **What is left is one live look at `/adopt/<id>`, `/our-work/<id>`, `/events/<id>` and
-  `/campaigns/<id>` — dev has no public rows, so there is no real id.** `scripts/check-public-heads.mjs`
-  takes real ids as arguments.
-- **`#79sqf`'s ALLOW-LIST IS DOWN FROM 18 ROWS TO 9, AND THE REMAINING NINE ARE CHECK LIMITATIONS, NOT
-  FAULTS** (#1484). **A tempering note that stream volunteered and which belongs in any report of it:
-  `/admin/website` already hid those tabs from a read-only login, so none of the nine controls was
-  reachable by a person.** The gates are the explicit, checkable form of a courtesy the page was already
-  doing — real work, **not a hole anyone could have fallen through.**
-- **`#c4vn7` IS UNCHANGED AND STILL HIS**, and still the best-argued item on the list: `stock.diets` and
-  `stock.medications` at edit are UNRULED, so `#q7dn3`'s merged fix stays inert until he rules.
-- **THE FLOOR IS ≈85k AND SETTLED ON THIRTEEN FIGURES** (84.4–88.0k). **Stop re-deriving it; confirm it
-  from the smallest stream and move on.**
-- **`stream-usage` IS NINE FOR NINE.** `738` said *"one batch is one batch; check it again"* — it has now
-  held for three batches. **It is settled. Stop re-testing it and do not reword it.**
-- **The `worktree.mjs streams` printer still prints a markdown TABLE with no `batch` column. FOURTH
-  EDITION.** The planner retypes it as plain lines every hand-over because he is on Remote Control.
-
----
-
-## THE BANDS: THE PLANNER IS OVER-BANDING, AND THE CAUSE IS NAMEABLE
-
-**Batch 1's three WERE read, before the rule changed — the figures are in `.plan-day.md` and are not
-repeated here.** What belongs here is what they mean: **two of the three came in BELOW the bottom of
-their bands, by 16% and 22%, and the third landed inside near the top.**
-
-**THE CAUSE OF BOTH MISSES IS THE SAME AND IT IS A METHOD ERROR: THE PLANNER PRICED AN UNKNOWN TWICE.**
-
-- `meme-photo-list-view` was banded as a schema PR with readers (160–185k) **plus ~30k for driven
-  browser proof**. **The apparatus premium was wrong, because
-  `docs/dev-fixtures-for-control-driving.md` already existed** — last plan's fixture documentation
-  **paid off, which is its hypothesis firing.** **Do not add ~30k for browser proof when the fixtures
-  are already written down.**
-- `th-path-proof` was banded as an audit (145–190k) **plus two named unknowns**. It landed inside the
-  audit row; both unknowns resolved in a few reads.
-- **`control-activity-allowlist` is the control case and it validates the method.** Its unknown was one
-  the planner had *reasoned about* and said so in the brief — *"I have not read the check's
-  handler-resolution code"* — and it came in near the TOP of its band.
-
-**SO THE RULE, AND IT IS THE DURABLE LESSON HERE: AN UNKNOWN YOU HAVE REASONED ABOUT BELONGS IN THE
-BAND; AN UNKNOWN YOU HAVE MERELY NAMED DOES NOT.** Naming a risk is not pricing it — the skill already
-says so, and the planner did it twice in one batch anyway.
-
-**All three of batch 3's bands were lowered at setup on that evidence**, and group 5's is derived by
-per-sentence arithmetic from group 4's 168,010 — **which is a DIFFERENT method from last plan's rule
-(*price on sentence count, do not discount for the floor*). Check which method won.**
+- **`#t48xh` DONE AND TICKED (#1493)** — four dynamic pages, 0 failures, a four-slice programme closed.
+  **And `739`'s correction paid for itself within hours:** the last look was done with **dev fixtures, not
+  by unlocking UAT.** He had asked whether the lock could come off; reading the script settled it — he
+  needs no unlock in order to look, and unlocking would not let the check run anyway, because
+  `check-public-heads.mjs` builds every address as `http://localhost:<port>` and asserts with no cookie.
+  **Generalise it: when a check needs a host with real public rows, the answer is fixtures in dev, not a
+  deploy.**
+- **`#f1wp1` DONE AND TICKED — BY LUTAN.** He applied the `cloudflared` fix on the Pi and **proved it at
+  13.1 s, no failure.**
+- **`#79sqf`, HIS #1, IS HALF CLOSED AND THE REST IS IN FLIGHT.** The static check was taught its three
+  false-positive patterns (#1496). **Its hand-back is F2:** the prose notice carries no activity, so
+  seeing one *"needs rendering each page under a one-card login and comparing sentences, which is the
+  driving half, not a static check."* **A numbered deliverable in `control-drive-pane`'s brief, with the
+  proof demanded in writing** — it has been called *"provably uncatchable"* for weeks with nobody writing
+  the proof down.
+- **`#dv7k3` DONE (#1497), SO FRIDAY'S GATE IS CLEAR.** No `drive.google.com` URL is built by app code for
+  those three links. **`#yy9fz`, the lockdown he set for Friday 13 November, is unblocked.** What remains
+  is his: **rehearse the lockdown script against UAT first.** His own caveat (a) says being happy with the
+  UAT Drive test is *not* the same as having rehearsed it — **do not read his sentence as covering it.**
+- **`#c4vn7`: HE SAID YES TO THE SESSION AND IT DID NOT HAPPEN.** Asked whether to book the walkthrough of
+  the 14 unruled activities today, he answered **"Yes, today"**; the plan then ran three batches and never
+  came back. **Owed by the planner, not by him, and it is the oldest thing waiting.** Two of the 14 switch
+  `#q7dn3`'s merged fix on or confirm it; `docs/unruled-activities-walkthrough.md` is ready.
+- **`#etr20` unchanged:** in the code, ships with the next release cut.
+- **The `worktree.mjs streams` printer still has no `batch` column. FIFTH EDITION.** Fix (i) closes it as a
+  side effect, which is the best argument for (i).
+- **`check-test-plan.mjs` disagreeing with its own `--base origin/main` run is STILL UNFILED.** `739` asked
+  for a backlog item; **this edition did not file it either.** It cost #1488 two commits. **File it.**
+- **THE FLOOR IS ≈85k ON TWENTY-THREE FIGURES** (84.4k–88.5k across the last ten), and `hsts-one-year`
+  confirmed it at **85,127** exactly as `739` asked. **Settled; re-measure only if the harness changes.**
+- **`stream-usage` is TEN FOR TEN, four batches without a miss.** Do not re-test or reword it.
 
 ---
 
-## INSTRUMENTS: ONE THAT DISAGREES WITH ITSELF, AND ONE TRAP THAT COST TWO COMMITS
+## THE BANDS: THE TABLE'S DEFAULT ROW IS WRONG, AND TEN FIGURES SAY SO
 
-**1. `check-test-plan.mjs` AND `check-test-plan.mjs --base origin/main` DO NOT AGREE, AND CI RUNS THE
-LATTER.** Proven on PR #1488: the bare command printed *"the plan is complete and correct"* and CI went
-red on a malformed `n/a:` — **while the bare one HAD caught the identical fault two lines later**, so it
-is not that it ignores malformed reasons generally. **`brief-blocks.md` step 3 told every stream to run
-the bare command**, so a stream could get a false green; **it now says to use the flag.** **WHY THEY
-DIFFER IS NOT ESTABLISHED and is worth a backlog item** — an instrument that reports success on input CI
-rejects costs a stream a cycle every time.
+**`739` found that the planner over-bands by pricing an unknown twice. This finding is about the TABLE.**
 
-**2. THE `n/a:` COLON TRAP IS REAL AND EXPENSIVE.** `n/a: no UI surface` passes; **`n/a as a deploy
-check, because …` reads fine to a human and fails.** It cost #1488 two commits and a red CI run **on two
-separate lines of the same plan**, after the first was fixed. The template warns about it two paragraphs
-above where it bites. **Every brief in batch 3 now carries it by name.**
+**The previous plan's ten streams, every one at `low`, came in between 146,679 and 189,669 — and NINE OF
+THE TEN inside 146k–175k.** The *ordinary well-briefed stream — the default* row says **120–145k** and
+**was not hit once in ten.** So that row is the floor plus a rounding error: a well-briefed stream on this
+codebase costs about **150–175k**. **Raise it rather than keep banding under it and calling every stream an
+overrun.**
 
-**3. `git merge backlog` CAN CONFLICT STRUCTURALLY, AND RESOLVING BY HUNK IS GUESSWORK.** Another session
-moved **910 ticked items into Completed** while `main` carried two streams' item edits; git produced one
-742-line hunk that meant nothing semantically. **RESOLVE BY ID instead:** `git diff <merge-base> HEAD --
-docs/backlog.md` named the **two** ids main had touched, so take the backlog side whole, re-apply those
-two lines by id, and **guard that the result's id set equals the union of both sides' and that the
-open/ticked counts match.** **Consequence: open items are now compacted at the top of the file, so every
-line number in an older note is wrong.**
-
-**4. `control-activity` IS NOW A BLOCKING CI JOB** (#1480, 12–25 s). Every brief should say to read it
-rather than allow-list past it.
+**`739`'s method holds and was applied all day — an unknown you have REASONED about belongs in the band;
+one you have merely NAMED does not.** Two of today's briefs test it deliberately: `control-drive-pane`
+makes *how many click-only controls there are* a deliverable to count rather than a premium to guess, and
+`login-inapp-browser` is told which way to err on user-agent detection and asked for unit tests instead of
+a device, keeping it off the ~30k browser premium. **Check both against their actuals.**
 
 ---
 
-## OWED, AND WHO OWES IT
+## A NEW ENVIRONMENT FAULT, AND THE RECORD IT DAMAGED
 
-1. **`0348` TO PRODUCTION — HIS, AND DESTRUCTIVE.** Drops columns and a view; #1444 says take a fresh
-   backup first. **`0350`–`0355` are queued behind it and `0356` is coming**, so pin any apply with
-   `--upto`. The bare runner applies every pending file.
-2. **`#c4vn7`** — the 14 UNRULED activities, a session with him, one at a time. **Two of them switch a
-   merged fix on or confirm it.**
-3. **`#t48xh`** — one live look at the four dynamic public pages, on a host with real rows. **Then it
-   ticks.** *(The Worker cache proof is NOT owed — see the correction above.)*
-4. **The `worktree.mjs streams` printer** — a markdown table with no `batch` column. **Fourth edition.**
-   Two columns of work removes the last manual step in every hand-over.
-5. **Why `check-test-plan.mjs` disagrees with its own `--base` invocation** — unfiled, and it should be
-   an item.
-6. **`#yy9fz`** — production lockdown, which **he scheduled for Friday 13 November 2026.** Two days away.
+**A LEFTOVER BUILD PROCESS CAN STOP A STREAM RUNNING ITS GATES AT ALL.** #1498 reported deliverable 11
+**not done**: *"a leftover build process (pid 61832) from my first gates run holds the lock and I was not
+permitted to stop it, so `gates.mjs` refuses to start."* **The stream was right to say so and right not to
+kill it.** CI ran the same four gates and concluded `success` on that PR's own head, so **nothing unproven
+shipped** — but with four or more streams live this recurs. **Worth a backlog item: a safe way to clear a
+stale lock, or `gates.mjs` naming the process that holds it.**
 
----
+**It also left a blank where evidence belongs — and the obvious fix is the WRONG one, which this
+edition nearly recommended.** `docs/test-plans/adoption-updates-schema.md` sits on `main` with `SHA_HERE`
+at *Tested at SHA* and `GATES_HERE` inside the gates fence: **the verification record for migration
+`0357`, bound for production.**
 
-## STANDING CHECKS — what held
+**That half is NOT a new finding — it is `#up3vf`, already TICKED, and I have REOPENED it**, because its
+outcome demonstrably still happens. **The tick was not dishonest and the shipped fix was not wrong; it
+was NARROWER than the item.** It prescribed failing on `PLACEHOLDER`, `TODO`, `<paste`, `xxx` or an empty
+block — **and the template own placeholder names are none of those**, so a plan written from the template
+walks past it. **`SHA_HERE` is a second path: the header TABLE, not a fence**, where a placeholder passes
+as *still being written* by design (2026-11-05) — right mid-flight, wrong once merged.
 
-- **`gh pr list --state all --head claude/<slug>`: run for all nine TWICE, and the second run changed
-  this document.** Writing turn: six merged, batch 3's three with no PR. Before the merge: **seven
-  merged, two open.** **Third consecutive edition in which this rule caught something.**
-- **`worktree.mjs list` read for `held` and `ahead` before creating anything**, every batch. **No open
-  PRs at any batch boundary and no Dependabot bump all day.**
-- **`check-stale-titles.mjs` at step 4: 10 candidates, NINE FALSE POSITIVES, one real find.** The
-  heuristic matches the words *decide/settle/waiting*, **so a title saying "nothing left to decide" is
-  flagged as loudly as a stale one.** **The real find is a new class: `#f56bs`'s title CONTRADICTED
-  ITSELF**, announcing his *always on* answer and then, two sentences later, that availability was still
-  open — **`738` had marked that item's TAIL superseded and missed the title's own stale half.** **Read
-  the whole title, and when you mark a tail superseded re-read the title in the same breath.**
-- **Reading the backlog by hand paid for itself again:** `#n9z65` was decided, specified and buildable
-  and **was not in the planner's nine.** He had it swapped in the same day; it shipped as #1487.
+**AND `#up3vf` RULES AGAINST RETROFITTING THE PLAN: a merged plan *"is a record of what happened"*, and
+editing it now would *"put evidence into history that nobody actually pasted"*.** #1498 local gates
+genuinely could not run, so filling its gate lines would be exactly that. **Fix the instrument; leave the
+record. I had written the opposite here before reading the item.**
 
 ---
 
-## INTERRUPTIONS — a cost of the BRIEF, not the stream
+## A SECOND SESSION NOW CREATES WORKTREES
 
-**TWO, BOTH THE PLANNER'S.**
+**The backlog manager set up a stream of its own**, which breaks an assumption every edition has made.
+Lutan: *"Note backlog manager just set up a stream for me for an urgent update to the user manual"* —
+`bills-manual-topic` (port 3009, `medium`), merged as #1501.
 
-1. **A multi-select used to CONFIRM a batch.** Batch 1 was put to him as a multi-select over its three
-   streams; he left one ticked meaning to confirm, the planner set up one stream, and he asked *"I'm
-   confused, is there only one stream for batch 1"*. **Unticking is indistinguishable from not meaning
-   to tick. Confirming a batch is SINGLE-select, and `SKILL.md` step 6 now says so.**
-2. **Paperwork before delivery, the lead above.**
+**So `worktree.mjs list` is no longer a registry of only the planner's work, and a folder the planner did
+not create is not an orphan.** It appeared mid-plan and was briefly reported to him as unexplained. **Four
+streams then ran at once against the usual two or three, which is his call, not a fault.**
 
-**AND A QUESTION OF HIS THAT WAS NOT AN INTERRUPTION BUT A SAVE:** *"does that mean we need to make the
-web site active on test"*. **It caught a wrong offer before it cost anything and is the reason the cache
-proof is now correctly filed.** Worth remembering that a question is sometimes the cheapest check in the
-system.
+**The real cost was a collision caught only after the briefs were written:** it owns `src/lib/manual/en.ts`,
+`prebuilt.ts` and `types.ts` **and touches `src/lib/releases.ts`, which two batch-2 briefs had already been
+told to add a release note to.** Both were amended with the rule that matters: **on a conflict in
+`releases.ts`, KEEP EVERY LINE FROM BOTH SIDES** — dropping someone's release note ships a change
+unannounced and nothing downstream catches it. **Read `list` for folders you did not create BEFORE writing
+briefs, and intersect their files with yours.**
+
+---
+
+## STANDING CHECKS — what held, and one thing that is not evidence
+
+- **`gh pr list --state all --head claude/<slug>`: run twice, and it mattered both times.** Four
+  consecutive editions in which this rule changed the text.
+- **`git merge backlog` conflicted twice in one sync; both resolved by ID, not by hunk.** `#t48xh`, ticked
+  on both sides, where backlog wholly contained `main`'s text plus the #1493 note; then `#f1wp1`, open on
+  `main` and ticked on `backlog` where he had filed his own apply. **Guarded by comparing the item-id set
+  and the open/ticked counts against both parents** — 1,070 ids, nothing lost or invented. **A second
+  backlog commit arrived between the merge and the fast-forward, so the sync ran twice. Expect that.**
+- **TRUST `check-backlog-ids.mjs` OVER YOUR OWN ARITHMETIC.** A planner guard failed because 51 open plus
+  1,017 ticked is 1,069 while 1,070 unique ids exist: **one ticked item quotes another item's id in its
+  prose.** The checker was right; the guard's assumption was not.
+- **`check-stale-titles.mjs`: 8 candidates, all 8 false positives** — each announced its answer in its own
+  title, which is what the heuristic matches. **The real stale title was on a TICKED item it does not
+  scan:** `#f1wp1` still reads *"AWAITING ONLY LUTAN'S APPLY"* though its body records him applying and
+  proving it. **Ticked items are where this hides now.**
+- **NOT EVIDENCE, and it nearly became a finding here:** `gh pr view --json mergedBy` shows `lutanbennett`
+  on **every** PR, because `gh` is signed in as him. **It says nothing about whether a stream or a person
+  pressed merge.**
 
 ---
 
 ## FOR YOUR FIRST TURN
 
-Read `.plan-day.md` before anything. **It stands at 9 of 9 and this edition resets the counter, so you
-are planning FROM SCRATCH, not resuming.**
+Read `.plan-day.md` first. **It stands at 9 of 9 and this edition resets the counter, so you are planning
+FROM SCRATCH.**
 
-**THE ORDER HAS CHANGED AND IT IS NOW A HARD SEQUENCE. Read `SKILL.md`'s THE ONE RULE before you do
-anything else**, because two of today's three process changes alter your first hour:
+**Read `SKILL.md`'s THE ONE RULE before anything else: it has been broken five times in six plans.** Your
+first hour is plan, agree the nine, set up batch 1, send the list — **and only then** measure, clear the
+merged batch's folders, read the PR bodies and file.
 
-- **Plan, agree the day's nine, set up batch 1, send the list — and ONLY THEN measure.** Step 3 is now
-  once a day and covers **this plan's nine**: **#1482–#1487 and #1489 were merged when this was
-  written, and #1490 (`worktree-env-narrowing`) and #1491 (`refusal-keys-group-5`) were open** — check
-  all nine, because two of them may have merged after this sentence. **Their PR BODIES are also unread —
-  that is the same step, and two plans' evidence says it is where the best next stream comes from.**
-- **Do not re-check batch 2 or 3 against the backlog.** A change comes from him.
+**What was owed — THREE OF THE FOUR WERE CLOSED BY THIS EDITION OWN TURN:**
 
-**Three things to do before you present anything:** run `node scripts/check-stale-titles.mjs` **at step
-4** and expect nine false positives in ten; **read the code behind any item whose prose claims a gap**;
-and **print the hand-over list straight after the last `worktree.mjs new`**, before the briefs.
+1. **FILED at last: the `check-test-plan.mjs --base` disagreement**, after two editions asked; an open item
+   in *Architecture*. **Do not file it a third time** — three TICKED items already existed with near
+   identical titles about that script, so **search by subject before filing.**
+2. **FILED: the stale build lock** that stopped #1498 gates, also *Architecture*.
+3. **REOPENED, not fixed: `#up3vf`**, moved from *Completed* back into *Quick wins*. What is left is two
+   narrow extensions **in the checker and nowhere else**: add the template own placeholder tokens to the
+   fenced-block list, and fail a header placeholder once a plan PR has merged. **Do not touch the plan.**
+4. **STILL OWED, AND IT IS THE ONE THAT MATTERS: `#c4vn7`.** He said **"Yes, today"** and it did not
+   happen. Put it in your first batch or do it yourself, but **do not re-ask him.**
 
-**The natural first batch:** **`#t48xh`'s last look** (four dynamic pages on a host with real rows —
-small, and it closes a four-slice programme ranked #2); **`#79sqf`'s remaining nine allow-list rows**,
-which need the CHECK taught rather than code fixed and whose size is still unestablished; and
-**whatever batch 3's three PR bodies hand back.** **`#pm4kz` (the `deploy-pi.sh` build lock) is first
-reserve** — it was displaced from this plan and nothing depends on it.
+**Two traps met while filing, both worth a minute:** a backlog id is **exactly five characters** and a
+six-character one reads as *absent*, so let `node scripts/backlog-ids.mjs` assign them; and **reopening a
+ticked item in place leaves an open item below `## Completed`**, which the pre-commit hook refuses and
+every session is blind to — **move it into a real section in the same edit.**
 
-**And one thing to settle rather than inherit: file the `check-test-plan.mjs` disagreement as a backlog
-item.** It is the only unfiled finding of the day.
+**The natural first batch:** **`#79sqf`'s remainder, whatever `control-drive-pane` hands back** (still his
+#1); **`#l5gxn`'s app half**, now `0357` has landed the adopter-to-resident scope and the text approval
+state turned out to **already exist** as `NULL`/`public_ok`/`private_only` — **read #1498's body, it
+corrected the item in three places**; and **whichever of `#k2llb` or `#3nuwy`'s next group batch 3 does not
+finish.**
+
+**One warning on `#l5gxn`:** its app half needs **a new approving card**, and a new card cannot be split
+from its grants — so it is **one stream carrying its own migration**, not a schema half and an app half.
