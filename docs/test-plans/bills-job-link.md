@@ -121,7 +121,7 @@
 
 Automated checks by: Claude  Date: 2026-11-11
 
-- [ ] The manual list above is empty
+- [ ] The manual list above is empty — n/a: one item is left for a person, see the table above
 
 Manual verification by: pending: the attach press with a waiting bill
 
