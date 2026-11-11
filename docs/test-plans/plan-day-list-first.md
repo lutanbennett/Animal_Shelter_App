@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none. Both changes are instructions Lutan gave in chat on 2026-11-11; process-document changes to a skill carry no backlog item |
 | Branch / worktree | `claude/plan-day-list-first` @ `C:\Development\Animal_Shelter_plan-day-list-first` |
 | Dev server | not started — no runtime surface (see §1) |
-| PR | <filled in when `gh pr create` returns> |
+| PR | #1488 |
 | Tested by / date | Claude (planner session) / 2026-11-11 |
 | Carries a migration? | no |
 | Tested at SHA | `f331615d` |
