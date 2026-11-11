@@ -5,7 +5,7 @@
 | Feature | Drive `/memes/make` under a meme_add-only login; fix the photo refusal it exposed; list the click-only controls |
 | Backlog item | `docs/backlog.md` → #79sqf (left open) |
 | Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
-| Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
+| Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3002` |
 | PR | see PR |
 | Tested by / date | Claude / 2026-11-11 |
 | Carries a migration? | no |
@@ -35,7 +35,15 @@ because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
 - [x] `node scripts/worktree.mjs sync` — origin/main merged in cleanly
-GATES
+- [x] `node scripts/gates.mjs` — all four gates exit 0, output as printed:
+
+```
+=== gates: typecheck exited 0 after 186s
+=== gates: lint exited 0 after 661s
+=== gates: test exited 0 after 90s
+=== gates: build exited 0 after 427s
+gates: typecheck=0 lint=0 test=0 build=0
+```
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
