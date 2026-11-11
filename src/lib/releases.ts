@@ -70,13 +70,21 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  "The user manual no longer shows Finding your way around (the menu) or Release notes to a login that has no menu, since they describe a menu that login does not have. A new topic, Your home screen and the header, tells that login about its tiles, the header, language and Sign out. Confirming a delete now gives examples anyone can meet instead of Admin-only ones.",
-  "On a donation receipt, the Email draft link is gone. In its place is Copy email address, which puts just the donor's address on the clipboard in one press. Press Copy, press Share, then paste the address into the To line. Share still attaches the PDF with the subject and message already written.",
-  "A supplier’s page and the Who does what screen now only say what you can do there. The supplier page no longer says you can make a supplier a Shelter Friend unless you can, and the Features link on Who does what reads See the features, not Edit the features, unless you are an Admin.",
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.44.2",
+    date: "2026-11-11",
+    title: "The manual fits a login with no menu, a receipt copies the donor's address, and pages say only what you can do",
+    major: false,
+    notes: [
+      "The user manual no longer shows Finding your way around (the menu) or Release notes to a login that has no menu, since they describe a menu that login does not have. A new topic, Your home screen and the header, tells that login about its tiles, the header, language and Sign out. Confirming a delete now gives examples anyone can meet instead of Admin-only ones.",
+      "On a donation receipt, the Email draft link is gone. In its place is Copy email address, which puts just the donor's address on the clipboard in one press. Press Copy, press Share, then paste the address into the To line. Share still attaches the PDF with the subject and message already written.",
+      "A supplier’s page and the Who does what screen now only say what you can do there. The supplier page no longer says you can make a supplier a Shelter Friend unless you can, and the Features link on Who does what reads See the features, not Edit the features, unless you are an Admin.",
+    ],
+  },
   {
     version: "0.44.1",
     date: "2026-11-10",

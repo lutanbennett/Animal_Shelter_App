@@ -105,6 +105,39 @@ fi
 grep -q '^/swapfile2 ' /etc/fstab || echo '/swapfile2 none swap sw,pri=200 0 0' | sudo tee -a /etc/fstab >/dev/null
 swapon --show
 
+echo "== 2c. Persistent journal, so a reboot's cause survives the reboot"
+# Raspberry Pi OS ships /usr/lib/systemd/journald.conf.d/40-rpi-volatile-storage.conf with
+# Storage=volatile, to spare an SD card from write wear. This Pi boots from NVMe, so that
+# does not apply - and the cost is real: on 2026-11-11 the box rebooted in the middle of a
+# release and there was NO record of why, because the whole journal lived in /run (tmpfs)
+# and is erased at every boot. Backlog #pm4kz; release record docs/releases/2026-11-11-0-44-2.md.
+#
+# A drop-in in /etc numbered 99- sorts after the vendor's 40-, so it wins, and the vendor
+# file is left ALONE: a package update can replace it without silently undoing this. Note
+# that `systemd-analyze cat-config systemd/journald.conf` then prints BOTH Storage lines,
+# volatile first and persistent second; the later one wins, so the volatile line is not a fault.
+#
+# SystemMaxUse is set because the default is 10% of the filesystem - about 93 GB here.
+sudo mkdir -p /etc/systemd/journald.conf.d
+sudo tee /etc/systemd/journald.conf.d/99-lanna-persistent-journal.conf >/dev/null <<'EOF'
+# Overrides Raspberry Pi OS's 40-rpi-volatile-storage.conf. See scripts/pi/setup.sh, step 2c.
+[Journal]
+Storage=persistent
+SystemMaxUse=500M
+EOF
+# journald creates the machine-id subdirectory itself, but the parent must exist and be
+# group-writable by systemd-journal.
+sudo install -d -m 2755 -o root -g systemd-journal /var/log/journal
+sudo systemctl restart systemd-journald
+sudo journalctl --flush
+# Assert it rather than assume it: journalctl must now read from disk, not from /run.
+if journalctl --header 2>/dev/null | grep -q '^File path: /var/log/journal/'; then
+  echo "setup: journal is persistent ($(journalctl --disk-usage 2>/dev/null))"
+else
+  echo "setup: WARNING - the journal is still in /run, so a reboot will erase it. Check" >&2
+  echo "       'systemd-analyze cat-config systemd/journald.conf' for a later Storage= line." >&2
+fi
+
 echo "== 3. The app: dependencies, env file, first build"
 npm ci --no-audit --no-fund
 node scripts/pi/write-env.mjs --env production

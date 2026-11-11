@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { isPublicPath, isPublicPage, isEdgeCachedPage, thPathRest } from "./public-paths.ts";
+import { isPublicPath, isPublicPage, isEdgeCachedPage, thPathRest, localizedHref, otherLanguageHref } from "./public-paths.ts";
 
 // The dangerous direction is a path wrongly treated as public, so the "not public"
 // lists are the longer ones. All values are written out here, not read from the module.
@@ -79,4 +79,23 @@ test("thPathRest: /th/ maps only a public PAGE to its bare twin", () => {
 test("edge cache: a /th/ twin caches exactly when its bare page does", () => {
   for (const p of ["/th", "/th/adopt", "/th/our-work/abc"]) assert.equal(isEdgeCachedPage(thPathRest(p) ?? p), true, p);
   for (const p of ["/th/campaigns", "/th/services", "/th/r/CODE1", "/th/e/1"]) assert.equal(isEdgeCachedPage(thPathRest(p) ?? p), false, p);
+});
+
+test("localizedHref: Thai public pages get /th, nothing else does", () => {
+  assert.equal(localizedHref("/adopt", "th"), "/th/adopt");
+  assert.equal(localizedHref("/", "th"), "/th");
+  assert.equal(localizedHref("/adopt/12?x=1#a", "th"), "/th/adopt/12?x=1#a");
+  for (const p of ["/adopt", "/", "/bills", "/login"]) assert.equal(localizedHref(p, "en"), p, p);
+  for (const p of ["/bills", "/login", "/api/x", "https://x.org/adopt", "//x.org/adopt", "#a", "/th/adopt"]) {
+    assert.equal(localizedHref(p, "th"), p, p);
+  }
+});
+
+test("otherLanguageHref: the toggle goes to the other address; staff pages stay put", () => {
+  assert.equal(otherLanguageHref("/th/adopt", "en"), "/adopt");
+  assert.equal(otherLanguageHref("/th", "en"), "/");
+  assert.equal(otherLanguageHref("/adopt", "th"), "/th/adopt");
+  assert.equal(otherLanguageHref("/", "th"), "/th");
+  assert.equal(otherLanguageHref("/bills", "th"), null);
+  assert.equal(otherLanguageHref("/th/bills", "en"), null);
 });

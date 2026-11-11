@@ -1,8 +1,9 @@
 "use client";
 
 import { useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { otherLanguageHref } from "@/lib/public-paths";
 import { localeCookie, type Locale } from "@/lib/i18n/locales";
 
 const TONES = {

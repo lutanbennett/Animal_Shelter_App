@@ -142,8 +142,10 @@ sequential.** Deploy test, see it finish, then hand the production command over 
 or hand his over first and wait — **then UAT last, after his has finished.**
 Adding UAT made the queue three long, so the discipline matters more, not less:
 **his is the one that must not be killed**, which is why UAT goes at the back.
-**What genuinely parallelises is the Pi builds**, which build on the Pi and touch
-nothing in the main checkout.
+**What parallelises with a WORKER deploy is a Pi build**, which runs on the Pi and touches nothing in
+the main checkout — one Pi build alongside one Worker deploy is the shape to use. **The three Pi
+builds do NOT parallelise with each other**: the Pi has 4 GiB and the OOM killer takes one. See
+*The Pi* below, corrected on `0.44.2`.
 
 **And confirm a deploy from the Worker, never from "it finished".** A failed
 deploy also finishes. `0.40.3` was told "it looks like it has deployed" when it
@@ -780,7 +782,33 @@ ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App_uat && ./scripts/pi/deploy-pi.
 **Three clones now, one per environment** — `~/Animal_Shelter_App`,
 `~/Animal_Shelter_App_test`, `~/Animal_Shelter_App_uat` — serving
 `lanna-care`, `lanna-care-test` and `lanna-care-uat` on ports 3000, 3001 and 3002.
-They build in parallel safely; they are on the Pi, not the main checkout.
+They are on the Pi, not the main checkout, so they never collide with a Worker deploy.
+
+**BUT DO NOT RUN ALL THREE AT ONCE. THE PI HAS 4 GiB OF RAM AND THE OOM KILLER TAKES ONE.**
+Corrected 2026-11-11 on `0.44.2`, where this line said *"they build in parallel safely"* and it is
+not true for three. Three parallel `next build` runs exhausted memory: the production build died with
+a bare **`Killed`** in its log, and the Pi had also **rebooted at 08:39** mid-build a few minutes
+earlier, killing an entire first round of all three. The journal is not persistent on that box
+(`journalctl --list-boots` shows only the current boot), so the reboot's cause is **not established**
+— but the correlation with three concurrent builds is the only thing that changed.
+
+- **Run them ONE AT A TIME.** Read each one's closing lines before starting the next. One build takes
+  about five minutes, so serial costs ten extra minutes and buys a release that does not half-land.
+  **This said "or at most two" when it was written on 2026-11-11, and that was corrected the same day
+  from a figure already in the repo:** `scripts/pi/setup.sh` step 2b records that **`next build` peaks
+  above 6 GB on this 4 GB Pi**, which is why it adds a 4 GB swap file and why `deploy-pi.sh` refuses
+  below ~6 GB. So **one** build already needs swap to fit; two want ~12 GB against about 10 GB of RAM
+  plus swap, and three were never possible. The OOM kill was predictable from that comment, and
+  "at most two" was a guess dressed as a limit.
+- **The failure is SAFE, and read it rather than fearing it:** `deploy-pi.sh` discards `.next.new`
+  and never touches `.next`, so the clone keeps serving the old version and prints
+  `BUILD FAILED — discarding .next.new` then `DEPLOY FAILED — NOTHING NEW IS BEING SERVED`. Rebuild
+  that clone alone and it succeeds — it did, first try, with 3.0 GiB free.
+- **Before theorising about the machine, run the prescribed `du -sh .next .next/cache node_modules`
+  comparison** (`CLAUDE.md`, *When a Pi build is killed*). On `0.44.2` it exonerated the cache: both
+  clones read `1.3G` `.next` and `1.2G` `node_modules` with no `.next/cache` at all, so it was memory
+  and not the 2026-10-19 cache-bloat fault.
+- **`free -h` on the Pi is the one-line check**: 4.0 GiB total. Two builds fit; three do not.
 
 **The UAT one restarts itself since 2026-11-09**, when `/etc/sudoers.d/lanna-care-restart`
 gained UAT's two commands (*What UAT needed once*, item 2). Before that it stopped at its
