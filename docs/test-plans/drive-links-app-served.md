@@ -10,10 +10,10 @@
 | Backlog item | `docs/backlog.md` → #dv7k3 |
 | Branch / worktree | `claude/drive-links-app-served` @ `C:\Development\Animal_Shelter_drive-links-app-served` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3001` |
-| PR | pending: PR not yet open at this commit |
+| PR | opened from this branch |
 | Tested by / date | Claude / 2026-11-11 |
 | Carries a migration? | no |
-| Tested at SHA | aac79f39 |
+| Tested at SHA | 0e4949f4 |
 
 ## 1. Scope and risk
 
@@ -24,10 +24,16 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — pending-free: run before the PR (see gates block)
+- [x] `node scripts/worktree.mjs sync` — origin/main merged in cleanly
 - [x] `node scripts/gates.mjs` ends with the four-gate line (pasted below)
 
-GATES_PLACEHOLDER
+```
+=== gates: typecheck exited 0 after 20s
+=== gates: lint exited 0 after 168s
+=== gates: test exited 0 after 27s
+=== gates: build exited 0 after 46s
+gates: typecheck=0 lint=0 test=0 build=0
+```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
