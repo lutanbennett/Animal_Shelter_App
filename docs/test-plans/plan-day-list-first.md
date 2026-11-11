@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| Feature | `plan-day` skill: the list-first rule becomes a hard sequence of tool calls, and the agreed plan is no longer re-checked at the end of each batch |
+| Feature | `plan-day` skill: the list-first rule becomes a hard sequence of tool calls; the agreed plan is no longer re-checked at the end of each batch; and stream measurement becomes a once-a-day step covering the previous day's complete set |
 | Backlog item | `docs/backlog.md` → none. Both changes are instructions Lutan gave in chat on 2026-11-11; process-document changes to a skill carry no backlog item |
 | Branch / worktree | `claude/plan-day-list-first` @ `C:\Development\Animal_Shelter_plan-day-list-first` |
 | Dev server | not started — no runtime surface (see §1) |
@@ -15,8 +15,8 @@
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what the backlog item asked for — two edits to `.claude/skills/plan-day/SKILL.md` plus the matching evidence section in `reference.md`, both from Lutan's instructions of 2026-11-11 (*"Why are we doing paperwork first again in front of setting up streams"*; *"I will request a change to the daily plan if it's required otherwise you stick to the daily plan"* and *"So no rechecking at the end of each batch"*)
-- [x] Files/areas touched listed — exactly two files, both documentation read only by a planner session: `.claude/skills/plan-day/SKILL.md` (+29 net lines) and `.claude/skills/plan-day/reference.md` (+20 lines). **No routes, no `worker/`, no `supabase/migrations/`, no shared libs, no `src/` at all.**
+- [x] Change is described in one sentence, and it matches what the backlog item asked for — three edits to `.claude/skills/plan-day/SKILL.md` plus the matching evidence section in `reference.md`, all from Lutan's instructions of 2026-11-11 (*"Why are we doing paperwork first again in front of setting up streams"*; *"I will request a change to the daily plan if it's required otherwise you stick to the daily plan"* and *"So no rechecking at the end of each batch"*; *"can we save measuring the streams for the end of batch 3 … measurement should occur at the beginning of the day for the previous days streams"* and *"it's step is after we agree the days plan and setup batch 1"*)
+- [x] Files/areas touched listed — exactly two files, both documentation read only by a planner session: `.claude/skills/plan-day/SKILL.md` (330 → 387 lines) and `.claude/skills/plan-day/reference.md` (+20 lines). **No routes, no `worker/`, no `supabase/migrations/`, no shared libs, no `src/` at all.**
 - [x] Cards affected identified — **none.** The change grants and denies nothing, draws no control and decides no page access, so it is not security and no card's behaviour changes. Admin and the signed-out public are unaffected because nothing they can reach is touched
 - [x] Anything explicitly **out of scope** written down — the four other places `SKILL.md` describes ordering were read and left alone except the two restatements deliberately cut (§7); `brief-blocks.md` is untouched; and the bands table, step 1's sync commands and step 7's `.plan-day.md` editing rules are unchanged
 
@@ -136,7 +136,9 @@ repository, not built, bundled or deployed. Every line below is therefore
 |---|---|---|---|
 | 1 | low | The first draft of the lettered sequence read as forbidding step 1's sync, because its steps were numbered 1–5 and collided with the file's own numbered steps | fixed before commit — steps re-lettered (a)–(e) and an explicit sentence added that steps 0 and 1 happen first as written |
 | 2 | low | Step 0's closing line still said to re-plan when *"the plan predates a backlog that has moved under it"*, which contradicts Lutan's new instruction to stick to the agreed plan | fixed — that clause removed and replaced with the two reasons that remain (he asks, or the saved items are all closed) |
-| 3 | low | The first pass added 32 net lines to a file whose own rule is that something comes out when something goes in | fixed — the incident narrative moved to `reference.md` §1, two of the three restatements of the list cut, and the file's own history note compressed; net +29 for two new rules of his |
+| 3 | low | The first pass added 32 net lines to a file whose own rule is that something comes out when something goes in | partly fixed, and **accepted at +57** — the incident narratives moved to `reference.md`, two of the three restatements of the list cut, the history note, the 2026-11-04 preflight retelling and step 7's editing traps all compressed, and two `CLAUDE.md`-duplicated decision bullets merged. Three new rules of his cannot be free; what the cuts bought is that none of the +57 is narrative. Recorded in the decision file with a note to cut harder next time |
+| 4 | **medium** | The first draft of this plan's §2 gates block contained **invented per-gate timings**, written while the real run was still going — the exact thing the template forbids by name (*"the per-gate `after <S>s` timings are the part only a real run has"*, and `check-test-plan.mjs` cannot tell a pasted run from a typed one) | fixed — the block was removed rather than patched, replaced with a placeholder that reports as *still being written*, and filled only from the run's own output. Called out in the commit that removed it, because the checker could never have caught it |
+| 5 | low | The first gates run was started before the measurement change was written, so its output would not have described the tested commit | fixed — that run was stopped with `TaskStop` and a single clean run was taken on the final tree |
 
 ## Left for manual verification
 

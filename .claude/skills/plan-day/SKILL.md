@@ -30,7 +30,8 @@ everything after them, and is lettered so it cannot be confused with this file's
 - **(c)** `node scripts/worktree.mjs streams`, **the moment the last brief is written and before any
   other tool call.**
 - **(d)** The list, first in your reply.
-- **(e)** **Only now**: the actuals, the PR bodies, the backlog filing, the bands, `.plan-day.md`.
+- **(e)** **Only now**: the PR bodies, the backlog filing, the bands, `.plan-day.md` — and, **on the
+  day's FIRST batch only, the measurement of the previous day's streams** (step 3).
 
 **BETWEEN THE SYNC AND (a), THE ONLY READS ALLOWED ARE THREE CHEAP FACTS:** has the current batch merged
 (`gh pr list --state open`, and `--state all --head claude/<slug>` per slug); is the migration slot free;
@@ -55,8 +56,8 @@ in here. If you add to this file, something else comes out.**
 - **Stick to the agreed plan.** Once he has agreed the day's nine, **do not re-check the next batch
   against the backlog** — a change comes from him. (2026-11-11: *"I will request a change to the daily
   plan if it's required otherwise you stick to the daily plan"*.) Step 0 has what this does not remove.
-- **`test-plan` is advisory, permanently.** Never list it as a decision he owes. (2026-10-20.)
-- **Every PR merges on green, with no approval round-trip** — feature PRs included (`CLAUDE.md`).
+- **`test-plan` is advisory, permanently** (2026-10-20), and **every PR merges on green with no approval
+  round-trip**, feature PRs included. Both are in `CLAUDE.md` in full; neither is a decision he owes.
 - **All analysis is by CARD, never by role.** Roles are a transient grouping and will be rebuilt. Before
   you write any band, brief or finding: would this sentence still be true after the card assignments are
   rebuilt? If not, name the card instead. (2026-10-28, said twice in one day.)
@@ -113,10 +114,8 @@ not assume `main` is newer: on 2026-11-08 two items were newer on `main` and one
 because the planner had filed his answer there that morning. Compare the two texts, keep the one carrying
 the later content, and have your script exit non-zero if an anchor is missing.
 
-**The preflight is last, and two things to do with it:** say in the plan what you cannot reach, and
-**never ask him to check something you have merely lost the ability to read.** On 2026-11-04 the planner
-spent an evening saying *"I cannot read the database"* while `SUPABASE_SERVICE_ROLE_KEY` sat in
-`.env.local` the whole time — it had lost one of two credentials and behaved as though it had lost both.
+**The preflight is last:** say in the plan what you cannot reach, and **never ask him to check something
+you have merely lost the ability to read** (`reference.md` §2).
 
 ## 2. Set up — the current batch only
 
@@ -149,10 +148,35 @@ with no PR, is not a slot to reuse. Then per stream, in sequence:
 **A mitigation you write into a brief is a HYPOTHESIS. Check next round whether it FIRED, and write down
 which way it went.** Never write the fix up as settled in the same breath as finding the fault.
 
-## 3. What is already in flight
+## 3. Measure the previous day's streams — ONCE A DAY, after batch 1 is set up
 
-`node scripts/worktree.mjs list`, then `gh pr list --state open` and **name every open PR this session
-did not open** (a Dependabot bump above all — no stream owns it, so nothing else will look;
+**His decision, 2026-11-11:** *"can we save measuring the streams for the end of batch 3 … I'm thinking
+measurement should occur at the beginning of the day for the previous days streams. That way we always
+have a complete set"*, and on where it sits: *"it's step is after we agree the days plan and setup batch
+1"*.
+
+**So measurement happens EXACTLY ONCE A DAY, and this is its slot:** the day's plan is agreed, batch 1's
+worktrees and briefs exist, the list has gone to him — **and then** you read the **complete set of the
+previous day's streams**, all nine of them together.
+
+- **DO NOT measure per batch.** On a resume that sets up batch 2 or batch 3, **skip this step
+  entirely.** There is nothing to read: yesterday's set was read this morning and today's streams are
+  not finished.
+- **You always get a complete set, which is the point.** Three batches of three measured piecemeal gave
+  a planner three partial pictures and a floor re-derived three times; nine read together give one.
+- **IT IS SAFE TO WAIT, AND HERE IS WHY — the figures cannot expire.** Each stream posts one
+  `stream-usage:` comment on its own PR immediately before merging, and `gh pr view <n> --json comments`
+  reads it from a merged PR whose branch and worktree are long gone. **Proven 2026-11-11:** batch 1's
+  three were read after their worktrees had been cleared. **This is the whole reason his ordering works**
+  — contrast the live reading, where an archived session reports `unavailable` and the figure is lost
+  for good (`reference.md` §7).
+- **ONE CONSEQUENCE, STATED RATHER THAN GLOSSED: the day's FIRST batch is banded before you have
+  yesterday's figures.** Its bands come from the handover instead. Batches 2 and 3 are banded at their
+  own setup, by which time you have read the complete set, so **only batch 1 lags.** Measuring earlier
+  would fix that and would be paperwork ahead of his list, which is the trade he made.
+
+**Then, in the same step: what is already in flight.** `node scripts/worktree.mjs list`, then
+`gh pr list --state open` and **name every open PR this session did not open** (a Dependabot bump above all — no stream owns it, so nothing else will look;
 `CLAUDE.md` says whether it is merged or read first).
 
 - **Read the `state` column before believing the `ahead` column.** A squash-merged branch stays ahead for
@@ -164,10 +188,10 @@ did not open** (a Dependabot bump above all — no stream owns it, so nothing el
   unsubmitted work, if ahead), which is a different thing from a merged PR. Never widen a destructive
   step past what he named.
 
-**Actuals come from the PR, not a live process.** Each stream posts one `stream-usage:` comment before
-merging; `gh pr view <n> --json comments` has it, and it cannot expire. **The floor is
-`tokens − messages`, re-derived each batch and never carried forward.** Release-manager and handover PRs
-post none.
+**Actuals come from the PR, not a live process** — see the durability note above. **The floor is
+`tokens − messages`, re-derived ONCE A DAY from the complete set and never carried forward.** Nine
+figures read together is a better floor than three sets of three. Release-manager and handover PRs post
+none.
 
 **Four ways a figure is NOT a band reading — record it, mark it, keep it out:** `finished=blocked`;
 `compacted=yes` or a floor-sized `messages` on a long session (the window was reset, so the figure is a
@@ -259,12 +283,10 @@ not meaning to tick.** Bundle any decision he owes into the same question.
 
 Write `C:/Development/Animal_Shelter_App/.plan-day.md` (gitignored, and it stays that way).
 
-**To overwrite it: Write the new text to your scratchpad, then `cat <scratch> > .plan-day.md`** — Write
-refuses a file this session has not read, and `rm` is refused as local destruction. For small amendments
-prefer a node script written to the scratchpad and run by path, using `out.split(from).join(to)` —
-**never `replace()`**, which reads `$` specially — **with a guard that exits non-zero when an anchor is
-missing.** Normalise `\r\n` before matching. Never `node -e` for text holding a Windows path. Full
-reasoning and the tracked-file line-ending trap: `reference.md`.
+**To overwrite it: Write to your scratchpad, then `cat <scratch> > .plan-day.md`.** Amend with a node
+script run by path, `out.split(from).join(to)` — **never `replace()`**, which reads `$` specially —
+**with a guard that exits non-zero when an anchor is missing**, and normalise `\r\n` first. Why each of
+those, and the line-ending trap: `reference.md` §6.
 
 It holds the date, and per batch a status (`pending` / `set up <when>` / `merged`) with each item's slug,
 title, area, migration flag and one-line why, plus any dependency that fixed the ordering. Keep statuses
@@ -290,8 +312,14 @@ while the context exists; then he starts a fresh chat. Reset the counter once it
 
 **The handover is not written until its PR is MERGED.** On 2026-11-08 edition `708` was written, pushed
 and never PR'd, so `main` read the previous edition for a day. Its test plan is part of it. It merges on
-green like everything else. **Write it at setup of the last batch and say in it that that batch's figures
-are not in it.**
+green like everything else. **Write it at setup of the last batch.**
+
+**SINCE 2026-11-11 THE FIGURES LAG ONE PLAN, AND THE HANDOVER MUST SAY SO.** Measurement moved to once a
+day (step 3), so a handover written at batch 3's setup carries **no figures from its own plan at all** —
+its own nine are read the next morning and reported by its successor. **That is the delta model working
+as intended, not a gap:** each edition reports the previous plan's complete set. **Say in each edition
+which plan's figures it is reporting**, so nobody reads a missing set as a lost one. The old wording —
+*"say that that batch's figures are not in it"* — described the per-batch world and is superseded.
 
 ## Bands — provisional, revise from the actuals
 

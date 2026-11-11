@@ -65,6 +65,45 @@ is his to make.** The alternative cost him a re-read of the backlog three times 
 it went too. Re-planning from scratch now has exactly two reasons: he asks, or the saved items are all
 closed.
 
+## 3. Measurement happens once a day, for the previous day's complete set
+
+**His words:** *"can we save measuring the streams for the end of batch 3 … I'm thinking measurement
+should occur at the beginning of the day for the previous days streams. That way we always have a
+complete set"*, and on where the step sits: *"it's step is after we agree the days plan and setup batch
+1"*.
+
+**So step 3 is now a once-a-day step** in that exact slot: the day's plan agreed, batch 1's worktrees
+and briefs written, the list sent — **then** read all nine of the previous day's `stream-usage` figures
+together. **On a resume that sets up batch 2 or 3, the step is skipped entirely:** yesterday's set was
+read this morning and today's streams are not finished.
+
+**Why it works, and this is the fact the whole change rests on: the figures cannot expire.** Each
+stream posts its `stream-usage:` comment on its own PR immediately before merging, and
+`gh pr view <n> --json comments` reads it from a merged PR long after the branch and worktree are gone.
+**Proven on 2026-11-11**, when batch 1's three were read after their worktrees had already been
+cleared. Contrast the live reading, where an archived session answers `unavailable` and the figure is
+lost for good — **that** is the one that cannot be deferred, and it is not the one we use.
+
+**What it buys:** three batches of three gave the planner three partial pictures and a floor
+re-derived three times a day. Nine read together give one complete set and one floor. The floor line in
+step 3 changed accordingly, from *"re-derived each batch"* to *"re-derived once a day from the complete
+set"*.
+
+**ONE CONSEQUENCE, AND IT IS WRITTEN INTO THE SKILL RATHER THAN GLOSSED: the day's FIRST batch is
+banded before the previous day's figures have been read.** Its bands come from the handover instead.
+Batches 2 and 3 are banded at their own setup, after the measurement, so **only batch 1 lags.**
+Measuring before planning would remove that lag and would be paperwork ahead of his list — which is
+the thing change 1 above exists to stop. **He chose the ordering; the lag is its price and it is
+small.**
+
+**A second consequence, for the handover.** A handover is written at the setup of the plan's last
+batch, so it now carries **no figures from its own plan at all** — its nine are read the next morning
+and reported by its successor. **That is the delta model working as intended**, since each edition
+already exists to report what its predecessor's plan actually did. The skill now requires each edition
+to **say which plan's figures it is reporting**, so a missing set is never read as a lost one. The old
+instruction — *"say that that batch's figures are not in it"* — described the per-batch world and is
+superseded.
+
 ## What came out, because the file requires it
 
 `SKILL.md` says *"If you add to this file, something else comes out."* Two new rules went in, so:
@@ -77,9 +116,18 @@ closed.
   (*"Cite them; do not copy them back in here"*).
 - **The file's own history note is compressed** from five lines to three, keeping the pointers and the
   something-comes-out rule.
+- **The 2026-11-04 preflight incident is cut to its rule**, because retelling it is `reference.md` §2's
+  job.
+- **Step 7's `.plan-day.md` editing traps are cut to the two that bite silently** (`replace()` reading
+  `$`, and the missing-anchor guard), pointing at `reference.md` §6 for the rest.
+- **Two bullets in HIS DECISIONS are merged into one pointer**, because `test-plan` being advisory and
+  merge-on-green are both in `CLAUDE.md` at length.
 
-Net: `SKILL.md` 330 → 359 lines for two new rules of his, with the prose that explains them held in
-`reference.md`.
+**Net: `SKILL.md` 330 → 387 lines, and that is honestly +57 rather than a wash.** Three new rules of
+his cannot be free. What the cuts bought is that none of the 57 is narrative — every incident now lives
+in `reference.md` and the skill holds only the instruction. **The rule exists to stop the file drifting
+back towards the 2,176 lines it was cut from on 2026-11-08, and a planner adding to it next should cut
+harder than this did.**
 
 ## Corrected in passing: confirming a batch is single-select
 
