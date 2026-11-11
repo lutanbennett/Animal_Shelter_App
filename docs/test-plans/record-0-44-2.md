@@ -25,8 +25,8 @@
 
 - [x] `node scripts/worktree.mjs sync` — n/a: the branch was cut from `origin/main` after the cut PR merged, in the cut's own worktree, which was still present
 - [x] `node scripts/gates.mjs` — **n/a, and deliberately so.** This is a documents-only PR; `scripts/check-docs-only.mjs` decides, and `ci.yml` gates every heavy job on it (paperwork rule 1). The rule also says **not** to touch code to make a check run, so nothing here does
-- [ ] `node scripts/check-docs-only.mjs --base origin/main` — pending: run after committing, which is the only way it can answer
-- [ ] `node scripts/check-test-plan.mjs --base origin/main` run the way CI runs it — pending
+- [x] `node scripts/check-docs-only.mjs --base origin/main` — run **after committing**, which is the only way it can answer: exit **0**, *"The heavy jobs will skip; test-plan still runs."* So the `audit` job will show **`skipped`**, which is not a pass and is correct here — no `package.json` or `package-lock.json` change to audit
+- [x] `node scripts/check-test-plan.mjs --base origin/main` run the way CI runs it — exit **0**. **It caught a real fault in this very plan on the first run** and is worth recording as the check earning its keep: these two lines were written `pending` and `pending:` with no detail, and it refused with *"`pending` with no detail — say what is outstanding and who it waits on"*. Both checks had in fact already run, so the honest fix was to tick them with their results rather than to add a reason to a wait that did not exist
 
 ## 3. Schema and data
 
