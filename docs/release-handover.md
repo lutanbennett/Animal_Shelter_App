@@ -37,8 +37,12 @@ build in parallel safely"* and **that line was wrong and is now corrected** (`do
   **The cause is NOT established** — the journal is not persistent on that box
   (`journalctl --list-boots` shows only the current boot) — but three concurrent builds is the only thing
   that changed. Treat it as suspected, not proven.
-- **Run them one at a time**, or at most two, reading each one's closing lines before the next. One takes
-  about five minutes. Serial costs ten extra minutes and buys a release that does not half-land.
+- **Run them ONE AT A TIME**, reading each one's closing lines before the next. One takes about five
+  minutes. Serial costs ten extra minutes and buys a release that does not half-land. **This said "or at
+  most two" and that was corrected within the day** from a figure already in the repo: `setup.sh` step 2b
+  records that **`next build` peaks above 6 GB on this 4 GB Pi**, which is why it adds 4 GB of swap and
+  why `deploy-pi.sh` refuses below ~6 GB. One build already needs swap; two want ~12 GB against ~10 GB.
+  **The OOM was predictable from a comment that was already there**, and "at most two" was a guess.
 - **One Pi build alongside one Worker deploy is still fine** — different machines. That is the
   parallelism to use.
 

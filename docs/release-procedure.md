@@ -792,9 +792,14 @@ earlier, killing an entire first round of all three. The journal is not persiste
 (`journalctl --list-boots` shows only the current boot), so the reboot's cause is **not established**
 — but the correlation with three concurrent builds is the only thing that changed.
 
-- **Run them one at a time**, or at most two, and read each one's closing lines before starting the
-  next. One build takes about five minutes, so serial costs ten extra minutes and buys a release that
-  does not half-land.
+- **Run them ONE AT A TIME.** Read each one's closing lines before starting the next. One build takes
+  about five minutes, so serial costs ten extra minutes and buys a release that does not half-land.
+  **This said "or at most two" when it was written on 2026-11-11, and that was corrected the same day
+  from a figure already in the repo:** `scripts/pi/setup.sh` step 2b records that **`next build` peaks
+  above 6 GB on this 4 GB Pi**, which is why it adds a 4 GB swap file and why `deploy-pi.sh` refuses
+  below ~6 GB. So **one** build already needs swap to fit; two want ~12 GB against about 10 GB of RAM
+  plus swap, and three were never possible. The OOM kill was predictable from that comment, and
+  "at most two" was a guess dressed as a limit.
 - **The failure is SAFE, and read it rather than fearing it:** `deploy-pi.sh` discards `.next.new`
   and never touches `.next`, so the clone keeps serving the old version and prints
   `BUILD FAILED — discarding .next.new` then `DEPLOY FAILED — NOTHING NEW IS BEING SERVED`. Rebuild
