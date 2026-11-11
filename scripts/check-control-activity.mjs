@@ -166,7 +166,7 @@ for (const [f, sf] of sfs) {
     if (ts.isJsxAttribute(n) && n.initializer && ts.isJsxExpression(n.initializer) && n.initializer.expression && /^on[A-Z]/.test(n.name.getText())) {
       const tag = n.parent?.parent && (ts.isJsxOpeningElement(n.parent.parent) || ts.isJsxSelfClosingElement(n.parent.parent)) ? n.parent.parent.tagName.getText() : null;
       const target = tag ? importMap.get(f)?.get(tag.split(".")[0])?.file : null;
-      if (target) { const k = target + "::" + n.name.getText(); (cbSources.get(k) || cbSources.set(k, []).get(k)).push({ expr: n.initializer.expression, file: f }); }
+      if (target) { const k = target + "::" + n.name.getText(); const elx = n.parent.parent; (cbSources.get(k) || cbSources.set(k, []).get(k)).push({ expr: n.initializer.expression, file: f, node: ts.isJsxOpeningElement(elx) ? elx.parent : elx }); }
     }
     ts.forEachChild(n, v);
   })(sf);
@@ -202,8 +202,12 @@ function gatesFor(node, file) {
           const e = st.expression;
           const neg = ts.isPrefixUnaryExpression(e) && e.operator === ts.SyntaxKind.ExclamationToken ? e.operand : null;
           if (neg) conds.push(neg);
-          else if (ts.isBinaryExpression(e) && e.operatorToken.kind === ts.SyntaxKind.BarBarToken)
-            for (const side of [e.left, e.right]) if (ts.isPrefixUnaryExpression(side) && side.operator === ts.SyntaxKind.ExclamationToken) conds.push(side.operand);
+          else if (ts.isBinaryExpression(e) && e.operatorToken.kind === ts.SyntaxKind.BarBarToken) {
+            // `if (!a || !b || c) return`: past it, a and b both hold. Flatten the whole || chain, not just its top two operands.
+            const terms = [];
+            (function flat(x) { if (ts.isBinaryExpression(x) && x.operatorToken.kind === ts.SyntaxKind.BarBarToken) { flat(x.left); flat(x.right); } else terms.push(x); })(e);
+            for (const side of terms) if (ts.isPrefixUnaryExpression(side) && side.operator === ts.SyntaxKind.ExclamationToken) conds.push(side.operand);
+          }
         }
       }
     }
@@ -297,6 +301,36 @@ function findFn(file, name) {
   })(sf);
   return hit;
 }
+/**
+ * PATTERN (i), an optional can(). `const canPublish = can(perms, "x")` whose name is only ever used to SHAPE what the action writes
+ * (the condition of a ternary, the left side of `&&`, never refusing) does not make x a requirement of the control: the action runs
+ * for a login without it, it just writes less. Anything else is a requirement, conservatively: any use in an `if`, a `||`/`??`,
+ * passed to a call, returned, or a ternary arm that refuses. Counted in OPTIONAL_CAN so the report says how many were skipped.
+ */
+const OPTIONAL_CAN = [];
+const REFUSES = /\brefuse\b|\bthrow\b|\bnotFound\b|\bredirect\b|ok:\s*false/;
+function isOptionalCan(call) {
+  const decl = call.parent;
+  if (!decl || !ts.isVariableDeclaration(decl) || decl.initializer !== call || !ts.isIdentifier(decl.name)) return false;
+  let fn = decl;
+  while (fn && !ts.isFunctionLike(fn)) fn = fn.parent;
+  if (!fn) return false;
+  let optional = true;
+  (function v(n) {
+    if (!optional) return;
+    if (ts.isIdentifier(n) && n.text === decl.name.text && n !== decl.name && !(n.parent && ts.isPropertyAccessExpression(n.parent) && n.parent.name === n)) {
+      let use = n;
+      while (use.parent && (ts.isParenthesizedExpression(use.parent) || (ts.isPrefixUnaryExpression(use.parent) && use.parent.operator === ts.SyntaxKind.ExclamationToken))) use = use.parent;
+      const p = use.parent;
+      const shapes =
+        (p && ts.isConditionalExpression(p) && p.condition === use && !REFUSES.test(p.whenTrue.getText() + p.whenFalse.getText())) ||
+        (p && ts.isBinaryExpression(p) && p.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken && p.left === use && !REFUSES.test(p.right.getText()));
+      if (!shapes) optional = false;
+    }
+    ts.forEachChild(n, v);
+  })(fn.body ?? fn);
+  return optional;
+}
 const actCache = new Map();
 /** Activities asked inside function `name` of `file`, following calls to helpers (same file, then imports) to `depth`. */
 function actionActs(file, name, depth = 2, seen = new Set()) {
@@ -312,7 +346,8 @@ function actionActs(file, name, depth = 2, seen = new Set()) {
       const callee = n.expression;
       if (ts.isIdentifier(callee)) {
         const nm = callee.text;
-        if (nm === "can" && n.arguments.length >= 2 && strLit(n.arguments[1])) res.acts.push({ act: strLit(n.arguments[1]), level: strLit(n.arguments[2]) || "edit" });
+        if (nm === "can" && n.arguments.length >= 2 && strLit(n.arguments[1]) && isOptionalCan(n)) OPTIONAL_CAN.push(`${rel(file)} ${strLit(n.arguments[1])}`);
+        else if (nm === "can" && n.arguments.length >= 2 && strLit(n.arguments[1])) res.acts.push({ act: strLit(n.arguments[1]), level: strLit(n.arguments[2]) || "edit" });
         else if (nm === "requirePermission" && strLit(n.arguments[0])) res.acts.push({ act: strLit(n.arguments[0]), level: strLit(n.arguments[1]) || "edit" });
         else if (depth > 0) {
           const imp = importMap.get(file)?.get(nm);
@@ -335,9 +370,20 @@ function actionActs(file, name, depth = 2, seen = new Set()) {
 // ---- control -> action -------------------------------------------------------------------------
 /** Follow an expression to the server actions / rpcs it can reach. */
 function reach(expr, file, depth = 3, seen = new Set()) {
-  const out = { actions: [], rpcs: [], callbacks: [] }; // actions: {file,name}; rpcs: names
-  const addAll = (r) => { out.actions.push(...r.actions); out.rpcs.push(...r.rpcs); out.callbacks.push(...r.callbacks); };
+  const out = { actions: [], rpcs: [], callbacks: [], callers: [], branches: [] }; // actions: {file,name}; rpcs: names; callers: {file,node,sub} one per caller of a callback prop
+  const addAll = (r) => { out.actions.push(...r.actions); out.rpcs.push(...r.rpcs); out.callbacks.push(...r.callbacks); out.callers.push(...r.callers); out.branches.push(...r.branches); };
   (function v(n) {
+    // PATTERN (ii): `cond ? actionA : actionB`. When BOTH arms reach an action they are alternatives, not one union: each arm is judged on its
+    // own, and the true arm may also lean on the condition itself (`canEdit ? update : propose` reaches update only when canEdit is true).
+    if (ts.isConditionalExpression(n)) {
+      const a = reach(n.whenTrue, file, depth, new Set(seen)), b = reach(n.whenFalse, file, depth, new Set(seen));
+      const has = (x) => x.actions.length || x.rpcs.length;
+      if (has(a) && has(b)) {
+        out.branches.push({ cond: n.condition, file, positive: true, sub: a }, { cond: n.condition, file, positive: false, sub: b });
+        out.callbacks.push(...a.callbacks, ...b.callbacks); out.callers.push(...a.callers, ...b.callers); out.branches.push(...a.branches, ...b.branches);
+        return;
+      }
+    }
     if (ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression) && n.expression.name.text === "rpc" && strLit(n.arguments[0])) out.rpcs.push(strLit(n.arguments[0]));
     if (ts.isIdentifier(n) && !(n.parent && ts.isPropertyAccessExpression(n.parent) && n.parent.name === n) && !(n.parent && ts.isPropertyAssignment(n.parent) && n.parent.name === n)) {
       const nm = n.text, k = file + "::" + nm;
@@ -353,12 +399,28 @@ function reach(expr, file, depth = 3, seen = new Set()) {
       } else if (init) addAll(reach(init.body ?? init, file, depth - 1, seen));
       else {
         // destructured `const [state, formAction] = useActionState(...)`
-        let decl = null;
-        (function f(x) { if (decl) return; if (ts.isVariableDeclaration(x) && ts.isArrayBindingPattern(x.name) && x.name.elements.some((e) => ts.isBindingElement(e) && e.name.getText() === nm) && x.initializer) decl = x; else ts.forEachChild(x, f); })(sfs.get(file));
+        // the destructure in the INNERMOST function that encloses this use: two components in one file may both name theirs `onSubmit`
+        let decl = null, best = Infinity;
+        (function f(x) {
+          if (ts.isVariableDeclaration(x) && ts.isArrayBindingPattern(x.name) && x.name.elements.some((e) => ts.isBindingElement(e) && e.name.getText() === nm) && x.initializer) {
+            let fn = x; while (fn && !ts.isFunctionLike(fn)) fn = fn.parent;
+            const size = fn ? fn.end - fn.pos : Infinity;
+            if ((!fn || (fn.pos <= n.pos && n.end <= fn.end)) && size < best) { best = size; decl = x; }
+          }
+          ts.forEachChild(x, f);
+        })(sfs.get(file));
         if (decl && ts.isCallExpression(decl.initializer) && ts.isIdentifier(decl.initializer.expression) && FORM_HOOKS.test(decl.initializer.expression.text) && decl.initializer.arguments[0]) addAll(reach(decl.initializer.arguments[0], file, depth - 1, seen));
         else if (/^on[A-Z]/.test(nm)) {
           const srcs = cbSources.get(file + "::" + nm);
-          if (srcs?.length && depth > 1) for (const sc of srcs) addAll(reach(sc.expr, sc.file, depth - 1, seen));
+          if (srcs?.length && depth > 1) {
+            // PATTERN (iii): a callback prop is judged PER CALLER, never as the union of every caller's action. A shared component's
+            // onPick is whatever the caller passed; the caller's own gate and the pages that render the CALLER are what guard it.
+            for (const sc of srcs) {
+              const sub = reach(sc.expr, sc.file, depth - 1, seen);
+              out.callbacks.push(...sub.callbacks); out.callers.push(...sub.callers);
+              if (sub.actions.length || sub.rpcs.length) out.callers.push({ file: sc.file, node: sc.node, sub: { actions: sub.actions, rpcs: sub.rpcs } });
+            }
+          }
           else out.callbacks.push(nm);
         }
       }
@@ -384,31 +446,57 @@ for (const [f, sf] of sfs) {
       const r = reach(n.initializer.expression, f);
       const names = [...new Set([...r.actions.map((a) => a.name), ...r.rpcs.map((x) => `rpc:${x}`)])];
       const label = `<${tag} ${n.name.getText()}> ${names.join(" + ")}`;
-      if (!r.actions.length && !r.rpcs.length) {
+      const el2 = el.parent && ts.isJsxElement(el.parent) ? el.parent : el;
+      // A <form onSubmit> with submit buttons, EVERY one drawn under a gate, can only be submitted through those buttons: the gates on them are the form's.
+      const submitGates = [];
+      if (tag === "form" && ts.isJsxElement(el2)) {
+        const subs = [];
+        (function sv(x) { if ((ts.isJsxOpeningElement(x) || ts.isJsxSelfClosingElement(x)) && x.attributes.properties.some((p) => ts.isJsxAttribute(p) && p.name.getText() === "type" && p.initializer && ts.isStringLiteral(p.initializer) && p.initializer.text === "submit")) subs.push(x); ts.forEachChild(x, sv); })(el2);
+        const g = subs.map((x) => gatesFor(x, f).acts);
+        if (g.length && g.every((a) => a.length)) submitGates.push(...g.flat());
+      }
+      const units = [];
+      if (r.actions.length || r.rpcs.length) units.push({ actions: r.actions, rpcs: r.rpcs, caller: null });
+      for (const c of r.callers) units.push({ actions: c.sub.actions, rpcs: c.sub.rpcs, caller: c });
+      for (const b of r.branches) units.push({ actions: b.sub.actions, rpcs: b.sub.rpcs, caller: null, branch: b });
+      if (!units.length) {
         if (r.callbacks.length) R.unresolved.push({ where, label: `<${tag} ${n.name.getText()}> ${[...new Set(r.callbacks)].join(", ")}`, why: `calls a callback prop (${[...new Set(r.callbacks)].join(", ")}); the action it runs is defined by the caller and not followed` });
         else R.none++;
       } else {
         R.withAction++;
-        const need = [], notes = [];
-        for (const a of r.actions) { const x = actionActs(a.file, a.name); need.push(...x.acts); notes.push(...x.rpcNotes); }
-        for (const rp of r.rpcs) { const x = rpcActs(rp); need.push(...x.acts); notes.push(...x.notes); }
-        const needU = uniq(need);
-        if (!needU.length) {
-          if (notes.length) R.unresolved.push({ where, label, why: [...new Set(notes)].join("; ") });
-          else R.noActivity++;
-        } else {
-          const gates = gatesFor(el.parent && ts.isJsxElement(el.parent) ? el.parent : el, f);
-          if (gates.acts.some((g) => needU.some((d) => sat(g, d)))) { R.ok++; okHow.gate++; }
-          else {
-            const hosts = [...hostPages(f)].map((h) => pages.get(h));
-            const hostOk = (hosts.length > 0 && hosts.every((hp) => hp.opens.length && opensAll(hp.opens, needU))) || sameFileOk(el, f, needU);
-            if (hostOk) { R.ok++; okHow.host++; }
-            else if (gates.acts.length) R.findings.push({ where, label, why: `gated on ${show(gates.acts)}; its action asks ${show(needU)}` });
-            else if (gates.unresolved.length) R.unresolved.push({ where, label, why: `gate ${[...new Set(gates.unresolved)].join(", ")} not traced to an activity; action asks ${show(needU)}` });
-            else if (!hosts.length) R.unresolved.push({ where, label, why: `no gate and no page renders this file; action asks ${show(needU)}` });
-            else if (hosts.some((hp) => !hp.opens.length)) R.unresolved.push({ where, label, why: `no gate; a host page has no static guard; action asks ${show(needU)}` });
-            else R.findings.push({ where, label, why: `no gate; host page(s) ${hosts.filter((hp) => !opensAll(hp.opens, needU)).slice(0, 3).map((h) => h.file.replace(/^src\/app\//, "").replace(/\/page\.tsx$/, "") || "/").join(", ")} do not imply ${show(needU)}` });
+        const outcomes = [];
+        for (const u of units) {
+          const unames = [...new Set([...u.actions.map((a) => a.name), ...u.rpcs.map((x) => `rpc:${x}`)])];
+          const ulabel = `<${tag} ${n.name.getText()}> ${unames.join(" + ")}`;
+          const via = u.caller ? ` (passed by ${rel(u.caller.file)})` : "";
+          const need = [], notes = [];
+          for (const a of u.actions) { const x = actionActs(a.file, a.name); need.push(...x.acts); notes.push(...x.rpcNotes); }
+          for (const rp of u.rpcs) { const x = rpcActs(rp); need.push(...x.acts); notes.push(...x.notes); }
+          const needU = uniq(need);
+          if (!needU.length) {
+            if (notes.length) { R.unresolved.push({ where, label: ulabel, why: [...new Set(notes)].join("; ") + via }); outcomes.push("bad"); }
+            else outcomes.push("noact");
+            continue;
           }
+          const gates = gatesFor(el2, f);
+          const callerGates = u.caller ? gatesFor(u.caller.node, u.caller.file) : { acts: [] };
+          // the true arm of `cond ? A : B` is reached only when cond holds, so cond's own activity counts for A
+          const armGates = u.branch && u.branch.positive ? resolveCondition(u.branch.cond, u.branch.file).acts : [];
+          const allGate = [...gates.acts, ...callerGates.acts, ...armGates, ...submitGates];
+          if (allGate.some((g) => needU.some((d) => sat(g, d)))) { outcomes.push("gate"); continue; }
+          const hosts = [...hostPages(u.caller ? u.caller.file : f)].map((h) => pages.get(h));
+          const hostOk = (hosts.length > 0 && hosts.every((hp) => hp.opens.length && opensAll(hp.opens, needU))) || (u.caller ? sameFileOk(u.caller.node, u.caller.file, needU) : sameFileOk(el, f, needU));
+          if (hostOk) { outcomes.push("host"); continue; }
+          outcomes.push("bad");
+          if (allGate.length) R.findings.push({ where, label: ulabel, why: `gated on ${show(allGate)}; its action asks ${show(needU)}${via}` });
+          else if (gates.unresolved.length) R.unresolved.push({ where, label: ulabel, why: `gate ${[...new Set(gates.unresolved)].join(", ")} not traced to an activity; action asks ${show(needU)}${via}` });
+          else if (!hosts.length) R.unresolved.push({ where, label: ulabel, why: `no gate and no page renders this file; action asks ${show(needU)}${via}` });
+          else if (hosts.some((hp) => !hp.opens.length)) R.unresolved.push({ where, label: ulabel, why: `no gate; a host page has no static guard; action asks ${show(needU)}${via}` });
+          else R.findings.push({ where, label: ulabel, why: `no gate; host page(s) ${hosts.filter((hp) => !opensAll(hp.opens, needU)).slice(0, 3).map((h) => h.file.replace(/^src\/app\//, "").replace(/\/page\.tsx$/, "") || "/").join(", ")} do not imply ${show(needU)}${via}` });
+        }
+        if (!outcomes.includes("bad")) {
+          if (outcomes.every((o) => o === "noact")) R.noActivity++;
+          else { R.ok++; okHow[outcomes.includes("host") ? "host" : "gate"]++; }
         }
       }
     }
@@ -431,6 +519,7 @@ console.log(`  reach no server action or rpc (state toggles, links, etc.; not ju
 console.log(`  reach an action: ${R.withAction}`);
 console.log(`    action asks no static activity (self-service or public; counted, not judged): ${R.noActivity}`);
 console.log(`    resolved OK: ${R.ok} (by its own gate ${okHow.gate}, by the host page's guard ${okHow.host})`);
+console.log(`    optional can() calls in action bodies, not counted as requirements (pattern i): ${[...new Set(OPTIONAL_CAN)].join("; ") || "none"}`);
 console.log(`  UNRESOLVED (could not decide): ${R.unresolved.length}`);
 for (const u of R.unresolved) console.log(`    ? ${u.where} ${u.label}: ${u.why}`);
 console.log(`  FINDINGS: ${R.findings.length} (${known.length} on the allow-list, ${fresh.length} new)`);

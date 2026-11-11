@@ -2,60 +2,25 @@
   "rule": "A control drawn for a login whose cards its own action refuses (backlog #79sqf). scripts/check-control-activity.mjs fails on any finding not listed here and on any entry that is no longer a finding. Each entry is an unfixed fault or a recorded false positive from the check's first run (2026-11-11): FIX it and delete the entry, never treat it as a ruling that it is fine. Never add an entry to make a new control pass: draw the control only when can() asks the activity its action asks. Shrink-only.",
   "entries": [
     {
-      "file": "src/app/admin/website/SitePageForm.tsx",
-      "control": "<form onSubmit> updateSitePage + proposeSitePage",
-      "found": "no gate; host page(s) admin/website/pages/[slug], admin/website do not imply website.content:edit, website.propose:edit",
-      "date": "2026-11-11",
-      "reason": "READ, FALSE POSITIVE (2026-11-11, #79sqf): the action is chosen by the same prop that gates it (`canEdit ? updateSitePage : proposeSitePage`), the submit button is drawn only under `canEdit || canPropose`, and the fields are readOnly otherwise. The check unions both actions' activities; the control cannot reach the one it lacks. Cause (a/b): a conditional action choice the check does not trace."
-    },
-    {
-      "file": "src/app/admin/website/SiteSettingsForm.tsx",
-      "control": "<form onSubmit> updateSiteContent + proposeSiteContent",
-      "found": "no gate; host page(s) admin/website do not imply website.content:edit, website.propose:edit",
-      "date": "2026-11-11",
-      "reason": "READ, FALSE POSITIVE (2026-11-11, #79sqf): same shape as SitePageForm: `useWriteForm(canEdit ? updateSiteContent : proposeSiteContent)` with the submit drawn only under `canEdit || canPropose`. The check unions both actions' activities."
-    },
-    {
-      "file": "src/app/contacts/[id]/ShelterFriendCard.tsx",
-      "control": "<ActionButton onClick> createSupplierFriend + createFriend",
-      "found": "no gate; host page(s) suppliers/[id], contacts/[id] do not imply friends.manage:edit",
-      "date": "2026-11-11",
-      "reason": "READ, FALSE POSITIVE of the check: the control sits after an early return on !canManage (line 161); canManage is passed from ContactHub through an expression the check did not trace."
-    },
-    {
-      "file": "src/app/medical/ResidentPicker.tsx",
-      "control": "<button onClick> reassignWaitingPhoto",
-      "found": "no gate; host page(s) photos/add, medical/weight, medical/photos do not imply photos.approve:edit, photos.resident_manage:edit",
-      "date": "2026-11-11",
-      "reason": "READ, FALSE POSITIVE (2026-11-11, #79sqf): this picker only calls `onPick(r)`. reassignWaitingPhoto is called from src/app/photos/approve/ApproveQueue.tsx, not from any of the hosts named; the check attributes a shared component's callback to every host. Cause (c), left unfixed."
-    },
-    {
       "file": "src/app/my/MyTaskList.tsx",
-      "control": "<ActionButton onClick> recordRecurringJob + setMaintenanceStatus",
+      "control": "<ActionButton onClick> recordRecurringJob",
       "found": "gated on maintenance.progress:edit; its action asks recurring.do_any:edit, recurring.do_own:edit",
       "date": "2026-11-11",
-      "reason": "READ, FALSE POSITIVE of the check: takeBack branches on item.kind (recurring -> recurring.*, maintenance -> maintenance.progress); the gate is per kind and the check unions both actions."
-    },
-    {
-      "file": "src/app/projects/[id]/FolderView.tsx",
-      "control": "<form onSubmit> updateProjectFolderInfo",
-      "found": "no gate; host page(s) projects/[id] do not imply projects.publish:edit",
-      "date": "2026-11-11",
-      "reason": "READ, FALSE POSITIVE of the check: updateProjectFolderInfo asks projects.publish only for the is_public switch (actions.ts:146 'without it the form leaves is_public as it is'); the form itself is not a publish control. The check unions every can() in the action body."
+      "reason": "READ, FALSE POSITIVE of the check, narrowed 2026-11-11 (claude/control-check-false-positives): takeBack reaches recordRecurringJob only when `occursOn` is set, which is `item.kind === \"recurring\"`, and the button is drawn under `item.kind === \"recurring\" || canEditMaintenance`; the maintenance arm (setMaintenanceStatus) is now judged separately and passes on canEditMaintenance. What is left is that the recurring arm's guard is a PREDICATE ON THE ITEM, not a card (a recurring row only reaches Done-today because this login recorded it), which the check cannot relate to the gate. Needs predicate implication, not a new case."
     },
     {
       "file": "src/components/ResidentPicker.tsx",
       "control": "<RowActionButton onClick> setFeaturedResident",
-      "found": "no gate; host page(s) memes/[id]/edit, memes/new, memes/make do not imply website.content:edit",
+      "found": "no gate; host page(s) admin/website do not imply website.content:edit (passed by src/app/admin/website/FeaturedResident.tsx)",
       "date": "2026-11-11",
-      "reason": "READ, FALSE POSITIVE of the check: shared picker; its callback is passed by several callers and the check unions their actions, so setFeaturedResident (admin/website) is attributed to the memes pages too."
+      "reason": "READ, FALSE POSITIVE of the check (2026-11-11, #79sqf, narrowed by claude/control-check-false-positives): the callback is now judged per caller, and the only caller with an action is FeaturedResident.tsx (the memes callers run none). What is left is a gate the check does not trace: /admin/website draws its Home tab, which holds FeaturedResident, only when `tabs={canContent ? WEBSITE_TABS : [\"gallery\"]}` (page.tsx:240), a prop ARRAY, not a JSX condition. Resolving it needs the tab-array gate taught, a fourth pattern."
     },
     {
       "file": "src/components/ResidentPicker.tsx",
       "control": "<ActionButton onClick> setFeaturedResident",
-      "found": "no gate; host page(s) memes/[id]/edit, memes/new, memes/make do not imply website.content:edit",
+      "found": "no gate; host page(s) admin/website do not imply website.content:edit (passed by src/app/admin/website/FeaturedResident.tsx)",
       "date": "2026-11-11",
-      "reason": "READ, FALSE POSITIVE of the check: shared picker; its callback is passed by several callers and the check unions their actions, so setFeaturedResident (admin/website) is attributed to the memes pages too."
+      "reason": "READ, FALSE POSITIVE of the check (2026-11-11, #79sqf, narrowed by claude/control-check-false-positives): the callback is now judged per caller, and the only caller with an action is FeaturedResident.tsx (the memes callers run none). What is left is a gate the check does not trace: /admin/website draws its Home tab, which holds FeaturedResident, only when `tabs={canContent ? WEBSITE_TABS : [\"gallery\"]}` (page.tsx:240), a prop ARRAY, not a JSX condition. Resolving it needs the tab-array gate taught, a fourth pattern."
     },
     {
       "file": "src/components/UnitsPanel.tsx",
