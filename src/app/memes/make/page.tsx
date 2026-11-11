@@ -140,17 +140,14 @@ export default async function MakeMemePage(props: PageProps<"/memes/make">) {
   if (residentId && UUID.test(residentId)) {
     const [{ data: photos }, { residents: whoList }] = await Promise.all([
       supabase
-        .from("attachments")
-        .select("drive_file_id, file_name, sub_folder, approved_at")
-        .eq("owner_type", "resident")
-        .eq("owner_id", residentId)
-        .not("approved_at", "is", null)
-        .eq("media_kind", "photo")
+        .from("resident_photo_list")
+        .select("drive_file_id, file_name")
+        .eq("resident_id", residentId)
         .order("uploaded_at", { ascending: false })
-        .returns<{ drive_file_id: string; file_name: string | null; sub_folder: string | null }[]>(),
+        .returns<{ drive_file_id: string; file_name: string | null }[]>(),
       loadMemeResidents(supabase, perms),
     ]);
-    const usable = (photos ?? []).filter((p) => !isMedicalFolder(p.sub_folder) && IMAGE_NAME.test(p.file_name ?? ""));
+    const usable = (photos ?? []).filter((p) => IMAGE_NAME.test(p.file_name ?? ""));
     return shell(
       <>
         <h2 className="text-lg font-semibold text-foreground">{m.pickPhoto(whoList.find((r) => r.id === residentId)?.name ?? "")}</h2>
