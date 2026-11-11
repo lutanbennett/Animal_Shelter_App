@@ -2,7 +2,7 @@
 // passed in: see scripts/lib/readonly-checks.mjs for how that is guaranteed.
 //
 //   node scripts/check-production.mjs                         lists the checks
-//   node scripts/check-production.mjs <check> [--env test]    runs one against production (or dev with --env test)
+//   node scripts/check-production.mjs <check> [--env test]    runs one against production (or dev with --env test, UAT with --env uat)
 //   node scripts/check-production.mjs all                     runs every check
 //
 // Exit 0 = ran and nothing to flag; 1 = a check found something; 2 = could not run. The dev-only guards in the other
@@ -13,8 +13,8 @@ import { CHECKS, runCheck } from "./lib/readonly-checks.mjs";
 const args = process.argv.slice(2);
 const i = args.indexOf("--env");
 const envName = i >= 0 ? args.splice(i, 2)[1] : "production";
-if (!["production", "test"].includes(envName)) {
-  console.error("--env must be production or test.");
+if (!["production", "test", "uat"].includes(envName)) {
+  console.error("--env must be production, test or uat.");
   process.exit(2);
 }
 const wanted = args[0];

@@ -624,6 +624,8 @@ afterwards and put both in the record. `cards-union` and `role-cards-coverage` a
 the after-checks that say whether the rebuild is self-consistent; they cannot tell
 you what was lost, because by then it is gone.
 
+**Two more readings (#rv4qk).** A migration that archives or drops supplier or Vendor contact rows (`0348`) is measured by `node scripts/check-production.mjs supplier-vendor-rows`: Vendor contacts and suppliers counted live vs archived, and whether the old view and columns are still there. It answers on both sides of the migration. And `check-production.mjs` takes `--env uat` as well as `--env test`, so when a migration is already on production but still pending on UAT, UAT's before-picture can be taken: `node scripts/check-production.mjs <check> --env uat`.
+
 **The general form, worth keeping even when the next case looks different:**
 reading production rather than reasoning about it is the rule `0.40.1` established
 - and this release obeyed it and still came away with a gap, because it read the
