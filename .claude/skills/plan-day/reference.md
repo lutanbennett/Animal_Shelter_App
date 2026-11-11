@@ -137,6 +137,26 @@ arithmetic applies to a batch.
 
 ---
 
+### THE LIST-FIRST HARD SEQUENCE — why it is a sequence of tool calls and not a rule about prose
+
+**Three breaches in four plans, each by a planner who had read the rule and agreed with it.**
+
+- **2026-11-08.** He asked three times in one day where his plan was: *"You haven't given me the batch 2
+  list yet - why are we having so many issues with the process"*. The diagnosis he accepted: **the planner
+  had been satisfying this document instead of delivering to him.** THE ONE RULE was written that day.
+- **2026-11-11, batch 2 of that day's plan.** *"Why are we doing paperwork first again in front of setting
+  up streams"*. In that turn **three full PR bodies, three `stream-usage` comments and an entire band
+  analysis were read and written before a single worktree existed** — and **only one of those reads fed a
+  brief** (#1482's, whose migration `0354` the `bills-job-link` brief quotes as a worked example and whose
+  146,679 that band was lowered against). The other two PR bodies and the whole band write-up were pure
+  paperwork ahead of delivery.
+- **The lesson that made it a numbered sequence:** the rule as first written read as being about the
+  ORDER OF A REPLY, and a planner can obey that while spending twenty tool calls on reading first. **The
+  list was also restated in three separate places in `SKILL.md`, which is itself the evidence that
+  repetition does not work** — two of the three were cut when the sequence went in.
+- **The allowed-reads list is deliberately short:** has the batch merged, is the migration slot free, and
+  one named PR a brief will quote. **A PR body read "while you are there" is paperwork.**
+
 ## 2. The three rules from the worst evening — 2026-11-04
 
 Eleven interruptions, an hour of work redone, and him ending with *"I have wasted a whole evening doing
