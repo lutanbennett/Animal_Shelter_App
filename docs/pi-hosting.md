@@ -358,6 +358,32 @@ The code path (empty address means the Worker serves saves too) is tested (`node
 and `--var ORIGIN_HOST:` was checked to override the config in wrangler's own dry run. No one has yet pulled
 it on production. The first real use is its test, so after it, write down in the next release record what happened.
 
+## After a power cut: what the boot log shows (and what it does not mean)
+
+Measured once, 2026-11-01, in the power-pull drill (backlog `#f1wp1`). One sample, so suggestive rather than proven.
+
+- **A `cloudflared` start-failure is expected after a power cut.** The log shows
+  `lookup _v2-origintunneld._tcp.argotunnel.com ... dial udp <the router>:53: connect: network is unreachable`,
+  then a restart, then a tunnel connection. That is not a fault. The unit ordering is already right
+  (`After=` and `Wants=network-online.target`); "the network is up" and "names resolve" are just not the same
+  moment right after an abrupt power loss. A clean `sudo reboot` did not show it (0 failures, first tunnel
+  connection at 12.2 s against 20.5 s after the cut).
+- **Early timestamps after a power cut are wrong.** The clock reads `1970-01-01` until it is set, so the first
+  lines of the boot log carry 1970 dates. This happens **only** on power loss; a clean reboot sets the clock
+  correctly at boot. Read the monotonic offsets (`journalctl -b -o short-monotonic`) when you need an order of events.
+- **What the change does.** `setup.sh` installs a drop-in,
+  `/etc/systemd/system/cloudflared.service.d/10-wait-for-dns.conf`, with a bounded wait (at most 15 s, then it
+  starts anyway) for a Cloudflare tunnel name to resolve, plus `RestartSec=1s` as a backstop. It cuts the
+  unchosen 6-second retry; it does **not** make the Pi boot faster, fix the 1970 clock, or help if DNS stays down
+  longer than 15 s (then `cloudflared` starts, fails and retries every second). Reasoning:
+  `docs/decisions/2026-11-11-pi-cloudflared-race.md`.
+- **Installing it is a step on the Pi, not a deploy:** re-run `scripts/pi/setup.sh <tunnel-id>` there (re-runnable),
+  or write the same drop-in by hand, then `sudo systemctl daemon-reload`. `cloudflared` is one service shared by
+  prod, test and UAT, so `setup-test.sh` and `setup-uat.sh` do not carry it.
+- **How to prove it (needs an abrupt power loss; a clean reboot proves nothing):** after the Pi is back,
+  `journalctl -u cloudflared -b -o short-monotonic`. Compare (1) start-failures with `network is unreachable`
+  (expect 0; was 1) and (2) seconds to the first `Registered tunnel connection` line (was 20.5 s; clean reboot 12.2 s).
+
 ## Building the box (what was done on 2026-09-30)
 
 The NVMe SSD is on a HAT, and there was no adapter to flash it from a laptop, so:

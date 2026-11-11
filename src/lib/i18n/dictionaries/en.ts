@@ -112,6 +112,21 @@ const en = {
     "recurring_job.reassign_not_allowed": () => "Your access does not include handing recurring jobs to someone else.",
     "recurring_job.date_already_marked": () => "That date has already been marked done or skipped.",
     "recurring_job.cannot_sign_in": () => "A job can only be handed to someone who can still sign in.",
+    "stock.count_not_allowed": () => "This login can't record a stocktake: it needs the permission \"Count the stock\".",
+    "stock.list_invalid": (p: Record<string, string>) => `The ${p.kind === "medication" ? "medication" : "diet type"} counts must be a list.`,
+    "stock.count_row_invalid": (p: Record<string, string>) =>
+      `Every ${p.kind === "medication" ? "medication" : "diet type"} count needs an id and a number. Leave out an item that was not counted.`,
+    "stock.count_negative": () => "A stock count cannot be negative.",
+    "stock.listed_twice": (p: Record<string, string>) => `The same ${p.kind === "medication" ? "medication" : "diet type"} is listed twice.`,
+    "stock.units_do_not_add_up": (p: Record<string, string>) =>
+      `The units entered for a ${p.kind === "medication" ? "medication" : "diet type"} count do not add up to the count.`,
+    "stock.medications_not_found": (p: Record<string, string>) =>
+      `Stocktake not saved: ${p.found} of ${p.total} medications were found. Reload the page and count again.`,
+    "stock.diet_types_not_found": (p: Record<string, string>) =>
+      `Stocktake not saved: ${p.found} of ${p.total} diet types were found. Reload the page and count again.`,
+    "stock.correct_not_allowed": () => "Your access does not include editing stock.",
+    "stock.unknown_kind": () => "Unknown item kind. Reload the page and try again.",
+    "stock.item_not_found": () => "That item was not found. Reload the page and try again.",
   },
 
   // The notice a desktop-only Settings/Management page shows on a phone

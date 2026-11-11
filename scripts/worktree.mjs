@@ -52,6 +52,41 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, "..");
 const ENV_FILES = [".env.local", ".dev.vars"];
+// Keys a new worktree is given. Everything else in those files stays in the main checkout
+// (docs/decisions/2026-11-11-worktree-env-narrowing.md has the per-key evidence).
+// A key not listed is NOT copied, so add one here when a worktree activity turns out to need it.
+const ENV_KEEP = new Set([
+  // next dev, dev-signin, apply-migrations, gates, check-planner-preflight
+  "NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_ACCESS_TOKEN",
+  // the running server: Drive uploads (src/lib/google/drive.ts) and the form key built into next build
+  "GOOGLE_DRIVE_ROOT_FOLDER_ID", "GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_OAUTH_REFRESH_TOKEN",
+  "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY",
+  // src/lib/clinics/calendar-sync.ts runs in the dev server; not established that no worktree path reaches it
+  "GOOGLE_CALENDAR_ID", "GOOGLE_CALENDAR_REFRESH_TOKEN",
+]);
+// Needed by every worktree; a copy without one of these fails loudly (see copyEnvFile).
+const ENV_REQUIRED = ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_ACCESS_TOKEN"];
+
+/** Write the allow-listed lines of src to dest; returns key NAMES only. */
+function copyEnvFile(src, dest, file) {
+  const kept = [];
+  const left = [];
+  const out = [];
+  for (const line of readFileSync(src, "utf8").split(/\r?\n/)) {
+    const m = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=/.exec(line);
+    if (!m) {
+      if (line.trim().startsWith("#")) out.push(line);
+      continue;
+    }
+    if (ENV_KEEP.has(m[1])) {
+      out.push(line);
+      kept.push(m[1]);
+    } else left.push(m[1]);
+  }
+  writeFileSync(dest, out.join("\n").replace(/\n*$/, "\n"));
+  const missing = file === ".env.local" ? ENV_REQUIRED.filter((k) => !kept.includes(k)) : [];
+  return { kept, left, missing };
+}
 const MAIN_PORT = 3000;
 const FIRST_PORT = 3001;
 const BRANCH_PREFIX = "claude/";
@@ -494,8 +529,9 @@ function cmdNew(args) {
   for (const f of ENV_FILES) {
     const src = path.join(trees[0].dir, f);
     if (existsSync(src)) {
-      copyFileSync(src, path.join(dir, f));
-      console.log(`copied ${f}`);
+      const r = copyEnvFile(src, path.join(dir, f), f);
+      console.log(`copied ${f}: ${r.kept.length} of ${r.kept.length + r.left.length} keys${r.left.length ? ` (left in the main checkout: ${r.left.join(", ")})` : ""}`);
+      if (r.missing.length) fail(`${f} in the main checkout lacks ${r.missing.join(", ")}, which every worktree needs. Add it there, then 'done' this worktree and run 'new' again.`);
     }
   }
 
