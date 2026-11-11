@@ -29,6 +29,7 @@ import { StoryGallery, type StoryPhoto } from "./StoryGallery";
 import { HelpUsDoMore } from "../HelpUsDoMore";
 import { requirePageVisible } from "@/lib/public-page-access";
 import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
+import { localizedHref } from "@/lib/public-paths";
 
 /**
  * Open Graph tags so a story pasted into Facebook or LINE previews with
@@ -64,12 +65,12 @@ export async function generateMetadata(
     title: fullTitle,
     description,
     ...(origin ? { metadataBase: origin } : {}),
-    alternates: { canonical: `/our-work/${project.id}` },
+    alternates: publicAlternates(`/our-work/${project.id}`, locale),
     openGraph: {
       type: "article",
       title: fullTitle,
       description,
-      url: `/our-work/${project.id}`,
+      url: localizedHref(`/our-work/${project.id}`, locale),
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
       alternateLocale: ogAlternateLocale(locale),

@@ -8,6 +8,7 @@ import { loadSiteContent } from "@/lib/site/content";
 import { PublicHeader } from "../adopt/PublicHeader";
 import { PublicFooter } from "../adopt/PublicFooter";
 import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
+import { localizedHref } from "@/lib/public-paths";
 
 /**
  * The privacy notice. Google requires a public privacy-policy URL before
@@ -40,7 +41,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       title,
       description: t.privacy.intro,
-      url: "/privacy",
+      url: localizedHref("/privacy", locale),
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
       alternateLocale: ogAlternateLocale(locale),

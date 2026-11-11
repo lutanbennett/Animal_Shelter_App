@@ -20,6 +20,7 @@ import { ResidentCard, type ResidentCardRow } from "./ResidentCard";
 import { HappyEndings, type RecentAdoption } from "./HappyEndings";
 import { requirePageVisible } from "@/lib/public-page-access";
 import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
+import { localizedHref } from "@/lib/public-paths";
 
 export async function generateMetadata(): Promise<Metadata> {
   const [supabase, { t, locale }, origin] = await Promise.all([
@@ -44,7 +45,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       title,
       description: t.adopt.metaDescription,
-      url: "/adopt",
+      url: localizedHref("/adopt", locale),
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
       alternateLocale: ogAlternateLocale(locale),

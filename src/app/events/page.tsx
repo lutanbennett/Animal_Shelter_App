@@ -12,6 +12,7 @@ import { PublicFooter } from "../adopt/PublicFooter";
 import { EventCard } from "./EventCard";
 import { requirePageVisible } from "@/lib/public-page-access";
 import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
+import { localizedHref } from "@/lib/public-paths";
 
 // Read live from the views; an event published today shows without a rebuild.
 export const dynamic = "force-dynamic";
@@ -31,7 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       title,
       description,
-      url: "/events",
+      url: localizedHref("/events", locale),
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
       alternateLocale: ogAlternateLocale(locale),

@@ -35,6 +35,7 @@ import { ResidentCard } from "../ResidentCard";
 import { PhotoGallery } from "./PhotoGallery";
 import { requirePageVisible } from "@/lib/public-page-access";
 import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
+import { localizedHref } from "@/lib/public-paths";
 
 /** The page's reading column; lines up with the header's edges on a phone. */
 const column = "mx-auto w-full max-w-3xl px-5 lg:px-8";
@@ -83,12 +84,12 @@ export async function generateMetadata(
     title,
     description,
     ...(origin ? { metadataBase: origin } : {}),
-    alternates: { canonical: `/adopt/${resident.id}` },
+    alternates: publicAlternates(`/adopt/${resident.id}`, locale),
     openGraph: {
       type: "profile",
       title,
       description,
-      url: `/adopt/${resident.id}`,
+      url: localizedHref(`/adopt/${resident.id}`, locale),
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
       alternateLocale: ogAlternateLocale(locale),

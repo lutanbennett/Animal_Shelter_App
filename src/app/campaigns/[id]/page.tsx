@@ -20,6 +20,7 @@ import { PublicFooter } from "../../adopt/PublicFooter";
 import { AppealView } from "../AppealView";
 import { requirePageVisible } from "@/lib/public-page-access";
 import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
+import { localizedHref } from "@/lib/public-paths";
 
 // The raised figure is read live and says when it was last updated.
 export const dynamic = "force-dynamic";
@@ -57,12 +58,12 @@ export async function generateMetadata(props: PageProps<"/campaigns/[id]">): Pro
     title,
     description,
     ...(origin ? { metadataBase: origin } : {}),
-    alternates: { canonical: `/campaigns/${appeal.id}` },
+    alternates: publicAlternates(`/campaigns/${appeal.id}`, locale),
     openGraph: {
       type: "article",
       title,
       description,
-      url: `/campaigns/${appeal.id}`,
+      url: localizedHref(`/campaigns/${appeal.id}`, locale),
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
       alternateLocale: ogAlternateLocale(locale),
