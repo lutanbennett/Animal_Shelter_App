@@ -162,7 +162,7 @@ export default async function MakeMemePage(props: PageProps<"/memes/make">) {
   const [{ residents: pickable, emptyKind }, { data: profiles }, { data: recent }] = await Promise.all([
     loadMemeResidents(supabase, perms),
     supabase
-      .from("residents")
+      .from("resident_who_and_where")
       .select("id, profile_photo_drive_file_id")
       .not("profile_photo_drive_file_id", "is", null)
       .returns<{ id: string; profile_photo_drive_file_id: string }[]>(),
