@@ -156,6 +156,17 @@ arithmetic applies to a batch.
   repetition does not work** — two of the three were cut when the sequence went in.
 - **The allowed-reads list is deliberately short:** has the batch merged, is the migration slot free, and
   one named PR a brief will quote. **A PR body read "while you are there" is paperwork.**
+- **AND CLEARING LEFTOVERS IS NOT ON IT EITHER — ADDED 2026-11-11 ON HIS INSTRUCTION**, mid-plan, while
+  he was waiting for the list: *"Can you change the skill instruction to put removing streams after
+  setup of streams please"*. The planner had read `worktree.mjs list`, confirmed four merged PRs and run
+  four `worktree.mjs done` calls before creating a single worktree for the day. **It was all correct
+  work and it was all in the wrong place.** Two things make it worse than an ordinary paperwork-first
+  breach: **(1)** deleting a worktree's `node_modules` on Windows took long enough to be moved to the
+  background, and the planner then declined to run `worktree.mjs new` beside it rather than risk two
+  git worktree operations at once — **so the housekeeping physically blocked the delivery**; and
+  **(2)** it does not feel like paperwork. It feels like tidying up before you start, which is why it
+  got past a planner who had just read the hard sequence. **The rule now says it in (e) and in step 2:
+  read `list`, remove nothing.**
 
 ## 2. The three rules from the worst evening — 2026-11-04
 

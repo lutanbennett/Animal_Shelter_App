@@ -30,14 +30,22 @@ everything after them, and is lettered so it cannot be confused with this file's
 - **(c)** `node scripts/worktree.mjs streams`, **the moment the last brief is written and before any
   other tool call.**
 - **(d)** The list, first in your reply.
-- **(e)** **Only now**: the PR bodies, the backlog filing, the bands, `.plan-day.md` — and, **on the
-  day's FIRST batch only, the measurement of the previous day's streams** (step 3).
+- **(e)** **Only now**: the PR bodies, the backlog filing, the bands, `.plan-day.md`, **and clearing
+  the finished worktrees of the batch that just merged** — and, **on the day's FIRST batch only, the
+  measurement of the previous day's streams** (step 3).
 
 **BETWEEN THE SYNC AND (a), THE ONLY READS ALLOWED ARE THREE CHEAP FACTS:** has the current batch merged
 (`gh pr list --state open`, and `--state all --head claude/<slug>` per slug); is the migration slot free;
 and does a brief you are about to write need to QUOTE a merged PR, in which case **name that one PR and
 read only it.** Nothing else. **A PR body you read "while you are there" is paperwork, and it goes after
 the list.**
+
+**AND CLEARING LAST BATCH'S WORKTREES IS NOT ONE OF THE THREE — IT GOES IN (e), AFTER THE LIST. HIS
+INSTRUCTION, 2026-11-11:** *"Can you change the skill instruction to put removing streams after setup of
+streams please"*, asked while he was waiting for the list. **A leftover costs nothing by existing; his
+list costs him the wait**, and one `worktree.mjs done` can spend minutes deleting `node_modules` while
+`worktree.mjs new` waits behind it. **Reading `list` before (a) is allowed and expected; acting on it is
+not** (`reference.md` §1).
 
 **Cut from 2,176 lines on his instruction, 2026-11-08.** Evidence, incidents and superseded trials live in
 **`reference.md`**; the verbatim brief blocks in **`brief-blocks.md`**. **Cite them; do not copy them back
@@ -120,7 +128,8 @@ you have merely lost the ability to read** (`reference.md` §2).
 ## 2. Set up — the current batch only
 
 **Read `node scripts/worktree.mjs list` for `held` and `ahead` first:** a held folder, or a branch ahead
-with no PR, is not a slot to reuse. Then per stream, in sequence:
+with no PR, is not a slot to reuse. **Read it, and remove nothing yet** — clearing a merged batch's
+leftovers is (e), after the list. Then per stream, in sequence:
 
 1. `node C:/Development/Animal_Shelter_App/scripts/worktree.mjs new <slug>`
 2. Write `C:/Development/Animal_Shelter_<slug>/.brief.md` (gitignored) — **the blocks every brief carries
