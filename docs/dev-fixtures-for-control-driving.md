@@ -9,7 +9,7 @@ Measured 2026-11-11 on the shared dev database (stream `control-drive-fixtures`,
 |---|---|---|
 | Enclosures with residents | Already there (`Front Zone 2`, `Blue Enclosure 5 (Hallway)`; residents Test 1 `R-8473`, Test 2 `R-8472`, Flip Check Dog `R-FLIP1`) | pre-existing |
 | A resident with a usable photo | Test 1 (`R-8473`), one approved private-only photo `fixture-dog-dev.jpg` | `/photos/add` as the Admin dev login, tagged Test 1, then `/photos/approve` > **Private only** |
-| A bill waiting to be matched | One in the `/bills` inbox, `fixture-bill-dev.png` | `/bills` > Add bills (file input) |
+| A bill waiting to be matched | Made, then deleted by the Delete press; make another | `/bills` > Add bills (file input) |
 | A Shelter Friend | **Not made** | still to do |
 | A diet row / `/operations/*` rows | **Not made** | still to do |
 

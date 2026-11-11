@@ -256,11 +256,12 @@ export function EnclosureMaintenance({
             );
           })}
         </ul>
-      ) : (
+      ) : canWriteMaintenance ? (
+        // The sentence invites logging work, so only a login that is offered the Log button sees it.
         <span className="text-xs text-muted">
           {t.enclosures.hub.maintenanceDetail}
         </span>
-      )}
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-3 text-xs font-medium">
         {canWriteMaintenance && (
