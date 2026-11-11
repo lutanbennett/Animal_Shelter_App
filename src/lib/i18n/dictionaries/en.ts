@@ -1189,6 +1189,7 @@ const en = {
         "photos.resident_medical": "See the photos in a resident's Medical folder",
         "photos.medical_add": "Add a resident's photo to the Medical folder",
         "shop.manage": "Manage the Shop for the shelter page",
+        "maintenance.job_picker": "See the list of jobs, to attach a bill to one (not the job board)",
         "photos.shelter_add": "Add a resident's photo to the Shelter folder only (shown on the website once approved)",
         "photos.approve": "Approve or remove the photos waiting in Photos to approve",
         "facility.enclosures": "Enclosures, zones and the facility map",

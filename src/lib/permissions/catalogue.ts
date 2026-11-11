@@ -144,6 +144,7 @@ export const ACTIVITIES = [
   { key: "photos.resident_medical", kind: "level", area: "photos", sort: 71, requires: [], probes: [] },
   { key: "photos.medical_add", kind: "yesno", area: "photos", sort: 72, requires: [], probes: [] },
   { key: "shop.manage", kind: "level", area: "settings", sort: 73, requires: [], probes: [] },
+  { key: "maintenance.job_picker", kind: "yesno", area: "maintenance", sort: 89, requires: [], probes: [] },
 ] as const satisfies readonly ActivityDef[];
 
 export type Activity = (typeof ACTIVITIES)[number];

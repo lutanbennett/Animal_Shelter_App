@@ -71,7 +71,7 @@ export default async function BillsPage() {
     // Jobs still open, or touched in the last two weeks (a finished job still gets its receipts a few days later).
     forJobs
       ? supabase
-          .from("maintenance")
+          .from("maintenance_job_picker")
           .select("id, job_code, title, status, updated_at")
           .or(`status.neq.Completed,updated_at.gte.${since}`)
           .order("updated_at", { ascending: false })
