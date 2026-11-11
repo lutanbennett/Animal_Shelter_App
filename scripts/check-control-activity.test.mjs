@@ -103,3 +103,50 @@ test("(iii) a caller whose own page does NOT guard its action is still flagged, 
   assert.match(r.out, /passed by src\/app\/b\/CallerB\.tsx/);
   assert.doesNotMatch(r.out, /passed by src\/app\/a\/CallerA\.tsx/);
 });
+
+// ---- (ii) per-branch actions: `canEdit ? update : propose` ----------------------------------------------------
+// Each arm is judged on its own; the true arm may lean on the condition (reached only when canEdit holds); a form
+// whose submit buttons are ALL drawn under a gate is submitted only through them, so their gate is the form's.
+const branchActions = `"use server";\nexport async function update(id: string) { if (!can(perms, "site.edit")) return; }\nexport async function propose(id: string) { if (!can(perms, "site.propose")) return; }\n`;
+const branchPage = `import { Form } from "./Form";\nexport default async function P() { await requirePermission("site.view"); return <Form canEdit={can(perms, "site.edit")} canPropose={can(perms, "site.propose")} />; }\n`;
+const branchForm = (submitGate) => `"use client";\nimport { update, propose } from "./actions";\nexport function Form({ canEdit = false, canPropose = false }) {\n  const [state, onSubmit] = useWriteForm(canEdit ? update : propose);\n  return <form onSubmit={onSubmit}>{${submitGate} && <button type="submit" />}</form>;\n}\n`;
+
+test("(ii) each arm of a conditional action is covered: the true arm by its condition, the other by the submit button's gate", () => {
+  const r = run({ "src/app/s/page.tsx": branchPage, "src/app/s/actions.ts": branchActions, "src/app/s/Form.tsx": branchForm("(canEdit || canPropose)") });
+  assert.equal(r.status, 0, r.out);
+});
+
+test("(ii) an arm nothing covers is still flagged: the submit is drawn for canEdit only, but the other arm asks site.propose", () => {
+  const r = run({ "src/app/s/page.tsx": branchPage, "src/app/s/actions.ts": branchActions, "src/app/s/Form.tsx": branchForm("canEdit") });
+  assert.equal(r.status, 1, r.out);
+  assert.match(r.out, /its action asks site\.propose/);
+});
+
+test("(ii) a form with NO gated submit gets no borrowed gate: an ungated form is flagged", () => {
+  const form = `"use client";\nimport { update, propose } from "./actions";\nexport function Form({ canEdit = false }) {\n  const [state, onSubmit] = useWriteForm(canEdit ? update : propose);\n  return <form onSubmit={onSubmit}><button type="submit" /></form>;\n}\n`;
+  const r = run({ "src/app/s/page.tsx": branchPage, "src/app/s/actions.ts": branchActions, "src/app/s/Form.tsx": form });
+  assert.equal(r.status, 1, r.out);
+  assert.match(r.out, /do not imply site\.propose/);
+});
+
+// ---- two causes found on the way, each with its own case -----------------------------------------------------------
+test("an early return on `!a || !b || c` guards past it on BOTH a and b (the whole || chain, not its top two operands)", () => {
+  const file = `"use client";\nimport { go } from "./actions";\nexport function Card({ canManage, kind, archived }) {\n  if (!canManage || !(kind === "x") || archived) return null;\n  return <button onClick={() => go("1")} />;\n}\n`;
+  const r = run({
+    "src/app/g/page.tsx": `import { Card } from "./Card";\nexport default async function P() { await requirePermission("g.view"); return <Card canManage={can(perms, "g.manage")} kind="x" archived={false} />; }\n`,
+    "src/app/g/actions.ts": `"use server";\nexport async function go(id: string) { if (!can(perms, "g.manage")) return; }\n`,
+    "src/app/g/Card.tsx": file,
+  });
+  assert.equal(r.status, 0, r.out);
+});
+
+test("two components in one file may both name their handler `onSubmit`: the second form is judged on ITS OWN action, not the first one's", () => {
+  const forms = `"use client";\nimport { one, two } from "./actions";\nexport function One() { const [s, onSubmit] = useWriteForm(one); return <form onSubmit={onSubmit} />; }\nexport function Two() { const [s, onSubmit] = useWriteForm(two); return <form onSubmit={onSubmit}><button type="submit" /></form>; }\n`;
+  const r = run({
+    "src/app/h/page.tsx": `import { One, Two } from "./Forms";\nexport default async function P() { await requirePermission("h.one"); return <><One /><Two /></>; }\n`,
+    "src/app/h/actions.ts": `"use server";\nexport async function one(id: string) { if (!can(perms, "h.one")) return; }\nexport async function two(id: string) { if (!can(perms, "h.two")) return; }\n`,
+    "src/app/h/Forms.tsx": forms,
+  });
+  assert.equal(r.status, 1, r.out);
+  assert.match(r.out, /<form onSubmit> two: .*imply h\.two/);
+});

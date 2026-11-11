@@ -202,8 +202,12 @@ function gatesFor(node, file) {
           const e = st.expression;
           const neg = ts.isPrefixUnaryExpression(e) && e.operator === ts.SyntaxKind.ExclamationToken ? e.operand : null;
           if (neg) conds.push(neg);
-          else if (ts.isBinaryExpression(e) && e.operatorToken.kind === ts.SyntaxKind.BarBarToken)
-            for (const side of [e.left, e.right]) if (ts.isPrefixUnaryExpression(side) && side.operator === ts.SyntaxKind.ExclamationToken) conds.push(side.operand);
+          else if (ts.isBinaryExpression(e) && e.operatorToken.kind === ts.SyntaxKind.BarBarToken) {
+            // `if (!a || !b || c) return`: past it, a and b both hold. Flatten the whole || chain, not just its top two operands.
+            const terms = [];
+            (function flat(x) { if (ts.isBinaryExpression(x) && x.operatorToken.kind === ts.SyntaxKind.BarBarToken) { flat(x.left); flat(x.right); } else terms.push(x); })(e);
+            for (const side of terms) if (ts.isPrefixUnaryExpression(side) && side.operator === ts.SyntaxKind.ExclamationToken) conds.push(side.operand);
+          }
         }
       }
     }
@@ -366,9 +370,20 @@ function actionActs(file, name, depth = 2, seen = new Set()) {
 // ---- control -> action -------------------------------------------------------------------------
 /** Follow an expression to the server actions / rpcs it can reach. */
 function reach(expr, file, depth = 3, seen = new Set()) {
-  const out = { actions: [], rpcs: [], callbacks: [], callers: [] }; // actions: {file,name}; rpcs: names; callers: {file,node,sub} one per caller of a callback prop
-  const addAll = (r) => { out.actions.push(...r.actions); out.rpcs.push(...r.rpcs); out.callbacks.push(...r.callbacks); out.callers.push(...r.callers); };
+  const out = { actions: [], rpcs: [], callbacks: [], callers: [], branches: [] }; // actions: {file,name}; rpcs: names; callers: {file,node,sub} one per caller of a callback prop
+  const addAll = (r) => { out.actions.push(...r.actions); out.rpcs.push(...r.rpcs); out.callbacks.push(...r.callbacks); out.callers.push(...r.callers); out.branches.push(...r.branches); };
   (function v(n) {
+    // PATTERN (ii): `cond ? actionA : actionB`. When BOTH arms reach an action they are alternatives, not one union: each arm is judged on its
+    // own, and the true arm may also lean on the condition itself (`canEdit ? update : propose` reaches update only when canEdit is true).
+    if (ts.isConditionalExpression(n)) {
+      const a = reach(n.whenTrue, file, depth, new Set(seen)), b = reach(n.whenFalse, file, depth, new Set(seen));
+      const has = (x) => x.actions.length || x.rpcs.length;
+      if (has(a) && has(b)) {
+        out.branches.push({ cond: n.condition, file, positive: true, sub: a }, { cond: n.condition, file, positive: false, sub: b });
+        out.callbacks.push(...a.callbacks, ...b.callbacks); out.callers.push(...a.callers, ...b.callers); out.branches.push(...a.branches, ...b.branches);
+        return;
+      }
+    }
     if (ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression) && n.expression.name.text === "rpc" && strLit(n.arguments[0])) out.rpcs.push(strLit(n.arguments[0]));
     if (ts.isIdentifier(n) && !(n.parent && ts.isPropertyAccessExpression(n.parent) && n.parent.name === n) && !(n.parent && ts.isPropertyAssignment(n.parent) && n.parent.name === n)) {
       const nm = n.text, k = file + "::" + nm;
@@ -384,8 +399,16 @@ function reach(expr, file, depth = 3, seen = new Set()) {
       } else if (init) addAll(reach(init.body ?? init, file, depth - 1, seen));
       else {
         // destructured `const [state, formAction] = useActionState(...)`
-        let decl = null;
-        (function f(x) { if (decl) return; if (ts.isVariableDeclaration(x) && ts.isArrayBindingPattern(x.name) && x.name.elements.some((e) => ts.isBindingElement(e) && e.name.getText() === nm) && x.initializer) decl = x; else ts.forEachChild(x, f); })(sfs.get(file));
+        // the destructure in the INNERMOST function that encloses this use: two components in one file may both name theirs `onSubmit`
+        let decl = null, best = Infinity;
+        (function f(x) {
+          if (ts.isVariableDeclaration(x) && ts.isArrayBindingPattern(x.name) && x.name.elements.some((e) => ts.isBindingElement(e) && e.name.getText() === nm) && x.initializer) {
+            let fn = x; while (fn && !ts.isFunctionLike(fn)) fn = fn.parent;
+            const size = fn ? fn.end - fn.pos : Infinity;
+            if ((!fn || (fn.pos <= n.pos && n.end <= fn.end)) && size < best) { best = size; decl = x; }
+          }
+          ts.forEachChild(x, f);
+        })(sfs.get(file));
         if (decl && ts.isCallExpression(decl.initializer) && ts.isIdentifier(decl.initializer.expression) && FORM_HOOKS.test(decl.initializer.expression.text) && decl.initializer.arguments[0]) addAll(reach(decl.initializer.arguments[0], file, depth - 1, seen));
         else if (/^on[A-Z]/.test(nm)) {
           const srcs = cbSources.get(file + "::" + nm);
@@ -424,9 +447,18 @@ for (const [f, sf] of sfs) {
       const names = [...new Set([...r.actions.map((a) => a.name), ...r.rpcs.map((x) => `rpc:${x}`)])];
       const label = `<${tag} ${n.name.getText()}> ${names.join(" + ")}`;
       const el2 = el.parent && ts.isJsxElement(el.parent) ? el.parent : el;
+      // A <form onSubmit> with submit buttons, EVERY one drawn under a gate, can only be submitted through those buttons: the gates on them are the form's.
+      const submitGates = [];
+      if (tag === "form" && ts.isJsxElement(el2)) {
+        const subs = [];
+        (function sv(x) { if ((ts.isJsxOpeningElement(x) || ts.isJsxSelfClosingElement(x)) && x.attributes.properties.some((p) => ts.isJsxAttribute(p) && p.name.getText() === "type" && p.initializer && ts.isStringLiteral(p.initializer) && p.initializer.text === "submit")) subs.push(x); ts.forEachChild(x, sv); })(el2);
+        const g = subs.map((x) => gatesFor(x, f).acts);
+        if (g.length && g.every((a) => a.length)) submitGates.push(...g.flat());
+      }
       const units = [];
       if (r.actions.length || r.rpcs.length) units.push({ actions: r.actions, rpcs: r.rpcs, caller: null });
       for (const c of r.callers) units.push({ actions: c.sub.actions, rpcs: c.sub.rpcs, caller: c });
+      for (const b of r.branches) units.push({ actions: b.sub.actions, rpcs: b.sub.rpcs, caller: null, branch: b });
       if (!units.length) {
         if (r.callbacks.length) R.unresolved.push({ where, label: `<${tag} ${n.name.getText()}> ${[...new Set(r.callbacks)].join(", ")}`, why: `calls a callback prop (${[...new Set(r.callbacks)].join(", ")}); the action it runs is defined by the caller and not followed` });
         else R.none++;
@@ -448,7 +480,9 @@ for (const [f, sf] of sfs) {
           }
           const gates = gatesFor(el2, f);
           const callerGates = u.caller ? gatesFor(u.caller.node, u.caller.file) : { acts: [] };
-          const allGate = [...gates.acts, ...callerGates.acts];
+          // the true arm of `cond ? A : B` is reached only when cond holds, so cond's own activity counts for A
+          const armGates = u.branch && u.branch.positive ? resolveCondition(u.branch.cond, u.branch.file).acts : [];
+          const allGate = [...gates.acts, ...callerGates.acts, ...armGates, ...submitGates];
           if (allGate.some((g) => needU.some((d) => sat(g, d)))) { outcomes.push("gate"); continue; }
           const hosts = [...hostPages(u.caller ? u.caller.file : f)].map((h) => pages.get(h));
           const hostOk = (hosts.length > 0 && hosts.every((hp) => hp.opens.length && opensAll(hp.opens, needU))) || (u.caller ? sameFileOk(u.caller.node, u.caller.file, needU) : sameFileOk(el, f, needU));
