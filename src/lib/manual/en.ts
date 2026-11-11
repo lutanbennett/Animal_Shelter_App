@@ -1344,9 +1344,8 @@ const manual: Manual = {
           path: "Operations → Maintenance",
           steps: [
             "The board opens on the jobs assigned to you, unless your cards include \"Mark anyone's recurring job done or skipped\", which starts it on Everyone. Switch Assigned to between Me and Everyone at any time. Filter by zone or enclosure. Completed jobs from the last 30 days are shown; tick Show all completed jobs for older ones.",
-            "On a computer, drag a job card to another column to change its status. On a phone, tap Move job on under the job, choose where it goes (Move to In progress, Blocked, Completed or Not started), and confirm — the question says in words what will happen. Use the status chips at the top to look at one status, such as Completed, and move a job back from there. Cards are coloured when a job is overdue, due soon, or blocked.",
-            "Tap a card to open the job: edit its details, record the actual cost, and add Before and After photos. Who it's assigned to is shown under the title and on the card.",
-            "A job logged by mistake can be deleted from its page (Delete job, bottom right) where your cards include \"Delete a maintenance job for good\". \"Move a job on: in progress, blocked, completed\" completes jobs but does not delete them. Its photos and Drive folder go with it and it can't be undone — for a job that was real but is finished, mark it Completed instead.",
+            "Use the status chips at the top to look at one status, such as Completed. Cards are coloured when a job is overdue, due soon, or blocked.",
+            "Tap a card to open the job and read it: its details, cost and photos. Who it's assigned to is shown under the title and on the card. Changing a job is under Changing jobs on the board.",
           ],
           screenshot: {
             src: "/manual/maintenance-board.png",
@@ -1356,6 +1355,23 @@ const manual: Manual = {
             {
               kind: "note",
               text: "The board, its jobs and their photos need \"Maintenance jobs: log, change, assign, cost\" at Read. Without it the board is not opened at all.",
+            },
+          ],
+        },
+        {
+          id: "maintenance-board-edit",
+          title: "Changing jobs on the board",
+          activity: "maintenance.jobs",
+          path: "Operations → Maintenance",
+          steps: [
+            "On a computer, drag a job card to another column to change its status. On a phone, tap Move job on under the job, choose where it goes (Move to In progress, Blocked, Completed or Not started), and confirm — the question says in words what will happen. Use the status chips at the top to look at one status, such as Completed, and move a job back from there.",
+            "Tap a card to open the job: edit its details, record the actual cost, and add Before and After photos.",
+            "A job logged by mistake can be deleted from its page (Delete job, bottom right) where your cards include \"Delete a maintenance job for good\". \"Move a job on: in progress, blocked, completed\" completes jobs but does not delete them. Its photos and Drive folder go with it and it can't be undone — for a job that was real but is finished, mark it Completed instead.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Changing a job needs \"Maintenance jobs: log, change, assign, cost\" at Edit. A card that only reads jobs shows the board but none of this.",
             },
           ],
         },

@@ -829,6 +829,8 @@ export const ENTRIES = {
       do: "Open Maintenance and switch Assigned to between Me and Everyone.",
       expect: "The jobs show in columns by status, coloured when overdue or blocked.",
     },
+  ],
+  "maintenance-board-edit": [
     {
       activity: "Change a job's status on the board",
       needs: "maintenance.jobs",
