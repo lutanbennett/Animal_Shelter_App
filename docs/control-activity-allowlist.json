@@ -37,13 +37,6 @@
       "reason": "READ, FALSE POSITIVE of the check: takeBack branches on item.kind (recurring -> recurring.*, maintenance -> maintenance.progress); the gate is per kind and the check unions both actions."
     },
     {
-      "file": "src/app/projects/[id]/FolderView.tsx",
-      "control": "<form onSubmit> updateProjectFolderInfo",
-      "found": "no gate; host page(s) projects/[id] do not imply projects.publish:edit",
-      "date": "2026-11-11",
-      "reason": "READ, FALSE POSITIVE of the check: updateProjectFolderInfo asks projects.publish only for the is_public switch (actions.ts:146 'without it the form leaves is_public as it is'); the form itself is not a publish control. The check unions every can() in the action body."
-    },
-    {
       "file": "src/components/ResidentPicker.tsx",
       "control": "<RowActionButton onClick> setFeaturedResident",
       "found": "no gate; host page(s) memes/[id]/edit, memes/new, memes/make do not imply website.content:edit",

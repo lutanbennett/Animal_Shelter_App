@@ -297,6 +297,36 @@ function findFn(file, name) {
   })(sf);
   return hit;
 }
+/**
+ * PATTERN (i), an optional can(). `const canPublish = can(perms, "x")` whose name is only ever used to SHAPE what the action writes
+ * (the condition of a ternary, the left side of `&&`, never refusing) does not make x a requirement of the control: the action runs
+ * for a login without it, it just writes less. Anything else is a requirement, conservatively: any use in an `if`, a `||`/`??`,
+ * passed to a call, returned, or a ternary arm that refuses. Counted in OPTIONAL_CAN so the report says how many were skipped.
+ */
+const OPTIONAL_CAN = [];
+const REFUSES = /refuse|throw|notFound|redirect|ok:s*false/;
+function isOptionalCan(call) {
+  const decl = call.parent;
+  if (!decl || !ts.isVariableDeclaration(decl) || decl.initializer !== call || !ts.isIdentifier(decl.name)) return false;
+  let fn = decl;
+  while (fn && !ts.isFunctionLike(fn)) fn = fn.parent;
+  if (!fn) return false;
+  let optional = true;
+  (function v(n) {
+    if (!optional) return;
+    if (ts.isIdentifier(n) && n.text === decl.name.text && n !== decl.name && !(n.parent && ts.isPropertyAccessExpression(n.parent) && n.parent.name === n)) {
+      let use = n;
+      while (use.parent && (ts.isParenthesizedExpression(use.parent) || (ts.isPrefixUnaryExpression(use.parent) && use.parent.operator === ts.SyntaxKind.ExclamationToken))) use = use.parent;
+      const p = use.parent;
+      const shapes =
+        (p && ts.isConditionalExpression(p) && p.condition === use && !REFUSES.test(p.whenTrue.getText() + p.whenFalse.getText())) ||
+        (p && ts.isBinaryExpression(p) && p.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken && p.left === use && !REFUSES.test(p.right.getText()));
+      if (!shapes) optional = false;
+    }
+    ts.forEachChild(n, v);
+  })(fn.body ?? fn);
+  return optional;
+}
 const actCache = new Map();
 /** Activities asked inside function `name` of `file`, following calls to helpers (same file, then imports) to `depth`. */
 function actionActs(file, name, depth = 2, seen = new Set()) {
@@ -312,7 +342,8 @@ function actionActs(file, name, depth = 2, seen = new Set()) {
       const callee = n.expression;
       if (ts.isIdentifier(callee)) {
         const nm = callee.text;
-        if (nm === "can" && n.arguments.length >= 2 && strLit(n.arguments[1])) res.acts.push({ act: strLit(n.arguments[1]), level: strLit(n.arguments[2]) || "edit" });
+        if (nm === "can" && n.arguments.length >= 2 && strLit(n.arguments[1]) && isOptionalCan(n)) OPTIONAL_CAN.push(`${rel(file)} ${strLit(n.arguments[1])}`);
+        else if (nm === "can" && n.arguments.length >= 2 && strLit(n.arguments[1])) res.acts.push({ act: strLit(n.arguments[1]), level: strLit(n.arguments[2]) || "edit" });
         else if (nm === "requirePermission" && strLit(n.arguments[0])) res.acts.push({ act: strLit(n.arguments[0]), level: strLit(n.arguments[1]) || "edit" });
         else if (depth > 0) {
           const imp = importMap.get(file)?.get(nm);
@@ -431,6 +462,7 @@ console.log(`  reach no server action or rpc (state toggles, links, etc.; not ju
 console.log(`  reach an action: ${R.withAction}`);
 console.log(`    action asks no static activity (self-service or public; counted, not judged): ${R.noActivity}`);
 console.log(`    resolved OK: ${R.ok} (by its own gate ${okHow.gate}, by the host page's guard ${okHow.host})`);
+console.log(`    optional can() calls in action bodies, not counted as requirements (pattern i): ${[...new Set(OPTIONAL_CAN)].join("; ") || "none"}`);
 console.log(`  UNRESOLVED (could not decide): ${R.unresolved.length}`);
 for (const u of R.unresolved) console.log(`    ? ${u.where} ${u.label}: ${u.why}`);
 console.log(`  FINDINGS: ${R.findings.length} (${known.length} on the allow-list, ${fresh.length} new)`);
