@@ -11,7 +11,7 @@
 | PR | <filled in when `gh pr create` returns> |
 | Tested by / date | Claude (planner session) / 2026-11-11 |
 | Carries a migration? | no |
-| Tested at SHA | <filled in from the gates run> |
+| Tested at SHA | `9f468982` |
 
 ## 1. Scope and risk
 
@@ -23,11 +23,20 @@
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [ ] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — <the run's own closing lines, pasted exactly as printed>
+- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — **four gates, every exit code `0`.** Run on `9f468982`, the commit this plan is tested at; the lines below are that run's own output, timings included:
 
 ```
-<gates run in progress — this block is filled from the run's own output, never typed>
+=== gates: typecheck exited 0 after 221s
+=== gates: lint exited 0 after 628s
+=== gates: test exited 0 after 98s
+=== gates: build exited 0 after 471s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
+
+**That run took about 24 minutes, roughly 60% longer than this morning's** (36/383/39/295 s) on an
+identical four-gate pass. **Nothing in this PR could affect it** — one Markdown file — so the
+difference is machine load, and it is recorded here because a timing without its machine load is not a
+reading (`CLAUDE.md`, *Measuring the public site*).
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
