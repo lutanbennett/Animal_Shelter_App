@@ -8,6 +8,7 @@ import {
   upsertGeneratedFile,
 } from "@/lib/google/drive";
 import { loadResidentArchiveRecord } from "./resident-record";
+import { getSiteOrigin } from "@/lib/site-origin";
 import {
   renderResidentSummaryPdf,
   summaryPdfFileName,
@@ -16,6 +17,15 @@ import {
   RESIDENT_INDEX_FILE_NAME,
   renderResidentIndexHtml,
 } from "./resident-index-html";
+
+/** The address the export links back to; null outside a request (then the export carries no app links). */
+async function archiveAppOrigin(): Promise<string | null> {
+  try {
+    return (await getSiteOrigin())?.origin ?? null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * The Drive half of the deceased workflow, run after the Deceased placement
@@ -158,7 +168,7 @@ export async function archiveDeceasedResident(
       existingFileId: resident.deceased_summary_drive_file_id,
     });
 
-    const html = renderResidentIndexHtml(record, { summaryPdfFileName: pdfName });
+    const html = renderResidentIndexHtml(record, { summaryPdfFileName: pdfName, appOrigin: await archiveAppOrigin() });
     const indexFileId = await upsertGeneratedFile(drive, residentFolderId, {
       name: RESIDENT_INDEX_FILE_NAME,
       mimeType: "text/html",
