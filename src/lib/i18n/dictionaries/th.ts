@@ -83,6 +83,17 @@ const th: Dictionary = {
     "photo.add_shelter_not_allowed": () => "สิทธิ์ของคุณไม่รวมการเพิ่มรูปของศูนย์พักพิง",
     "photo.folder_id_invalid": () => "นี่ไม่ใช่โฟลเดอร์ Google Drive ที่ถูกต้อง โปรดลองอีกครั้ง และแจ้งผู้ดูแลระบบหากยังเกิดขึ้นอีก",
     "photo.website_not_allowed": () => "สิทธิ์ของคุณไม่รวมการเปลี่ยนรูปบนเว็บไซต์",
+    // UNREVIEWED Thai (not yet read by a human, #y1dqu): the ten recurring-job refusals.
+    "recurring_job.record_not_allowed": () => "สิทธิ์ของคุณไม่รวมการบันทึกงานประจำ",
+    "recurring_job.outcome_invalid": () => "งานทำได้เพียงทำเครื่องหมายว่าเสร็จแล้วหรือข้ามเท่านั้น",
+    "recurring_job.not_found": () => "ไม่พบงานประจำนี้แล้ว โปรดโหลดหน้านี้ใหม่เพื่อดูสถานะล่าสุด",
+    "recurring_job.date_handed_over": () => "งานของวันนี้ถูกมอบหมายให้คนอื่นแล้ว",
+    "recurring_job.not_assigned": () => "เฉพาะผู้ที่ได้รับมอบหมายงานนี้หรือฝ่ายจัดการเท่านั้นที่บันทึกได้",
+    "recurring_job.not_on_that_date": (p: Record<string, string>) => `งานนี้ไม่ตรงกับวันที่ ${p.date}`,
+    "recurring_job.done_before_its_day": () => "ทำเครื่องหมายว่าเสร็จก่อนถึงวันของงานไม่ได้ แต่ข้ามล่วงหน้าได้",
+    "recurring_job.reassign_not_allowed": () => "สิทธิ์ของคุณไม่รวมการมอบหมายงานประจำให้คนอื่น",
+    "recurring_job.date_already_marked": () => "วันนั้นถูกทำเครื่องหมายว่าเสร็จหรือข้ามไปแล้ว",
+    "recurring_job.cannot_sign_in": () => "มอบหมายงานได้เฉพาะผู้ที่ยังเข้าสู่ระบบได้",
   },
 
   largerScreen: {

@@ -102,6 +102,16 @@ const en = {
     "photo.add_shelter_not_allowed": () => "Your access does not include adding shelter photos.",
     "photo.folder_id_invalid": () => "That is not a valid Google Drive folder. Try again, and tell an administrator if it keeps happening.",
     "photo.website_not_allowed": () => "Your access does not include changing the website photo.",
+    "recurring_job.record_not_allowed": () => "Your access does not include recording recurring jobs.",
+    "recurring_job.outcome_invalid": () => "A job can only be marked done or skipped.",
+    "recurring_job.not_found": () => "That recurring job no longer exists. Reload the page to see where it stands.",
+    "recurring_job.date_handed_over": () => "This date of the job has been handed to someone else.",
+    "recurring_job.not_assigned": () => "Only the people this job is assigned to, or management, can record it.",
+    "recurring_job.not_on_that_date": (p: Record<string, string>) => `This job does not fall on ${p.date}.`,
+    "recurring_job.done_before_its_day": () => "A job cannot be marked done before its day. It can be skipped ahead.",
+    "recurring_job.reassign_not_allowed": () => "Your access does not include handing recurring jobs to someone else.",
+    "recurring_job.date_already_marked": () => "That date has already been marked done or skipped.",
+    "recurring_job.cannot_sign_in": () => "A job can only be handed to someone who can still sign in.",
   },
 
   // The notice a desktop-only Settings/Management page shows on a phone
