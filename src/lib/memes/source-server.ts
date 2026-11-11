@@ -32,6 +32,13 @@ export async function resolveSource(
       .eq("owner_type", "resident")
       .eq("drive_file_id", fileId)
       .returns<MakerSourceRow[]>();
+    if (!data?.length) {
+      // A login holding only the meme card cannot select attachments rows (RLS), but it is offered these photos through
+      // resident_photo_list (0354): approved, non-medical photos only, gated on resident.who_and_where. The picker and this
+      // check must read the same door, or a photo the picker draws is refused here. Found driving /memes/make, 2026-11-11.
+      const { data: listed } = await supabase.from("resident_photo_list").select("resident_id").eq("drive_file_id", fileId).returns<{ resident_id: string }[]>();
+      if (listed?.length) return { ok: true, kind, residentIds: [...new Set(listed.map((l) => l.resident_id))], ...NO_LINK };
+    }
     const r = checkMakerSource(data);
     return r.ok ? { ok: true, kind, residentIds: r.residentIds, ...NO_LINK } : { ok: false, reason: r.reason };
   }
