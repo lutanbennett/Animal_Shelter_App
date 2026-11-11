@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { runWriteAction, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
+import { dbRefusal } from "@/lib/db-refusal";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can } from "@/lib/permissions/can";
@@ -165,11 +166,8 @@ async function saveStocktakeBody(
     .single<{ medication_updated: number; diet_types_updated: number; counted_at: string }>();
 
   if (error || !data) {
-    const message = error?.message ?? "";
-    if (/not authorized/i.test(message)) return { ok: false, error: e.notAuthorized };
-    if (/were found/i.test(message)) return { ok: false, error: e.stale };
-    if (/negative|needs an id and a number|do not add up/i.test(message)) return { ok: false, error: e.countInvalid };
-    return { ok: false, error: message ? `${e.failed}: ${message}` : e.failed };
+    if (error) return dbRefusal("stocktake.saveStocktake", error, t);
+    return { ok: false, error: e.failed };
   }
 
   revalidatePath("/stocktake");

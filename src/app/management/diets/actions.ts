@@ -3,6 +3,7 @@
 import { refresh, revalidatePath } from "next/cache";
 import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
+import { dbRefusal } from "@/lib/db-refusal";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { parseUnitCost } from "@/lib/format";
@@ -125,7 +126,7 @@ export async function updateDietTypeStock(id: string, count: string, requestId: 
       p_id: id,
       p_count: parsed.value,
     });
-    if (error) return refuse(error.message);
+    if (error) return dbRefusal("diets.updateDietTypeStock", error, t);
     revalidateDietPages();
     return { ok: true };
   });
