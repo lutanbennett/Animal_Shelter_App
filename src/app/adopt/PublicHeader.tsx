@@ -19,6 +19,7 @@ import {
   type PublicPage,
   type PublicSection,
 } from "@/lib/public-pages";
+import { localizedHref } from "@/lib/public-paths";
 import { canSeeHiddenPages } from "@/lib/public-page-access";
 import { LanguageSwitcher } from "../LanguageSwitcher";
 import { SignOutButton } from "../login/SignOutButton";
@@ -108,7 +109,7 @@ export async function PublicHeader({
   // — with one, the Appeals entry is the sponsorship page.
   const pageLink = (page: PublicPage, navKey?: string): PublicNavLink => ({
     key: navKey ?? page.key,
-    href: page.href,
+    href: localizedHref(page.href, locale),
     label: (page.menu?.label ?? page.label)(t),
     current: page.key === current,
   });
@@ -203,7 +204,7 @@ export async function PublicHeader({
   ];
 
   const brand = (
-    <Link href="/" className="flex min-h-11 items-center gap-2.5 text-site-ink lg:gap-3">
+    <Link href={localizedHref("/", locale)} className="flex min-h-11 items-center gap-2.5 text-site-ink lg:gap-3">
       <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center lg:h-16 lg:w-16">
         <Image
           src="/lca-logo-transparent.png"
@@ -306,7 +307,7 @@ export async function PublicHeader({
       </div>
 
       {trail && trail.length > 0 && (
-        <Breadcrumb trail={[{ label: n.home, href: "/" }, ...trail]} label={n.breadcrumb} origin={origin} />
+        <Breadcrumb trail={[{ label: n.home, href: localizedHref("/", locale) }, ...trail.map((c) => (c.href ? { ...c, href: localizedHref(c.href, locale) } : c))]} label={n.breadcrumb} origin={origin} />
       )}
     </header>
   );

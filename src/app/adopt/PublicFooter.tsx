@@ -5,6 +5,7 @@ import { preferredChannels, talkChannels } from "@/lib/site/channels";
 import { loadSiteContent, pairedText, socialLinks, visitingHoursLines, type SiteContent } from "@/lib/site/content";
 import { footerPages, hiddenPagesOf, isPageHidden } from "@/lib/public-pages";
 import { staffLoginHref } from "@/lib/site-hosts";
+import { localizedHref } from "@/lib/public-paths";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
 import { hasPublicShopLinks } from "@/lib/shop/shop-links";
 import { FacebookIcon } from "@/components/FacebookIcon";
@@ -152,7 +153,7 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
                 (page.key !== "shop" || showShop),
             )
             .map((page) => (
-              <Link key={page.key} href={page.href} className={footerLink}>{page.label(t)}</Link>
+              <Link key={page.key} href={localizedHref(page.href, locale)} className={footerLink}>{page.label(t)}</Link>
             ))}
         </div>
 
@@ -177,7 +178,7 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
           )}
           <div className="flex flex-wrap gap-x-4 pt-4 lg:mt-auto">
             {footerPages("foot").map((page) => (
-              <Link key={page.key} href={page.href} className={smallLink}>{page.label(t)}</Link>
+              <Link key={page.key} href={localizedHref(page.href, locale)} className={smallLink}>{page.label(t)}</Link>
             ))}
             <a href={staffLoginHref()} className={smallLink}>{f.staffLogin}</a>
           </div>

@@ -135,3 +135,24 @@ export function thPathRest(pathname: string): string | null {
   const rest = pathname.slice(3) || "/";
   return isPublicPage(rest) ? rest : null;
 }
+
+/**
+ * Slice B of #t48xh: the one place a link learns the Thai address. `localizedHref("/adopt", "th")`
+ * is `/th/adopt`; English, a staff path, an external or hash-only href, and an href already under
+ * `/th` come back unchanged. Query and hash are kept. Slices C and D build `/th/` URLs with this.
+ */
+export function localizedHref(href: string, locale: string): string {
+  if (locale !== "th" || !href.startsWith("/") || href.startsWith("//")) return href;
+  const cut = href.search(/[?#]/);
+  const path = cut === -1 ? href : href.slice(0, cut);
+  const tail = cut === -1 ? "" : href.slice(cut);
+  if (!isPublicPage(path)) return href;
+  return (path === "/" ? "/th" : `/th${path}`) + tail;
+}
+
+/** The same page in the other language: the address the toggle goes to, or null for a non-public page. */
+export function otherLanguageHref(pathname: string, next: string): string | null {
+  const bare = thPathRest(pathname) ?? pathname;
+  if (!isPublicPage(bare)) return null;
+  return next === "th" ? localizedHref(bare, "th") : bare;
+}
