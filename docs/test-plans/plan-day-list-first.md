@@ -11,7 +11,7 @@
 | PR | <filled in when `gh pr create` returns> |
 | Tested by / date | Claude (planner session) / 2026-11-11 |
 | Carries a migration? | no |
-| Tested at SHA | `6cb636ab` |
+| Tested at SHA | `f331615d` |
 
 ## 1. Scope and risk
 
@@ -23,10 +23,14 @@
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (`Already up to date.`, then pushed)
-- [ ] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — <the run's own closing lines go here, pasted exactly as printed>
+- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — **four gates, every exit code `0`.** Run on `f331615d`, the tip of this branch, and the lines below are that run's own output:
 
 ```
-<gates run in progress — this block is filled from the run's own output, not typed>
+=== gates: typecheck exited 0 after 36s
+=== gates: lint exited 0 after 383s
+=== gates: test exited 0 after 39s
+=== gates: build exited 0 after 295s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
@@ -128,7 +132,7 @@ repository, not built, bundled or deployed. Every line below is therefore
 
 ### Rollback
 
-- [ ] Rollback position stated, **including what it does not cover** — n/a as a deploy gate, but stated for completeness: the rollback is `git revert 6cb636ab`, which fully restores the previous instructions because the change is two text files with no runtime consumer and no state. **What a revert would NOT restore: nothing.** There is no migration, no deployed artifact and no cached copy
+- [ ] Rollback position stated, **including what it does not cover** — n/a: there is nothing deployed to roll back, and the position is stated anyway. The rollback is `git revert f331615d 6cb636ab`, which fully restores the previous instructions because the change is two text files with no runtime consumer and no state. **What a revert would not cover: nothing.** There is no migration, no deployed artifact and no cached copy
 
 ## Defects found
 
