@@ -428,6 +428,26 @@ export const CHECKS = {
       : x.called_by.length ? [`${x.function}: CALLED by ${x.called_by.length}`, ...x.called_by.map((w) => `    ${w}`)]
       : [`${x.function}: exists, called by nothing`]),
   },
+  // #rv4qk. What 0348 (suppliers cleanup) moves, as ROWS so it survives the Management API (a RAISE NOTICE never comes back).
+  // Reads the schema first, so it answers on both sides of 0348: it names no column 0348 drops.
+  "supplier-vendor-rows": {
+    asks: "How many Vendor contacts are live vs archived, how many suppliers are live vs archived, and is 0348 applied (do stock_vendors, stock_receipts.supplier_contact_id, stock_deliveries.supplier_contact_id and suppliers.source_contact_id still exist)? Counts only. Read-only.",
+    sql: `select json_build_object(
+        'vendor_contacts_live', (select count(*) from contacts where type = 'Vendor' and archived_at is null),
+        'vendor_contacts_archived', (select count(*) from contacts where type = 'Vendor' and archived_at is not null),
+        'vendor_contacts_archived_by_0348', (select count(*) from contacts where type = 'Vendor' and archive_reason = 'Moved to Suppliers (0348)'),
+        'suppliers_live', (select count(*) from suppliers where archived_at is null),
+        'suppliers_archived', (select count(*) from suppliers where archived_at is not null),
+        'stock_vendors_view', exists (select 1 from pg_views where schemaname = 'public' and viewname = 'stock_vendors'),
+        'receipts_contact_col', exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'stock_receipts' and column_name = 'supplier_contact_id'),
+        'deliveries_contact_col', exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'stock_deliveries' and column_name = 'supplier_contact_id'),
+        'suppliers_source_col', exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'suppliers' and column_name = 'source_contact_id'))`,
+    render: (r) => [
+      `0348 ${r.stock_vendors_view || r.receipts_contact_col || r.deliveries_contact_col || r.suppliers_source_col ? "NOT applied (old view/columns still present)" : "applied (view and columns gone)"}`,
+      `Vendor contacts: ${r.vendor_contacts_live} live, ${r.vendor_contacts_archived} archived (${r.vendor_contacts_archived_by_0348} of them archived by 0348)`,
+      `Suppliers: ${r.suppliers_live} live, ${r.suppliers_archived} archived`,
+    ],
+  },
   "table-policy-commands": {
     asks: "For each public table with row security on, which commands (select/insert/update/delete) have no policy that can answer true for anyone? A policy counts as live when it resolves through has_permission(), is_admin() or a row test; one that only calls a function known to be false, or has no policy at all, does not. (Table and command names only.)",
     // RLS denies by default, so a command with no live policy is refused for everyone, Admin included (Admin's bypass runs inside
