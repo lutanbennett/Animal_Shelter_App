@@ -23,7 +23,7 @@
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (`Already up to date.`, then pushed)
-- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — **four gates, every exit code `0`.** Run on `f331615d`, the tip of this branch, and the lines below are that run's own output:
+- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — **four gates, every exit code `0`.** Run on `f331615d`, **the last commit on this branch that could affect a gate**; the commits after it are this test plan and `brief-blocks.md`, both Markdown, neither reachable by typecheck, lint, test or build. **CI re-runs the same four gates on the actual head, which is the authoritative result** — that is also why the CI line below is never ticked. The lines here are this run's own output, timings included:
 
 ```
 === gates: typecheck exited 0 after 36s
