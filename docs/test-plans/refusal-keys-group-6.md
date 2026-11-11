@@ -14,7 +14,7 @@
 | PR | see PR |
 | Tested by / date | Claude, 2026-11-11 |
 | Carries a migration? | yes, 0358 |
-| Tested at SHA | bac0c501 |
+| Tested at SHA | see PR |
 
 ## 1. Scope and risk
 
@@ -62,8 +62,8 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 - [x] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations`
 - [x] File is re-runnable (`if not exists` / `or replace` / `drop … if exists`)
 - [ ] Existing rows still read correctly after the change (checked against real dev data) — n/a: function bodies only, no rows or columns changed
-- [ ] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness — the `do $$ … $$`  — n/a: no constraint or default; only the twelve raised messages changed (now eleven keys)
-- [ ] Down-migration written, or the reason one is not needed is stated — n/a: 0178 bodies are the previous definition and can be re-applied
+- [ ] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness — the `do $$ … $$`  — n/a: no constraint or default; only the eight raised messages changed (eight keys)
+- [ ] Down-migration written, or the reason one is not needed is stated — n/a: 0307 body is the previous definition and can be re-applied
 - [ ] Production apply plan stated for the release manager (which file, which project, when) — pending: release manager applies 0358 to production before the deploy that carries the callers
 
 ## 4. Functional checks
@@ -72,7 +72,7 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 - [ ] Data persists — reload the page and the change is still there — n/a: no data written by this change
 - [ ] Create / edit / delete all exercised (whichever the feature has) — n/a: no create/edit flow changed
 - [ ] Empty state renders sensibly (no rows yet) — n/a: no list or empty state
-- [ ] Invalid input is rejected with a readable message, not a crash — pending: stock refusal not yet provoked on screen
+- [ ] Invalid input is rejected with a readable message, not a crash — pending: five of eight refusals proved in a dev harness, none on screen
 - [ ] Boundary cases checked (long text, zero, negative, missing optional fields, dates) — n/a: wording only
 
 ### Role access matrix
@@ -92,12 +92,12 @@ needs two cards together, put both on one row. Do not name `staff` (retired, `01
 
 | Login (card(s) held) | Can reach | Expected | Result |
 |---|---|---|---|
-| admin | stocktake and stock-edit screens | not driven | pending |
-| exactly the card stock.count | stocktake | not driven; SQL checks unchanged | pending |
+| admin | /admin/intake-date | not driven | pending |
+| exactly the card correct_intake_date | /admin/intake-date | not driven; SQL checks unchanged | pending |
 | signed out | n/a | n/a | n/a |
 
-- [ ] Every login above tested — pending: no on-screen run; permission checks are unchanged SQL
-- [ ] A login that should not have access is blocked server-side (hitting the URL directly fails) — n/a: checks unchanged from 0178
+- [ ] Every login above tested — pending: no on-screen run; permission check unchanged SQL
+- [ ] A login that should not have access is blocked server-side (hitting the URL directly fails) — n/a: checks unchanged from 0307
 
 ## 5. Cross-cutting
 
@@ -164,10 +164,10 @@ correct when written. **UAT is deployed on every release since 2026-11-08**
 
 ### Migration ordering — *skip if no migration*
 
-- [ ] **Does this PR contain both a migration and code that reads it?** If yes, the production apply must happen *be — deferred: yes, 0358 plus callers; production apply first, pinned with --upto because 0348 (destructive) and 0350-0352 are pending ahead of it; release manager
+- [ ] **Does this PR contain both a migration and code that reads it?** If yes, the production apply must happen *be — deferred: yes, 0358 plus callers; production apply first, release manager
 - [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — it executes the real DDL inside — deferred: release manager
 - [ ] For a **destructive or rewriting** migration only: a production backup exists and is fresh. (Additive nullable — n/a: function replacement only
-- [ ] Apply plan stated: which file, which project, and whether it runs before or after the deploy — deferred: 0358 to production before the deploy, pinned with --upto (0348 destructive, 0350-0352 pending)
+- [ ] Apply plan stated: which file, which project, and whether it runs before or after the deploy — deferred: 0358 to production before the deploy, 
 
 ### Rollback
 
@@ -201,8 +201,8 @@ section 8's.
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | Provoke a stock refusal in Thai on screen (stale stocktake page); every page checks the card before the call, so it needs a deliberately stale page. Keys proved by direct calls on dev; fallback proved by db-refusal.test.mjs. | stocktake and stock-edit screens |
-| 2 | A Thai speaker reads the eleven new Thai sentences (#y1dqu); unread by a human | refusals block of th.ts |
+| 1 | Provoke an intake-date refusal in Thai on screen (e.g. a date after a later weight); not driven this session. Keys proved by direct calls on dev; fallback proved by db-refusal.test.mjs. | /admin/intake-date |
+| 2 | A Thai speaker reads the eight new Thai sentences (#y1dqu); unread by a human | refusals block of th.ts |
 
 ## Sign-off
 
