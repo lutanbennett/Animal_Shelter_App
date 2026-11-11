@@ -179,8 +179,35 @@ if [[ "${SWAP_KB:-0}" -lt "$MIN_SWAP_KB" ]]; then
   fi
 fi
 
+# ONE build at a time on this machine. The three clones share one 4 GiB box and a build peaks above
+# 6 GB, so a second concurrent build gets the OOM killer (0.44.2: a bare "Killed"). This is a kernel
+# flock on a fixed per-MACHINE path (not inside a clone): the kernel drops it when the holder dies,
+# including an OOM kill, so there is never a stale lock to clear. It REFUSES rather than waits
+# (docs/decisions/2026-11-11-pi-build-lock.md). Held through install, build and the manual PDFs,
+# released before the swap; the fetch, the guards and the restart are not serialised.
+BUILD_LOCK="${PI_BUILD_LOCK:-/tmp/lanna-pi-build.lock}"
+if ! command -v flock >/dev/null 2>&1; then
+  echo "deploy-pi: REFUSING: 'flock' is not installed, so the one-build-at-a-time lock cannot be taken." >&2
+  echo "  Nothing was changed. It ships with Raspberry Pi OS (util-linux); install it: sudo apt install util-linux" >&2
+  exit 2
+fi
+exec 9>>"$BUILD_LOCK"
+FLOCK_RC=0; flock -n 9 || FLOCK_RC=$?
+if [[ "$FLOCK_RC" -ne 0 && "$FLOCK_RC" -ne 1 ]]; then
+  echo "deploy-pi: REFUSING: could not take the build lock $BUILD_LOCK (flock exit $FLOCK_RC). Nothing was changed." >&2
+  exit 2
+fi
+if [[ "$FLOCK_RC" -eq 1 ]]; then
+  echo "deploy-pi: NOT STARTING: another build is running on this Pi." >&2
+  echo "  Now building: $(tr '\n' ' ' < "$BUILD_LOCK")" >&2
+  echo "  The Pi has 4 GB of memory and one build needs about 6 GB, so two at once crash." >&2
+  echo "  Nothing was changed; $SERVICE keeps serving. Wait for that build to print its last line," >&2
+  echo "  then run this again: ./scripts/pi/deploy-pi.sh ${ORIG_ARGS[*]:-}" >&2
+  exit 3
+fi
+echo "$ENV_NAME from $CLONE (pid $$) since $(date '+%H:%M:%S %d %b')" > "$BUILD_LOCK"
 node scripts/pi/write-env.mjs --env "$ENV_NAME"
-"${NICE[@]}" npm ci --no-audit --no-fund   # devDependencies too: next build needs TypeScript and Tailwind
+"${NICE[@]}" npm ci --no-audit --no-fund 9>&-   # devDependencies too: next build needs TypeScript and Tailwind
 # Build into .next.new and rename it into place, so the folder the service serves is never
 # rewritten under live requests (next.config.ts reads NEXT_DIST_DIR, and type-checks .next.new's own
 # route types through tsconfig.next-new.json, never the live .next/types: a release that deleted a
@@ -196,7 +223,7 @@ abandon_build() {
   echo "  (Check the served version with /api/version: a git-updated clone is not a deployed clone.)" >&2
   rm -rf .next.new
 }
-NEXT_DIST_DIR=.next.new "${NICE[@]}" npm run build && BUILD_RC=0 || BUILD_RC=$?
+NEXT_DIST_DIR=.next.new "${NICE[@]}" npm run build 9>&- && BUILD_RC=0 || BUILD_RC=$?
 if [[ "$BUILD_RC" -ne 0 ]]; then abandon_build; report_build_failure "$BUILD_RC"; exit 1; fi
 # The build must carry this environment's Server Actions key, the one the Worker
 # builds with, or forms rendered by one are rejected by the other. Stops before
@@ -209,7 +236,9 @@ NEXT_DIST_DIR=.next.new node scripts/actions-key.mjs --env "$ENV_NAME" --built |
 # .manual-pdf/, outside public/, and are written file-by-file via rename. Stops before the swap on
 # failure, so the old version and its old manual keep serving
 # (docs/decisions/2026-11-05-manual-pdf-prebuilt.md).
-"${NICE[@]}" node scripts/build-manual-pdf.mjs || { echo "deploy-pi: building the manual PDFs failed; nothing swapped." >&2; abandon_build; exit 1; }
+"${NICE[@]}" node scripts/build-manual-pdf.mjs 9>&- || { echo "deploy-pi: building the manual PDFs failed; nothing swapped." >&2; abandon_build; exit 1; }
+
+exec 9>&-   # the memory-hungry part is over: the next clone's build may start while this one swaps
 
 HOST=lannacareforanimals.org   # the live site since the 2026-11-06 cutover
 [[ "$ENV_NAME" == "uat" ]] && HOST=uat.lannacare.org
