@@ -114,13 +114,22 @@ kill it.** CI ran the same four gates and concluded `success` on that PR's own h
 shipped** — but with four or more streams live this recurs. **Worth a backlog item: a safe way to clear a
 stale lock, or `gates.mjs` naming the process that holds it.**
 
-**It also left a half-written verification record on `main`.**
-`docs/test-plans/adoption-updates-schema.md` carries `SHA_HERE` at *Tested at SHA* and `GATES_HERE` where
-the gate lines belong. **An unfilled placeholder reports as *still being written* and passes by design**
-(2026-11-05) — right for a plan mid-flight, wrong for one that has merged. **This is the verification
-record for migration `0357`, which is in dev and will reach production.** A PR touching nothing but
-`docs/test-plans/` is explicitly allowed for this. **Fix it; the honest content is the CI run, since the
-local gates genuinely could not be run.**
+**It also left a blank where evidence belongs — and the obvious fix is the WRONG one, which this
+edition nearly recommended.** `docs/test-plans/adoption-updates-schema.md` sits on `main` with `SHA_HERE`
+at *Tested at SHA* and `GATES_HERE` inside the gates fence: **the verification record for migration
+`0357`, bound for production.**
+
+**That half is NOT a new finding — it is `#up3vf`, already TICKED, and I have REOPENED it**, because its
+outcome demonstrably still happens. **The tick was not dishonest and the shipped fix was not wrong; it
+was NARROWER than the item.** It prescribed failing on `PLACEHOLDER`, `TODO`, `<paste`, `xxx` or an empty
+block — **and the template own placeholder names are none of those**, so a plan written from the template
+walks past it. **`SHA_HERE` is a second path: the header TABLE, not a fence**, where a placeholder passes
+as *still being written* by design (2026-11-05) — right mid-flight, wrong once merged.
+
+**AND `#up3vf` RULES AGAINST RETROFITTING THE PLAN: a merged plan *"is a record of what happened"*, and
+editing it now would *"put evidence into history that nobody actually pasted"*.** #1498 local gates
+genuinely could not run, so filling its gate lines would be exactly that. **Fix the instrument; leave the
+record. I had written the opposite here before reading the item.**
 
 ---
 
@@ -174,13 +183,22 @@ FROM SCRATCH.**
 first hour is plan, agree the nine, set up batch 1, send the list — **and only then** measure, clear the
 merged batch's folders, read the PR bodies and file.
 
-**Four things owed; two are small enough to do before your first batch:**
+**What was owed — THREE OF THE FOUR WERE CLOSED BY THIS EDITION OWN TURN:**
 
-1. **File the `check-test-plan.mjs --base` disagreement.** Two editions have asked.
-2. **Fix `docs/test-plans/adoption-updates-schema.md`'s `SHA_HERE` and `GATES_HERE` on `main`.**
-3. **File the stale build lock** that stopped #1498's gates.
-4. **`#c4vn7` — he said "Yes, today" and it did not happen.** Put it in your first batch or do it yourself,
-   but **do not re-ask him whether he wants it.**
+1. **FILED at last: the `check-test-plan.mjs --base` disagreement**, after two editions asked; an open item
+   in *Architecture*. **Do not file it a third time** — three TICKED items already existed with near
+   identical titles about that script, so **search by subject before filing.**
+2. **FILED: the stale build lock** that stopped #1498 gates, also *Architecture*.
+3. **REOPENED, not fixed: `#up3vf`**, moved from *Completed* back into *Quick wins*. What is left is two
+   narrow extensions **in the checker and nowhere else**: add the template own placeholder tokens to the
+   fenced-block list, and fail a header placeholder once a plan PR has merged. **Do not touch the plan.**
+4. **STILL OWED, AND IT IS THE ONE THAT MATTERS: `#c4vn7`.** He said **"Yes, today"** and it did not
+   happen. Put it in your first batch or do it yourself, but **do not re-ask him.**
+
+**Two traps met while filing, both worth a minute:** a backlog id is **exactly five characters** and a
+six-character one reads as *absent*, so let `node scripts/backlog-ids.mjs` assign them; and **reopening a
+ticked item in place leaves an open item below `## Completed`**, which the pre-commit hook refuses and
+every session is blind to — **move it into a real section in the same edit.**
 
 **The natural first batch:** **`#79sqf`'s remainder, whatever `control-drive-pane` hands back** (still his
 #1); **`#l5gxn`'s app half**, now `0357` has landed the adopter-to-resident scope and the text approval
