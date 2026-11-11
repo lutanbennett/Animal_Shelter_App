@@ -258,7 +258,7 @@ Manual verification by: pending: no person has looked; pane controls and canvas 
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — pending: release manager
 
 Result: pass
 
