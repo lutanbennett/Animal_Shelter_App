@@ -10,7 +10,7 @@
 
 - **Folder link on the banner** now goes to `/residents/<id>/archive-files`. That page reads the `residents` row as the caller (RLS: same read the hub needs), then lists the folder as the app owner and keeps only files for which `can_see_drive_file()` is true for the caller, so the list can never show a file its own link refuses. Each file opens at `/api/documents/<id>`. The link is drawn only when the archive is done and a folder exists.
 - **A folder is not a document**, so a folder is a page, not a proxy. Depth is capped at 3 and 200 files. A file in the folder that no table knows (so `can_see_drive_file` is false) is not listed; the generated summary and index and registered attachments are.
-- **Home-screen-icons**: UNCHANGED, by Lutan’s ruling the same day: the icons folder stays "anyone with the link", as it was left on UAT. It is the one deliberate direct Drive link and an exception to the lockdown: `scripts/drive-sharing.mjs` must not strip the `Home screen icons` folder on Production. The folder holds only generated card pictures. So the item’s "no drive.google.com URL built by app code" is met for all but this one link.
+- **Home-screen-icons**: the Drive link is removed. The page already draws every icon this login can use from the route registry, so the folder was a convenience for the full set of every card. `scripts/sync-home-icons.mjs` still fills the folder. Lutan, 2026-11-11: the folders must be identical to UAT, which was tested with the whole tree private (0 of 1,263 shared, icons folder included), so no exception and no Drive link.
 
 ## The export file: option (ii), link back to the app
 
