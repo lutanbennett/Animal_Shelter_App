@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| Feature | Control press, group D: five table rows pressed in the browser (11 of 25), no code changed |
+| Feature | Control press, group D: seven table rows pressed in the browser (13 of 25), no code changed |
 | Backlog item | `docs/backlog.md` → `#79sqf` (not ticked; count stays 6 of 25) |
 | Branch / worktree | `claude/control-press-group-d` @ `C:\Development\Animal_Shelter_control-press-group-d` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3005` |
@@ -59,7 +59,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 | Login (card(s) held) | Can reach | Expected | Result |
 |---|---|---|---|
 | admin | n/a | n/a | not tested, no code changed |
-| exactly one card per row (`residents`, `medical_records`, `record_microchip`, `view_residents`) | the rows in the decision file | control drawn and works with the card, absent without | as expected |
+| exactly one card per row (`residents`, `medical_records`, `record_microchip`, `view_residents`, `translations`, `propose_translations`) | the rows in the decision file | control drawn and works with the card, absent without | as expected |
 | signed out | n/a | n/a | not tested |
 
 - [x] Every login above tested: one-card logins for the rows pressed, listed in the decision file
