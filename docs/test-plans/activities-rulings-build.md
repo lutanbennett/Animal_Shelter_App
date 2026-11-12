@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → `#c4vn7` |
 | Branch / worktree | `claude/adoring-dijkstra-b983e6` @ `C:\Development\Animal_Shelter_App-worktrees\adoring-dijkstra-b983e6` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3002` |
-| PR | <filled when it is opened> |
+| PR | #1515 |
 | Tested by / date | Claude (Opus 5) / 2026-11-12 |
 | Carries a migration? | yes — `0360_readonly_activities_and_stock_usage_card.sql` |
 | Tested at SHA | `dace25a6` plus the docs and release-note commit on this branch |
