@@ -105,3 +105,10 @@ test("evaluate: a number already on main is still refused", () => {
   assert.equal(v.problems.length, 1);
   assert.match(v.problems[0], /already taken on/);
 });
+
+import { renumberAdvice } from "./check-migration-numbers.mjs";
+test("renumber advice: applied means do NOT renumber; not applied means renumber; unknown says how to find out", () => {
+  assert.match(renumberAdvice("0365_x.sql", "yes"), /ALREADY APPLIED.*Do NOT renumber/s);
+  assert.match(renumberAdvice("0365_x.sql", "no"), /safe to renumber/);
+  assert.match(renumberAdvice("0365_x.sql", "unknown"), /--is-applied 0365_x\.sql.*do NOT rename/s);
+});

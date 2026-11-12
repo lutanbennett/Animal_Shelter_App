@@ -116,7 +116,13 @@ if (forget && envName !== "test") {
   console.error(`--forget is for the dev database only (--env test); refusing ${envName}. Nothing was sent to any database.`);
   process.exit(2);
 }
-const readOnly = statusOnly || drift;
+const isAppliedIndex = args.indexOf("--is-applied");
+const isApplied = isAppliedIndex >= 0 ? args[isAppliedIndex + 1] : null;
+if (isAppliedIndex >= 0 && (!isApplied || isApplied.startsWith("--"))) {
+  console.error("--is-applied needs a migration filename, e.g. --is-applied 0365_something.sql");
+  process.exit(2);
+}
+const readOnly = statusOnly || drift || isAppliedIndex >= 0;
 if (upto && (readOnly || baseline)) {
   console.error("--upto goes with an apply or --dry-run, not --status, --drift or --baseline.");
   process.exit(2);
@@ -273,6 +279,12 @@ function driftReport() {
   console.log(`  Applied here, no file on origin/main: ${missingFile.length}`);
   for (const name of missingFile) console.log(`    ${name}`);
   return { unapplied, missingFile };
+}
+
+if (isApplied) {
+  // Read-only question for check-migration-numbers.mjs: is this exact filename recorded in this database?
+  console.log(applied.has(isApplied) ? "applied" : "not applied");
+  process.exit(applied.has(isApplied) ? 0 : 1);
 }
 
 if (drift) {

@@ -157,6 +157,24 @@ export function evaluate(candidate, mainBlobs, claimed = new Map()) {
   return { highestName, fresh, ok, problems };
 }
 
+/**
+ * Is this exact file already recorded in the dev database? "yes" | "no" | "unknown" (no credentials,
+ * no network, CI). Shells out to apply-migrations.mjs --is-applied, which owns the database access.
+ */
+function appliedToDev(name) {
+  const r = spawnSync(process.execPath, ["scripts/apply-migrations.mjs", "--is-applied", name], { encoding: "utf8", timeout: 60000 });
+  const out = (r.stdout ?? "").trim().split(/\s*\n\s*/).pop();
+  return out === "applied" ? "yes" : out === "not applied" ? "no" : "unknown";
+}
+
+/** What a stream must do about a misnumbered file, depending on whether dev already holds it. */
+export function renumberAdvice(name, state) {
+  if (state === "yes")
+    return `${name} is ALREADY APPLIED to dev. Do NOT renumber it: renaming leaves its old row behind as drift. Stop and report this to Lutan or the planner.`;
+  if (state === "no") return `${name} is not applied to dev, so it is safe to renumber.`;
+  return `Could not tell whether ${name} is applied to dev (no database access here). Before renaming, run: node scripts/apply-migrations.mjs --is-applied ${name} — if it says "applied", do NOT rename; stop and report.`;
+}
+
 function main() {
   const top = git(["rev-parse", "--show-toplevel"]);
   if (!top.ok) cannotCheck("not inside a git checkout");
