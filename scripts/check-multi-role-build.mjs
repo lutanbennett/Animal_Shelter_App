@@ -47,7 +47,7 @@ const cellsOf = (role) => {
   for (const [activity, level] of bundleOfRole(role)) cells[activity] = level === "edit" ? 2 : 1;
   for (const a of ACTIVITIES) {
     if (seed.rolesHolding(a.key, "edit").includes(role)) cells[a.key] = 2;
-    else if (a.kind === "level" && seed.rolesHolding(a.key, "read").includes(role)) cells[a.key] = 1;
+    else if (a.kind !== "yesno" && seed.rolesHolding(a.key, "read").includes(role)) cells[a.key] = 1;
   }
   return cells;
 };

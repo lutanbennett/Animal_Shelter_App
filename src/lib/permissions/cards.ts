@@ -402,8 +402,20 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // Card review 2, his answers of 2026-10-28 (0280): three cards, each at READ, because the diet list, the medicine list and the cashflow
   // outgoings are Admin tasks and stay with Admin (outside the card system). Read sees the page; every control that changes something asks
   // the same activity at edit, so none of them is drawn for a holder of one of these cards.
-  food_forecast: { includes: [], bundle: [{ activity: "stock.diets", level: "read" }], opens: "/management/diets" },
-  medicine_forecast: { includes: [], bundle: [{ activity: "stock.medications", level: "read" }], opens: "/management/medications" },
+  // stock.usage added 2026-11-12 (0360): Lutan ruled "Stock between counts" onto these two existing cards rather than a card of its
+  // own, because it is a read-only report over the very stock figures they already show. It is the "Stock between counts" link on
+  // Diets, Medications and Deliveries, and the page behind it. Nothing that changes a figure is added: correcting a count still
+  // asks stock.correct, which is Admin-only by his ruling of 2026-11-09.
+  food_forecast: {
+    includes: [],
+    bundle: [{ activity: "stock.diets", level: "read" }, { activity: "stock.usage" }],
+    opens: "/management/diets",
+  },
+  medicine_forecast: {
+    includes: [],
+    bundle: [{ activity: "stock.medications", level: "read" }, { activity: "stock.usage" }],
+    opens: "/management/medications",
+  },
   view_cashflow: { includes: [], bundle: [{ activity: "reports.cashflow", level: "read" }], opens: "/management/cashflow" },
   // Vet cards (2026-10-29, 0281): the nine activities a vet performs that no card was sized for, split so a vet is not handed Manage medical
   // (archive, send to hospital, booking) or Residents (move, rehome, register). Each includes the read it needs to be usable.

@@ -19,8 +19,19 @@
  * translated (§4 rule 6), so people-facing words come from the dictionaries.
  */
 
-/** "level" = Edit / Read / None. "yesno" = Yes / No: an act with nothing to look at (§4 rule 2). */
-export type ActivityKind = "level" | "yesno";
+/**
+ * "level" = Edit / Read / None. "yesno" = Yes / No: an act with nothing to look at (§4 rule 2).
+ * "readonly" = Read / None: nothing is ever done at Edit, so the setting is not offered.
+ *
+ * Lutan, 2026-11-12, ruling on the four activities nothing asked at edit
+ * (docs/decisions/2026-11-12-fourteen-activities-ruled.md): he chose to take the unused Edit setting off
+ * the list rather than leave it as a placeholder, because a setting that does nothing is a trap -- someone
+ * grants it and expects a result. "readonly" is how that removal is said, and it is enforced three ways:
+ * the type system refuses can(perms, key, "edit"), the database refuses a card_grants or role_permissions
+ * row at level 2 (0360), and the Admin-only check (check-ungranted-activities) stops counting an edit gap
+ * that can no longer exist. Admin is unaffected: it sits outside the card system (can.ts).
+ */
+export type ActivityKind = "level" | "yesno" | "readonly";
 
 /** What a check asks for. Edit includes Read. A yes/no activity is only ever asked at "edit". */
 export type Level = "read" | "edit";
@@ -116,7 +127,7 @@ export const ACTIVITIES = [
   { key: "website.propose", kind: "yesno", area: "settings", sort: 80, requires: [], probes: [] },
   { key: "website.approve", kind: "yesno", area: "settings", sort: 81, requires: [], probes: [] },
   // 0317: read the expense report. A level, so Read can open the screen without handing over the right to write any bill.
-  { key: "reports.expenses", kind: "level", area: "management", sort: 82, requires: [], probes: [] },
+  { key: "reports.expenses", kind: "readonly", area: "management", sort: 82, requires: [], probes: [] },
   { key: "social.library_manage", kind: "yesno", area: "management", sort: 83, requires: [], probes: [] },
   // 0329: the reels half of the same split. social.reels is add-and-change and recording a post; social.reels_manage archives, deletes and takes a post record off.
   { key: "social.reels", kind: "level", area: "management", sort: 84, requires: [], probes: [] },
@@ -138,10 +149,10 @@ export const ACTIVITIES = [
   { key: "photos.shelter_add", kind: "yesno", area: "photos", sort: 65, requires: [], probes: [] },
   { key: "social.library", kind: "level", area: "management", sort: 66, requires: [], probes: [] },
   { key: "photos.approve", kind: "yesno", area: "photos", sort: 67, requires: [], probes: [] },
-  { key: "roles.view", kind: "level", area: "settings", sort: 68, requires: [], probes: [] },
+  { key: "roles.view", kind: "readonly", area: "settings", sort: 68, requires: [], probes: [] },
   { key: "website.gallery", kind: "yesno", area: "settings", sort: 70, requires: [], probes: [] },
-  { key: "resident.who_and_where", kind: "level", area: "residents", sort: 69, requires: [], probes: [] },
-  { key: "photos.resident_medical", kind: "level", area: "photos", sort: 71, requires: [], probes: [] },
+  { key: "resident.who_and_where", kind: "readonly", area: "residents", sort: 69, requires: [], probes: [] },
+  { key: "photos.resident_medical", kind: "readonly", area: "photos", sort: 71, requires: [], probes: [] },
   { key: "photos.medical_add", kind: "yesno", area: "photos", sort: 72, requires: [], probes: [] },
   { key: "shop.manage", kind: "level", area: "settings", sort: 73, requires: [], probes: [] },
   { key: "maintenance.job_picker", kind: "yesno", area: "maintenance", sort: 89, requires: [], probes: [] },
@@ -157,6 +168,9 @@ export type YesNoKey = Extract<Activity, { kind: "yesno" }>["key"];
 
 /** The Edit/Read/None ones: `can(perms, key, "read")` is meaningful. */
 export type LevelKey = Extract<Activity, { kind: "level" }>["key"];
+
+/** The Read/None ones: read is the only question, so `can(perms, key, "edit")` does not compile (2026-11-12). */
+export type ReadOnlyKey = Extract<Activity, { kind: "readonly" }>["key"];
 
 const KNOWN: ReadonlySet<string> = new Set(ACTIVITIES.map((a) => a.key));
 

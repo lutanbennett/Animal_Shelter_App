@@ -67,7 +67,7 @@ const seededCells = []; // [role, activity, level]; a cell seeded for 'vet' is t
 for (const f of migrations) {
   const sql = readFileSync(join(migDir, f), "utf8");
   if (!/permission_activities|role_permissions/.test(sql)) continue;
-  for (const m of sql.matchAll(/\('([a-z_]+\.[a-z_]+)', '(level|yesno)', '([a-z]+)', (\d+)\)/g)) {
+  for (const m of sql.matchAll(/\('([a-z_]+\.[a-z_]+)', '(level|yesno|readonly)', '([a-z]+)', (\d+)\)/g)) {
     seeded.set(m[1], { kind: m[2], area: m[3], sort: Number(m[4]) });
   }
   for (const m of sql.matchAll(/\('([a-z_]+)', '([a-z_]+\.[a-z_]+)', ([12])\)/g)) {

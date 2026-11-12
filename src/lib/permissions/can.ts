@@ -12,7 +12,7 @@
  * nothing in it is secret.
  */
 
-import { isActivityKey, type ActivityKey, type Level, type LevelKey, type YesNoKey } from "./catalogue";
+import { isActivityKey, type ActivityKey, type Level, type LevelKey, type ReadOnlyKey, type YesNoKey } from "./catalogue";
 
 /** What my_permissions() (0132) returns, as the app holds it. Cells: 1 read, 2 edit or yes. */
 export type Permissions = {
@@ -54,10 +54,13 @@ export function entersApp(perms: Permissions | null | undefined): boolean {
  * the database also says yes to Admin for a key it does not know (§6 rule 8),
  * which a typo in a policy could hide; here an unknown key is no for everyone.
  *
- * A yes/no activity takes no level: asking one "read" is a type error.
+ * A yes/no activity takes no level: asking one "read" is a type error, and a Read/None activity
+ * (kind "readonly") must be asked "read": asking one "edit" is a type error too.
  */
 export function can(perms: Permissions | null | undefined, activity: YesNoKey): boolean;
 export function can(perms: Permissions | null | undefined, activity: LevelKey, level?: Level): boolean;
+/** A Read/None activity: "read" is the only level there is, so asking one "edit" is a type error (2026-11-12). */
+export function can(perms: Permissions | null | undefined, activity: ReadOnlyKey, level: "read"): boolean;
 export function can(
   perms: Permissions | null | undefined,
   activity: ActivityKey,
