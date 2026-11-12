@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none. The record and handover are procedure (`docs/release-procedure.md` rule 3), not backlog items. The DNS finding is carried in the handover rather than filed, because it is a setting on Lutan's machine and not work to schedule |
 | Branch / worktree | `claude/record-0-44-3` @ `C:\Development\Animal_Shelter_record-0-44-3` (a fresh worktree; the cut's own was left alone and is cleaned up separately) |
 | Dev server | n/a: nothing in this PR is served, imported or rendered |
-| PR | #TBD |
+| PR | #1507 |
 | Tested by / date | Claude Opus 5 (production release manager) / 2026-11-12 |
 | Carries a migration? | no |
 | Tested at SHA | this branch's own head, cut from `origin/main` at `f2c1b996`; `check-docs-only.mjs` is the check that matters and it is read below |
