@@ -86,7 +86,7 @@ it. Everything outside those comments is judged.
 | PR | filled in at `gh pr create` |
 | Tested by / date | Claude (Opus 5) / 2026-11-12 |
 | Carries a migration? | no |
-| Tested at SHA | `TESTED_AT_SHA` |
+| Tested at SHA | `837c28b58` (the commit the gates above ran on; the plan commit follows it) |
 
 ## 1. Scope and risk
 
@@ -112,7 +112,16 @@ because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — **four gates, each `<N>` that gate's own exit code, and every `<N>` is `0`.** Run it yourself and paste its closing lines **exactly as your run printed them**, in a fenced block under this line: the `=== gates: <name> exited <N> after <S>s` line for each gate as well as the final `gates:` line. **Never type the final line from this description or copy it from another plan.** The shape here is deliberately not a line you could paste: the per-gate `after <S>s` timings are the part only a real run has. `check-test-plan.mjs` cannot tell a pasted run from a typed one, so this wording is the only guard (`docs/decisions/2026-11-02-gates-line-four-gates.md`). They are the evidence, and running the script again regenerates them
+- [x] `node scripts/gates.mjs` run in this worktree; all four gates exited `0`. Its closing lines, exactly as this run printed them, are in the fenced block below (the per-gate timings are the part only a real run has).
+
+```
+gates: run 2026-11-12 in the claude/rule3-second-argument worktree
+=== gates: typecheck exited 0 after 126s
+=== gates: lint exited 0 after 408s
+=== gates: test exited 0 after 123s
+=== gates: build exited 0 after 264s
+gates: typecheck=0 lint=0 test=0 build=0
+```
 - [ ] CI green on the PR (runs the same four gates, among its other checks). **This one cannot be true in the commit that creates the PR**, so write it `n/a: not yet — the PR does not exist at this commit` and **leave it there.** Changed 2026-10-20: ticking it in a follow-up commit used to be the rule, and that commit **invalidated its own evidence** — a new HEAD means a new run, so every PR in this repository paid two full CI cycles to transcribe a result GitHub already records permanently against the commit. A tick here attests to nothing a reader can check better by looking at the PR. **What must still happen, and is a merge step rather than a checklist line: before merging, read the run for your current HEAD (`gh run view <id> --json status,conclusion,headSha`) and confirm its `headSha` matches.** Merging on an older run's strength merges a commit whose CI never finished. **Do not pre-tick this line either** — a green you have not seen is the exact failure this checklist exists to prevent — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
