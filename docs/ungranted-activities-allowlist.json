@@ -1,5 +1,5 @@
 {
-  "rule": "An activity that no card grants is drawn for Admin only (the perms.isAdmin short-circuit in can.ts), so nobody else can reach it and no one-card login can test it. scripts/check-ungranted-activities.mjs fails on any activity+level listed nowhere here. Each record is a NAMED, DATED decision with its reason, never a count. A record whose activity is now granted fails the check until it is deleted. Admin itself is not a finding and is never given cards. foundNotRuled lists gaps the first run found that nobody has ruled on: printed every run as UNRULED, they do not fail the check, but a gap on neither list fails.",
+  "rule": "An activity that no card grants is drawn for Admin only (the perms.isAdmin short-circuit in can.ts), so nobody else can reach it and no one-card login can test it. scripts/check-ungranted-activities.mjs fails on any activity+level listed nowhere here. Each record is a NAMED, DATED decision with its reason, never a count. A record whose activity is now granted fails the check until it is deleted. Admin itself is not a finding and is never given cards. foundNotRuled lists gaps the first run found that nobody has ruled on: printed every run as UNRULED, they do not fail the check, but a gap on neither list fails. It is EMPTY since 2026-11-12 (0361), when the last five of Lutan's fourteen rulings were built: four unused edit settings were removed from the catalogue, so those gaps no longer exist, and stock.usage went onto the food_forecast and medicine_forecast cards, so a card now grants it. A record must be deleted in the same change that closes its gap, because the check fails on a record whose gap is gone.",
   "adminOnlyOnPurpose": [
     {
       "activity": "facility.enclosures",
@@ -114,51 +114,5 @@
       "decision": "docs/decisions/2026-11-12-fourteen-activities-ruled.md"
     }
   ],
-  "foundNotRuled": [
-    {
-      "activity": "stock.usage",
-      "level": "edit",
-      "found": "2026-11-06",
-      "note": "RULED 2026-11-12 BY LUTAN AND THE RULING IS A CARD, SO DO NOT RE-ASK AND DO NOT MOVE IT TO adminOnlyOnPurpose. He chose to add Stock between counts to the EXISTING food_forecast and medicine_forecast cards rather than give it a card of its own, because it is a read-only report over stock figures those cards already show. This record is still here only because the grant is not built: it needs a card_grants migration as well as the cards.ts bundle, and on 2026-11-12 another in-flight branch already carried a migration, which the repo allows only one of at a time. DELETE THIS RECORD IN THE SAME CHANGE THAT ADDS THE GRANT: the check fails on a record whose gap a card now closes. See docs/decisions/2026-11-12-fourteen-activities-ruled.md.",
-      "ruled": "2026-11-12",
-      "by": "Lutan",
-      "pendingBuild": "a card_grants migration plus the cards.ts bundle"
-    },
-    {
-      "activity": "photos.resident_medical",
-      "level": "edit",
-      "found": "2026-11-06",
-      "note": "RULED 2026-11-12 BY LUTAN: NOTHING IS BEHIND THIS AT EDIT, AND HE CHOSE TO REMOVE THE UNUSED EDIT SETTING. Do not re-ask and do not file it as Admin-only. The activity is really the right to SEE the Medical photo folder; it was made a level only so read could be handed out, and no screen or save in the app asks it at edit. He picked taking it off the list over leaving it as a placeholder, on the reasoning that a setting which does nothing is a trap: someone grants it and expects a result. DELETE THIS RECORD IN THE SAME CHANGE THAT REMOVES THE LEVEL FROM THE CATALOGUE, which needs a permission_activities migration. See docs/decisions/2026-11-12-fourteen-activities-ruled.md.",
-      "ruled": "2026-11-12",
-      "by": "Lutan",
-      "pendingBuild": "a permission_activities migration removing the edit level, plus catalogue.ts"
-    },
-    {
-      "activity": "reports.expenses",
-      "level": "edit",
-      "found": "2026-11-06",
-      "note": "RULED 2026-11-12 BY LUTAN: NOTHING IS BEHIND THIS AT EDIT, AND HE CHOSE TO REMOVE THE UNUSED EDIT SETTING. Do not re-ask and do not file it as Admin-only. The Expenses report is read-only by design: 0317 says so in its own comment and raises if the view_expenses card is ever given anything but read. Same removal and same migration as photos.resident_medical. See docs/decisions/2026-11-12-fourteen-activities-ruled.md.",
-      "ruled": "2026-11-12",
-      "by": "Lutan",
-      "pendingBuild": "a permission_activities migration removing the edit level, plus catalogue.ts"
-    },
-    {
-      "activity": "resident.who_and_where",
-      "level": "edit",
-      "found": "2026-11-06",
-      "note": "RULED 2026-11-12 BY LUTAN: NOTHING IS BEHIND THIS AT EDIT, AND HE CHOSE TO REMOVE THE UNUSED EDIT SETTING. Do not re-ask and do not file it as Admin-only. It is the name, code and enclosure view of a resident, a lighter version of the full record, and every caller asks read; about a dozen cards hold that read. Same removal and same migration as photos.resident_medical. See docs/decisions/2026-11-12-fourteen-activities-ruled.md.",
-      "ruled": "2026-11-12",
-      "by": "Lutan",
-      "pendingBuild": "a permission_activities migration removing the edit level, plus catalogue.ts"
-    },
-    {
-      "activity": "roles.view",
-      "level": "edit",
-      "found": "2026-11-06",
-      "note": "RULED 2026-11-12 BY LUTAN: NOTHING IS BEHIND THIS AT EDIT, AND HE CHOSE TO REMOVE THE UNUSED EDIT SETTING. Do not re-ask and do not file it as Admin-only. At read it opens Settings - Who does what, granted by the who_does_what card; the saves on that page do not ask this activity at all, they ask the Admin check plus the authenticator step, by the page's own written rule that Admin is the only editor so there is always someone able to edit. That arrangement is the settled Admin rule in CLAUDE.md and is NOT reopened by this removal. Same removal and same migration as photos.resident_medical. See docs/decisions/2026-11-12-fourteen-activities-ruled.md.",
-      "ruled": "2026-11-12",
-      "by": "Lutan",
-      "pendingBuild": "a permission_activities migration removing the edit level, plus catalogue.ts"
-    }
-  ]
+  "foundNotRuled": []
 }

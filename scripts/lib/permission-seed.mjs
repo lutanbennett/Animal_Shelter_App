@@ -17,7 +17,7 @@ export function loadSeed(repo) {
   for (const f of readdirSync(dir).filter((x) => x.endsWith(".sql")).sort()) {
     const sql = readFileSync(path.join(dir, f), "utf8");
     if (!/permission_activities|role_permissions/.test(sql)) continue;
-    for (const m of sql.matchAll(/\('([a-z_]+\.[a-z_]+)', '(?:level|yesno)', '[a-z]+', \d+\)/g)) keys.add(m[1]);
+    for (const m of sql.matchAll(/\('([a-z_]+\.[a-z_]+)', '(?:level|yesno|readonly)', '[a-z]+', \d+\)/g)) keys.add(m[1]);
     for (const m of sql.matchAll(/\('([a-z_]+)', '([a-z_]+\.[a-z_]+)', ([12])\)/g)) cells.push([live(m[1]), m[2], Number(m[3])]);
     // The other form a cell is seeded in: "select r.id, 'translations.view', 2 from roles r where r.key in
     // ('management', 'staff')" (0154) or "… where r.key = 'management'" (0168). Without this the cell was

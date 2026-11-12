@@ -64,7 +64,7 @@ const forRole = (role, scopes = {}) => {
   const cells = {};
   for (const a of ACTIVITIES) {
     if (seed.rolesHolding(a.key, "edit").includes(role)) cells[a.key] = 2;
-    else if (a.kind === "level" && seed.rolesHolding(a.key, "read").includes(role)) cells[a.key] = 1;
+    else if (a.kind !== "yesno" && seed.rolesHolding(a.key, "read").includes(role)) cells[a.key] = 1;
   }
   return parsePermissions({
     role: { key: role, name: role, opens_app: true },
@@ -101,7 +101,7 @@ const mgmtWithout = (...gone) => {
   for (const a of ACTIVITIES) {
     if (gone.includes(a.key)) continue;
     if (seed.rolesHolding(a.key, "edit").includes("management")) cells[a.key] = 2;
-    else if (a.kind === "level" && seed.rolesHolding(a.key, "read").includes("management")) cells[a.key] = 1;
+    else if (a.kind !== "yesno" && seed.rolesHolding(a.key, "read").includes("management")) cells[a.key] = 1;
   }
   return parsePermissions({ role: { key: "management", name: "Management", opens_app: true }, is_admin: false, scopes: {}, permissions: cells });
 };
@@ -117,7 +117,7 @@ const shelterMade = (gone = []) => {
   for (const a of ACTIVITIES) {
     if (gone.includes(a.key)) continue;
     if (seed.rolesHolding(a.key, "edit").includes("management")) cells[a.key] = 2;
-    else if (a.kind === "level" && seed.rolesHolding(a.key, "read").includes("management")) cells[a.key] = 1;
+    else if (a.kind !== "yesno" && seed.rolesHolding(a.key, "read").includes("management")) cells[a.key] = 1;
   }
   return parsePermissions({ role: { key: "site_manager", name: "Site manager", opens_app: true }, is_admin: false, scopes: {}, permissions: cells });
 };

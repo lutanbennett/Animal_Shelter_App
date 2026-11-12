@@ -191,7 +191,7 @@ export const CHECKS = {
         'catalogue', (select coalesce(json_agg(a.key order by a.key), '[]'::json) from permission_activities a),
         'gaps', (select coalesce(json_agg(a.key || '@' || case l.n when 1 then 'read' else 'edit' end order by a.key, l.n), '[]'::json)
           from permission_activities a cross join generate_series(1, 2) as l(n)
-          where (a.kind = 'level' or l.n = 2)
+          where (case a.kind when 'level' then true when 'readonly' then l.n = 1 else l.n = 2 end)
             and coalesce((select max(g.level) from card_grants g where g.activity = a.key), 0) < l.n))`,
     render: (r) => {
       const v = compareToAllowlist(r.gaps, r.catalogue);
