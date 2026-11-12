@@ -598,7 +598,8 @@ Result: pending
 0. Sign in with `--cards food_forecast`. The home screen shows the **See the food forecast** tile (or the tile of a card that includes it).
 1. Open `/management/diets`: it loads.
 2. **See:** The diet list and the food forecast (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+3. **Do:** Compare stock used with planned. Use a disposable record named `walk-food_forecast`. **Read-back:** nothing is written: Stock between counts is a read-only report of what each medicine and food used between two stocktakes against what was planned. Confirm the Stock between counts link is offered on the card page, that /management/stock-usage opens, and that it offers no control that changes a figure (correcting a count asks stock.correct, which Lutan ruled Admin-only on 2026-11-09). Use the report itself, not a record named walk-food_forecast (2026-11-12).
+4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -609,7 +610,8 @@ Result: pending
 0. Sign in with `--cards medicine_forecast`. The home screen shows the **See the medicine forecast** tile (or the tile of a card that includes it).
 1. Open `/management/medications`: it loads.
 2. **See:** The medication list: prices, labels, reorder levels (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+3. **Do:** Compare stock used with planned. Use a disposable record named `walk-medicine_forecast`. **Read-back:** nothing is written: Stock between counts is a read-only report of what each medicine and food used between two stocktakes against what was planned. Confirm the Stock between counts link is offered on the card page, that /management/stock-usage opens, and that it offers no control that changes a figure (correcting a count asks stock.correct, which Lutan ruled Admin-only on 2026-11-09). Use the report itself, not a record named walk-food_forecast (2026-11-12).
+4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 

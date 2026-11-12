@@ -36,9 +36,10 @@
 // Deliberately bypassing it is `git commit --no-verify`; CI will still say.
 
 import { spawnSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
 import { statSync } from "node:fs";
 import { readFileSync } from "node:fs";
-import { MIGRATION_NAME, MIGRATIONS_DIR, KNOWN_DUPLICATES, collisionsWithOpenPrs, duplicateNumbers, numberOf, parseLsTree } from "./lib/migrations.mjs";
+import { MIGRATION_NAME, MIGRATIONS_DIR, KNOWN_DUPLICATES, collisionsWithOpenPrs, duplicateNumbers, numbersClaimedByOpenPrs, numberOf, parseLsTree } from "./lib/migrations.mjs";
 
 const STALE_HOURS = 24;
 
@@ -101,9 +102,18 @@ function hoursSinceFetch() {
 /**
  * The verdict, as data: every new file that is misnumbered or misnamed, with
  * what to do about it. `candidate` is every path under MIGRATIONS_DIR/ in the
- * tree being checked; `mainBlobs` is origin/main's files.
+ * tree being checked; `mainBlobs` is origin/main's files; `claimed` is number ->
+ * { pr, file } for the numbers other OPEN PRs already add (empty in the hook,
+ * which never reaches the network).
+ *
+ * "One past the highest on main" means one past the highest FREE number: a number
+ * another open PR has taken is not free, so the next file takes the one after it.
+ * Before 2026-11-12 the arithmetic read main alone, which left no legal number at
+ * all when another PR held main's highest + 1 — that number failed as a collision
+ * and the next failed as a gap, and the check's own advice ("take the next free
+ * number") was rejected by its own gap rule.
  */
-function evaluate(candidate, mainBlobs) {
+export function evaluate(candidate, mainBlobs, claimed = new Map()) {
   const mainNames = [...mainBlobs.keys()].sort();
   const highestName = mainNames.at(-1) ?? null;
   const highest = highestName ? numberOf(highestName) : 0;
@@ -121,15 +131,25 @@ function evaluate(candidate, mainBlobs) {
   fresh.sort((a, b) => numberOf(a) - numberOf(b) || a.localeCompare(b));
 
   const ok = [];
+  // The next number nobody holds: not on main, and not added by another open PR.
+  let cursor = highest + 1;
+  const nextFree = () => {
+    while (mainByNumber.has(cursor) || claimed.has(cursor)) cursor += 1;
+    return cursor++;
+  };
   fresh.forEach((name, i) => {
     const n = numberOf(name);
-    const want = highest + 1 + i;
+    // A number another open PR adds is reported once, by the open-PR check in main(), which names the
+    // PR and says who renumbers. Reporting it here as well would print two problems about one file,
+    // and this file's own number consumes no free slot.
+    if (claimed.has(n)) return;
+    const want = nextFree();
     if (n === want) return ok.push(name);
     let why;
     if (mainByNumber.has(n)) why = `${pad(n)} is already taken on ${base} by ${mainByNumber.get(n)}`;
     else if (fresh.slice(0, i).some((o) => numberOf(o) === n))
       why = `${pad(n)} is shared with ${fresh.find((o) => numberOf(o) === n)}, also new here`;
-    else if (i === 0) why = `it leaves a gap: the highest on ${base} is ${highestName ?? "none"}`;
+    else if (i === 0) why = `it leaves a gap: the next free number after ${base}'s highest (${highestName ?? "none"}) is ${pad(want)}`;
     else why = `it leaves a gap after ${fresh[i - 1]}`;
     const to = `${pad(want)}${name.slice(4)}`;
     problems.push(`${name}: ${why}.\n    Rename it to ${to}:\n      git mv ${MIGRATIONS_DIR}/${name} ${MIGRATIONS_DIR}/${to}`);
@@ -168,7 +188,23 @@ function main() {
     ? git(["ls-files", "--full-name", "--", `${MIGRATIONS_DIR}/`])
     : git(["ls-tree", "--name-only", "HEAD", `${MIGRATIONS_DIR}/`]);
   if (!tree.ok) cannotCheck(`could not list ${staged ? "the index" : "HEAD"}: ${tree.err}`);
-  const { highestName, fresh, ok, problems } = evaluate(tree.out.split("\n").filter(Boolean), mainBlobs);
+
+  // The open PRs, read once: both the arithmetic in evaluate() and the collision report below need them.
+  // Needs gh, so a run that cannot ask carries on without them, exactly as the collision half always has
+  // (and the hook, --staged, never asks at all).
+  let prs = null;
+  if (!staged && !noPrs) {
+    if (prsFile) prs = JSON.parse(readFileSync(prsFile, "utf8"));
+    else {
+      const r = spawnSync("gh", ["pr", "list", "--state", "open", "--limit", "200", "--json", "number,headRefName,files"], { encoding: "utf8" });
+      if (r.status === 0) prs = JSON.parse(r.stdout);
+      else console.error(`${TAG}: open-PR check skipped — gh could not list PRs (${(r.stderr || r.error?.message || "no gh").trim().split("\n")[0]}).`);
+    }
+  }
+  const ownBranch = branchArg ?? process.env.GITHUB_HEAD_REF ?? git(["branch", "--show-current"]).out;
+  const claimed = prs ? numbersClaimedByOpenPrs(prs, ownBranch) : new Map();
+
+  const { highestName, fresh, ok, problems } = evaluate(tree.out.split("\n").filter(Boolean), mainBlobs, claimed);
 
   // The durable half: a number used by two files in the tree. Pure filename read. Never in the hook.
   const dupNotes = [];
@@ -180,21 +216,12 @@ function main() {
       else problems.push(`${pad(n)} is used by more than one file: ${list.join(", ")}.
     Rename the one that is not applied anywhere yet. Applied files cannot be renamed (schema_migrations records the filename).`);
     }
-    // The preventing half: another open PR already adds the same number. Needs gh, so it warns rather than fails when gh cannot answer.
-    if (fresh.length && !noPrs) {
-      let prs = null;
-      if (prsFile) prs = JSON.parse(readFileSync(prsFile, "utf8"));
-      else {
-        const r = spawnSync("gh", ["pr", "list", "--state", "open", "--limit", "200", "--json", "number,headRefName,files"], { encoding: "utf8" });
-        if (r.status === 0) prs = JSON.parse(r.stdout);
-        else console.error(`${TAG}: open-PR check skipped — gh could not list PRs (${(r.stderr || r.error?.message || "no gh").trim().split("\n")[0]}).`);
-      }
-      if (prs) {
-        const own = branchArg ?? process.env.GITHUB_HEAD_REF ?? git(["branch", "--show-current"]).out;
-        for (const h of collisionsWithOpenPrs(fresh, prs, own))
-          problems.push(`${h.name}: open PR ${h.pr} already adds ${h.other}, the same number ${pad(h.number)}.
-    Whichever merges second must renumber; ask the other stream, or take the next free number.`);
-      }
+    // The preventing half: another open PR already adds the same number. The PRs were read above.
+    if (fresh.length && prs) {
+      for (const h of collisionsWithOpenPrs(fresh, prs, ownBranch))
+        problems.push(`${h.name}: open PR ${h.pr} already adds ${h.other}, the same number ${pad(h.number)}.
+    Whichever merges second must renumber; ask the other stream, or take the next free number — which this
+    check now works out for you, counting the numbers open PRs hold.`);
     }
   }
 
@@ -229,8 +256,12 @@ function main() {
   process.exit(REFUSED);
 }
 
-try {
-  main();
-} catch (e) {
-  cannotCheck(`unexpected error: ${e?.message ?? e}`);
+// Run only as a command. evaluate() is exported for scripts/check-migration-numbers.test.mjs, which must be
+// able to import the rule without the script reading git and calling process.exit.
+if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
+  try {
+    main();
+  } catch (e) {
+    cannotCheck(`unexpected error: ${e?.message ?? e}`);
+  }
 }

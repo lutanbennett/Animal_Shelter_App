@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { refuseFor } from "@/lib/auth/require-role";
 import { can, type Permissions } from "./can";
 import { loadPermissions } from "./load";
-import type { Level, LevelKey, YesNoKey } from "./catalogue";
+import type { Level, LevelKey, ReadOnlyKey, YesNoKey } from "./catalogue";
 import { opensAnyIn, type Section } from "./routes";
 
 /**
@@ -22,7 +22,9 @@ import { opensAnyIn, type Section } from "./routes";
  */
 export async function requirePermission(activity: YesNoKey): Promise<Guarded>;
 export async function requirePermission(activity: LevelKey, level: Level): Promise<Guarded>;
-export async function requirePermission(activity: YesNoKey | LevelKey, level?: Level): Promise<Guarded> {
+/** A Read/None activity (kind "readonly"): "read" is the only level it has. */
+export async function requirePermission(activity: ReadOnlyKey, level: "read"): Promise<Guarded>;
+export async function requirePermission(activity: YesNoKey | LevelKey | ReadOnlyKey, level?: Level): Promise<Guarded> {
   const supabase = await createClient();
   const {
     data: { user },

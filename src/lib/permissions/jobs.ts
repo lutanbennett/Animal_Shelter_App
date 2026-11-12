@@ -17,7 +17,7 @@
  * Pure and client-safe.
  */
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
-import type { ActivityKey, Level, LevelKey, YesNoKey } from "./catalogue";
+import type { ActivityKey, Level, LevelKey, ReadOnlyKey, YesNoKey } from "./catalogue";
 
 export type JobKey =
   | "administer_medication"
@@ -29,8 +29,14 @@ export type JobKey =
   | "do_purchasing"
   | "record_delivery";
 
-/** A level activity at the level the job needs, or a yes/no activity (no level: the cell is Yes). */
-export type BundleEntry = { activity: LevelKey; level: Level } | { activity: YesNoKey; level?: undefined };
+/**
+ * A level activity at the level the job needs, a yes/no activity (no level: the cell is Yes), or a
+ * Read/None activity, which can only ever be read (2026-11-12).
+ */
+export type BundleEntry =
+  | { activity: LevelKey; level: Level }
+  | { activity: ReadOnlyKey; level: "read" }
+  | { activity: YesNoKey; level?: undefined };
 
 export type Job = {
   key: JobKey;
