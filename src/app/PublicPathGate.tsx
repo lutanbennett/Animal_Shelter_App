@@ -13,6 +13,7 @@ import { isPublicPage } from "@/lib/public-paths";
  */
 export function PublicPathGate({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  if (isPublicPage(pathname)) return null;
+  // The adopter page draws its own small header: an adopter holds no card, so the staff chrome has nothing for them.
+  if (isPublicPage(pathname) || pathname === "/adopter-update") return null;
   return <>{children}</>;
 }

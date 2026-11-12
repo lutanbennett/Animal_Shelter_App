@@ -7728,6 +7728,25 @@ const en = {
     },
   },
 
+  adopterUpdate: {
+    pageTitle: "Send us news",
+    intro: "Tell the shelter how your adopted animal is getting on. A person reads it first; nothing you write is shown on the website until the shelter has read it and agreed.",
+    wordsLabel: "Your news",
+    send: "Send",
+    sending: "Sending…",
+    sentWaiting: "Thank you. Your news is with the shelter, waiting to be read.",
+    noAnimals: "We cannot find an animal adopted by this email address. If you recently adopted, please tell the shelter which email you gave them.",
+    statusWaiting: "Waiting to be read",
+    statusApproved: "Read and may be shown on the website",
+    statusPrivate: "Read and kept private",
+    errors: {
+      empty: "Please write something before sending.",
+      tooLong: (max: number) => `Please keep it under ${max} characters.`,
+      notYours: "We cannot send news about this animal from this sign-in.",
+      tooMany: "You have sent a lot of news today. Please try again tomorrow.",
+    },
+  },
+
   adoptionUpdates: {
     title: "Adoption updates",
     addUpdate: "Add update",
@@ -7738,6 +7757,7 @@ const en = {
       facebook: "Facebook",
       email: "Email",
       visit: "Visit",
+      app: "Sent by the adopter",
     },
     /** Under every photo an adopter sent, wherever it is shown. */
     publishedBadge: "Public on the website",

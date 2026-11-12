@@ -7,6 +7,7 @@
 import { redirect } from "next/navigation";
 import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
 import { safeNextPath } from "@/lib/auth/next-path";
+import { ADOPTER_PATH, loadAdopterScope } from "@/lib/adopter/scope";
 import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { createClient } from "@/lib/supabase/server";
@@ -40,6 +41,7 @@ export async function login(
   // password was right, but the session would open nothing — and on a
   // locked site it would still get past the lock.
   const role = await loadSessionRole(supabase);
+  if (!role?.entersApp && (await loadAdopterScope(supabase))) redirect(ADOPTER_PATH);
   if (!role) {
     await supabase.auth.signOut();
     const { t } = await getT();

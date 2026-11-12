@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
 import { safeNextPath } from "@/lib/auth/next-path";
 import { PASSWORD_CHANGE_PATH } from "@/lib/auth/password-change";
+import { ADOPTER_PATH, loadAdopterScope } from "@/lib/adopter/scope";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteOrigin } from "@/lib/site-origin";
 
@@ -43,6 +44,10 @@ export async function GET(request: NextRequest) {
   }
 
   const role = await loadSessionRole(supabase);
+  // An adopter holds no staff card; a verified email that is a live contact is sent to the page for sending news (#l5gxn).
+  if (!role?.entersApp && (await loadAdopterScope(supabase))) {
+    return NextResponse.redirect(`${origin}${ADOPTER_PATH}`);
+  }
   if (!role) {
     await supabase.auth.signOut();
     return NextResponse.redirect(`${origin}/login?error=no_role`);

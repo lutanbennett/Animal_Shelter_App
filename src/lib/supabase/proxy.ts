@@ -9,6 +9,7 @@ import {
 import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
 import { DEFAULT_SIGNED_IN_PATH, NO_ACCESS_PATH, safeNextPath } from "@/lib/auth/next-path";
 import { isPublicPath as isPublicPathname, isWebsitePageWhenOff } from "@/lib/public-paths";
+import { ADOPTER_PATH, loadAdopterScope } from "@/lib/adopter/scope";
 import { isPublicSiteLocked, isPublicSiteOff } from "@/lib/public-site";
 
 /**
@@ -80,6 +81,10 @@ export async function updateSession(request: NextRequest, rewriteTo?: URL) {
   // sees it as a visitor does, with "Open the app" in its header.
   if (user && request.nextUrl.pathname === "/login") {
     const role = await loadSessionRole(supabase);
+    // An adopter (verified email = a live contact, no staff card) lands on the page for sending news (#l5gxn).
+    if (!role?.entersApp && (await loadAdopterScope(supabase))) {
+      return noindex(NextResponse.redirect(new URL(ADOPTER_PATH, request.nextUrl.origin)), locked);
+    }
     // A session that opens nothing (archived since it signed in, or never
     // given a role) is ended here, so /login offers a fresh sign-in.
     if (!role) {
@@ -155,6 +160,15 @@ export async function updateSession(request: NextRequest, rewriteTo?: URL) {
       return noindex(withCookies(NextResponse.redirect(url), response), locked);
     }
     if (off && role && !role.entersApp && request.nextUrl.pathname === NO_ACCESS_PATH) {
+      return noindex(response, locked);
+    }
+    // The one page a login with no staff card may use besides the public site: the adopter's own (#l5gxn). It is let
+    // through only for a verified email that is a live contact, and the page and its action ask again.
+    if (
+      !role?.entersApp &&
+      (request.nextUrl.pathname === ADOPTER_PATH || request.nextUrl.pathname.startsWith(ADOPTER_PATH + "/")) &&
+      (await loadAdopterScope(supabase))
+    ) {
       return noindex(response, locked);
     }
     if (!role?.entersApp) {

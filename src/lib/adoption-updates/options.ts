@@ -12,7 +12,7 @@ import type { Permissions } from "@/lib/permissions/can";
  * ever holds the code. Growing the list is one migration (a CHECK, not an
  * enum) plus a line in each dictionary.
  */
-export const ADOPTION_UPDATE_CHANNELS = ["line", "facebook", "email", "visit"] as const;
+export const ADOPTION_UPDATE_CHANNELS = ["line", "facebook", "email", "visit", "app"] as const;
 export type AdoptionUpdateChannel = (typeof ADOPTION_UPDATE_CHANNELS)[number];
 
 export function isAdoptionUpdateChannel(value: unknown): value is AdoptionUpdateChannel {
