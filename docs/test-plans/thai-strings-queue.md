@@ -26,10 +26,10 @@
 - [x] `node scripts/gates.mjs` ends with the four-gate line, every exit code 0. Output redirected to a file and read:
 
 ```
-=== gates: typecheck exited 0 after 111s
-=== gates: lint exited 0 after 287s
-=== gates: test exited 0 after 37s
-=== gates: build exited 0 after 281s
+=== gates: typecheck exited 0 after 113s
+=== gates: lint exited 0 after 318s
+=== gates: test exited 0 after 110s
+=== gates: build exited 0 after 400s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
