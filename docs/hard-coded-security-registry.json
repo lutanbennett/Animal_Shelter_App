@@ -156,6 +156,21 @@
   ],
   "serviceRoleSites": [
     {
+      "file": "src/lib/adopter/scope.ts",
+      "for": "Finds the contacts row for an adopter's VERIFIED sign-in email and asks adopter_residents() (0357), because an adopter login has no table access to contacts or placement_history.",
+      "guard": "Verified email from the session (email_confirmed_at set); returns a scope only for a live contact. Grants nothing: it answers which of their own animals a person adopted."
+    },
+    {
+      "file": "src/app/adopter-update/actions.ts",
+      "for": "Inserts an adoption_updates row for an adopter (text_approval left NULL) and counts their last day's sends.",
+      "guard": "loadAdopterScope plus adopter_may_submit(contact, resident) before the insert; sender is the matched contact; a daily cap. Naming an approval state still needs text.approve."
+    },
+    {
+      "file": "src/app/adopter-update/page.tsx",
+      "for": "Reads the adopter's OWN rows (sender_contact_id is theirs) so they see their copy and its waiting state.",
+      "guard": "loadAdopterScope on the same request; never reads public_adoption_updates or anyone else's rows."
+    },
+    {
       "file": "src/lib/supabase/admin.ts",
       "for": "The one place the service-role client is made.",
       "guard": "Server only (`server-only`); every caller below is named."

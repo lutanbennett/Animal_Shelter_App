@@ -370,6 +370,7 @@ const PINNED = {
 // app, before the page runs. A reason that only says "hub" or "public" is not a reason.
 const APP = "Behind the proxy's gate (signed in, a role that opens the app).";
 const EXEMPT = {
+  "/adopter-update": { why: "The adopter's own page (#l5gxn). Not behind the app gate: the proxy lets a login with no staff card here only when its verified email is a live contact, and the page asks again (loadAdopterScope). It holds no card on purpose." },
   "/admin/role-draft": { why: "A redirect to /admin/who-does-what, which carries the guard (who-does-what-edit retired the page and kept the address)." },
   "/": { public: true, why: "The public home page. Reads the session only to choose the header; shows nothing from the app." },
   "/login": { public: true, why: "Sign-in. There is no one to ask a permission of yet." },
@@ -510,6 +511,7 @@ for (const k of known) console.log(`KNOWN ${k}`);
 const GUARD = /\b(?:can|requirePermission|requireAdminUser|assertAdminRole|hasAdminRole|canEditItemSettings|refuseUnlessAdmin)\(/;
 const ADMIN_CHECK = /\b(?:requireAdminUser|assertAdminRole|hasAdminRole|refuseUnlessAdmin)\(/;
 const NO_ACTIVITY = {
+  "adopter-update/actions.ts": "an adopter holds no staff card on purpose (#l5gxn): sendAdopterUpdate verifies the email, takes the contact from loadAdopterScope and asks adopter_may_submit(contact, resident) before the one insert",
   "services/sterilisation/actions.ts": "the public sign-up, signed out by definition: written as the anon role with insert-only column grants (0233), so the database gate decides; it never reads a sign-up back",
   "account/password/actions.ts": "changes the signed-in user's own password and name; its one service-role call clears their own must-change flag after the password check",
   "medical/scan-actions.ts": "leaves or clears a five-minute waiting cookie and nothing else; startCardWait refuses unless canOpen(perms, route) for the job's own page, and /scan/arrive re-checks it at the redirect",
@@ -538,7 +540,7 @@ const NO_ACTIVITY = {
   eq("G every NO_ACTIVITY entry gives a reason", Object.entries(NO_ACTIVITY).filter(([, w]) => w.length < 30).map(([p]) => p), []);
   eq(
     "G a service-role writer carries its own admin check",
-    serverFiles.filter((f) => /createAdminClient\(/.test(read(f)) && !ADMIN_CHECK.test(read(f)) && rel(f) !== "account/password/actions.ts").map(rel),
+    serverFiles.filter((f) => /createAdminClient\(/.test(read(f)) && !ADMIN_CHECK.test(read(f)) && rel(f) !== "account/password/actions.ts" && rel(f) !== "adopter-update/actions.ts").map(rel),
     [],
   );
   console.log(`G ${serverFiles.length} server-action files: ${serverFiles.length - Object.keys(NO_ACTIVITY).length} name a guard, ${Object.keys(NO_ACTIVITY).length} listed with a reason`);
