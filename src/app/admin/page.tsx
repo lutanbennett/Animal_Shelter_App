@@ -28,7 +28,7 @@ import {
  * which today is Admin alone.
  */
 export default async function AdminPage() {
-  const { perms, supabase } = await requireAnyPageIn("settings");
+  const { perms } = await requireAnyPageIn("settings");
   const { t } = await getT();
 
   const allTiles: SectionTile[] = [
