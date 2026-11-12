@@ -149,6 +149,6 @@ Automated checks by: Claude  Date: 2026-11-12
 
 ### Manual verification
 
-pending: a real shelter CSV tried by a person, and the page on a phone
+Manual verification by: pending: a real shelter CSV tried by a person, and the page on a phone
 
 Result: pass
