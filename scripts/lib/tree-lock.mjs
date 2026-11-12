@@ -70,16 +70,39 @@ export function takeTreeLock(kind, root = ROOT) {
       throw new Error(`${file} exists but cannot be read. Another run may be starting; if none is, delete it and try again.`);
     }
     if (alive(held.pid)) {
-      throw new Error(
+      const err = new Error(
         `refusing to start a ${kind}: a ${describe(held)} is using node_modules in ${root}.\n` +
           `  Running both at once wrecks the tree (npm ci deletes it while the build reads it).\n` +
-          `  Wait for that ${held.kind} to finish, then run this again.`,
+          `  Wait for that ${held.kind} to finish, then run this again.\n` +
+          `  If it is a leftover of your own interrupted run, end it yourself: ${process.platform === "win32" ? `taskkill /PID ${held.pid} /T /F` : `kill ${held.pid}`}`,
       );
+      err.held = held;
+      throw err;
     }
     console.warn(`tree-lock: taking over a stale lock left by a ${describe(held)} whose process has gone.`);
     rmSync(file, { force: true });
   }
   throw new Error(`could not take ${file}; another run won the race. Try again.`);
+}
+
+/**
+ * Like takeTreeLock, but a LIVE holder is waited for (polling every 5 s, up to
+ * `waitSeconds`) instead of refused at once. Still fails closed: at the
+ * timeout it throws the same refusal. Never takes a lock from a live process.
+ */
+export function takeTreeLockWaiting(kind, waitSeconds, root = ROOT, log = console.warn) {
+  const deadline = Date.now() + waitSeconds * 1000;
+  let told = false;
+  for (;;) {
+    try {
+      return takeTreeLock(kind, root);
+    } catch (e) {
+      if (!e.held || Date.now() >= deadline) throw e;
+      if (!told) log(`tree-lock: waiting up to ${waitSeconds}s for the ${describe(e.held)} to finish...`);
+      told = true;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5000);
+    }
+  }
 }
 
 // A handful of packages every build needs. A tree `npm ci` half-removed has
