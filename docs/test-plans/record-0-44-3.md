@@ -25,8 +25,8 @@
 
 - [x] `node scripts/worktree.mjs sync` — n/a: the branch was cut from `origin/main` at `f2c1b996` minutes before committing, which is after every deploy
 - [x] `node scripts/gates.mjs` — **n/a, and deliberately so.** This is a documents-only PR; `scripts/check-docs-only.mjs` decides, and `ci.yml` gates every heavy job on it (paperwork rule 1). The rule also says **not** to touch code to make a check run, so nothing here does
-- [x] `node scripts/check-docs-only.mjs --base origin/main` — run **after committing**, which is the only way it can answer. Result recorded in *Defects found*
-- [x] `node scripts/check-test-plan.mjs --base origin/main` run the way CI runs it — result recorded in *Defects found*
+- [x] `node scripts/check-docs-only.mjs --base origin/main` — run **after committing**, which is the only way it can answer: exit **0**, listing exactly the three files, *"The heavy jobs will skip; test-plan still runs."* So `audit` will show **`skipped`**, which is not a pass and is correct here — no `package.json` or `package-lock.json` change to audit
+- [x] `node scripts/check-test-plan.mjs --base origin/main` run the way CI runs it — exit **0**, *"ok — docs/test-plans/record-0-44-3.md"*
 
 ## 3. Schema and data
 

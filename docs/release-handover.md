@@ -81,10 +81,9 @@ network setting. **It was not needed to ship, so do not block on it**, and he ha
 is building. So the prose rule that `0.44.2` had to correct is no longer only prose.
 
 **Still run them one at a time and read each one's closing lines**, because the lock protects you from
-the OOM killer, not from mistaking a git-updated clone for a deployed one. The Pi has 4 GiB, and
-`setup.sh` step 2b records that `next build` **peaks above 6 GB** there. In this release the UAT build
-ran alone, took the lock cleanly, and reported `serving 0.44.3 as expected` with `check-assets`
-identical to the build.
+the OOM killer, not from mistaking a git-updated clone for a deployed one. The Pi has 4 GiB and
+`setup.sh` step 2b records that `next build` **peaks above 6 GB** there. Here the UAT build ran alone,
+took the lock cleanly, and reported `serving 0.44.3 as expected`, `check-assets` identical to the build.
 
 **One Pi build alongside one Worker deploy is still fine** — different machines. That is the
 parallelism to use, and this release used it.
