@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getT } from "@/lib/i18n/get-t";
+import { dbRefusal } from "@/lib/db-refusal";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { getDriveClient } from "@/lib/google/drive";
@@ -102,7 +103,8 @@ async function handlePost(
     p_adoption_update_id: updateId,
     p_media_kind: "video",
   });
-  if (recordError) return NextResponse.json({ error: recordError.message }, { status: 500 });
+  // record_attachment raises keys since 0365; dbRefusal() words them in the reader's language.
+  if (recordError) return NextResponse.json({ error: dbRefusal("residents.videos.record", recordError, t).error }, { status: 500 });
   const recorded = (recordResult as { attachment: { id: string }; is_profile?: boolean }[])[0];
   const attachmentId = recorded.attachment.id;
 

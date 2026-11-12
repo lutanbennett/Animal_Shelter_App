@@ -159,6 +159,26 @@ const en = {
     "merge.blood_test_type_same": () => "Choose a different blood test type to merge into.",
     "merge.blood_test_type_not_found": () => "That blood test type was not found. Reload the page and try again.",
     "merge.blood_test_type_not_allowed": () => "Your access does not include removing a duplicate blood test type.",
+    // #3nuwy group 9: merge_doctors (0365). Its two "not allowed" raises share one key.
+    "merge.doctors_not_allowed": () => "Your access does not include merging doctors.",
+    "merge.doctors_not_found": () => "That doctor was not found. Reload the page and try again.",
+    "merge.doctors_both_have_logins": () => "Both of these doctors have a login, so they cannot be merged.",
+    "merge.doctors_login_admin_only": () => "Only an administrator can merge a doctor who has a login.",
+    // #3nuwy group 9: set_role_cards (0365), the Who does what save. The last two were already written for
+    // the person reading them (0221, 0222) and are kept word for word.
+    "role_cards.card_twice": () => "A card can only be given to a role once. Reload the page and try again.",
+    "role_cards.needs_an_approver_first": () =>
+      "Give a role the Approve photos card first, so someone can approve these photos.",
+    "role_cards.last_approver": (p: Record<string, string>) =>
+      `This is the last role that can approve photos, and these roles still add resident photos: ${p.roles}. Take Add resident photos off them first, or give another role the Approve photos card.`,
+    // #3nuwy group 9: record_attachment (0365) -- every file the app files, from a resident photo to a bill.
+    "attachment.purpose_invalid": () => "That file cannot be filed for that purpose. Reload the page and try again.",
+    "attachment.media_kind_invalid": () => "That is not a kind of file that can be filed here. Reload the page and try again.",
+    "attachment.add_not_allowed": () => "Your access does not include adding files here.",
+    "attachment.event_not_found": () => "That event no longer exists. Reload the page to see where it stands.",
+    "attachment.medical_folder_not_allowed": () => "Your access does not include adding photos to the Medical folder.",
+    "attachment.shelter_folder_only": () => "Your access only includes adding photos to the Shelter folder.",
+    "attachment.update_not_this_residents": () => "That adoption update is not about this resident. Reload the page and try again.",
   },
 
   // The notice a desktop-only Settings/Management page shows on a phone

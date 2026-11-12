@@ -114,7 +114,8 @@ async function handlePost(request: Request, { params }: { params: Promise<{ id: 
     p_adoption_update_id: null,
   });
   if (recordError) {
-    return NextResponse.json({ error: recordError.message }, { status: 500 });
+    // record_attachment raises keys since 0365; dbRefusal() words them in the reader's language.
+    return NextResponse.json({ error: dbRefusal("medical.photos.record", recordError, t).error }, { status: 500 });
   }
   const row = (recordResult as { attachment: { id: string }; is_profile: boolean }[])[0];
 
