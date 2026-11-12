@@ -64,6 +64,10 @@ const eslintConfig = defineConfig([
       "src/lib/adopter/scope.ts",
       "src/app/adopter-update/actions.ts",
       "src/app/adopter-update/page.tsx",
+      "src/lib/adopter/media.ts",
+      "src/app/adopter-update/media/photo/route.ts",
+      "src/app/adopter-update/media/video/start/route.ts",
+      "src/app/adopter-update/media/video/finish/route.ts",
     ],
     rules: {
       "no-restricted-imports": [
