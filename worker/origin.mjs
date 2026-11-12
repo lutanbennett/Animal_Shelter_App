@@ -3,7 +3,8 @@
 // OpenNext bundle, which only exists after a build.
 
 import { isWrappedWritePath, ORIGIN_ATTEMPT_MS } from "../src/lib/write-requests.ts";
-import { isPiOnlyPath, isRefusedByWorker } from "../src/lib/pi-only-paths.ts";
+import { isPiOnlyPath } from "../src/lib/pi-only-paths.ts";
+import { isRefusedByWorker } from "./worker-paths.mjs";
 
 const DEFAULT_ORIGIN_TIMEOUT_MS = ORIGIN_ATTEMPT_MS;
 
@@ -68,7 +69,7 @@ const OFFLINE_HTML = `<!doctype html>
 </main></body></html>`;
 
 /**
- * Anything that is not the public website (src/lib/pi-only-paths.ts) while the Pi is not
+ * Anything that is not the public website (worker/worker-paths.mjs) while the Pi is not
  * answering: say so with a small self-contained page, never render it here. No external
  * request of any kind (the Pi being away is when nothing else can be fetched), English and
  * Thai together because the app's language choice is not reachable from the Worker.

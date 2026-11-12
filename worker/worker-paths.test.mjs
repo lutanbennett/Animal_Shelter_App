@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { workerMayRender, isRefusedByWorker, isPiOnlyPath } from "./pi-only-paths.ts";
+import { isPiOnlyPath } from "../src/lib/pi-only-paths.ts";
+import { workerMayRender, isRefusedByWorker } from "./worker-paths.mjs";
 
 test("the Worker renders the public website", () => {
   for (const p of ["/", "/adopt", "/adopt/12", "/th", "/th/adopt", "/privacy", "/r/CODE1", "/login", "/robots.txt", "/sitemap.xml", "/api/version", "/api/photos/abc"]) {
