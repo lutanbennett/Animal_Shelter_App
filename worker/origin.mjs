@@ -4,6 +4,7 @@
 
 import { isWrappedWritePath, ORIGIN_ATTEMPT_MS } from "../src/lib/write-requests.ts";
 import { isPiOnlyPath } from "../src/lib/pi-only-paths.ts";
+import { isRefusedByWorker } from "./worker-paths.mjs";
 
 const DEFAULT_ORIGIN_TIMEOUT_MS = ORIGIN_ATTEMPT_MS;
 
@@ -56,12 +57,28 @@ function writeUnanswered() {
   );
 }
 
-/** A Pi-only path (src/lib/pi-only-paths.ts) while the Pi is not answering: say so, never render it here. */
+const OFFLINE_HTML = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Offline · ออฟไลน์</title>
+<style>body{margin:0;font:18px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;background:#f6f4ef;color:#222;display:flex;min-height:100vh;align-items:center;justify-content:center}main{max-width:30rem;margin:1rem;padding:1.5rem;background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.15)}h1{font-size:1.4rem;margin:0 0 .5rem}p{margin:.25rem 0 1rem}hr{border:0;border-top:1px solid #ddd;margin:1rem 0}@media(prefers-color-scheme:dark){body{background:#181818;color:#eee}main{background:#242424}hr{border-color:#444}}</style></head>
+<body><main>
+<h1>The app is offline for a moment</h1>
+<p>The shelter's own server is not answering right now. The app will be back shortly. Please wait a few minutes and try again. The public website is still available.</p>
+<hr>
+<h1 lang="th">แอปออฟไลน์ชั่วคราว</h1>
+<p lang="th">เซิร์ฟเวอร์ของศูนย์พักพิงไม่ตอบสนองในขณะนี้ แอปจะกลับมาใช้งานได้ในไม่ช้า กรุณารอสักครู่แล้วลองใหม่อีกครั้ง เว็บไซต์สาธารณะยังใช้งานได้ตามปกติ</p>
+</main></body></html>`;
+
+/**
+ * Anything that is not the public website (worker/worker-paths.mjs) while the Pi is not
+ * answering: say so with a small self-contained page, never render it here. No external
+ * request of any kind (the Pi being away is when nothing else can be fetched), English and
+ * Thai together because the app's language choice is not reachable from the Worker.
+ */
 function piUnavailable() {
-  return new Response(
-    "This page is made by the shelter's own server, which is not answering right now. Please try again in a few minutes.",
-    { status: 503, headers: { "content-type": "text/plain; charset=utf-8", "retry-after": "60", "x-lanna-served-by": "pi-unavailable" } },
-  );
+  return new Response(OFFLINE_HTML, {
+    status: 503,
+    headers: { "content-type": "text/html; charset=utf-8", "retry-after": "60", "cache-control": "no-store", "x-lanna-served-by": "pi-unavailable" },
+  });
 }
 
 /**
@@ -82,6 +99,8 @@ export async function fetchFromOrigin(request, env) {
   // its path is wrapped, because only then can the database refuse a second
   // application of it.
   const piOnly = isPiOnlyPath(url.pathname);
+  // Not the public website: the Worker cannot afford to render it (error 1102), so the Pi or nothing.
+  const refused = isRefusedByWorker(url.pathname);
   const canFallBack = idempotent || mayReplayWrite(url);
   url.host = env.ORIGIN_HOST;
 
@@ -113,10 +132,14 @@ export async function fetchFromOrigin(request, env) {
       signal: canFallBack && !piOnly ? AbortSignal.timeout(timeoutMs) : undefined,
     });
   } catch {
-    return piOnly ? piUnavailable() : canFallBack ? null : writeUnanswered();
+    if (piOnly) return piUnavailable();
+    // A refused read, or a write the Pi may have acted on, is not rendered here.
+    if (refused) return idempotent ? piUnavailable() : writeUnanswered();
+    return canFallBack ? null : writeUnanswered();
   }
   if (ORIGIN_DOWN_STATUSES.has(response.status)) {
     if (piOnly) return piUnavailable();
+    if (refused) return idempotent || NEVER_ARRIVED_STATUSES.has(response.status) ? piUnavailable() : writeUnanswered();
     if (canFallBack || NEVER_ARRIVED_STATUSES.has(response.status)) return null;
     // A 502/504 can be cloudflared losing the origin mid-request, after the
     // Pi has already acted — so an unwrapped write is no more replayed
