@@ -13,7 +13,7 @@
 | PR | filled in at `gh pr create` |
 | Tested by / date | Claude (Opus 5) / 2026-11-12 |
 | Carries a migration? | no |
-| Tested at SHA | `<filled below from git rev-parse --short HEAD>` |
+| Tested at SHA | `a62e4d22e` — the commit the gates ran against; this plan's own fill-in is the only commit after it |
 
 ## 1. Scope and risk
 
@@ -24,12 +24,20 @@
 
 ## 2. Automated gates
 
-- [ ] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly — n/a: `pending` below covers it; see the sync line in section 6
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: *Already up to date*, then pushed. `origin/main` is an ancestor of this branch's HEAD (`git rev-list --count HEAD..origin/main` = 0), so nothing came in and the gates run below is still against the tested tree
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`
 
 ```
-<gates output pasted here>
+=== gates: typecheck exited 0 after 269s
+=== gates: lint exited 0 after 515s
+=== gates: test exited 0 after 88s
+=== gates: build exited 0 after 318s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
+
+Run in the background to a file in the scratchpad and read back from that file, as the brief asks.
+The timings are long because `check-control-activity.mjs` was run against the same machine while the
+gates held it; the exit codes are what the line certifies and all four are `0`.
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
@@ -76,14 +84,14 @@ Each press used a login holding **exactly one card** (`node scripts/dev-signin.m
 - [ ] Manual updated (`src/lib/manual/en.ts`) — n/a: a developer script on the dev database; no shelter user reaches it, so it has no manual topic
 - [ ] Translatable strings go through the translation path — n/a: the script's output is a developer console report, never shown in the app
 - [ ] Mobile viewport (375px) — n/a: a command-line script; it has no viewport
-- [x] Browser console clean — no errors or React warnings seen across the eight presses; the only console noise was the broken-image requests for the fixtures' placeholder Drive ids, which is the fixture's own doing and not an app fault
-- [x] Network clean — no unexpected 4xx/5xx on `/bills`, `/my`, the resident hub, Blood Tests or Photos during the presses
+- [x] Browser console clean — no React warnings and no application errors across the eight presses. There **are** 13 errors, and all 13 are the same one: `502 Bad Gateway` on `/api/photos/zz-fixture-*`. Read back request by request, every one is a fixture photo. The fixture rows carry placeholder Drive ids that no Drive file answers, so the image proxy fails by design — the fixture's own doing, not an app fault, and the next stream will see the same 13
+- [x] Network clean — no unexpected 4xx/5xx on `/bills`, `/my`, the resident hub, Blood Tests or Photos. The only non-2xx responses are the 13 fixture-photo 502s described above, which are expected and were checked individually rather than assumed
 
 ## 6. Regression
 
 - [x] The pages nearest the change still work — `/home`, `/my`, `/residents`, `/residents/[id]`, `/residents/[id]/blood-tests`, `/residents/[id]/photos` and `/bills` were all loaded and driven; the fixture rows appear in each list as ordinary rows (the Bills tile read *5 waiting*, the residents list counted them, the deceased filter found the closed record)
 - [ ] Any shared file touched checked from a second, unrelated page — n/a: no shared file is touched; the only new file is a standalone script nothing imports
-- [ ] Nothing merged from `main` during `sync` was broken by this branch — pending: `sync` is run immediately before the PR and the gates re-read after it; if it brings anything in, the gates line above is regenerated
+- [x] Nothing merged from `main` during `sync` was broken by this branch — `sync` brought nothing in (*Already up to date*), so there is nothing this branch could have broken
 
 ## 7. Documentation
 

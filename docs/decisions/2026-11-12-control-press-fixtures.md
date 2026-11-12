@@ -17,6 +17,11 @@ controls are drawn for, so the next stream presses instead of hand-making a row.
 - `ls scripts/fixtures/ scripts/test-fixtures/`, `ls scripts/ | grep -iE 'fixture|dev-'`: no script
   that makes dev rows. `scripts/fixtures/` holds five static files for check-script tests;
   `scripts/dev-*` is sign-in and the assistant stand-in. The gap was still there.
+- `node scripts/check-control-activity.mjs` (22.3 s, run while the gates build held the machine):
+  **4 findings, all 4 on the allow-list, 0 new** — the same reading #1523 and #1517 took, so nothing
+  regressed and no new no-gate control appeared. `PhotoGallery:812` and `TranslationPanel:179` are
+  still printed as unresolved, which is the check being honest about what a static pass cannot decide;
+  pressing them is what this stream and the last one did instead.
 - The four preconditions were then asked of **the whole of dev**, not just of this script's own rows
   (`node scripts/dev-fixtures.mjs --status`, 2026-11-12):
 
@@ -133,6 +138,12 @@ cheapest shape the next stream could be handed, and it is why the fixtures were 
 - **Running `dev-signin.mjs` twice for the same card set and port re-keys the login**, so only the
   **last** snippet is live. Taking the email from run 1 and the snippet from run 2 signs you out of
   run 1.
+- **The fixture photos do not render, and that is expected.** Their `drive_file_id`s are placeholders
+  (`zz-fixture-photo-1`, `zz-fixture-bill-3`, …) that no Drive file answers, so `/api/photos/<id>`
+  returns **502** and the gallery and bill cards show the broken-image box. Thirteen such 502s were
+  read back one by one and every one was a fixture photo. **It does not block a press** — none of the
+  eight controls needs the bytes — so giving the fixtures real Drive uploads would cost a Drive round
+  trip to remove console noise and nothing else. Do not file them as an app fault.
 - **Fixtures left on dev** (all named `ZZ fixture …`, all re-makeable, none to be tidied):
   `ZZ fixture deceased`, `ZZ fixture two photos`, five `ZZ fixture bill N` cards,
   `ZZ fixture bill job`, `ZZ fixture daily job`, plus the general and utility bills and the
