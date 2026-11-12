@@ -196,8 +196,29 @@ const manual: Manual = {
           },
         },
         {
+          id: "home-covering-another-role",
+          everyone: true,
+          title: "Home screen: if you cover another role",
+          path: "Home",
+          intro:
+            "If you have been given a second role for a while (the Head of Medical covering the Head of Maintenance, say), your home keeps each job's tiles together instead of mixing them.",
+          steps: [
+            "On a phone, buttons across the top switch between My job and the other role. The home opens on My job. Tap the other role to see its tiles; the app remembers your choice for the rest of the day.",
+            "On a computer the two sets of tiles sit one under the other, each under its role's name.",
+            "The role you are covering says Covering until, with the last day. The day after that the second set is gone and you see only your own job.",
+            "A tile both roles give appears in each set, because it is the same page. Counts (My tasks, Maintenance, photos waiting) stay on their tiles.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "This only changes how the home is laid out. What you may open is the same as before: both roles' access together.",
+            },
+          ],
+        },
+        {
           id: "shelter-operations",
-          // UNASSIGNED (2026-11-09, manual-topics-by-card): the Operations front page opens for any one of a dozen cards, so no one card owns it.
+          opensSection: "operations",
+          needsMenu: true,
           title: "Operations: the daily work",
           path: "Operations (in the menu)",
           intro:
@@ -346,26 +367,6 @@ const manual: Manual = {
           steps: [
             "Tap the title to go to Settings → Security. Sign in with your authenticator app when asked, then give each person a role or leave them waiting.",
             "The task has no Done button. It goes from every admin's list on its own once nobody is waiting, whichever admin dealt with them.",
-          ],
-        },
-        {
-          id: "home-covering-another-role",
-          // UNASSIGNED (2026-11-09, manual-topics-by-card): about holding a second set of cards for a while, which no card grants.
-          title: "Home screen: if you cover another role",
-          path: "Home",
-          intro:
-            "If you have been given a second role for a while (the Head of Medical covering the Head of Maintenance, say), your home keeps each job's tiles together instead of mixing them.",
-          steps: [
-            "On a phone, buttons across the top switch between My job and the other role. The home opens on My job. Tap the other role to see its tiles; the app remembers your choice for the rest of the day.",
-            "On a computer the two sets of tiles sit one under the other, each under its role's name.",
-            "The role you are covering says Covering until, with the last day. The day after that the second set is gone and you see only your own job.",
-            "A tile both roles give appears in each set, because it is the same page. Counts (My tasks, Maintenance, photos waiting) stay on their tiles.",
-          ],
-          callouts: [
-            {
-              kind: "note",
-              text: "This only changes how the home is laid out. What you may open is the same as before: both roles' access together.",
-            },
           ],
         },
         {

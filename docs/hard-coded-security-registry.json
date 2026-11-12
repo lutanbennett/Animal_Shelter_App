@@ -30,6 +30,14 @@
   "stillDecidesAccess": [],
   "notAccess": [
     {
+      "file": "src/lib/manual/for-topic.ts",
+      "matches": [
+        "return { role: { key: \"\", name: \"\", nameTh: null, homePath: null }, roles: [], isAdmin: false, cells };"
+      ],
+      "kind": "content-marking",
+      "reason": "permsOfCards() builds an empty placeholder login (no role name, not Admin) whose cells are exactly one card's bundle, only so opensAnyIn() can be asked which cards open a section for the manual's Operations topic. It marks which manual topic is shown; it grants and denies nothing, and the role fields are blank on purpose so nothing can key on them."
+    },
+    {
       "file": "src/app/admin/security/actions.ts",
       "matches": [
         "role.key !== \"admin\"",
