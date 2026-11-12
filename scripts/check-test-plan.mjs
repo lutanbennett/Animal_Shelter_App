@@ -348,7 +348,7 @@ for (const file of changed) {
   // and none is rewritten to satisfy this. Blind spot: a merged plan nobody edits is never read.
   let onBase = false;
   try {
-    git(["cat-file", "-e", `${mergeBase}:${file}`]);
+    execFileSync("git", ["cat-file", "-e", `${mergeBase}:${file}`], { stdio: "pipe" });
     onBase = true;
   } catch {
     // New in this PR.
