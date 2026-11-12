@@ -14,7 +14,7 @@
 | PR | opened after this commit |
 | Tested by / date | Claude / 2026-11-12 |
 | Carries a migration? | no |
-| Tested at SHA | bc55a234c |
+| Tested at SHA | abf17b7f9 |
 
 ## 1. Scope and risk
 
@@ -44,9 +44,9 @@ indistinguishable from one that passed.
 
 ```
 === gates: typecheck exited 0 after 9s
-=== gates: lint exited 0 after 134s
-=== gates: test exited 0 after 47s
-=== gates: build exited 0 after 52s
+=== gates: lint exited 0 after 145s
+=== gates: test exited 0 after 49s
+=== gates: build exited 0 after 54s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 - [ ] CI green on the PR (runs the same four gates, among its other checks). **This one cannot be true in the commit that creates the PR**, so write it `n/a: not yet — the PR does not exist at this commit` and **leave it there.** Changed 2026-10-20: ticking it in a follow-up commit used to be the rule, and that commit **invalidated its own evidence** — a new HEAD means a new run, so every PR in this repository paid two full CI cycles to transcribe a result GitHub already records permanently against the commit. A tick here attests to nothing a reader can check better by looking at the PR. **What must still happen, and is a merge step rather than a checklist line: before merging, read the run for your current HEAD (`gh run view <id> --json status,conclusion,headSha`) and confirm its `headSha` matches.** Merging on an older run's strength merges a commit whose CI never finished. **Do not pre-tick this line either** — a green you have not seen is the exact failure this checklist exists to prevent — n/a: not yet — the PR does not exist at this commit
