@@ -166,6 +166,8 @@ export const WRAPPED_WRITE_PATHS = [
   "/management/events",
   "/management/events/[id]",
   "/management/events/new",
+  "/management/foundation-papers",
+  "/management/foundation-papers/board-ids",
   "/management/cashflow",
   "/management/cashflow/fixed-outgoings",
   "/management/clinics",

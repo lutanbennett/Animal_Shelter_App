@@ -2370,6 +2370,37 @@ const manual: Manual = {
           ],
         },
         {
+          id: "foundation-papers",
+          title: "The foundation's papers",
+          activity: "foundation.papers",
+          path: "Foundation papers",
+          intro:
+            "One safe place for the foundation's own papers: the bylaws, the registration certificate and licences, the minutes, the financial statements, the tax ID, and each month's bank statement and reconciliation. Only people given the Foundation papers card can see them.",
+          steps: [
+            "Open Foundation papers. Newest first, every paper shows its title, its kind and, for a bank paper, the month it covers. Before anything has been filed it says so plainly.",
+            "To file one, choose the kind of paper, give it a title, choose the file (a PDF or a photo, up to 15 MB) and tap File it. For a bank statement or a reconciliation, also choose the month it covers.",
+            "Open shows the paper. Remove takes it out of the store after asking first, and it cannot be got back. A paper filed under the wrong kind is removed and filed again.",
+          ],
+          callouts: [
+            {
+              kind: "warning",
+              text: "Copies of board members' ID cards and household registrations are not kept here. They have their own card, Board ID copies, because far fewer people should see them.",
+            },
+          ],
+        },
+        {
+          id: "foundation-id-copies",
+          title: "Board members' ID copies",
+          activity: "foundation.id_copies",
+          path: "Board ID copies",
+          intro:
+            "Copies of each board member's Thai national ID card and household registration. Only people given the Board ID copies card can see them, and holding the Foundation papers card does not show them.",
+          steps: [
+            "Open Board ID copies. Each copy shows a title (the member's role on the board is enough) and a note if one was added.",
+            "To file one, give it a title, choose the file (a PDF or a photo) and tap File it. Open shows it. Remove takes it out after asking first.",
+          ],
+        },
+        {
           id: "website-hide-pages",
           title: "Website: hiding a page",
           activity: "website.content",

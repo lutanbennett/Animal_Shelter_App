@@ -244,6 +244,28 @@ export const ENTRIES = {
       expect: "Each says what happened and leaves the list. The website shows only the approved one.",
     },
   ],
+  "foundation-papers": [
+    {
+      activity: "File and open one of the foundation's papers",
+      device: "desktop",
+      do: "Open Foundation papers, choose a kind of paper, give it a title, choose a made-up PDF and tap File it. For a bank statement also choose the month. Then tap Open on it.",
+      expect: "It says Filed and the paper is listed, newest first. Open shows it. Before anything is filed the page says nothing has been filed yet. Board members' ID copies are not here.",
+    },
+    {
+      activity: "Remove a paper filed by mistake",
+      device: "desktop",
+      do: "Tap Remove on a made-up paper and agree when asked.",
+      expect: "The paper leaves the list and cannot be got back. Someone without the card sees no Remove and no page.",
+    },
+  ],
+  "foundation-id-copies": [
+    {
+      activity: "File and open a copy of a board member's ID",
+      device: "desktop",
+      do: "Open Board ID copies, give the copy a title, choose a made-up file and tap File it. Then tap Open on it.",
+      expect: "It says Filed and the copy is listed. Someone holding only Foundation papers cannot see this page or the copy.",
+    },
+  ],
   "release-notes": [
     {
       activity: "Read the release notes",
