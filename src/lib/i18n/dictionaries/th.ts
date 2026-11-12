@@ -126,6 +126,12 @@ const th: Dictionary = {
     },
     "intake.first_placement_ends": (p: Record<string, string>) =>
       `ย้ายวันที่รับเข้าไปเป็น ${p.date} ไม่ได้ เพราะที่อยู่แรกสิ้นสุดวันที่ ${p.ends} และจะไม่ได้เริ่มก่อนสิ้นสุด`,
+    // UNREVIEWED Thai (not yet read by a human, #y1dqu): the five deceased-placement refusals.
+    "deceased.archive_not_allowed": () => "สิทธิ์ของคุณไม่รวมการจัดเก็บเอกสารของสัตว์ที่เสียชีวิตแล้ว",
+    "deceased.not_deceased": () => "สัตว์ตัวนี้ไม่ได้ถูกบันทึกว่าเสียชีวิต",
+    "deceased.withdraw_not_allowed": () => "สิทธิ์ของคุณไม่รวมการยกเลิกบันทึกการเสียชีวิต",
+    "deceased.reason_required": () => "โปรดระบุเหตุผลที่บันทึกการเสียชีวิตผิดพลาด",
+    "deceased.no_earlier_placement": () => "ไม่มีที่อยู่ก่อนหน้าให้ส่งสัตว์ตัวนี้กลับไป",
   },
 
   largerScreen: {

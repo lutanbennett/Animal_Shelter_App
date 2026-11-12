@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { dbRefusal } from "@/lib/db-refusal";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { SYSTEM_ZONE } from "@/lib/enclosures/options";
@@ -71,9 +72,10 @@ export async function recordResidentDeath(
       .returns<{ is_deceased: boolean }[]>(),
   ]);
 
-  if (deceasedResult.error) return { error: deceasedResult.error.message };
-  if (currentResult.error) return { error: currentResult.error.message };
-  if (stateResult.error) return { error: stateResult.error.message };
+  // Plain table reads, not function refusals: dbRefusal sends them through databaseFailure's rules, so no raw database text reaches the screen.
+  if (deceasedResult.error) return { error: dbRefusal("deceased.record.enclosure", deceasedResult.error, t).error };
+  if (currentResult.error) return { error: dbRefusal("deceased.record.placement", currentResult.error, t).error };
+  if (stateResult.error) return { error: dbRefusal("deceased.record.state", stateResult.error, t).error };
 
   const deceased = deceasedResult.data?.[0];
   if (!deceased) return { error: errors.enclosureNotFound };
@@ -109,7 +111,8 @@ export async function recordResidentDeath(
     cause_of_death: input.causeOfDeath,
     created_by: user?.id ?? null,
   });
-  if (error) return { error: error.message };
+  // An insert, not a keyed function: a trigger's sentence (the closed-record lock) goes through databaseFailure's rules.
+  if (error) return { error: dbRefusal("deceased.record.insert", error, t).error };
 
   return { ok: true, id: placementId };
 }
@@ -153,7 +156,7 @@ export async function undoResidentDeath(
     p_resident_id: input.residentId,
     p_reason: reason,
   });
-  if (error) return { error: error.message };
+  if (error) return { error: dbRefusal("deceased.undo", error, t).error };
 
   return { ok: true };
 }

@@ -144,6 +144,11 @@ const en = {
     },
     "intake.first_placement_ends": (p: Record<string, string>) =>
       `The intake date cannot be moved to ${p.date} because the first placement ends on ${p.ends} and would not start before it ends.`,
+    "deceased.archive_not_allowed": () => "Your access does not include filing a deceased resident's records.",
+    "deceased.not_deceased": () => "This resident is not recorded as deceased.",
+    "deceased.withdraw_not_allowed": () => "Your access does not include withdrawing a recorded death.",
+    "deceased.reason_required": () => "Say why the death was recorded in error.",
+    "deceased.no_earlier_placement": () => "There is no earlier placement to return this resident to.",
   },
 
   // The notice a desktop-only Settings/Management page shows on a phone
