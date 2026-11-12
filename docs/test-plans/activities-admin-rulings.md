@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → `#c4vn7`. **Not ticked by this PR** — it is nine of fourteen, and the item already records the full ruling and what is left (committed on the `backlog` branch 2026-11-12, so this PR does not touch `docs/backlog.md` and cannot conflict with it) |
 | Branch / worktree | `claude/activities-admin-rulings` @ `C:\Development\Animal_Shelter_activities-admin-rulings` |
 | Dev server | n/a: nothing in this PR is served or rendered. The one code file is a build-time/CI script library |
-| PR | #TBD |
+| PR | #1511 |
 | Tested by / date | Claude Opus 5 / 2026-11-12 |
 | Carries a migration? | **no** — and that is the reason this PR is nine rulings and not fourteen (section 1) |
 | Tested at SHA | this branch's own head, cut from `origin/main` |
@@ -24,9 +24,9 @@
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — n/a: the worktree was created from `origin/main` minutes before the work
-- [x] `node scripts/gates.mjs` — run; result recorded under *Defects found*
+- [x] `node scripts/gates.mjs` — **typecheck=0 lint=0 test=0 build=0**, all four run on this branch
 - [x] `node scripts/check-ungranted-activities.mjs` — the check this PR is about. **Exit 0**, `85 catalogue activities; 14 Admin-only on purpose, 5 UNRULED; 56 cards`. Before: **5 Admin-only on purpose, 14 UNRULED**. All five remaining lines now read `RULED 2026-11-12 by Lutan, waiting on the build — do not re-ask`
-- [x] `node scripts/check-test-plan.mjs --base origin/main` run the way CI runs it — result recorded under *Defects found*
+- [x] `node scripts/check-test-plan.mjs --base origin/main` run the way CI runs it — exit **0**, *"ok — docs/test-plans/activities-admin-rulings.md"*
 - [x] Checked no test asserts the old wording before changing it — `grep` for `no ruling yet` across `.mjs`, `.ts` and test files finds it **only in the file being changed**
 
 ## 3. Schema and data
@@ -98,7 +98,7 @@
 | 1 | medium | **A ruling given on 2026-11-09 was still printed as "no ruling yet" on 2026-11-12**, because it reached only a backlog note. The planner handover and the check disagreed, and nobody noticed for three days | **Both causes addressed.** The nine are recorded with his words; and the check no longer claims a given ruling is missing, so the remaining five cannot be re-asked the same way |
 | 2 | low | **The stock count box would be offered to a card holder the database always refuses** — the Diets and Medications pages gate it on the list's edit, while `record_stock_correction()` demands the Admin-only `stock.correct` | **MOOT, not fixed**, because he ruled both lists' edit Admin-only as well. Recorded on both allow-list entries and in the decision file **with the condition under which it returns** — the day either list's edit goes onto a card |
 | 3 | low | **Several controls are hidden correctly but silently** — `project_folders` shows a folder's photos with no Add, no bin and no message; the stock pages open read-only the same way | **Found, not fixed, and named as not this PR's work.** Hiding is right; the missing explanation is a courtesy gap. The appeal photo chooser is recorded as the model that does it properly |
-| 4 | none | `gates.mjs` and `check-test-plan.mjs` results | Recorded above once run |
+| 4 | none | `gates.mjs` and `check-test-plan.mjs` results | **All four gates 0** — typecheck 47s, lint 147s, test 44s, build 162s. `check-test-plan.mjs --base origin/main` exit **0** |
 
 ## Left for manual verification
 
