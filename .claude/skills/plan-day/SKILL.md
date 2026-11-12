@@ -146,6 +146,11 @@ leftovers is (e), after the list. Then per stream, in sequence:
   questions — in the NUMBERED DELIVERABLES, never in step zero.** A question in step zero is context, and
   context is not reported on. *"A brief that says what the planner has not established gets corrected;
   one that asserts gets obeyed."*
+- **READ THE DIRECTORY BEFORE YOU NAME A FILE.** On 2026-11-12 four briefs told a stream to edit
+  `src/lib/manual/th.ts`, which **does not exist** — the manual is English-only — and the planner wrote
+  it four times without once running `ls`. **No stream obeyed it**, because each read the directory at
+  step zero. **That is the step-zero instrument catching the BRIEF rather than the item, and one `ls`
+  would have settled it.**
 - **Open anything you assert, price or forbid**, and prefer the narrowest prohibition. A folder name is
   not a manifest and a `grep -l` is not a definition. Where a ban might be too wide, add: *"if a numbered
   deliverable genuinely needs a file I have forbidden, do it and say so in your PR."*
