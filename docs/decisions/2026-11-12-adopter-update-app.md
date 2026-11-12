@@ -27,3 +27,9 @@ The insert names no `text_approval`, so it is NULL and `public_adoption_updates`
 - Prose into the Translations queue (answer (e)).
 - Driving it: a disposable adopter login (confirmed-email auth user + a contact with an open Adopt placement), then the page, a send, the staff view, and the public view; the Thai wording on a real phone.
 - `releases.ts`: no line, because the feature is not user-complete.
+
+## The service call is recorded, not avoided (Lutan, 2026-11-12, asked directly)
+`0357`'s caveat tells the app half to call the scope functions through a server-side service call, and the permission-catalogue check says a service-role writer needs an admin check or a named exemption. Those collided; he ruled to record the service call and keep it. `scripts/check-permission-catalogue.mjs` names `adopter-update/actions.ts` in `NO_ACTIVITY` and as a second named exemption to the service-role rule beside `account/password/actions.ts`, whose shape this is: a signed-in person acting on their OWN data through one narrow service-role call after a check the code performs (`adopter_may_submit`). The other precedent, `services/sterilisation/actions.ts`, is exempt because it is signed out (anon role, insert-only grants); that does not transfer to an identified adopter. The assertion still fails for every other file.
+
+## Driven (2026-11-12, dev, `scripts/dev-adopter-signin.mjs`)
+A disposable adopter (confirmed email, Carer contact, open Adopt placement on resident R-L5GXN, no role, no card): lands on `/adopter-update`; a sent update shows "Waiting to be read"; the row has `channel = app`, `text_approval` NULL, no stamp; `public_adoption_updates` (read as anon) has 0 rows for that resident and 0 matching the words; `/home`, `/residents`, `/contacts`, `/admin/who-does-what` and a staff API route each redirect that login to `/login` (the session is ended).

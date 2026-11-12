@@ -39,8 +39,16 @@ wait for `worktree.mjs new` to exit before trusting the tree. A gate ticked
 because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
-- [ ] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly — pending: not run; the stream was handed back unfinished
-- [ ] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — **four gates, each `<N>` that gate's own exit code, and every `<N>` is `0`.** Run it yourself and paste its closing lines **exactly as your run printed them**, in a fenced block under this line: the `=== gates: <name> exited <N> after <S>s` line for each gate as well as the final `gates:` line. **Never type the final line from this description or copy it from another plan.** The shape here is deliberately not a line you could paste: the per-gate `after <S>s` timings are the part only a real run has. `check-test-plan.mjs` cannot tell a pasted run from a typed one, so this wording is the only guard (`docs/decisions/2026-11-02-gates-line-four-gates.md`). They are the evidence, and running the script again regenerates them — pending: not run yet; the next session runs it and pastes the output
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (merge made by the ort strategy, pushed)
+- [x] `node scripts/gates.mjs` ends with `gates: typecheck=0 lint=0 test=0 build=0`, run on the merged tree before the plan and `scripts/dev-adopter-signin.mjs` were added; output as printed:
+
+```
+=== gates: typecheck exited 0 after 117s
+=== gates: lint exited 0 after 308s
+=== gates: test exited 0 after 67s
+=== gates: build exited 0 after 220s
+gates: typecheck=0 lint=0 test=0 build=0
+```
 - [ ] CI green on the PR (runs the same four gates, among its other checks). — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
@@ -59,9 +67,9 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — pending: the page was not driven in a browser; no disposable adopter login exists yet
-- [ ] Data persists — reload the page and the change is still there — pending: the page was not driven in a browser; no disposable adopter login exists yet
-- [ ] Create / edit / delete all exercised (whichever the feature has) — pending: the page was not driven in a browser; no disposable adopter login exists yet
+- [x] Happy path works end to end — driven in the browser pane: adopter login lands on /adopter-update, sends words, sees "Waiting to be read"
+- [x] Data persists — the row is in adoption_updates (channel app, text_approval NULL, no stamp, share_publicly false) and is shown again from the database on refresh
+- [ ] Create / edit / delete all exercised — n/a: an adopter can only create; there is no edit or delete
 - [ ] Empty state renders sensibly (no rows yet) — pending: the page was not driven in a browser; no disposable adopter login exists yet
 - [ ] Invalid input is rejected with a readable message, not a crash — pending: the page was not driven in a browser; no disposable adopter login exists yet
 - [ ] Boundary cases checked (long text, zero, negative, missing optional fields, dates) — pending: the page was not driven in a browser; no disposable adopter login exists yet
@@ -83,10 +91,10 @@ needs two cards together, put both on one row. Do not name `staff` (retired, `01
 
 | Login (card(s) held) | Can reach | Expected | Result |
 |---|---|---|---|
-| adopter (no staff card, verified contact email) | /adopter-update only | pending: not driven | pending |
+| adopter (no staff card, verified contact email) | /adopter-update only | /adopter-update loads; /home, /residents, /contacts, /admin/who-does-what and a staff API route each redirect to /login (the session is ended) | pass |
 
-- [ ] Every login above tested — pending: the page was not driven in a browser; no disposable adopter login exists yet
-- [ ] A login that should not have access is blocked server-side (hitting the URL directly fails) — pending: the page was not driven in a browser; no disposable adopter login exists yet
+- [ ] Every login above tested — pending: admin and signed-out were not run for this page
+- [x] A login that should not have access is blocked server-side (hitting the URL directly fails) — fetched five staff addresses as the adopter; each redirected to /login
 
 ## 5. Cross-cutting
 
@@ -164,7 +172,7 @@ correct when written. **UAT is deployed on every release since 2026-11-08**
 
 ## Defects found
 
-| 1 | high | Unfinished: photos, video, size limit, Translations route, browser drive not done | pending: next session |
+| 1 | medium | Photos, video, size limit and upload state, and the Translations route are not built (deliverables 5 and 8) | pending: planner files the remainder |
 
 ## Left for manual verification
 
@@ -186,7 +194,7 @@ at it, separately from deploying?** A doctor's view of a page, a real phone, whe
 wording reads well — yes. Anything the deploy itself performs — no, that is
 section 8's.
 
-| 1 | Sign in as a disposable adopter, send, see waiting, confirm absent from the public view, confirm staff pages refuse that login | dev, port 3008 |
+| 1 | A real adopter signing in with Google (the proof used a password login) | dev, port 3008 |
 | 2 | Thai wording on a real phone | phone |
 
 ## Sign-off
@@ -201,10 +209,10 @@ assurance.
 Gates, scripts, server-side behaviour, and any browser check that was actually
 driven rather than assumed. Signed by whoever ran them — Claude may sign this.
 
-- [ ] Everything in this checklist that could be verified without human eyes was run, not assumed — pending: gates and browser drive not run — pending: release manager at deploy time
+- [x] Everything in this checklist that could be verified without human eyes was run, not assumed — except the lines marked pending
 - [x] Nothing is ticked that was not actually executed — pending: release manager at deploy time
 
-Automated checks by: pending: gates and browser checks not yet run
+Automated checks by: Claude  Date: 2026-11-12
 
 ### Manual verification
 
