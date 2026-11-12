@@ -11,7 +11,7 @@
 | PR | pending: opened after this plan is committed |
 | Tested by / date | Claude, 2026-11-12 |
 | Carries a migration? | no |
-| Tested at SHA | a240f4124 |
+| Tested at SHA | 313b63054 |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,11 @@
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — four gates, every exit code `0`:
 
 ```
-GATES_PASTE
+=== gates: typecheck exited 0 after 13s
+=== gates: lint exited 0 after 155s
+=== gates: test exited 0 after 59s
+=== gates: build exited 0 after 88s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
