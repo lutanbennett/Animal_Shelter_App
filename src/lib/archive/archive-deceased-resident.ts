@@ -8,6 +8,7 @@ import {
   upsertGeneratedFile,
 } from "@/lib/google/drive";
 import { loadResidentArchiveRecord } from "./resident-record";
+import { dbRefusal } from "@/lib/db-refusal";
 import { getSiteOrigin } from "@/lib/site-origin";
 import {
   renderResidentSummaryPdf,
@@ -144,7 +145,7 @@ export async function archiveDeceasedResident(
       }[]
     >();
 
-  if (residentResult.error) return { error: residentResult.error.message };
+  if (residentResult.error) return { error: dbRefusal("deceased.archive.resident", residentResult.error, t).error };
   const resident = residentResult.data?.[0];
   if (!resident) return { error: t.residents.deceased.archiveErrors.residentNotFound };
 
@@ -182,7 +183,7 @@ export async function archiveDeceasedResident(
       p_summary_drive_file_id: summaryFileId,
       p_index_drive_file_id: indexFileId,
     });
-    if (error) return { error: error.message };
+    if (error) return { error: dbRefusal("deceased.archive", error, t).error };
 
     // A chosen profile photo that did not make it in is reported, not just
     // logged: the PDF is the lasting record, and no picture looks like no photo.

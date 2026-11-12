@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "If recording a death, withdrawing one, or filing a deceased resident’s records is refused, the reason now shows in Thai when the app is in Thai. Before, a few of these reasons always appeared in English.",
 ];
 
 /** Newest first. */
