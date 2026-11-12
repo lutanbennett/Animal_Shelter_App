@@ -8,6 +8,7 @@ import {
   type WriteMessages,
 } from "@/lib/action-result";
 import { writeRequestIdFrom } from "@/lib/write-requests";
+import { dbRefusal } from "@/lib/db-refusal";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -136,7 +137,7 @@ export async function mergeProcedureType(
       p_from: fromId,
       p_into: intoId,
     });
-    if (error) return refuse(error.message);
+    if (error) return dbRefusal("procedureTypes.mergeProcedureType", error, t);
 
     revalidateProcedureTypePages();
     return { ok: true, count: (data as number | null) ?? 0 };

@@ -149,6 +149,16 @@ const en = {
     "deceased.withdraw_not_allowed": () => "Your access does not include withdrawing a recorded death.",
     "deceased.reason_required": () => "Say why the death was recorded in error.",
     "deceased.no_earlier_placement": () => "There is no earlier placement to return this resident to.",
+    "merge.medication_same": () => "Choose a different medication to merge into.",
+    "merge.medication_not_found": () => "That medication was not found. Reload the page and try again.",
+    "merge.medication_unit_mismatch": (p: Record<string, string>) => `Both medications must be measured in the same unit (${p.from} vs ${p.into}).`,
+    "merge.medication_not_allowed": () => "Your access does not include removing a duplicate medication.",
+    "merge.procedure_type_same": () => "Choose a different procedure type to merge into.",
+    "merge.procedure_type_not_found": () => "That procedure type was not found. Reload the page and try again.",
+    "merge.procedure_type_not_allowed": () => "Your access does not include removing a duplicate procedure type.",
+    "merge.blood_test_type_same": () => "Choose a different blood test type to merge into.",
+    "merge.blood_test_type_not_found": () => "That blood test type was not found. Reload the page and try again.",
+    "merge.blood_test_type_not_allowed": () => "Your access does not include removing a duplicate blood test type.",
   },
 
   // The notice a desktop-only Settings/Management page shows on a phone

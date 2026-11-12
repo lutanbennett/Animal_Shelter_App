@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { writeRequestIdFrom } from "@/lib/write-requests";
+import { dbRefusal } from "@/lib/db-refusal";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -166,7 +167,7 @@ export async function mergeMedication(
     }
 
     const { data, error } = await supabase.rpc("merge_medication", { p_from: fromId, p_into: intoId });
-    if (error) return refuse(error.message);
+    if (error) return dbRefusal("medications.mergeMedication", error, t);
 
     revalidateMedicationPages();
     return { ok: true, count: (data as number | null) ?? 0 };
