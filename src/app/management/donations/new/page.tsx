@@ -6,6 +6,7 @@ import { todayIso } from "@/lib/format";
 import { requirePermission } from "@/lib/permissions/require";
 import { loadRaised } from "@/lib/appeals/staff";
 import { SUPPORTER_COLUMNS, type SupporterRow } from "@/lib/donations/supporters";
+import { DONATION_METHODS, type DonationMethod } from "@/lib/donations/donations";
 import { DonationForm, type AppealOption, type DonorContact } from "./DonationForm";
 
 /**
@@ -16,6 +17,15 @@ import { DonationForm, type AppealOption, type DonorContact } from "./DonationFo
 export default async function NewDonationPage(props: PageProps<"/management/donations/new">) {
   const sp = await props.searchParams;
   const presetAppealId = typeof sp.appeal === "string" ? sp.appeal : "";
+  // Arriving from "Record another gift" on the gift just saved: the next line on
+  // the same bank statement is almost always the same day and the same method.
+  const today = todayIso();
+  const presetReceivedOn =
+    typeof sp.on === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sp.on) && sp.on <= today ? sp.on : "";
+  const presetMethod =
+    typeof sp.method === "string" && (DONATION_METHODS as readonly string[]).includes(sp.method)
+      ? (sp.method as DonationMethod)
+      : undefined;
   await requirePermission("donation.receipt");
   const { t } = await getT();
   const d = t.donations;
@@ -79,7 +89,17 @@ export default async function NewDonationPage(props: PageProps<"/management/dona
         <h1 className="text-2xl font-semibold text-foreground">{d.form.newTitle}</h1>
         <p className="text-sm text-muted">{d.form.newSubtitle}</p>
       </div>
-      <DonationForm contacts={contacts.data ?? []} supporters={supporters.data ?? []} residents={residentOptions} residentsFailed={!!residents.error} today={todayIso()} appeals={appealOptions} presetAppealId={presetAppealId} />
+      <DonationForm
+        contacts={contacts.data ?? []}
+        supporters={supporters.data ?? []}
+        residents={residentOptions}
+        residentsFailed={!!residents.error}
+        today={today}
+        appeals={appealOptions}
+        presetAppealId={presetAppealId}
+        presetReceivedOn={presetReceivedOn}
+        presetMethod={presetMethod}
+      />
     </main>
   );
 }
