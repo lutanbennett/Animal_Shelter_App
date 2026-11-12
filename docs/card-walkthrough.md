@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-56 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+58 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -280,6 +280,28 @@ Result: pending
 0. Sign in with `--cards approve_text`. The home screen shows the **Approve public text** tile (or the tile of a card that includes it).
 1. Open `/text/approve`: it loads.
 2. **Do:** Public text to approve: read the words waiting for the website and approve or keep private. Use a disposable record named `walk-approve_text`. **Read-back:** the waiting text shows under Public text to approve; Approve or Keep private reads back as public_ok or private_only from the database (driven in the browser on dev)...
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Foundation papers (`foundation_papers`)
+
+- Opens: `/management/foundation-papers`
+
+0. Sign in with `--cards foundation_papers`. The home screen shows the **Foundation papers** tile (or the tile of a card that includes it).
+1. Open `/management/foundation-papers`: it loads.
+2. **Do:** Foundation papers (bylaws, certificates, minutes, statements, tax ID, bank statements). Use a disposable record named `walk-foundation_papers`. **Read-back:** the paper shows in the list on /management/foundation-papers with "Filed." and its Open link serves it through /api/documents/<id>; Remove takes it out of the list. Use a made-up fixture, never a real paper.
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Board ID copies (`foundation_id_copies`)
+
+- Opens: `/management/foundation-papers/board-ids`
+
+0. Sign in with `--cards foundation_id_copies`. The home screen shows the **Board ID copies** tile (or the tile of a card that includes it).
+1. Open `/management/foundation-papers/board-ids`: it loads.
+2. **Do:** Board members' ID card and household registration copies. Use a disposable record named `walk-foundation_id_copies`. **Read-back:** the copy shows in the list on /management/foundation-papers/board-ids and not on the Foundation papers page; Open serves it through /api/documents/<id>. Use a made-up fixture, never a real ID copy.
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
