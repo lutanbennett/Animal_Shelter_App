@@ -104,11 +104,14 @@ export function DonationForm({
     const on = fields.receivedOn;
     if (on === askedFor.current || !/^\d{4}-\d{2}-\d{2}$/.test(on)) return;
     askedFor.current = on;
-    let live = true;
     setAlreadyState("checking");
+    // Guarded on the date alone, never on a cleanup flag: React runs this effect
+    // twice on mount in development, and a flag cleared by the first run's
+    // cleanup would throw away the only answer — the second run asks for the
+    // same date and returns early. A reply for a date the person has since moved
+    // off is what askedFor rejects.
     void giftsReceivedOn(on).then((r) => {
-      // A reply for a date the person has since moved off must not overwrite the current one.
-      if (!live || askedFor.current !== on) return;
+      if (askedFor.current !== on) return;
       if (!r.ok) {
         setAlready([]);
         setAlreadyState("failed");
@@ -117,9 +120,6 @@ export function DonationForm({
       setAlready(r.gifts);
       setAlreadyState("ok");
     });
-    return () => {
-      live = false;
-    };
   }, [fields.receivedOn]);
 
   const inKind = fields.method === "in_kind";
