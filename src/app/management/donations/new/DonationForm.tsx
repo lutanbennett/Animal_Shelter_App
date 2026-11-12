@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useWriteCall } from "@/lib/use-write-form";
@@ -15,6 +15,7 @@ import {
 } from "@/lib/donations/donations";
 import { RECEIPT_COUNTRIES } from "@/lib/donations/issuer";
 import { recordDonation } from "../actions";
+import { giftsReceivedOn, type GiftOnDay } from "../reads";
 import { createSupporter } from "../donors/actions";
 import type { SupporterRow } from "@/lib/donations/supporters";
 import { DateInput } from "@/components/DateInput";
@@ -40,6 +41,8 @@ export function DonationForm({
   today,
   appeals = [],
   presetAppealId = "",
+  presetReceivedOn = "",
+  presetMethod,
 }: {
   contacts: DonorContact[];
   /** Live (unarchived) donors from the supporters list. */
@@ -51,6 +54,9 @@ export function DonationForm({
   appeals?: AppealOption[];
   /** Arriving from an appeal's own page: the designation starts on it. */
   presetAppealId?: string;
+  /** Arriving from "Record another gift": the date and method of the one just saved. */
+  presetReceivedOn?: string;
+  presetMethod?: DonationFields["method"];
 }) {
   const { t, locale } = useI18n();
   const f = t.donations.form;
@@ -64,15 +70,16 @@ export function DonationForm({
   // One per action: a request id kept from an unknown save must never reach another action.
   const createDonorCall = useWriteCall();
   const recordCall = useWriteCall();
+  const startOn = presetReceivedOn || today;
   const [fields, setFields] = useState<DonationFields>({
-    receivedOn: today,
+    receivedOn: startOn,
     donorName: "",
     contactId: "",
     supporterId: "",
     donorEmail: "",
     donorPhone: "",
     donorLine: "",
-    method: "bank_transfer",
+    method: presetMethod ?? "bank_transfer",
     designation: presetAppealId && appeals.some((a) => a.id === presetAppealId) ? "appeal" : "general",
     designationResidentId: "",
     designationAppealId: presetAppealId && appeals.some((a) => a.id === presetAppealId) ? presetAppealId : "",
@@ -85,6 +92,35 @@ export function DonationForm({
   const set = <K extends keyof DonationFields>(key: K, value: DonationFields[K]) => setFields((p) => ({ ...p, [key]: value }));
   const setLine = (i: number, key: "description" | "amount", value: string) =>
     setFields((p) => ({ ...p, lines: p.lines.map((l, j) => (j === i ? { ...l, [key]: value } : l)) }));
+
+  // What is already on record for the chosen date: asked on open and again
+  // whenever the date changes. A failed ask says so rather than showing an empty
+  // list — "nothing recorded that day" is the one answer that would invite the
+  // duplicate this panel exists to prevent.
+  const [already, setAlready] = useState<GiftOnDay[]>([]);
+  const [alreadyState, setAlreadyState] = useState<"ok" | "checking" | "failed">("checking");
+  const askedFor = useRef("");
+  useEffect(() => {
+    const on = fields.receivedOn;
+    if (on === askedFor.current || !/^\d{4}-\d{2}-\d{2}$/.test(on)) return;
+    askedFor.current = on;
+    setAlreadyState("checking");
+    // Guarded on the date alone, never on a cleanup flag: React runs this effect
+    // twice on mount in development, and a flag cleared by the first run's
+    // cleanup would throw away the only answer — the second run asks for the
+    // same date and returns early. A reply for a date the person has since moved
+    // off is what askedFor rejects.
+    void giftsReceivedOn(on).then((r) => {
+      if (askedFor.current !== on) return;
+      if (!r.ok) {
+        setAlready([]);
+        setAlreadyState("failed");
+        return;
+      }
+      setAlready(r.gifts);
+      setAlreadyState("ok");
+    });
+  }, [fields.receivedOn]);
 
   const inKind = fields.method === "in_kind";
   const total = fields.lines.reduce((s, l) => s + Math.round((parseBaht(l.amount) ?? 0) * 100), 0) / 100;
@@ -228,6 +264,27 @@ export function DonationForm({
               ))}
             </select>
           </div>
+        </div>
+        <div className="flex flex-col gap-2 rounded border border-border bg-background p-3">
+          <h3 className="text-sm font-semibold text-foreground">{f.alreadyTitle}</h3>
+          {alreadyState === "failed" ? (
+            <p role="alert" className="text-sm text-danger">{f.alreadyFailed}</p>
+          ) : alreadyState === "checking" ? (
+            <p className="text-sm text-muted">{f.alreadyChecking}</p>
+          ) : already.length === 0 ? (
+            <p className="text-sm text-muted">{f.alreadyNone}</p>
+          ) : (
+            <ul className="flex flex-col gap-1">
+              {already.map((g) => (
+                <li key={g.id} className="flex flex-wrap items-baseline gap-x-3 text-sm text-foreground">
+                  <span className="min-w-0 flex-1 font-medium" lang="und">{g.donorName}</span>
+                  <span className="text-muted">{t.donations.methods[g.method]}</span>
+                  <span className="w-24 text-right">{g.amount == null ? f.alreadyInKind : formatBahtExact(g.amount, locale)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <span className="text-xs text-muted">{f.alreadyHint}</span>
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="dn-designation" className={labelClass}>{f.designation}</label>

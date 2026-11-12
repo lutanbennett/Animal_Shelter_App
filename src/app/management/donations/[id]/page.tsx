@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BackLink } from "@/components/BackLink";
 import { createClient } from "@/lib/supabase/server";
@@ -72,7 +73,23 @@ export default async function DonationPage(props: PageProps<"/management/donatio
     <main className="flex flex-1 flex-col gap-6 p-4 sm:p-6">
       <div className="flex flex-col gap-1">
         <BackLink href="/management/donations">{d.backToList}</BackLink>
-        <h1 className="text-2xl font-semibold text-foreground" lang="und">{donation.donor_name}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-semibold text-foreground" lang="und">{donation.donor_name}</h1>
+          {/*
+            Working down a bank statement is a run of gifts on one day: this comes
+            back to an empty form with the date and method already set. The whole
+            page needs donation.receipt (requirePermission above), which is the
+            activity the form it opens asks of its own save, so a login that is
+            shown this link can always use it.
+          */}
+          <Link
+            href={`/management/donations/new?on=${donation.received_on}&method=${donation.method}`}
+            className="rounded border border-border px-4 py-2 text-sm text-foreground hover:bg-surface"
+            title={d.detail.anotherHint}
+          >
+            {d.detail.another}
+          </Link>
+        </div>
       </div>
 
       <dl className="flex max-w-2xl flex-col gap-2 rounded border border-border bg-surface p-4">
