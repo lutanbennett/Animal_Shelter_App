@@ -59,7 +59,7 @@ export function entersApp(perms: Permissions | null | undefined): boolean {
  */
 export function can(perms: Permissions | null | undefined, activity: YesNoKey): boolean;
 export function can(perms: Permissions | null | undefined, activity: LevelKey, level?: Level): boolean;
-/** A Read/None activity: "read" is the only level there is, so asking one "edit" is a type error (2026-11-12). */
+/** A Read/None kind: read is the only level there is, so asking one "edit" is a type error (2026-11-12). */
 export function can(perms: Permissions | null | undefined, activity: ReadOnlyKey, level: "read"): boolean;
 export function can(
   perms: Permissions | null | undefined,
