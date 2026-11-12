@@ -72,6 +72,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 export const unreleased: ReleaseNote[] = [
   "Anyone with the Food forecast or Medicine forecast card can now open Stock between counts, the report that compares what was used between two stocktakes with what was planned. It was open to the administrator only. Correcting a count is unchanged and stays with the administrator.",
   "If recording a death, withdrawing one, or filing a deceased resident’s records is refused, the reason now shows in Thai when the app is in Thai. Before, a few of these reasons always appeared in English.",
+  "If merging two medications, procedure types or blood test types is refused, the reason now shows in Thai when the app is in Thai. Before, these reasons always appeared in English.",
 ];
 
 /** Newest first. */

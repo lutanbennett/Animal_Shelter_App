@@ -132,6 +132,16 @@ const th: Dictionary = {
     "deceased.withdraw_not_allowed": () => "สิทธิ์ของคุณไม่รวมการยกเลิกบันทึกการเสียชีวิต",
     "deceased.reason_required": () => "โปรดระบุเหตุผลที่บันทึกการเสียชีวิตผิดพลาด",
     "deceased.no_earlier_placement": () => "ไม่มีที่อยู่ก่อนหน้าให้ส่งสัตว์ตัวนี้กลับไป",
+    "merge.medication_same": () => "เลือกยาตัวอื่นเพื่อรวมเข้าด้วยกัน",
+    "merge.medication_not_found": () => "ไม่พบยานี้ โปรดโหลดหน้าใหม่แล้วลองอีกครั้ง",
+    "merge.medication_unit_mismatch": (p: Record<string, string>) => `ยาทั้งสองต้องใช้หน่วยเดียวกัน (${p.from} กับ ${p.into})`,
+    "merge.medication_not_allowed": () => "สิทธิ์ของคุณไม่รวมการลบยาที่ซ้ำกัน",
+    "merge.procedure_type_same": () => "เลือกประเภทหัตถการอื่นเพื่อรวมเข้าด้วยกัน",
+    "merge.procedure_type_not_found": () => "ไม่พบประเภทหัตถการนี้ โปรดโหลดหน้าใหม่แล้วลองอีกครั้ง",
+    "merge.procedure_type_not_allowed": () => "สิทธิ์ของคุณไม่รวมการลบประเภทหัตถการที่ซ้ำกัน",
+    "merge.blood_test_type_same": () => "เลือกประเภทการตรวจเลือดอื่นเพื่อรวมเข้าด้วยกัน",
+    "merge.blood_test_type_not_found": () => "ไม่พบประเภทการตรวจเลือดนี้ โปรดโหลดหน้าใหม่แล้วลองอีกครั้ง",
+    "merge.blood_test_type_not_allowed": () => "สิทธิ์ของคุณไม่รวมการลบประเภทการตรวจเลือดที่ซ้ำกัน",
   },
 
   largerScreen: {
