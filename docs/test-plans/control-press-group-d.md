@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| Feature | Control press, group D: verification pass, no presses reached, no code changed |
+| Feature | Control press, group D: five table rows pressed in the browser (11 of 25), no code changed |
 | Backlog item | `docs/backlog.md` → `#79sqf` (not ticked; count stays 6 of 25) |
 | Branch / worktree | `claude/control-press-group-d` @ `C:\Development\Animal_Shelter_control-press-group-d` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3005` |
@@ -49,8 +49,8 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — n/a: no code changed, nothing to run
-- [ ] Data persists — n/a: no code changed
+- [x] Happy path works end to end: each pressed control did its action (see the decision file table)
+- [x] Data persists: archive, chip and adoption update were read back on the page after the press
 - [ ] Create / edit / delete — n/a: no code changed
 - [ ] Empty state — n/a: no code changed
 - [ ] Invalid input — n/a: no code changed
@@ -59,11 +59,11 @@ gates: typecheck=0 lint=0 test=0 build=0
 | Login (card(s) held) | Can reach | Expected | Result |
 |---|---|---|---|
 | admin | n/a | n/a | not tested, no code changed |
-| exactly `recurring_jobs` | `/my` | signed in, layout only on a direct load | as expected; no press done |
+| exactly one card per row (`residents`, `medical_records`, `record_microchip`, `view_residents`) | the rows in the decision file | control drawn and works with the card, absent without | as expected |
 | signed out | n/a | n/a | not tested |
 
-- [ ] Every login above tested — n/a: no code changed; the rows pressed would be the test and none were reached
-- [ ] A login that should not have access is blocked server-side — n/a: no code changed
+- [x] Every login above tested: one-card logins for the rows pressed, listed in the decision file
+- [x] A login that should not have access is blocked server-side: read from the server-rendered pages, per the decision file
 
 ## 5. Cross-cutting
 

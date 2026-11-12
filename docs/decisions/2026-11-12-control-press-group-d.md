@@ -1,11 +1,20 @@
-# Control press, group D: stopped early, 0 presses (`#79sqf`)
+# Control press, group D: five table rows pressed, 11 of 25 (`#79sqf`)
 
 **Date:** 2026-11-12. Branch `claude/control-press-group-d`, port 3005, no migration, no code changed.
 
 ## Result
 
-**driven: 6 of 25, unchanged.** This stream pressed nothing. It stopped after step zero, one trace
-and one read, and says so plainly.
+**driven: 11 of 25** (the 6 of #1517, plus the 5 table rows below: `AdoptionUpdateForm:236`, `ArchiveRecordControl` :64 and :72, `MicrochipForm:63`, `PhotoGallery:781`). Every press was a click in the browser pane as a login holding exactly one card (`dev-signin.mjs --cards <key> --port 3005`), reached by clicking through. No fault found, no code changed.
+
+## Per-row table
+
+| # | Control | Card held (press) | Press | Without the card (login) | Absent? |
+|---|---|---|---|---|---|
+| 2 | `AdoptionUpdateForm` (`resident.adoption_news`) | `residents` | Save update on Fixture l5gxn: "The update is saved." | `medical_records`: form replaced by "You can't add or change adoption updates: it needs the permission News from an adopter" | **yes** (page read from the server) |
+| 3a | `ArchiveRecordControl:72` archive (`medical.archive`) | `medical_records` | Remove on Test 1's deworming record, reason box, Remove: record left the list, "1 removed hidden" | `residents`: the whole immunizations page redirects away (NEXT_REDIRECT), no control | **yes** |
+| 3b | `ArchiveRecordControl:64` restore | `medical_records` | Show removed, Restore: record back in the list | same | **yes** |
+| 5 | `MicrochipForm:63` (`resident.microchip`) | `record_microchip` | Record chip, number + date, Save chip: hub shows the number, "implanted 12 Nov 2026", and a Correct button | `medical_records`: no Record chip, no Correct (chip number still readable) | **yes** |
+| 6a | `PhotoGallery:781` Remove photo (`photos.resident_manage`) | `residents` | Remove photo, Confirm remove on Test 2's only photo: "No photos yet" | `view_residents`: server passes `canManage:false` to the gallery (`residents` gets `true`) and the lightbox draws the controls only when it is true | **yes**, read from the page's props and the component, not from opening a lightbox |
 
 ## Step zero
 
@@ -25,8 +34,16 @@ and one read, and says so plainly.
   (`undo_deceased_placement`, `0359`) all ask `placement.death_withdraw`, and `cards.ts:121` records that no card
   carries it. Admin only by design still holds. No card should be invented for it.
 
-## Left (19 rows, all unpressed)
+## Left: 14 rows
 
-Rows 1-9 and the three fixture gaps of the brief's order, each still to be pressed with a one-card login,
-then re-checked with the other card. Row 1 needs a done-today recurring fixture first.
-No refusal wording was seen. Fixtures left on dev: none.
+- **Row 1 `MyTaskList:221`**: needs a recurring job done today by the test login; no fixture built. Still only the trace above.
+- **Row 4 `BloodTestList:121`**: the form is for a *closed* (deceased) resident's blood test, so it needs a resident with a blood test who has then had death recorded. Not built.
+- **Row 6b `PhotoGallery:812` Set as profile photo**: not pressed. The only photo was already the profile, so the button was disabled ("Current profile photo"); needs a second photo, which means a Drive upload.
+- Rows 7, 8, the five `BillsInbox` rows (9) and the three fixture gaps (11): not reached. Row 10 was read only.
+
+## Notes for the next session
+
+- Pressing costs about 2.5k tokens per login because the sign-in snippet is pasted into the pane; the without-card half is cheap from the shell (curl with the login's cookie, read the page text).
+- The pane's `requestAnimationFrame` stalls when hidden; a screenshot wakes it. Pages open after a first compile ("Compiling" bubble), allow ~10 s.
+- **Fixtures left on dev:** Test 1 has one immunization (Deworming, 12 Nov 2026; a double press may have made two, one archived then restored); Test 2 lost its only photo and now has a chip 900123456789012; Fixture l5gxn has one adoption update; sign-in logins for `recurring_jobs`, `adoption_news`, `residents`, `medical_records`, `record_microchip`, `view_residents`.
+- No refusal was provoked, so no wording was seen.
