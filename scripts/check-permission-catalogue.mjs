@@ -362,6 +362,8 @@ const PINNED = {
   // save and the photo) and translations.manage (the panels), each its own action's activity.
   "/admin/website/pages/[slug]": { guards: ['requirePermission("website.content", "read")'], decides: ["website.content", "translations.manage", "website.propose", "website.content:read"] },
   "/bills": { guards: ["if (!canUseBills(perms)) refuseFor(perms)"], decides: ["stock.delivery", "medical.visits", "maintenance.bills", "bills.sites", "bills.utilities", "bills.general"] },
+  // Add many bills from a CSV: opens on either of two cards (no single activity), like /bills; each ROW is asked for its own destination.
+  "/bills/import": { guards: ["if (!canImportBills(perms)) refuseFor(perms)"], decides: ["bills.utilities", "bills.general"] },
 };
 
 // EXEMPT: no permission guard, and the reason none is needed. `public: true` is also checked

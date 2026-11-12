@@ -220,9 +220,10 @@ export function templateRows(cat: Pick<ImportCatalogue, "kinds" | "places">): st
   const util = cat.kinds.find((k) => !k.archived && tailoringOf(k, cat.kinds).route === "utility");
   const gen = cat.kinds.find((k) => !k.archived && tailoringOf(k, cat.kinds).route === "general");
   const place = cat.places[0]?.name ?? "";
+  const placeFor = (k: BillKind | undefined) => (k && tailoringOf(k, cat.kinds).premises ? place : "");
   return [
     [...BILL_IMPORT_COLUMNS],
-    ["utility", util?.label ?? "", place, "", "4820.50", "2026-11-03", "2026-10", "IMG_0412.jpg"],
-    ["general", gen?.label ?? "", place, "", "640.00", "2026-11-06", "", ""],
+    ["utility", util?.label ?? "", placeFor(util), "", "4820.50", "2026-11-03", "2026-10", "IMG_0412.jpg"],
+    ["general", gen?.label ?? "", placeFor(gen), "", "640.00", "2026-11-06", "", ""],
   ];
 }

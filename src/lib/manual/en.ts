@@ -1570,6 +1570,22 @@ const manual: Manual = {
             "Nothing is deleted. A place, account or kind that is no longer used is archived, so bills already filed keep their label, and Restore brings it back.",
           ],
         },
+        {
+          id: "bills-import",
+          title: "Bills: adding many at once from a spreadsheet",
+          activity: "bills.general",
+          path: "Home → Bills → Add many bills from a spreadsheet",
+          intro:
+            "For a stack of receipts typed up away from the app. Utility bills and general bills only; bills for a delivery, a visit or a maintenance job are still filed one at a time.",
+          steps: [
+            "Open Add many bills from a spreadsheet and tap Download the template. It has the right columns and one example of each kind. Delete the examples.",
+            "Fill one bill on each row and save the file as CSV UTF-8. Dates are written 2026-11-11. A utility bill also needs the month it covers, written 2026-11. Kind, place and account must be spelled exactly as they are listed at the bottom of the page.",
+            "To join a row to a receipt photo already added in Bills, put the photo’s filename in the last column. Leave it empty for a bill with no photo. If no photo, or more than one photo, has that name, the row is not added and says why.",
+            "Choose the file and tap Check the file. Nothing is saved yet: you see which rows will be added and which cannot be, with the reason for each.",
+            "Tap the Add button to save the good rows. Rows that could not be added can be downloaded as a spreadsheet with a reason on each line; fix them and bring that file in again.",
+            "Each row is added only if your cards let you file that kind of bill. A row for a kind you may not file is refused with a reason, not added.",
+          ],
+        },
       ],
     },
 
