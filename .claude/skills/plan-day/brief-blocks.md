@@ -35,6 +35,12 @@ and stopped, leaving the half a user can see unbuilt, because its brief drew the
 So:
 
 - **Commit and push as you go.** A commit is the only checkpoint that survives a session stopping.
+- **AND THE FIRST COMMIT GOES IN THE BRIEF AS A NUMBERED DELIVERABLE, because this block was not
+  enough.** On 2026-11-12 a stream made its one correct line of code and stopped with **no commit and
+  no PR**; Lutan noticed before the planner did, and asked why it had *"not done much"*. Its brief said
+  commit as you go **twice, in two different blocks**. **A block is read once; a numbered deliverable is
+  reported on.** So every brief now carries *commit after the first code change* among its numbered
+  deliverables, and **the planner writes it there, not only here.**
 - **If you must stop before the work is done, stop with words**: say plainly, in your last message,
   what is built, what is not, and what the next session should do. **Never end a turn with a built
   branch and no PR.**
