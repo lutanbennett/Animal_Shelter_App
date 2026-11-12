@@ -9,7 +9,7 @@
 |---|---|
 | Feature | gates waits for a live tree-lock holder |
 | Backlog item | `docs/backlog.md` → #9975c |
-| Branch / worktree | `claude/gates-stale-lock` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/gates-stale-lock` @ `C:\Development\Animal_Shelter_gates-stale-lock` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | see PR |
 | Tested by / date | Claude / 2026-11-12 |
