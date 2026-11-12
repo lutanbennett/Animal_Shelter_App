@@ -106,6 +106,24 @@ select 'recurring job for /my take-back (row 1)',
        coalesce((select title || ': ' || assignees || ' assignee(s), acted-on today=' || done_today from recurring), 'MISSING (pass --login <email>)')
 union all
 select 'bill kinds the press needs', (select 'general-route ' || general_kinds || ', utility-route ' || utility_kinds from kinds)
+-- The same four questions asked of the WHOLE of dev, not just this script's rows: a stream should know
+-- whether somebody else's record would already do, before it makes one of its own (and then leave
+-- theirs alone — a real resident's record is not a fixture).
+union all
+select 'elsewhere on dev: deceased with a blood test',
+       (select count(*)::text from residents r
+         where coalesce((select s.is_deceased from resident_current_state s where s.resident_id = r.id), false)
+           and exists (select 1 from blood_tests b where b.resident_id = r.id)
+           and r.name not like 'ZZ fixture %')
+union all
+select 'elsewhere on dev: 2+ approved photos',
+       (select count(*)::text from residents r
+         where (select count(*) from attachments a
+                 where a.owner_type = 'resident' and a.owner_id = r.id and a.approved_at is not null) >= 2
+           and r.name not like 'ZZ fixture %')
+union all
+select 'elsewhere on dev: bills inbox waiting',
+       (select count(*)::text from bills_inbox where note is null or note not like 'ZZ fixture bill %')
 `;
 
 const MAKE = (loginId) => `
@@ -116,6 +134,7 @@ declare
   v_res uuid;
   v_type uuid;
   v_encl uuid;
+  v_zone uuid;
   v_photo_res uuid;
   v_bill uuid;
   v_job uuid;
@@ -193,22 +212,34 @@ begin
        where owner_type = 'resident' and owner_id = v_photo_res
          and drive_file_id = 'zz-fixture-photo-' || i
     ) then
-      insert into attachments (owner_type, owner_id, sub_folder, drive_file_id, file_name, approved_at, uploaded_by, media_kind)
+      insert into attachments (owner_type, owner_id, sub_folder, drive_file_id, file_name, uploaded_by, media_kind)
       values ('resident', v_photo_res, 'Shelter', 'zz-fixture-photo-' || i,
-              'ZZ fixture photo ' || i || '.jpg', now(), v_taker, 'photo');
+              'ZZ fixture photo ' || i || '.jpg', v_taker, 'photo');
     end if;
   end loop;
+  -- 0346 clears approved_at on INSERT for a website photo, whoever inserts it, so approving is a
+  -- second step. The UPDATE path only refuses a signed-in login without the approve card; this runs
+  -- as postgres with no auth.uid(), so it stamps. Without it the photo reads as "waiting" and
+  -- PhotoGallery draws a sentence where Set as profile photo would be.
+  update attachments set approved_at = now()
+   where owner_type = 'resident' and owner_id = v_photo_res
+     and drive_file_id in ('zz-fixture-photo-1', 'zz-fixture-photo-2')
+     and approved_at is null;
   update residents set profile_photo_drive_file_id = 'zz-fixture-photo-1'
    where id = v_photo_res
      and coalesce(profile_photo_drive_file_id, '') <> 'zz-fixture-photo-1';
 
   -- ---------------------------------------------------------------------
-  -- C. A maintenance job still To Do, so the bills inbox offers a job to
+  -- C. A maintenance job still Not Started, so the bills inbox offers a job to
   --    match a bill to (row 9's match control reads maintenance_job_picker).
   -- ---------------------------------------------------------------------
   if not exists (select 1 from maintenance where title = 'ZZ fixture bill job') then
-    insert into maintenance (title, description, status, job_code, created_by)
-    values ('ZZ fixture bill job', 'A job for a bill to be matched to.', 'To Do', 'M-ZZF1', v_taker);
+    -- maintenance_before_write() refuses a job with neither zone nor enclosure, so it gets a real
+    -- zone: any one that is not the Lifecycle pseudo-zone.
+    select id into v_zone from zones where name <> 'Lifecycle' order by name limit 1;
+    if v_zone is null then raise exception 'dev has no zone but Lifecycle — a maintenance job needs one'; end if;
+    insert into maintenance (title, description, status, zone_id, job_code, created_by)
+    values ('ZZ fixture bill job', 'A job for a bill to be matched to.', 'Not Started', v_zone, 'M-ZZF1', v_taker);
   end if;
 
   -- ---------------------------------------------------------------------
