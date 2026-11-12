@@ -40,92 +40,125 @@
       "by": "Lutan",
       "reason": "Lutan, 2026-11-09: \"Keep it as only admin for now, it should be a set list that very rarely requires adjustments.\" The types list (units of measure and the like) stays Admin-only at read and edit on purpose. A holder of Set up diets cannot add a unit and asks the administrator; that is now intended (#q7dn3 is the separate policy fault).",
       "decision": "docs/decisions/2026-11-09-security-instruments.md"
-    }
-  ],
-  "foundNotRuled": [
+    },
     {
       "activity": "photos.resident_publish",
       "level": "edit",
-      "found": "2026-11-06",
-      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
-    },
-    {
-      "activity": "projects.photos",
-      "level": "edit",
-      "found": "2026-11-06",
-      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
-    },
-    {
-      "activity": "projects.publish",
-      "level": "edit",
-      "found": "2026-11-06",
-      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
-    },
-    {
-      "activity": "stock.usage",
-      "level": "edit",
-      "found": "2026-11-06",
-      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
-    },
-    {
-      "activity": "stock.medications",
-      "level": "edit",
-      "found": "2026-11-06",
-      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
-    },
-    {
-      "activity": "stock.diets",
-      "level": "edit",
-      "found": "2026-11-06",
-      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+      "ruled": "2026-11-09",
+      "by": "Lutan",
+      "reason": "Lutan, 2026-11-09: \"Publishing a resident photo is part of the photo approval process (2 step) so only approvals needs a card.\" His answer is \"no card\" rather than the words Admin-only, and in effect those are the same thing: with no card granting it, every photo from a non-Admin login goes into the approval queue, which is the two-step process he described. Filed here because the allow-list has no third list. approve_photos grants photos.approve and photos.resident_manage, never this.",
+      "decision": "docs/decisions/2026-11-12-fourteen-activities-ruled.md"
     },
     {
       "activity": "stock.correct",
       "level": "edit",
-      "found": "2026-11-06",
-      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
-    },
-    {
-      "activity": "reports.cashflow",
-      "level": "edit",
-      "found": "2026-11-06",
-      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+      "ruled": "2026-11-09",
+      "by": "Lutan",
+      "reason": "Lutan, 2026-11-09: \"Correcting a stock count is Admins role.\" Typing a corrected figure for one item outside a stocktake goes through record_stock_correction(), which requires this activity and the list's own edit; recording a physical count of a whole shelf is the separate stock.count. See the note on stock.diets and stock.medications: because he ruled those Admin-only too on 2026-11-12, the count box the two pages draw on list-edit cannot reach a card holder, so control and action do not disagree today.",
+      "decision": "docs/decisions/2026-11-12-fourteen-activities-ruled.md"
     },
     {
       "activity": "system.status",
       "level": "edit",
-      "found": "2026-11-06",
-      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
-    },
-    {
-      "activity": "reports.expenses",
-      "level": "edit",
-      "found": "2026-11-06",
-      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+      "ruled": "2026-11-09",
+      "by": "Lutan",
+      "reason": "Lutan, 2026-11-09, asked directly: \"Yes they are Admin only.\" The status page shows the live health tiles and carries Check now, Run the alert check now and Send a test alert, the last of which mails every admin. Admin-only on purpose.",
+      "decision": "docs/decisions/2026-11-12-fourteen-activities-ruled.md"
     },
     {
       "activity": "appeal.medical_photo",
       "level": "edit",
-      "found": "2026-11-06",
-      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+      "ruled": "2026-11-12",
+      "by": "Lutan",
+      "reason": "Ruled Admin-only in the one-at-a-time walkthrough, over the two alternatives put to him (a card of its own, or folding it into run_appeals). This settles the tension 0216 left open, which said the activity is \"narrower than appeal.run: editing an appeal and publishing a wound photo are different powers\" while his earlier remark had leaned towards the manage-appeal card. Nothing is silent: a login holding run_appeals still sees the medical photos with the tickbox drawn disabled and a message saying only someone allowed to show medical photos can choose them, which is the model the other silently-hidden controls should follow.",
+      "decision": "docs/decisions/2026-11-12-fourteen-activities-ruled.md"
     },
     {
-      "activity": "roles.view",
+      "activity": "projects.photos",
       "level": "edit",
-      "found": "2026-11-06",
-      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+      "ruled": "2026-11-12",
+      "by": "Lutan",
+      "reason": "Ruled Admin-only in the walkthrough, over a card of its own or adding it to project_folders. Found and not fixed: a login holding project_folders opens a folder, sees the photos, and is drawn no Add button and no remove icon with no message explaining why. Hiding the controls is correct; saying nothing is a courtesy gap, and it is not this ruling's work.",
+      "decision": "docs/decisions/2026-11-12-fourteen-activities-ruled.md"
     },
     {
-      "activity": "resident.who_and_where",
+      "activity": "projects.publish",
+      "level": "edit",
+      "ruled": "2026-11-12",
+      "by": "Lutan",
+      "reason": "Ruled Admin-only in the walkthrough. He had asked on 2026-11-09 whether this sat on the manage-website card; it does not, and told that, he chose Admin-only rather than moving it onto website_photos. This records how the Show on the website tickbox already behaves, so it needed no build. Consistent with his other two outward-facing answers the same day.",
+      "decision": "docs/decisions/2026-11-12-fourteen-activities-ruled.md"
+    },
+    {
+      "activity": "reports.cashflow",
+      "level": "edit",
+      "ruled": "2026-11-12",
+      "by": "Lutan",
+      "reason": "Ruled Admin-only in the walkthrough, over a card of its own (\"Edit fixed outgoings\") or adding it to view_cashflow. The argument he took was that the fixed monthly lines include salaries as one total, so the figures are sensitive even though the screen is internal; the cost he accepted is that the bookkeeping cannot be delegated without full Admin. Records today's behaviour: view_cashflow opens the forecast read-only and the Edit fixed outgoings link and the fix-it shortcut are not drawn.",
+      "decision": "docs/decisions/2026-11-12-fourteen-activities-ruled.md"
+    },
+    {
+      "activity": "stock.diets",
+      "level": "edit",
+      "ruled": "2026-11-12",
+      "by": "Lutan",
+      "reason": "Ruled Admin-only in the walkthrough, over one card covering both stock lists or a card each, with the cost named to him: this is routine work that comes up whenever a delivery arrives or a reorder point is wrong. Setting up the diets themselves is the separate diet_settings card and is unaffected. One consequence worth keeping: the page draws the stock count box for anyone with edit here, while the database demands the Admin-only stock.correct, so a card holder would have seen a box that always refused. Because this stayed Admin-only the mismatch is MOOT, not fixed, and it returns the day this edit goes onto a card.",
+      "decision": "docs/decisions/2026-11-12-fourteen-activities-ruled.md"
+    },
+    {
+      "activity": "stock.medications",
+      "level": "edit",
+      "ruled": "2026-11-12",
+      "by": "Lutan",
+      "reason": "Ruled Admin-only in the walkthrough, in the same answer as stock.diets. Covers the per-medicine stock settings, the Order view, the cupboard order, and uploading or removing a medicine's label. The same moot count-box mismatch recorded on stock.diets applies here.",
+      "decision": "docs/decisions/2026-11-12-fourteen-activities-ruled.md"
+    }
+  ],
+  "foundNotRuled": [
+    {
+      "activity": "stock.usage",
       "level": "edit",
       "found": "2026-11-06",
-      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+      "note": "RULED 2026-11-12 BY LUTAN AND THE RULING IS A CARD, SO DO NOT RE-ASK AND DO NOT MOVE IT TO adminOnlyOnPurpose. He chose to add Stock between counts to the EXISTING food_forecast and medicine_forecast cards rather than give it a card of its own, because it is a read-only report over stock figures those cards already show. This record is still here only because the grant is not built: it needs a card_grants migration as well as the cards.ts bundle, and on 2026-11-12 another in-flight branch already carried a migration, which the repo allows only one of at a time. DELETE THIS RECORD IN THE SAME CHANGE THAT ADDS THE GRANT: the check fails on a record whose gap a card now closes. See docs/decisions/2026-11-12-fourteen-activities-ruled.md.",
+      "ruled": "2026-11-12",
+      "by": "Lutan",
+      "pendingBuild": "a card_grants migration plus the cards.ts bundle"
     },
     {
       "activity": "photos.resident_medical",
       "level": "edit",
       "found": "2026-11-06",
-      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+      "note": "RULED 2026-11-12 BY LUTAN: NOTHING IS BEHIND THIS AT EDIT, AND HE CHOSE TO REMOVE THE UNUSED EDIT SETTING. Do not re-ask and do not file it as Admin-only. The activity is really the right to SEE the Medical photo folder; it was made a level only so read could be handed out, and no screen or save in the app asks it at edit. He picked taking it off the list over leaving it as a placeholder, on the reasoning that a setting which does nothing is a trap: someone grants it and expects a result. DELETE THIS RECORD IN THE SAME CHANGE THAT REMOVES THE LEVEL FROM THE CATALOGUE, which needs a permission_activities migration. See docs/decisions/2026-11-12-fourteen-activities-ruled.md.",
+      "ruled": "2026-11-12",
+      "by": "Lutan",
+      "pendingBuild": "a permission_activities migration removing the edit level, plus catalogue.ts"
+    },
+    {
+      "activity": "reports.expenses",
+      "level": "edit",
+      "found": "2026-11-06",
+      "note": "RULED 2026-11-12 BY LUTAN: NOTHING IS BEHIND THIS AT EDIT, AND HE CHOSE TO REMOVE THE UNUSED EDIT SETTING. Do not re-ask and do not file it as Admin-only. The Expenses report is read-only by design: 0317 says so in its own comment and raises if the view_expenses card is ever given anything but read. Same removal and same migration as photos.resident_medical. See docs/decisions/2026-11-12-fourteen-activities-ruled.md.",
+      "ruled": "2026-11-12",
+      "by": "Lutan",
+      "pendingBuild": "a permission_activities migration removing the edit level, plus catalogue.ts"
+    },
+    {
+      "activity": "resident.who_and_where",
+      "level": "edit",
+      "found": "2026-11-06",
+      "note": "RULED 2026-11-12 BY LUTAN: NOTHING IS BEHIND THIS AT EDIT, AND HE CHOSE TO REMOVE THE UNUSED EDIT SETTING. Do not re-ask and do not file it as Admin-only. It is the name, code and enclosure view of a resident, a lighter version of the full record, and every caller asks read; about a dozen cards hold that read. Same removal and same migration as photos.resident_medical. See docs/decisions/2026-11-12-fourteen-activities-ruled.md.",
+      "ruled": "2026-11-12",
+      "by": "Lutan",
+      "pendingBuild": "a permission_activities migration removing the edit level, plus catalogue.ts"
+    },
+    {
+      "activity": "roles.view",
+      "level": "edit",
+      "found": "2026-11-06",
+      "note": "RULED 2026-11-12 BY LUTAN: NOTHING IS BEHIND THIS AT EDIT, AND HE CHOSE TO REMOVE THE UNUSED EDIT SETTING. Do not re-ask and do not file it as Admin-only. At read it opens Settings - Who does what, granted by the who_does_what card; the saves on that page do not ask this activity at all, they ask the Admin check plus the authenticator step, by the page's own written rule that Admin is the only editor so there is always someone able to edit. That arrangement is the settled Admin rule in CLAUDE.md and is NOT reopened by this removal. Same removal and same migration as photos.resident_medical. See docs/decisions/2026-11-12-fourteen-activities-ruled.md.",
+      "ruled": "2026-11-12",
+      "by": "Lutan",
+      "pendingBuild": "a permission_activities migration removing the edit level, plus catalogue.ts"
     }
   ]
 }
