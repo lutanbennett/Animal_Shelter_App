@@ -274,6 +274,10 @@ const en = {
     },
     /** The heading over Admin's switch. */
     switchLabel: "Open the home screen for",
+    /** The Who does what sub page that holds the switch. */
+    simulateTitle: "Open a role's home screen",
+    simulateIntro: "Shows a role's home screen as that role sees it. You stay signed in as Admin: a tile you follow opens its page with Admin's access, not the role's.",
+    backToWhoDoesWhat: "Back to Who does what",
     /** Settings is Admin's own home, listed first in the switch. */
     settings: "Settings",
     /** Under the title when Admin looks at another role's home: what that role sees. */
@@ -1011,6 +1015,7 @@ const en = {
         detailsLink: "See every activity (Details)",
         featuresLink: "Edit the features (Features)",
         featuresLinkReadOnly: "See the features (Features)",
+        simulateLink: "Open a role's home screen",
         detailsTitle: "Who does what: Details",
         detailsSubtitle:
           "Every activity down the side and every role across the top, read live. This is a read-only view: change a role's access by giving or removing cards.",

@@ -51,6 +51,9 @@ export default async function RoleHomePage(props: PageProps<"/home/[role]">) {
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
+      <Link href="/admin/who-does-what/simulate" className="inline-flex min-h-11 items-center text-sm font-medium text-primary underline">
+        {t.appHome.backToWhoDoesWhat}
+      </Link>
       <HomeSwitch roles={roles} current={roleKey} />
       <div>
         <h1 className="text-2xl font-semibold text-foreground [overflow-wrap:anywhere]">{name}</h1>
