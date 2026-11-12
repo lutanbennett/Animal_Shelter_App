@@ -70,19 +70,28 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  { text: "The buttons that open another role's home screen have moved from the top of Settings to Settings → Who does what, under Open a role's home screen, so you can change a role's cards and then look at its home without leaving the page. It still shows the role's tiles only; you stay signed in as Admin.", cards: ["who_does_what"] },
-  "Bills can now be added many at a time. Download the spreadsheet from Bills, type the utility and general bills into it away from the app, and bring it back in. You see which rows will be added and which cannot be, with a reason for each, before anything is saved, and the rows that could not be added come back as a spreadsheet to fix. A row can name a receipt photo already added in Bills to join it to its bill.",
-  "The user manual no longer shows Operations: the daily work to someone whose cards open nothing in Operations, and no longer shows a My tasks section to someone with no recurring jobs. The topic about covering another role now sits under Getting started, where everyone can read it.",
-  "An adopter who signs in with the email they gave the shelter can now send news about their animal with up to six photos or videos. Nothing they send appears on the website until a person has read it and agreed, and their words go to Management → Translations so the other language can be drafted and approved. Photos can be up to 15 MB and videos up to 150 MB, and a progress bar shows while a video is sending.",
-  "Anyone with the Food forecast or Medicine forecast card can now open Stock between counts, the report that compares what was used between two stocktakes with what was planned. It was open to the administrator only. Correcting a count is unchanged and stays with the administrator.",
-  "If recording a death, withdrawing one, or filing a deceased resident’s records is refused, the reason now shows in Thai when the app is in Thai. Before, a few of these reasons always appeared in English.",
-  "If merging two medications, procedure types or blood test types is refused, the reason now shows in Thai when the app is in Thai. Before, these reasons always appeared in English.",
-  "Two more kinds of refusal now show in Thai when the app is in Thai, where before they always appeared in English: merging two doctors on a clinic's doctor list, and adding any file to the app — a resident or event photo, a video, a clinic report or a bill page. The Thai wording has not been checked by a Thai speaker.",
-  { text: "When giving a role a card or taking one away under Settings → Who does what is refused, the reason now shows in Thai when the app is in Thai. That includes the two warnings about leaving nobody able to approve photos, which until now always appeared in English however the app was set. The Thai wording has not been checked by a Thai speaker.", cards: ["who_does_what"] },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.45.0",
+    date: "2026-11-12",
+    title: "Adopters send news, bills by spreadsheet, and the app says when it is offline",
+    major: true,
+    notes: [
+      { text: "The buttons that open another role's home screen have moved from the top of Settings to Settings → Who does what, under Open a role's home screen, so you can change a role's cards and then look at its home without leaving the page. It still shows the role's tiles only; you stay signed in as Admin.", cards: ["who_does_what"] },
+      "Bills can now be added many at a time. Download the spreadsheet from Bills, type the utility and general bills into it away from the app, and bring it back in. You see which rows will be added and which cannot be, with a reason for each, before anything is saved, and the rows that could not be added come back as a spreadsheet to fix. A row can name a receipt photo already added in Bills to join it to its bill.",
+      "The user manual no longer shows Operations: the daily work to someone whose cards open nothing in Operations, and no longer shows a My tasks section to someone with no recurring jobs. The topic about covering another role now sits under Getting started, where everyone can read it.",
+      "An adopter who signs in with the email they gave the shelter can now send news about their animal with up to six photos or videos. Nothing they send appears on the website until a person has read it and agreed, and their words go to Management → Translations so the other language can be drafted and approved. Photos can be up to 15 MB and videos up to 150 MB, and a progress bar shows while a video is sending.",
+      "Anyone with the Food forecast or Medicine forecast card can now open Stock between counts, the report that compares what was used between two stocktakes with what was planned. It was open to the administrator only. Correcting a count is unchanged and stays with the administrator.",
+      "If recording a death, withdrawing one, or filing a deceased resident’s records is refused, the reason now shows in Thai when the app is in Thai. Before, a few of these reasons always appeared in English.",
+      "If merging two medications, procedure types or blood test types is refused, the reason now shows in Thai when the app is in Thai. Before, these reasons always appeared in English.",
+      "Two more kinds of refusal now show in Thai when the app is in Thai, where before they always appeared in English: merging two doctors on a clinic's doctor list, and adding any file to the app — a resident or event photo, a video, a clinic report or a bill page. The Thai wording has not been checked by a Thai speaker.",
+      { text: "When giving a role a card or taking one away under Settings → Who does what is refused, the reason now shows in Thai when the app is in Thai. That includes the two warnings about leaving nobody able to approve photos, which until now always appeared in English however the app was set. The Thai wording has not been checked by a Thai speaker.", cards: ["who_does_what"] },
+      "If the app is ever offline you now see a short page saying so, in English and Thai, instead of a page that will not finish loading. The public website keeps working while that happens, and anything you were part-way through saving is either refused outright or flagged for you to check once the app is back.",
+    ],
+  },
   {
     version: "0.44.3",
     date: "2026-11-11",
