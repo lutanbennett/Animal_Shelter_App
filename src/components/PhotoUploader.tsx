@@ -50,13 +50,15 @@ export function uploadResidentPhoto(
   fields: Record<string, string>,
   onProgress: (percent: number) => void,
   /** The Head of Medical files through her own route (/api/medical/...), a Shelter-only login through /api/photos/shelter; everyone else through the default. */
-  route: "staff" | "medical" | "shelter" = "staff",
+  route: "staff" | "medical" | "shelter" | "adopter" = "staff",
 ): Promise<{ error?: string; archiveWarning?: string }> {
   return new Promise((resolve) => {
     const xhr = new XMLHttpRequest();
     xhr.open(
       "POST",
-      route === "medical"
+      route === "adopter"
+        ? "/adopter-update/media/photo"
+        : route === "medical"
         ? `/api/medical/residents/${residentId}/photos`
         : route === "shelter"
           ? `/api/photos/shelter/${residentId}`

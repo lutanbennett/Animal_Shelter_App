@@ -163,6 +163,47 @@ export async function uploadResidentVideo(
 }
 
 /**
+ * An adopter's video for their own update: the same three steps against /adopter-update/media/video/start and /finish, which
+ * ask the adopter's scope (src/lib/adopter/media.ts) instead of a card.
+ */
+export async function uploadAdopterVideo(
+  t: Dictionary,
+  ids: { residentId: string; updateId: string },
+  file: File,
+  onProgress: (percent: number) => void,
+  onRetrying: (retrying: boolean) => void,
+): Promise<VideoUploadResult> {
+  const messages = t.photos.videos.errors;
+
+  async function post(path: string, payload: unknown) {
+    const res = await fetch(`/adopter-update/media/video/${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    return { ok: res.ok, json };
+  }
+
+  try {
+    const started = await post("start", { ...ids, fileName: file.name, mimeType: file.type, size: file.size });
+    if (!started.ok) return { error: typeof started.json.error === "string" ? started.json.error : messages.startFailed };
+    const { uploadId, uploadUrl } = started.json as { uploadId: string; uploadUrl: string };
+
+    const sent = await sendToDrive(messages, uploadUrl, file, onProgress, onRetrying);
+    if ("error" in sent) return { error: sent.error };
+
+    onRetrying(false);
+    const durationMs = await readVideoDuration(file);
+    const finished = await post("finish", { ...ids, uploadId, driveFileId: sent.driveFileId, durationMs });
+    if (!finished.ok) return { error: typeof finished.json.error === "string" ? finished.json.error : messages.finishFailed };
+    return {};
+  } catch {
+    return { error: t.photos.uploader.networkError };
+  }
+}
+
+/**
  * A reel's upload: the same three steps against /api/reels/start and /api/reels/finish. The description, the date and
  * the residents picked from it travel with the finish call, which writes the reels row as the caller.
  */

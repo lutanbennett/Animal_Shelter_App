@@ -10,7 +10,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { loadAdopterScope } from "@/lib/adopter/scope";
 import { ADOPTER_NOTE_MAX_CHARS, ADOPTER_DAILY_CAP } from "@/lib/adopter/limits";
 
-export type AdopterSendResult = { ok: true } | { ok: false; error: string };
+export type AdopterSendResult = { ok: true; updateId: string } | { ok: false; error: string };
 
 /**
  * An adopter sends words about one of their animals. The four steps of docs/decisions/2026-11-11-adoption-updates-schema.md:
@@ -18,11 +18,11 @@ export type AdopterSendResult = { ok: true } | { ok: false; error: string };
  * (NULL: not read for the website; naming a state needs text.approve), and the adopter reads their own rows afterwards,
  * never the public view. Service-role is used because an adopter login has no table access, after both checks above.
  */
-export async function sendAdopterUpdate(residentId: string, words: string): Promise<AdopterSendResult> {
+export async function sendAdopterUpdate(residentId: string, words: string, withFiles = false): Promise<AdopterSendResult> {
   const { t } = await getT();
   const e = t.adopterUpdate.errors;
   const note = words.trim();
-  if (!note) return { ok: false, error: e.empty };
+  if (!note && !withFiles) return { ok: false, error: e.empty };
   if (note.length > ADOPTER_NOTE_MAX_CHARS) return { ok: false, error: e.tooLong(ADOPTER_NOTE_MAX_CHARS) };
 
   const scope = await loadAdopterScope(await createClient());
@@ -46,17 +46,17 @@ export async function sendAdopterUpdate(residentId: string, words: string): Prom
 
   // Today in Thailand (UTC+7), the shelter date.
   const receivedOn = new Date(Date.now() + 7 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  const { error } = await admin.from("adoption_updates").insert({
+  const { data: created, error } = await admin.from("adoption_updates").insert({
     resident_id: residentId,
     received_on: receivedOn,
     sender_contact_id: mine.contactId,
     channel: "app",
-    note,
+    note: note || null,
     // text_approval is deliberately NOT named: NULL = not read yet, and it stays absent from public_adoption_updates.
-  });
-  if (error) return { ok: false, error: t.common.somethingWentWrong("adopter-update") };
+  }).select("id").single<{ id: string }>();
+  if (error || !created) return { ok: false, error: t.common.somethingWentWrong("adopter-update") };
 
   revalidatePath("/adopter-update");
   revalidatePath(`/residents/${residentId}/adoption-updates`);
-  return { ok: true };
+  return { ok: true, updateId: created.id };
 }
