@@ -60,8 +60,8 @@ gates: typecheck=0 lint=0 test=0 build=0
 Per `CLAUDE.md`, schema lands as its own PR before the feature.
 
 - [ ] Migration number is one above the highest on  — n/a: no migration, no new page, nothing here changes it
-- [ ] `node scripts/apply-migrations.mjs --sta — deferred: release manager
-- [ ] `node scripts/apply-migrations.mjs --dry — deferred: release manager
+- [ ] `node scripts/apply-migrations.mjs --sta — n/a: no migration in this change
+- [ ] `node scripts/apply-migrations.mjs --dry — n/a: no migration in this change
 - [ ] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) a — n/a: no migration, no new page, nothing here changes it
 - [ ] File is re-runnable (`if not exists` / `or re — n/a: no migration, no new page, nothing here changes it
 - [ ] Existing rows still read correctly after the  — n/a: no migration, no new page, nothing here changes it
