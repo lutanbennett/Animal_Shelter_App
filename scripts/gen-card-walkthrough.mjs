@@ -50,7 +50,9 @@ export const READBACK = {
   "photos.resident_add": "the page counts the photo as added; it is filed in the resident's Medical folder, never on the website",
   "photos.resident_publish": "a photo is public once it is filed under Foster or Adoption rather than Medical (the Foster folder says it can appear on this resident's Adopt page): pick that folder when adding on /photos/add, or use Move to folder on /residents/<id>/photos. The controls on that page are Mark as posted (social), Remove, Current profile photo and Move to folder; there is no separate publish button",
   "diets.settings": "an ingredient's Save on /admin/diets/ingredients/<id> reads \"Saved.\" and the note was read back from the database (driven in the browser). Adding, changing and deleting an ingredient, a diet, a recipe line and a measure all ran as this card alone in a rollback test; where each shows on screen afterwards was not driven. No Stock link is drawn for this card alone (2026-11-09, #1408)",
-  "text.approve": "the waiting text shows under Public text to approve; Approve or Keep private reads back as public_ok or private_only from the database (driven in the browser on dev)..",
+  "foundation.papers": "the paper shows in the list on /management/foundation-papers with \"Filed.\" and its Open link serves it through /api/documents/<id>; Remove takes it out of the list. Use a made-up fixture, never a real paper",
+  "foundation.id_copies": "the copy shows in the list on /management/foundation-papers/board-ids and not on the Foundation papers page; Open serves it through /api/documents/<id>. Use a made-up fixture, never a real ID copy",
+  "text.approve":"the waiting text shows under Public text to approve; Approve or Keep private reads back as public_ok or private_only from the database (driven in the browser on dev)..",
 };
 
 // Added to the read-back of an activity when the card ALSO holds the activity that lets it look again (answered by hand:
