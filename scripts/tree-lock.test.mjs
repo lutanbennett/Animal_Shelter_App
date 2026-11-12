@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync, existsSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync, existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -64,4 +64,36 @@ test("waiting takes a stale lock over at once", () => {
   const root = tmp();
   writeFileSync(join(root, LOCK_FILE), JSON.stringify({ kind: "build", pid: 2 ** 22 + 12345, since: "x" }));
   takeTreeLockWaiting("build", 0, root, () => {})();
+});
+
+import { spawn } from "node:child_process";
+import { recordTreeLockChild } from "./lib/tree-lock.mjs";
+
+test("owner dead and child dead: taken over", () => {
+  const root = tmp();
+  writeFileSync(join(root, LOCK_FILE), JSON.stringify({ kind: "build", pid: 2 ** 22 + 12345, child: 2 ** 22 + 54321, since: "x" }));
+  takeTreeLock("install", root)();
+});
+
+test("owner dead but child ALIVE: not taken over, and the refusal names the child", () => {
+  const root = tmp();
+  const orphan = spawn(process.execPath, ["-e", "setTimeout(()=>{},30000)"], { stdio: "ignore" });
+  try {
+    writeFileSync(join(root, LOCK_FILE), JSON.stringify({ kind: "build", pid: 2 ** 22 + 12345, child: orphan.pid, since: "x" }));
+    assert.throws(() => takeTreeLock("install", root), (e) => new RegExp(`child, pid ${orphan.pid}`).test(e.message) && e.message.includes(String(orphan.pid)) && !e.message.includes(String(2 ** 22 + 12345) + " /T"));
+    assert.equal(existsSync(join(root, LOCK_FILE)), true, "the lock is left in place");
+  } finally {
+    orphan.kill();
+  }
+});
+
+test("recordTreeLockChild writes only into a lock this process owns", () => {
+  const root = tmp();
+  const release = takeTreeLock("build", root);
+  recordTreeLockChild(4242, root);
+  assert.equal(JSON.parse(readFileSync(join(root, LOCK_FILE), "utf8")).child, 4242);
+  recordTreeLockChild(null, root);
+  assert.equal(JSON.parse(readFileSync(join(root, LOCK_FILE), "utf8")).child, undefined);
+  release();
+  recordTreeLockChild(1, root); // no lock: no throw
 });

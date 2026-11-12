@@ -10,7 +10,7 @@
 // process, takeTreeLock() throws a message saying who and what to do, and the
 // caller stops. Only a lock whose process is gone is taken over, and the
 // takeover is said out loud.
-import { closeSync, openSync, readFileSync, rmSync, writeSync } from "node:fs";
+import { closeSync, openSync, readFileSync, rmSync, writeFileSync, writeSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -69,17 +69,20 @@ export function takeTreeLock(kind, root = ROOT) {
     } catch {
       throw new Error(`${file} exists but cannot be read. Another run may be starting; if none is, delete it and try again.`);
     }
-    if (alive(held.pid)) {
+    // The holder may be dead while the build it started lives on (gates.mjs killed without /T):
+    // that orphan still reads node_modules, so the lock is NOT stale (#9975c).
+    const livePid = alive(held.pid) ? held.pid : held.child && alive(held.child) ? held.child : null;
+    if (livePid) {
       const err = new Error(
-        `refusing to start a ${kind}: a ${describe(held)} is using node_modules in ${root}.\n` +
+        `refusing to start a ${kind}: a ${describe(held)}${livePid !== held.pid ? ` (its owner has gone but its child, pid ${livePid}, is still running)` : ""} is using node_modules in ${root}.\n` +
           `  Running both at once wrecks the tree (npm ci deletes it while the build reads it).\n` +
           `  Wait for that ${held.kind} to finish, then run this again.\n` +
-          `  If it is a leftover of your own interrupted run, end it yourself: ${process.platform === "win32" ? `taskkill /PID ${held.pid} /T /F` : `kill ${held.pid}`}`,
+          `  If it is a leftover of your own interrupted run, end it yourself: ${process.platform === "win32" ? `taskkill /PID ${livePid} /T /F` : `kill ${livePid}`}`,
       );
       err.held = held;
       throw err;
     }
-    console.warn(`tree-lock: taking over a stale lock left by a ${describe(held)} whose process has gone.`);
+    console.warn(`tree-lock: taking over a stale lock left by a ${describe(held)} whose process (and child) has gone.`);
     rmSync(file, { force: true });
   }
   throw new Error(`could not take ${file}; another run won the race. Try again.`);
@@ -102,6 +105,24 @@ export function takeTreeLockWaiting(kind, waitSeconds, root = ROOT, log = consol
       told = true;
       Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5000);
     }
+  }
+}
+
+/**
+ * Record the pid of the process that is actually reading node_modules (the gate's shell, whose
+ * tree holds `next build`) in the lock this process owns, so it survives this process being killed.
+ * Pass null to clear. No-op if this process does not own the lock.
+ */
+export function recordTreeLockChild(pid, root = ROOT) {
+  const file = join(root, LOCK_FILE);
+  try {
+    const held = JSON.parse(readFileSync(file, "utf8"));
+    if (held.pid !== process.pid) return;
+    if (pid) held.child = pid;
+    else delete held.child;
+    writeFileSync(file, JSON.stringify(held));
+  } catch {
+    // lock gone or unreadable: nothing to record
   }
 }
 

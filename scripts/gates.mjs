@@ -29,11 +29,11 @@
 // it — folding that into the default would make the gates red for most of a
 // PR's life and teach everyone to ignore the summary line.
 
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { takeTreeLockWaiting } from "./lib/tree-lock.mjs";
+import { recordTreeLockChild, takeTreeLockWaiting } from "./lib/tree-lock.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, "..");
@@ -103,7 +103,15 @@ for (const gate of gates) {
   // One command string with a shell, because npm is a .cmd shim on Windows and
   // Node no longer spawns those without one. The commands are the constants
   // above, so there is nothing to quote.
-  const r = spawnSync(gate.cmd, { cwd: repo, stdio: "inherit", shell: true });
+  // Async, so the child's pid can be written into the lock: if this script is killed the build
+  // lives on, and the lock must still say so (scripts/lib/tree-lock.mjs).
+  const r = await new Promise((resolve) => {
+    const c = spawn(gate.cmd, { cwd: repo, stdio: "inherit", shell: true });
+    recordTreeLockChild(c.pid);
+    c.on("error", (error) => resolve({ error }));
+    c.on("close", (status, signal) => resolve({ status, signal }));
+  });
+  recordTreeLockChild(null);
   const seconds = Math.round((Date.now() - started) / 1000);
   // A gate that could not be started, or was killed by a signal, has no exit
   // code; it is reported as what happened and counts as a failure.
