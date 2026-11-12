@@ -20,9 +20,9 @@ the deploy said so itself: `no major release new to production (was 0.44.2), so 
 
 The public site is **still locked** — read from the deploy's own binding list, `PUBLIC_SITE ("locked")`.
 
-**Still nobody holds the two cards `0.44.0` added** — `approve_text` and `diet_settings`. Measured on
-production this release, not copied forward: no role holds either. Public text saved since `0.44.0`
-waits with no holder able to approve it. **Fourth handover running.** Settings → Who does what.
+**DONE 2026-11-12 — the two cards `0.44.0` added are held at last.** Lutan assigned `approve_text` and
+`diet_settings` right after this release; **measured on production, not taken on his word.** The text
+waiting since `0.44.0` can now be approved. **Do not raise it again** — measure it, don't quote this line.
 
 **Re-measure before trusting any of this.** `git fetch`, `git diff --stat <deployed>..origin/main`,
 `gh pr list`, `--status` on all three, `/api/version` on all three hosts.
@@ -147,4 +147,4 @@ these to be *noted*, which the record does. **`pending:` with a reason is an acc
 - The DNS resolver setting on the build machine (Lutan's; a system setting).
 - The 14 UNRULED activities (a ruling, recorded, not failing).
 - The 18 `pending:` manual checks (people and later events).
-- `approve_text` and `diet_settings` still held by nobody (Settings → Who does what).
+- ~~`approve_text` and `diet_settings` held by nobody~~ — **done 2026-11-12**, both on Management.

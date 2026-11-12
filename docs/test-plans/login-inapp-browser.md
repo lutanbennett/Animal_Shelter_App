@@ -68,7 +68,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [ ] Nav entry — n/a: no nav change
 - [ ] Manual updated — n/a: sign-in page wording only
 - [x] Translatable strings go through the dictionaries (`login.inApp`, en and th)
-- [ ] Mobile viewport — pending: notice not seen on screen at 375px (pane cannot set a user agent)
+- [x] Mobile viewport — **confirmed by Lutan on a real phone, 2026-11-12.** The notice shows when the sign-in page is opened from inside an app's built-in browser. The browser pane could not show this at all, because it cannot set a user agent; a real device could, which is why the manual item existed.
 - [ ] Browser console clean — pending: not viewed with the notice showing
 - [ ] Network clean — n/a: server-rendered change, no new requests
 
@@ -125,9 +125,9 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 Automated checks by: Claude  Date: 2026-11-11
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: real LINE and Messenger check
+- [ ] The manual list above is empty, or every item in it was checked by a person — pending: Lutan checked it on a real phone on 2026-11-12 and the notice and sign-in both work; three parts of the item above were not in what he reported, so it is not yet fully checked. See the signature below.
 
-Manual verification by: pending: real-device check in LINE and Messenger
+Manual verification by: pending: **Lutan confirmed the main part on a real phone**, in chat on 2026-11-12: *"Yes the message is clear and working when trying to login from an apps inbuilt browser."* That covers the two things that mattered most — the notice appears, and email-and-password sign-in works — from inside an app's built-in browser on a real device. **NOT covered, because he was not asked and did not say:** which app it was (the item names LINE and Messenger), whether the Thai reads correctly, and whether the Google button was absent. Those three are what is still outstanding. Recorded this way rather than signed off, because a signature that does not match what the person looked at is worse than none.
 
 Result: pass
 

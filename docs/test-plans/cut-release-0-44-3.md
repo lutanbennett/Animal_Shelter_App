@@ -163,7 +163,7 @@ and **`public-views` 476 `ok`, 0 failures**. So this release has a genuine secon
 |---|---|---|---|
 | a login holding Bills | `/releases` | sees the four plain notes **and both `bills`-tagged ones** | pending: read on the deployed build, section 8 |
 | a login without Bills | `/releases` | sees the four plain notes only | pending: read on the deployed build, section 8 |
-| Admin | `/releases` | sees all six | pending: read on the deployed build, section 8 |
+| Admin | `/releases` | sees all six | **Lutan read the notes on the deployed build, 2026-11-12** and reported nothing missing. He did not report a count, so "all six" is his reading rather than a counted assertion |
 | the signed-out public | `/releases` | not a public page | n/a: no public surface in this diff |
 
 - [x] A login that should not have access is blocked server-side — n/a: this diff adds no action, route or policy. Note filtering is display, not access
@@ -194,8 +194,8 @@ and **`public-views` 476 `ok`, 0 failures**. So this release has a genuine secon
 
 ### Tested build
 
-- [ ] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — pending: filled in the release record once merged and read back
-- [ ] Deployed SHA matches the tested SHA — pending: read from each `deploy.mjs` run's own output. **The code-identity diff is the assertion, not SHA equality**, and one open PR (#1503) could move `main`
+- [ ] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — n/a as worded: the tested SHA is **`5867f864`**, but `main` moved **twice** during the release, so it was not the tip at deploy time. That is recorded rather than smoothed over: the retained property is **code identity, not SHA equality**, and the allow-list diff was empty for both moves. All three build SHAs are tabulated in `docs/releases/2026-11-11-0-44-3.md`
+- [ ] Deployed SHA matches the tested SHA — n/a: **it does not, and that is sound.** Three SHAs built: `5867f864` (both Pis and the test Worker), `6218fd73` (production Worker) and `f2c1b996` (UAT Worker). #1503 did move `main`, and the backlog fold moved it again. Each deploy's own output was read. **The code-identity diff was run for both moves and came back empty** — only `docs/planner-handover.md`, a test plan and `docs/backlog.md` differ, none of which is built or run at deploy
 
 ### On the deployed build
 
@@ -258,9 +258,9 @@ Automated checks by: Claude Opus 5 (production release manager session)  Date: 2
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: the list is not empty (five items), so only the person who looked may tick it
+- [ ] The manual list above is empty, or every item in it was checked by a person — pending: **one of the five is now done** (Lutan read the notes on the deployed build, 2026-11-12). Four remain, so only the person who looked may tick this
 
-Manual verification by: pending: Lutan to read the six notes on `/releases` and check both Bills-tagged ones show only to Bills holders; a Thai speaker for the three refusal-key groups; a Bills login attaching a bill to a job; the 17 carried items recorded as a stated gap on his instruction of 2026-11-11
+Manual verification by: pending: **Lutan read the notes on the deployed build on 2026-11-12** and reported nothing missing, which closes the first of the five. **Still outstanding:** whether both Bills-tagged notes show only to Bills holders (needs two logins, so his reading cannot settle it); a Thai speaker for the three refusal-key groups; and a Bills login attaching a bill with a job to pick.
 
 ### Result
 
