@@ -5,8 +5,8 @@
 //   node scripts/drive-sharing.mjs --env uat --remove   # delete every `anyone` permission
 //   node scripts/drive-sharing.mjs --env uat --restore  # put `anyone: reader` back on every item
 //
-// --env is REQUIRED (test | uat | production); there is no default. Production is refused outright until
-// the question of whose credentials own its files is settled (docs/decisions/2026-11-09-drive-unshare.md).
+// --env is REQUIRED (test | uat | production); there is no default. Production accepts the REPORT
+// only; --remove and --restore are refused outright, with no override (docs/decisions/2026-11-10-drive-unshare.md).
 // test is the dev tree every running stream shares, so changing it also needs --shared-tree-ok.
 //
 // Walks the root recursively, pages through every folder, and handles FILES as well as FOLDERS: a
@@ -31,8 +31,8 @@ if (REMOVE && RESTORE) {
   process.exit(2);
 }
 const WRITE = REMOVE || RESTORE;
-if (envName === "production") {
-  console.error("Production is refused: its Drive credentials are not settled yet. Nothing was read or changed.");
+if (envName === "production" && WRITE) {
+  console.error("Production is refused for --remove and --restore, with no override. Only the report is allowed there. Nothing was changed.");
   process.exit(2);
 }
 if (WRITE && envName === "test" && !flag("--shared-tree-ok")) {
