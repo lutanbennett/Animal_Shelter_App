@@ -219,15 +219,38 @@ So nothing ever stops, but **while the machine sleeps every sentence waits about
 11 seconds** before the keyword reader answers. The app does not yet remember that
 the model was missing a moment ago.
 
-The planned host is a gaming PC that is often asleep. Three choices, **yours to
-make**; none is set up:
+## The machine stays on: decided, and what it means in practice
 
-1. **Leave it on.** Always available; uses power and is on all night.
-2. **Wake it over the network** when the app needs it. Works, but the first
-   request waits for it to wake and the setup is fiddly.
-3. **Accept that it is sometimes unavailable.** The keyword reader still answers,
-   so nothing stops; the cost is the 11-second wait above. **Recommended as the safe
-   default**, and the one that needs no setup.
+**You decided this on 6 November 2026: the model machine is ALWAYS ON.** It is
+recorded here so nobody asks you again. The three choices that used to stand in
+this spot — leave it on, wake it over the network, or accept that it is sometimes
+asleep — are closed, and always-on is the one you picked.
+
+What it means in practice, on the day the machine exists:
+
+- **It is never put to sleep and never shut down.** Not at night, not when nobody
+  is at the desk. In Windows, Settings → System → Power, set both **Screen** and
+  **Sleep** to **Never** while it is plugged in. The screen may switch itself off;
+  the computer may not.
+- **So the 11-second wait in the table above never happens.** That wait is what a
+  sleeping machine costs, and an always-on machine does not pay it. The Director
+  asks the assistant at night from her desk and all day from her phone, and she
+  gets the model every time rather than the keyword reader.
+- **Wake-on-LAN is not needed and is not being set up.** It only ever existed as a
+  way round sleeping, and nothing sleeps.
+- **The cost is the idle power draw, and it is not zero.** A gaming PC left on
+  around the clock is the real ongoing cost of keeping this in house. That is the
+  trade: the shelter's text never leaves your house, and the electricity is what
+  it costs.
+- **The keyword reader stays exactly as it is.** It is still there for the minutes
+  after a restart, a Windows update or a power cut, so nothing ever stops.
+  Always-on removes the ordinary wait, not the safety net.
+
+**None of this is set up yet, and it waits on one thing only: the machine itself
+existing** (backlog item `#z04wr` — the gaming PC with a current-generation NVIDIA
+card and 16 GB of its own memory). Until then the spare i7 laptop stays the
+build-and-measure box and is not the host, so it is not expected to be on. There
+is nothing to do about always-on before the PC arrives.
 
 ## What the swap changes in the prompt
 
