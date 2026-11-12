@@ -94,7 +94,7 @@ export async function AppHeader() {
         >
           <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-white p-1">
             <Image
-              src="/lca-logo.jpg"
+              src="/lca-logo-160.jpg"
               alt=""
               width={28}
               height={28}
