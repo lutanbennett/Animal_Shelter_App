@@ -115,6 +115,7 @@ export const WRAPPED_WRITE_PATHS = [
   "/admin/who-does-what",
   "/admin/who-does-what/details",
   "/admin/who-does-what/features",
+  "/admin/who-does-what/simulate",
   "/admin/zones",
   "/adopt",
   "/adopt/[id]",

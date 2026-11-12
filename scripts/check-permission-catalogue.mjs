@@ -352,6 +352,8 @@ const PINNED = {
   // Who does what: Admin, or a role holding the Who does what card (roles.view, 0262). opensWhoDoesWhat() asks it in one place.
   "/admin/who-does-what/details": { guards: ["if (!opensWhoDoesWhat(perms)) refuseFor(perms)"], decides: [] },
   "/admin/who-does-what/features": { guards: ["if (!opensWhoDoesWhat(perms)) refuseFor(perms)"], decides: [] },
+  // Settings → Who does what → Open a role's home: Admin only, the same refusal /home/[role] asks (home-simulation-subpage). No card: Admin sits outside the card system.
+  "/admin/who-does-what/simulate": { guards: ["if (!perms?.isAdmin) refuseFor(perms)"], decides: [] },
   // Settings → Diets, the recipe book (diets-recipe-book): the one guard /admin/diets asks, diets.settings since 0340 (#d3cw7).
   "/admin/diets/[id]": { guards: ['requirePermission("diets.settings")'], decides: [] },
   "/admin/diets/ingredients": { guards: ['requirePermission("diets.settings")'], decides: [] },

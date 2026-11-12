@@ -204,6 +204,7 @@ const PAGES = [
   "/admin/who-does-what",
   "/admin/who-does-what/details",
   "/admin/who-does-what/features",
+  "/admin/who-does-what/simulate",
   "/residents/new",
   "/residents/{resident}/deceased",
   "/residents/{resident}/adoption-updates/new",
@@ -230,6 +231,7 @@ const PAGES = [
   "/admin/security/verify",
   "/admin/who-does-what/details",
   "/admin/who-does-what/features",
+  "/admin/who-does-what/simulate",
   // everyone
   "/manual",
   "/releases",
