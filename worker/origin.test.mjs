@@ -8,7 +8,7 @@ const stub = (impl) => { globalThis.fetch = impl; };
 test.afterEach(() => { globalThis.fetch = realFetch; });
 
 const get = () => new Request("https://site.example/adopt");
-const post = () => new Request("https://site.example/zzz-unlisted", { method: "POST", body: "payload" });
+const post = () => new Request("https://site.example/login", { method: "POST", body: "payload" });
 
 test("a good answer from the Pi is passed through", async () => {
   stub(async () => new Response("hi", { status: 200 }));
@@ -113,4 +113,46 @@ test("an ordinary read still has its timeout", async () => {
   stub(async (_url, init) => { signal = init.signal; return new Response("ok"); });
   await fetchFromOrigin(get(), ENV);
   assert.ok(signal instanceof AbortSignal);
+});
+
+// The rule is the website renders here, everything else is refused (src/lib/pi-only-paths.ts).
+const app = (path, init) => new Request(`https://site.example${path}`, init);
+
+test("an app page is answered with the offline page, never rendered locally, and still has its timeout", async () => {
+  let signal;
+  stub(async (_u, init) => { signal = init.signal; return new Response("", { status: 530 }); });
+  let rendered = false;
+  const out = await originOrLocal(app("/bills"), ENV, async () => { rendered = true; return new Response("local"); });
+  assert.ok(signal instanceof AbortSignal);
+  assert.equal(rendered, false);
+  assert.equal(out.response.status, 503);
+  assert.equal(out.servedBy, "pi-unavailable");
+  assert.match(out.response.headers.get("content-type"), /text\/html/);
+  assert.equal(out.response.headers.get("retry-after"), "60");
+});
+
+test("the offline page is self-contained, in English and Thai, with no external request", async () => {
+  stub(async () => { throw new Error("Network connection lost."); });
+  const out = await originOrLocal(app("/residents"), ENV, async () => new Response("local"));
+  const html = await out.response.text();
+  assert.match(html, /offline/i);
+  assert.match(html, /[฀-๿]/);
+  assert.match(html, /name="viewport"/);
+  assert.doesNotMatch(html, /(src|href)=|@import|url\(/i);
+});
+
+test("the website still falls back to the Worker: / , a page, /th/ twin, robots, sign-in", async () => {
+  stub(async () => new Response("", { status: 530 }));
+  for (const p of ["/", "/adopt", "/th/adopt", "/robots.txt", "/login"]) {
+    assert.equal(await fetchFromOrigin(app(p), ENV), null, p);
+  }
+});
+
+test("a write to an app path: refused when it never arrived, 'check it saved' when the Pi may have acted", async () => {
+  stub(async () => new Response("", { status: 530 }));
+  let res = await fetchFromOrigin(app("/bills", { method: "POST", body: "x" }), ENV);
+  assert.equal(res.headers.get("x-lanna-served-by"), "pi-unavailable");
+  stub(async () => new Response("", { status: 504 }));
+  res = await fetchFromOrigin(app("/bills", { method: "POST", body: "x" }), ENV);
+  assert.equal(res.headers.get("x-lanna-served-by"), "pi-timeout");
 });
