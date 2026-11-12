@@ -69,7 +69,9 @@ export type NewCardKey =
   | "project_folders"
   | "suppliers"
   | "diet_settings"
-  | "approve_text";
+  | "approve_text"
+  | "foundation_papers"
+  | "foundation_id_copies";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -214,6 +216,10 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // point of the review is a second person reading what the public will read, so it grants no right to edit any of those records.
   // Given to no role: Lutan assigns it in Who does what.
   approve_text: { includes: [], bundle: [{ activity: "text.approve" }], opens: "/text/approve" },
+  // 0362 (2026-11-12, #98se8): the foundation's own papers, filed and read. Exactly foundation.papers at edit (read, file, remove). It does NOT reach the
+  // board members' ID copies: those are their own activity and their own card, a much narrower audience. Given to no role.
+  foundation_papers: { includes: [], bundle: [{ activity: "foundation.papers", level: "edit" }], opens: "/management/foundation-papers" },
+  foundation_id_copies: { includes: [], bundle: [{ activity: "foundation.id_copies", level: "edit" }], opens: "/management/foundation-papers/board-ids" },
   recurring_jobs: {
     includes: [],
     bundle: [{ activity: "recurring.manage" }, { activity: "recurring.do_any" }, { activity: "recurring.do_own" }],
@@ -497,6 +503,8 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   suppliers: (t) => t.appHome.cards.suppliers,
   diet_settings: (t) => t.appHome.cards.dietSettings,
   approve_text: (t) => t.appHome.cards.approveText,
+  foundation_papers: (t) => t.appHome.cards.foundationPapers,
+  foundation_id_copies: (t) => t.appHome.cards.foundationIdCopies,
   food_forecast: (t) => t.appHome.cards.foodForecast,
   medicine_forecast: (t) => t.appHome.cards.medicineForecast,
   view_cashflow: (t) => t.appHome.cards.viewCashflow,

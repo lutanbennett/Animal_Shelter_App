@@ -13,7 +13,7 @@
  * rest, and Settings and Management landing pages with their areas.
  */
 
-import { Activity, CalendarClock, Scissors, BadgeCheck, Camera, Film, Laugh, ClipboardCheck, HandHeart, PartyPopper, Coins, Globe, Grid3x3, HandCoins, ImagePlus, HeartHandshake, History, LayoutDashboard, Languages, Pill, Receipt, Scale, ShoppingBag, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
+import { Activity, CalendarClock, Scissors, BadgeCheck, Camera, Film, Laugh, ClipboardCheck, HandHeart, PartyPopper, Coins, Globe, Grid3x3, HandCoins, ImagePlus, HeartHandshake, History, LayoutDashboard, Languages, Pill, Receipt, Scale, FileText, ShieldCheck, ShoppingBag, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
 import { CONTACT_ICONS, ENCLOSURE_ICONS, NAV_ICONS, SECTION_ICONS, CLINIC_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "./can";
@@ -326,6 +326,25 @@ export const ROUTES: readonly RouteEntry[] = [
     activity: "photos.approve",
     icon: BadgeCheck,
     label: (t) => t.photoApproval.title,
+    device: "any",
+    menu: false,
+  },
+  {
+    // The foundation's own papers (0362). Asks foundation.papers, the activity the database checks. Board ID copies are the next page, their own card.
+    path: "/management/foundation-papers",
+    activity: "foundation.papers",
+    level: "read",
+    icon: FileText,
+    label: (t) => t.foundationPapers.title,
+    device: "any",
+    menu: false,
+  },
+  {
+    path: "/management/foundation-papers/board-ids",
+    activity: "foundation.id_copies",
+    level: "read",
+    icon: ShieldCheck,
+    label: (t) => t.foundationPapers.idTitle,
     device: "any",
     menu: false,
   },

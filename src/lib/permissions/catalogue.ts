@@ -138,6 +138,9 @@ export const ACTIVITIES = [
   // asked together, which no screen said. Yes/no: nothing on those screens is offered to read that is not also offered to change.
   { key: "diets.settings", kind: "yesno", area: "settings", sort: 87, requires: [], probes: [] },
   { key: "text.approve", kind: "yesno", area: "settings", sort: 88, requires: [], probes: [] },
+  // 0362 (#98se8): the foundation's own papers. foundation.id_copies is the narrower one: copies of board members' ID cards and household registrations.
+  { key: "foundation.papers", kind: "level", area: "management", sort: 90, requires: [], probes: [] },
+  { key: "foundation.id_copies", kind: "level", area: "management", sort: 91, requires: [], probes: [] },
   { key: "contacts.browse", kind: "yesno", area: "contacts", sort: 57, requires: [], probes: [] },
   { key: "friends.view", kind: "yesno", area: "contacts", sort: 58, requires: [], probes: [] },
   { key: "community.outings", kind: "level", area: "projects", sort: 59, requires: [], probes: [] },
