@@ -1,148 +1,150 @@
-# Release handover — written 2026-11-11 after `0.44.2`
+# Release handover — written 2026-11-12 after `0.44.3`
 
 A **delta**. The durable rules are in `docs/release-procedure.md` and this release's own record is
-`docs/releases/2026-11-11-0-44-2.md`. **Both outrank this file.**
+`docs/releases/2026-11-11-0-44-3.md`. **Both outrank this file.**
 
 ## START HERE
 
-Production is `lannacareforanimals.org`, now on **`0.44.2`**. `test.lannacare.org` is test on the dev
-project and `uat.lannacare.org` is UAT on its own project (`fsjagxmxjosauwmxwype`), both also `0.44.2`.
-All three databases hold **354** migrations, 0 pending, no drift, and all three hosts answer from the
-**same commit**, `7b1d9f03`.
+Production is `lannacareforanimals.org`, now on **`0.44.3`**. `test.lannacare.org` is test on the dev
+project and `uat.lannacare.org` is UAT on its own project (`fsjagxmxjosauwmxwype`), both also
+`0.44.3`. All three databases hold **360** migrations, 0 pending, no drift either direction.
 
-**`0.44.2` did NOT mail**, on Lutan's instruction given in words. `#w4k9n` (e) stays **proven by
-`0.44.0`**; a minor release cannot test it either way.
+**The three hosts did NOT all build from one commit this time** — `main` moved twice mid-release, so
+the builds come from `5867f864`, `6218fd73` and `f2c1b996`. **That is fine and was checked:** the
+allow-list code-identity diff is **empty for both moves**, and the only differences are
+`docs/planner-handover.md`, a test plan and `docs/backlog.md`. Report code identity, never SHA
+equality — that property stays retired.
 
-The public site is **still locked** (`PUBLIC_SITE: "locked"`).
+**`0.44.3` did NOT mail**, on Lutan's instruction given in words (*"no email"*). `major: false`, and
+the deploy said so itself: `no major release new to production (was 0.44.2), so no email.`
 
-**Still nobody holds the two cards `0.44.0` added** — `approve_text` and `diet_settings`. Public text
-saved since `0.44.0` waits with no holder able to approve it. **Third handover running.** Settings →
-Who does what.
+The public site is **still locked** — read from the deploy's own binding list, `PUBLIC_SITE ("locked")`.
+
+**Still nobody holds the two cards `0.44.0` added** — `approve_text` and `diet_settings`. Measured on
+production this release, not copied forward: no role holds either. Public text saved since `0.44.0`
+waits with no holder able to approve it. **Fourth handover running.** Settings → Who does what.
 
 **Re-measure before trusting any of this.** `git fetch`, `git diff --stat <deployed>..origin/main`,
 `gh pr list`, `--status` on all three, `/api/version` on all three hosts.
 
-## THE ONE THING TO READ BEFORE YOUR NEXT CUT — IT HAS CHANGED THIS TIME
+## ASK ABOUT THE EMAIL, NEVER "MAJOR OR MINOR"
 
-**`git log --oneline -1`, then `--status` on production AND on uat as separate questions.** Unchanged,
-and it has now paid eight times. On `0.44.2` both had the same three pending, which is the easy case;
-`0.44.1` had UAT a migration further behind.
+He answered it himself again, unprompted — *"Lets do a minor release no email and note gaps in test
+plans"* — and **that one sentence answered both decisions**, the email and the `pending:` test-plan
+question. **Four releases running.** Do not ask him twice for what that sentence already settles.
 
-**BUT THE BIGGER ONE NOW IS THE PI: DO NOT RUN ALL THREE PI BUILDS AT ONCE.** The runbook said *"They
-build in parallel safely"* and **that line was wrong and is now corrected** (`docs/release-procedure.md`,
-*The Pi*). The Pi has **4 GiB of RAM**:
+## THE ONE THING TO READ BEFORE YOUR NEXT CUT — IT IS NEW AND IT COST LUTAN TWO PRESSES
 
-- Three parallel `next build` runs OOM-killed the production build — a bare **`Killed`** in its log.
-- The Pi had **also rebooted at 08:39** mid-build minutes earlier, killing a whole first round of three.
-  **The cause is NOT established** — the journal is not persistent on that box
-  (`journalctl --list-boots` shows only the current boot) — but three concurrent builds is the only thing
-  that changed. Treat it as suspected, not proven.
-- **Run them ONE AT A TIME**, reading each one's closing lines before the next. One takes about five
-  minutes. Serial costs ten extra minutes and buys a release that does not half-land. **This said "or at
-  most two" and that was corrected within the day** from a figure already in the repo: `setup.sh` step 2b
-  records that **`next build` peaks above 6 GB on this 4 GB Pi**, which is why it adds 4 GB of swap and
-  why `deploy-pi.sh` refuses below ~6 GB. One build already needs swap; two want ~12 GB against ~10 GB.
-  **The OOM was predictable from a comment that was already there**, and "at most two" was a guess.
-- **One Pi build alongside one Worker deploy is still fine** — different machines. That is the
-  parallelism to use.
+**If a deploy dies with *"The request to Cloudflare's API timed out"*, do NOT just retry. It is DNS on
+the build machine, and one log read settles it.**
 
-**Ask about the EMAIL, never "major or minor".** He answered it himself again — *"Let's do a minor
-release no email. Outstanding open tests logged as gap"* — and **that one sentence answered both
-decisions**, the email and the `pending:` test-plan question. **Three releases running.**
+This is what `0.44.3` got wrong. Production's Worker deploy failed **twice**, and the second failure
+was avoidable: the release manager told Lutan the network was flaky and running it again was the right
+response, which was a guess presented as a diagnosis.
 
-## WHAT `0.44.2` CHANGES FOR YOU
+What it actually is, measured:
 
-**1. TEST THE PORT, NOT THE PING. THIS COST HIM A TOUCH.** I told him the Pi was unreachable and needed
-him. It never was: **ICMP is blocked on that box**, and the SSH handshakes were timing out *because three
-builds had saturated it*. **Port 2222 was open the whole time**, and one line settles it:
+- The wrangler log (`…/xdg.config/.wrangler/logs/wrangler-*.log`) names the failing call: the
+  **first** API request of the deploy, a `GET …/workers/services/lanna-animal-care` **before any
+  upload**, dying after **10.8 s** with `errorType: ConnectionTimeout`.
+- A **cold DNS lookup of `api.cloudflare.com` took 12.1 s** on this machine, twice, while every other
+  host answered in under 70 ms. **12.1 > 10, so the first call can never connect.**
+- Bandwidth is **not** the cause: 24 MB/s down, 7.8 MB/s up, ~40 MB payload.
+- **Nothing is part-uploaded when this happens**, because the call that dies is a read that precedes
+  the upload. Check the live version before assuming damage; here the Worker still answered `0.44.2`.
 
-```bash
-timeout 8 bash -c 'echo > /dev/tcp/192.168.68.81/2222' && echo OPEN || echo "no answer"
+**The workaround, which worked first time:** warm the cache in the same command.
+
+```
+Resolve-DnsName api.cloudflare.com -Type A | Out-Null; node scripts/deploy.mjs --env production --skip-build --no-mail | tee .local/deploy-<ver>-retry.log
 ```
 
-A box that blocks ICMP and is too busy to complete an SSH banner looks **exactly** like a box that is
-off. `ping` proves nothing about this Pi, in either direction. Also note `arp -a` showed it present at
-layer 2 the whole time — another signal I had and did not weigh.
+**`--skip-build` is the other half of the saving** — the failed attempt's build is still good, so the
+retry is a ~20-second upload instead of another ~40-minute build. It is safe because `deploy.mjs`
+still asserts the bundle carries that environment's Server Actions key (`builtKeyProblem`), so a
+wrong-environment bundle is refused rather than shipped. Confirm it independently if you want: only
+the target project's Supabase id should appear in `.open-next/assets/_next/static`.
 
-**2. A PI BUILD FAILURE IS SAFE. READ IT RATHER THAN FEARING IT.** `deploy-pi.sh` discards `.next.new`
-and never touches `.next`, so the clone keeps serving the old release and prints
-`BUILD FAILED — discarding .next.new` then `DEPLOY FAILED — NOTHING NEW IS BEING SERVED`. Rebuilding that
-clone **alone** succeeded first try with 3.0 GiB free. **And run the prescribed diagnostic before
-theorising about the machine** (`CLAUDE.md`, *When a Pi build is killed*): `du -sh .next .next/cache
-node_modules` exonerated the cache here — both clones `1.3G` / `1.2G`, no `.next/cache` at all — so it
-was memory, not the 2026-10-19 cache-bloat fault. `free -h` is the one-line check: 4.0 GiB total.
+**Two consequences worth knowing.** The same resolver fault caused six Supabase read timeouts and a
+migration dry-run timeout in this release, so expect them and retry rather than reporting a database
+problem. And **`check-public-views` fails with zero assertions and exit 1** when it bites — read the
+exit code, never the count alone.
 
-**3. A GIT-UPDATED CLONE IS NOT A DEPLOYED CLONE, AND THIS IS WHAT THAT LOOKS LIKE.** After the reboot
-all three clones had their *source* at the release commit with `.next` still the old build and a partial
-`.next.new` beside it. `git log -1` would have read as "updated". **Read the served version and the
-service**, which is what the runbook says and what caught it.
+**The durable fix is Lutan's, not yours:** the NordLynx adapter is up advertising Nord's DNS servers
+(`103.86.96.100`) with NordVPN not running, which is how a lookup goes from 4 ms to 12 s. A system
+network setting. **It was not needed to ship, so do not block on it**, and he has not asked for it.
 
-**4. `0.44.1`'s HANDOVER WAS WRONG ABOUT TEST AND MAIL. CORRECTED.** Its item 5 said the test deploy
-*"printed nothing at all about mail"*. It prints a refusal like the other two —
-`deploy: no major release new to test (was 0.44.0), so no email.` — and the previous record's grep
-searched for strings the script does not print on a minor release. **So a minor release gives you THREE
-explicit refusals, one per environment.** Quote them; the absence of mail is the easiest thing on a minor
-release to assert without evidence.
+## THE PI: THE RULE NOW HAS A MECHANISM
 
-**5. HIS `tee` LOG IS UTF-16.** `tr -d '\000' < .local/deploy-<version>.log` before grepping, or every
-pattern misses. The runbook says so; it still cost a confused read here.
+**`deploy-pi.sh` enforces one build at a time as of this release** (#1495, per-machine `flock` at
+`/tmp/lanna-pi-build.lock`, `docs/decisions/2026-11-11-pi-build-lock.md`). It refuses and names what
+is building. So the prose rule that `0.44.2` had to correct is no longer only prose.
 
-**6. THE THREE STYLESHEET SIZES DIFFER AND THAT IS NOT A FAULT.** Production `99854`, test `99839`, UAT
-`99876`. Each environment bakes different values, so the hashes and byte counts legitimately differ.
-**The check that settles it is `check-assets.mjs` on each clone** — served versus *that clone's own*
-build; all three read *identical to the build*. A size matching **another** environment's would be the
-worry.
+**Still run them one at a time and read each one's closing lines**, because the lock protects you from
+the OOM killer, not from mistaking a git-updated clone for a deployed one. The Pi has 4 GiB and
+`setup.sh` step 2b records that `next build` **peaks above 6 GB** there. Here the UAT build ran alone,
+took the lock cleanly, and reported `serving 0.44.3 as expected`, `check-assets` identical to the build.
 
-**7. ANSWER A DEFERRED NOTE BY MEASURING — IT PAID AGAIN, THIS TIME TO SAY "NO NOTE".**
-`public-visible-one-expression`'s reason was conditional on no appeal running.
-`check-production.mjs appeal-override` read **0 running, text-approved appeals**, so `0350`'s widening
-has no subject and nothing was owed. **And read BOTH clauses of a two-clause reason:** its second clause
-(the production apply) *did* close here, and a candidate whose named step closes still owes nothing if
-the first clause says nobody would notice. Same shape as `suppliers-cleanup` on `0.44.1`.
+**One Pi build alongside one Worker deploy is still fine** — different machines. That is the
+parallelism to use, and this release used it.
 
-**8. WRITE THE PREDICTION INTO THE CUT PLAN BEFORE THE APPLY.** All three before-pictures were predicted
-in writing and all three landed: policy lines **77 → 77 with an empty `diff` and no
-`item_unit_conversions` line** (the specific thing to watch, since `0352` drops and replaces three write
-policies); public views **476 → 476, diff empty**; residents not listed publicly **281 → 281**,
-predicted not to move because `0350` changes the profile view and not enclosure membership. **A
-prediction that lands is evidence; a number without one is decoration.**
+**Pin the Pi build to the shipped SHA** (`--ref <sha>`), not `main`'s tip. Done here for UAT. The
+`0.38.1` trap is rebuilding a Pi to chase a moved SHA; when the code-identity diff is empty there is
+nothing to do.
 
-## WHAT STAYS HIS
+**TEST THE PORT, NOT THE PING** — carried from `0.44.2`, where it cost a touch. **ICMP is blocked on
+that box**, so a failed ping proves nothing and "the Pi is down" is the wrong conclusion:
 
-**His, non-negotiable:** whether it mails, and the **production Worker deploy**. Everything else is
-yours, the merge included — **every PR merges on green, feature PRs included** (2026-11-01). Do not wait
-for a go, and do not offer Auto-fix.
+```bash
+timeout 8 bash -c 'echo > /dev/tcp/192.168.68.81/2222' && echo OPEN
+```
 
-**`0.44.2` cost him three touches against a target of two, and the third was mine** — see item 1.
-`0.44.1` cost one.
+**The journal is persistent now** (`Storage=persistent`, capped 500 MB, folded into
+`scripts/pi/setup.sh` step 2c). **Survival across a reboot is still unproven on purpose** — the
+production host was not rebooted to find out. After the next reboot, `journalctl --list-boots` showing
+more than one entry is the proof.
 
-## CARRIED, UNCHANGED, RE-CONFIRMED RATHER THAN COPIED
+## A RACE THAT WILL BITE AGAIN: `npm ci` IN THE MAIN CHECKOUT
 
-- **`main` did not move once**, the second release running, so every build came from `7b1d9f03` and the
-  code-identity diff had an empty range. **Not a streak and not a property** — it measures how quiet
-  other sessions were. `gh pr list` showed nothing open before the cut.
-- **No `scripts/pi/` change shipped**, so the one-deploy-late caveat did not bite — but
-  `deploy-pi: restarting under the script from 7b1d9f03` was **present on all three clones** and was read
-  rather than assumed. Its absence means the release's guards did not run.
-- **THE PI'S `guard-release` STILL CANNOT GUARD** the schema (no `SUPABASE_ACCESS_TOKEN`, and it must not
-  have one). It printed `production ok` / `uat ok` on the *release record only* and said so. **Do not read
-  that as a schema pass.** The invariant was held as always: applied from this machine, read back
-  `0 pending` with clean drift on all three, plus `assert-schema` on production and UAT, **before** any Pi
-  build.
-- **`check-deferred-notes.mjs` over-listed again** (six of eleven candidates belonged to the previous
-  release's range) and printed guidance text as four "reasons". **Do not narrow it** — `0.44.1` is the
-  proof, where one over-listed candidate was a genuinely owed note. Budget one lookup per candidate.
-- **`check-production.mjs` refuses `--env uat`**, so UAT still gets no before-and-after. Backlog `#rv4qk`,
-  second release running, and it cost more this time because UAT carried the same three migrations.
-- `audit:prod` exits 1 with five vulnerabilities and `audit:register` exits 0 — one registered,
-  unreachable high advisory (`GHSA-5j98-mcp5-4vw2`). **A cut always runs the CI job for real**; it did and
-  it passed. **`skipped` is not a pass.**
-- **Unchanged and in the record rather than re-argued here:** all three Server Actions keys matched their
-  Pi, `STATUS_READ_TOKEN` stays unset on purpose (`#mzu7v`), `sync-home-icons` read `496 unchanged`, and
-  the restore drill is settled (`#rg7pv`) — do not re-raise that one.
+The first UAT Worker attempt exited 1 with `Cannot find module 'wrangler/package.json'`. The daily
+`guarded-install.mjs` was running `npm ci` in the main checkout and had `node_modules` down to **109
+entries** (it finished at 486, with `.package-lock.json` present, which is the marker of a complete
+install).
 
-**Read the live state; never accept "it's done."** This edition's example is the Pi: `git log -1` said
-every clone was on the release while two of three were serving the previous build, and the sites briefly
-answered the *new* version from the **Worker** while the Pi was busy — which is the `x-lanna-served-by`
-trap, met for real.
-**Next free migration number: `0353`** — read `git ls-tree`, never this line.
+**Wait it out. Do not install over the top of it, and do not conclude a script is broken.** If a
+deploy fails on a missing module, check for a running `guarded-install.mjs` or `npm ci` before
+anything else — `Get-CimInstance Win32_Process` showed it in one call.
+
+## WHAT THIS RELEASE MEASURED, SO YOU NEED NOT RE-DERIVE IT
+
+- **`check-public-views --env production`: 476 → 480 `ok`, 0 failures either side**, and the diff is
+  exactly four added lines — `maintenance_job_picker`, `resident_photo_list` and `0357`'s two adopter
+  functions, **all refused to anonymous visitors.**
+- **`table-policy-commands`: 77 lines before and after, diff empty.** If you compare against an older
+  record, note the records count **total output lines**, not `no policy` lines — counting the latter
+  gives 74 and looks like a regression that is not there.
+- **The four card checks are clean**, and `activities-grantable` matches its allow-list: 85 activities,
+  5 Admin-only on purpose, **14 UNRULED**. This release added none of the 14.
+- **Card grant changes take effect at the DEPLOY, not at the migration.** `0355` changes what the Bills
+  card grants, but that lives in `src/lib/cards.ts`, so `role-cells` does not move when the migration
+  applies. Run the card checks **after** the deploy; a cut plan predicting otherwise is wrong.
+
+## THE TEST-PLAN POSITION, WHICH IS NOT A PROBLEM TO SOLVE
+
+**34 PRs, 34 completed plans, one each, every one `Result: pass`.** That is the pre-deploy check in
+`docs/release-smoke-test.md`, and it passed.
+
+**18 of the 34 carry `pending:` on manual verification and 16 are reasoned `n/a:`.** Lutan asked for
+these to be *noted*, which the record does. **`pending:` with a reason is an accepted state since
+2026-11-05, so none is a defect** and none blocks anything. Worth a person's time:
+`login-inapp-browser` (the headline change, unchecked on a real phone) and the three
+`refusal-keys-group-*` plans (Thai nobody independent has read).
+
+**`test-plan` stays advisory. Do not raise promoting it — that was settled on 2026-10-20.**
+
+## WHAT IS NOT DONE, AND IS NOT YOURS TO DO
+
+- The DNS resolver setting on the build machine (Lutan's; a system setting).
+- The 14 UNRULED activities (a ruling, recorded, not failing).
+- The 18 `pending:` manual checks (people and later events).
+- `approve_text` and `diet_settings` still held by nobody (Settings → Who does what).
