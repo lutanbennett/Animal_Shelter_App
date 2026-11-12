@@ -44,7 +44,20 @@ export function compareToAllowlist(gaps, catalogue, file = readAllowlist()) {
     if (allowed.has(g)) {
       const r = allow.find((x) => id(x) === g);
       ruled.push(`${at(g)}: Admin-only on purpose, ruled ${r.ruled} by ${r.by}`);
-    } else if (pending.has(g)) unruled.push(`${at(g)}: no card grants it, no ruling yet`);
+    } else if (pending.has(g)) {
+      // A pending record may already carry a ruling that is only waiting on a build (a card grant, or
+      // a catalogue change needing a migration). Printing "no ruling yet" about a decision already
+      // given is how the same ruling gets asked for twice: Lutan's answers of 2026-11-09 were given,
+      // written only into a backlog note, and still printed here as unruled three days later. The
+      // record stays in foundNotRuled on purpose -- the gap is real until the build lands -- so the
+      // fix is to say WHICH it is rather than to move it.
+      const r = pendingRecs.find((x) => id(x) === g);
+      unruled.push(
+        r?.ruled && r?.by
+          ? `${at(g)}: RULED ${r.ruled} by ${r.by}, waiting on the build — do not re-ask`
+          : `${at(g)}: no card grants it, no ruling yet`,
+      );
+    }
     else fails.push(`${at(g)} is granted by no card (Admin only) and is not on the allow-list`);
   }
   for (const r of [...allow, ...pendingRecs]) {
