@@ -1,6 +1,7 @@
 import { bundleOfCards, CARD_KEYS, type CardKey } from "@/lib/permissions/cards";
 import { can, type Permissions } from "@/lib/permissions/can";
-import type { LevelKey } from "@/lib/permissions/catalogue";
+import type { ActivityKey, LevelKey } from "@/lib/permissions/catalogue";
+import { opensAnyIn } from "@/lib/permissions/routes";
 import type { ManualTopic } from "./types";
 
 /**
@@ -15,9 +16,20 @@ import type { ManualTopic } from "./types";
  */
 export type TopicCards = { kind: "everyone" } | { kind: "unassigned" } | { kind: "cards"; cards: CardKey[] };
 
+/** A login holding exactly these cards, as plain permissions (not Admin), to ask the route registry about. */
+function permsOfCards(keys: readonly CardKey[]): Permissions {
+  const cells: Partial<Record<ActivityKey, 1 | 2>> = {};
+  for (const [a, l] of bundleOfCards(keys)) cells[a] = l === "edit" ? 2 : 1;
+  return { role: { key: "", name: "", nameTh: null, homePath: null }, roles: [], isAdmin: false, cells };
+}
+
 export function cardsOfTopic(topic: ManualTopic): TopicCards {
   if (topic.adminOnly) return { kind: "cards", cards: [] };
   if (topic.cards?.length) return { kind: "cards", cards: topic.cards };
+  if (topic.opensSection) {
+    const section = topic.opensSection;
+    return { kind: "cards", cards: CARD_KEYS.filter((k) => opensAnyIn(permsOfCards([k]), section)) };
+  }
   if (topic.activity) {
     const need = topic.activityLevel === "read" ? "read" : "edit";
     const cards = CARD_KEYS.filter((k) => {
