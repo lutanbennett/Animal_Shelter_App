@@ -92,7 +92,9 @@ const porcelainPaths = (out) =>
 // under n/a:, pending: or an unticked line claims no evidence), only the stand-in
 // words below count, and nothing else in a fence is judged, so a faithful paste
 // that quotes this checker's own <name> messages still passes.
-const FENCE_PLACEHOLDER = /PLACEHOLDER|\bTODO\b|<paste|\b(?:xxx|XXX)\b/; // case-sensitive: pasted guard output says "placeholder" in prose
+// Also the template's own shapes: any NAME_HERE stand-in (GATES_HERE got through on 0357's plan, #up3vf) and the
+// gates line's own <N>, which a real run never prints.
+const FENCE_PLACEHOLDER = /PLACEHOLDER|\bTODO\b|<paste|\b(?:xxx|XXX)\b|\b[A-Z][A-Z0-9]*_HERE\b|<N>/; // case-sensitive: pasted guard output says "placeholder" in prose
 const fenceProblems = (lines) => {
   const out = [];
   let owner = null; // the box the next fence belongs to
@@ -164,6 +166,25 @@ try {
       `(git fetch origin main) or pass --base <ref>.`,
   );
   process.exit(2);
+}
+
+// Say which mode this is. The base defaults to origin/main either way, so --base origin/main
+// changes nothing about which lines are judged (#yiozr could not be reproduced on #1488). What
+// differs between a local run and CI is the input: locally an UNCOMMITTED edit to a plan is read
+// from disk, CI reads only what was committed, and a stale origin/main moves the diff.
+{
+  let dirty = [];
+  try {
+    dirty = porcelainPaths(git(["status", "--porcelain"])).filter(isPlan);
+  } catch {
+    // reported by the diff below
+  }
+  console.error(
+    "check-test-plan: base " + base + (mergeBase ? " (merge-base " + mergeBase.slice(0, 8) + ")" : "") +
+      "; judges plan text as it is on disk" +
+      (dirty.length ? " — UNCOMMITTED plan edits included (CI will not see them): " + dirty.join(", ") : "") +
+      ". Does not check: that origin/main is current (git fetch first), or anything in the PR but plan files and releases.ts.",
+  );
 }
 
 if (changed.length === 0) {
@@ -319,6 +340,27 @@ for (const file of changed) {
   }
 
   for (const [line, msg] of fenceProblems(lines)) note(file, line, msg);
+
+  // A plan already on the base is a merged plan, now being edited by a sign-off PR. Its header
+  // must not still hold a blank where the tested commit belongs: for a plan mid-flight that is
+  // "still being written" (2026-11-05), for a merged one nothing will ever fill it in. Only
+  // plans this PR touches are judged, so an old merged plan nobody edits cannot turn main red,
+  // and none is rewritten to satisfy this. Blind spot: a merged plan nobody edits is never read.
+  let onBase = false;
+  try {
+    git(["cat-file", "-e", `${mergeBase}:${file}`]);
+    onBase = true;
+  } catch {
+    // New in this PR.
+  }
+  if (onBase) {
+    lines.forEach((l, i) => {
+      const m = l.match(/^\|\s*Tested at SHA\s*\|\s*(.*?)\s*\|\s*$/);
+      if (!m || inFence[i]) return;
+      if (m[1] === "" || isPlaceholder(m[1]) || /\b[A-Z][A-Z0-9]*_HERE\b/.test(m[1]))
+        note(file, i + 1, "merged plan still has no real `Tested at SHA` in its header — write the commit, or `n/a: <reason>`");
+    });
+  }
 
   // Template placeholders must be replaced. The template's own guidance prose
   // names them too (`docs/test-plans/<feature>.md`), so that prose sits between

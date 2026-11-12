@@ -35,7 +35,7 @@ Manual verification by: n/a: nothing to look at
 Result: pass
 `;
 
-function check(body) {
+function check(body, { merged = false } = {}) {
   const dir = mkdtempSync(path.join(tmpdir(), "tps-"));
   try {
     const git = (...a) =>
@@ -43,9 +43,11 @@ function check(body) {
     git("init", "-q");
     writeFileSync(path.join(dir, "x.txt"), "x");
     git("add", ".");
-    git("commit", "-q", "-m", "base");
     mkdirSync(path.join(dir, "docs", "test-plans"), { recursive: true });
-    writeFileSync(path.join(dir, "docs", "test-plans", "fixture.md"), body);
+    if (merged) writeFileSync(path.join(dir, "docs", "test-plans", "fixture.md"), body);
+    git("add", ".");
+    git("commit", "-q", "-m", "base");
+    writeFileSync(path.join(dir, "docs", "test-plans", "fixture.md"), body + (merged ? "\nedited after merge\n" : ""));
     git("add", "-A");
     const r = spawnSync(process.execPath, [path.join(repo, "scripts", "check-test-plan.mjs"), "--base", "HEAD"], {
       cwd: dir,
@@ -92,3 +94,34 @@ for (const [name, body, expect] of [
     assert.match(text, expect);
   });
 }
+
+// #up3vf (reopened 2026-11-12): stand-ins the template's own wording leads to.
+const GATES_LINE = "- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N>`; run output pasted below\n";
+for (const [name, fence] of [
+  ["GATES_HERE in a ticked gates fence", "GATES_HERE"],
+  ["the gates line's own <N> in a fence", "gates: typecheck=<N> lint=<N> test=<N> build=<N>"],
+]) {
+  test(`${name} fails`, () => {
+    const body = COMPLETE.replace("- [x] Change is described in one sentence", GATES_LINE + "\n```\n" + fence + "\n```\n");
+    const { code, text } = check(body);
+    assert.equal(code, 1, text);
+    assert.match(text, /placeholder text/);
+  });
+}
+test("a real gates paste still passes", () => {
+  const body = COMPLETE.replace("- [x] Change is described in one sentence", GATES_LINE + "\n```\n=== gates: typecheck exited 0 after 41s\ngates: typecheck=0 lint=0 test=0 build=0\n```\n");
+  assert.equal(check(body).code, 0);
+});
+test("the output names its mode and what it does not check", () => {
+  assert.match(check(COMPLETE).text, /base HEAD.*Does not check/s);
+});
+
+const HDR = "| Tested at SHA | ";
+test("merged plan with a SHA_HERE header fails; a real SHA, n/a, and an unmerged blank pass", () => {
+  const withSha = (v) => COMPLETE.replace("## 1. Scope", "| | |\n|---|---|\n" + HDR + v + " |\n\n## 1. Scope");
+  assert.equal(check(withSha("SHA_HERE"), { merged: true }).code, 1);
+  assert.equal(check(withSha(""), { merged: true }).code, 1);
+  assert.equal(check(withSha("abc1234"), { merged: true }).code, 0);
+  assert.equal(check(withSha("n/a: gates could not run"), { merged: true }).code, 0);
+  assert.equal(check(withSha("SHA_HERE")).code, 0); // not merged yet: still being written
+});
