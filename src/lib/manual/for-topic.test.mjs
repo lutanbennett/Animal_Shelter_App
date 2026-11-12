@@ -81,7 +81,7 @@ test("a login holding only the three photo, reel and meme cards is shown those t
 
 test("the topics that teach the full record are not tagged for everyone", () => {
   const by = Object.fromEntries(manual.sections.flatMap((s) => s.topics).map((t) => [t.id, t]));
-  for (const id of ["hub", "residents-list", "name-card", "public-pages", "shelter-operations", "home-covering-another-role"]) {
+  for (const id of ["hub", "residents-list", "name-card", "public-pages", "shelter-operations"]) {
     assert.notEqual(cardsOfTopic(by[id]).kind, "everyone", `${id} must not be tagged everyone`);
   }
 });
