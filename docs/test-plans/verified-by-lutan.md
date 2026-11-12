@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none. These are test-plan signatures and a handover correction, not backlog work |
 | Branch / worktree | `claude/verified-by-lutan` @ `C:\Development\Animal_Shelter_verified-by-lutan` |
 | Dev server | n/a: nothing in this PR is served, imported or rendered |
-| PR | #TBD |
+| PR | #1512 |
 | Tested by / date | Claude Opus 5 / 2026-11-12 |
 | Carries a migration? | no |
 | Tested at SHA | this branch's own head, cut from `origin/main` |
@@ -25,8 +25,8 @@
 
 - [x] `node scripts/worktree.mjs sync` — n/a: the worktree was created from `origin/main` minutes before the work
 - [x] `node scripts/gates.mjs` — n/a: documents-only PR; `check-docs-only.mjs` decides and `ci.yml` gates the heavy jobs on it. Nothing here was changed to make a check run
-- [x] `node scripts/check-docs-only.mjs --base origin/main` — result under *Defects found*
-- [x] `node scripts/check-test-plan.mjs --base origin/main` run the way CI runs it — result under *Defects found*
+- [x] `node scripts/check-docs-only.mjs --base origin/main` — exit **0**, listing exactly the four files: *"The heavy jobs will skip; test-plan still runs."*
+- [x] `node scripts/check-test-plan.mjs --base origin/main` run the way CI runs it — exit **0**
 - [x] The two cards were **measured on production**, not taken on his word — `check-production.mjs role-cards` shows `approve_text` and `diet_settings` in the Management set
 
 ## 3. Schema and data
@@ -97,7 +97,7 @@
 | 1 | low | **Three documents claimed work was outstanding that Lutan had done** — most pointedly the handover, which said nobody holds the two cards and called it the fourth handover running | **Fixed here**, with the card state measured on production rather than copied from his message |
 | 2 | none | A multi-line edit refused to apply because the pattern was joined with `\n` against CRLF files | **Caught by the script refusing**, not by a bad diff. Fixed by joining with the file's own ending; proven by the per-file numstat |
 | 3 | none | `audit` will show `skipped` on this PR | Correct and expected for a documents-only diff. Skipped is not a pass; no dependency changes here |
-| 4 | none | `check-docs-only.mjs` and `check-test-plan.mjs` results | Recorded in section 2 once run |
+| 4 | none | `check-docs-only.mjs` and `check-test-plan.mjs` results | **Both exit 0.** docs-only lists exactly the four files; test-plan reports ok |
 
 ## Left for manual verification
 
