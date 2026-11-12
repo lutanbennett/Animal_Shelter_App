@@ -101,7 +101,7 @@ export const CLASSES = [
   {
     id: "drive-warning-fallback",
     reads: "user",
-    why: "The fallback sentence of driveErrorMessage(): returned to the maintenance and project actions as driveWarning, which MaintenanceBoard.tsx and MaintenanceForm.tsx draw (traced 2026-11-06). It sits in a function argument, so rule 3's positions do not reach it; translating needs the caller's dictionary threaded in.",
+    why: "The fallback sentence of driveErrorMessage(): returned to the maintenance and project actions as driveWarning, which MaintenanceBoard.tsx and MaintenanceForm.tsx draw (traced 2026-11-06). It sits in a function argument, which rule 3 reads since 2026-11-12 as a named position (scripts/lib/english-in-ts-positions.mjs); no English remains there, the callers thread their dictionary in (2026-11-06).",
     match: (rel) => /drive-sync\.ts$/.test(rel),
   },
   {
