@@ -26,14 +26,15 @@
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`
 
 ```
-=== gates: typecheck exited 0 after 10s
-=== gates: lint exited 0 after 148s
-=== gates: test exited 0 after 39s
-=== gates: build exited 0 after 80s
+=== gates: typecheck exited 0 after 87s
+=== gates: lint exited 0 after 233s
+=== gates: test exited 0 after 51s
+=== gates: build exited 0 after 85s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-An earlier run of the same tree reported `lint=1`, and the pipe it was first read through
+That run is the last one, on the tree that includes the numbering fix and its eight new tests. An
+earlier run reported `lint=1`, and the pipe it was first read through
 (`node scripts/gates.mjs | tail`) returned **0** — the exact trap this section warns about. The
 failure was real: `check-permission-catalogue`'s check B read the words `activity: "read"` inside a
 new doc comment in `can.ts` as an activity key. The comment was reworded and the gates re-run in full;
