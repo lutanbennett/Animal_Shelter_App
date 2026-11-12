@@ -33,7 +33,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { takeTreeLock } from "./lib/tree-lock.mjs";
+import { takeTreeLockWaiting } from "./lib/tree-lock.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, "..");
@@ -81,7 +81,8 @@ if (missing.length) {
 // The build reads node_modules; an `npm ci` through guarded-install.mjs deletes
 // it. Held until this script exits. Refuses, naming the holder, rather than race.
 try {
-  takeTreeLock("build");
+  // Waits (default 10 min) for a live holder rather than refusing at once; still refuses at the end.
+  takeTreeLockWaiting("build", Number(process.env.TREE_LOCK_WAIT_SECONDS ?? 600));
 } catch (e) {
   console.error(`gates: ${e.message}`);
   process.exit(2);

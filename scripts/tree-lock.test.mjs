@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync, existsSync } from "node:
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { LOCK_FILE, takeTreeLock, treeProblems } from "./lib/tree-lock.mjs";
+import { LOCK_FILE, takeTreeLock, takeTreeLockWaiting, treeProblems } from "./lib/tree-lock.mjs";
 
 const tmp = () => mkdtempSync(join(tmpdir(), "treelock-"));
 
@@ -51,4 +51,17 @@ test("a child of the live holder runs under its lock instead of refusing it", ()
     if (before === undefined) delete process.env.TREE_LOCK_PID;
     else process.env.TREE_LOCK_PID = before;
   }
+});
+
+test("waiting still refuses a live holder at the timeout, and names how to end it", () => {
+  const root = tmp();
+  const release = takeTreeLock("build", root);
+  assert.throws(() => takeTreeLockWaiting("build", 0, root, () => {}), /refusing to start a build.*end it yourself/s);
+  release();
+});
+
+test("waiting takes a stale lock over at once", () => {
+  const root = tmp();
+  writeFileSync(join(root, LOCK_FILE), JSON.stringify({ kind: "build", pid: 2 ** 22 + 12345, since: "x" }));
+  takeTreeLockWaiting("build", 0, root, () => {})();
 });
