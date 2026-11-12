@@ -29,7 +29,7 @@ a setting which does nothing is a trap — someone grants it and expects a resul
 1. **The type system.** `can(perms, "roles.view", "edit")` and
    `requirePermission("roles.view", "edit")` no longer compile: a `readonly` key's only overload takes
    the literal `"read"`. A bundle entry for one must say `level: "read"`.
-2. **The database (0360).** `card_grants` gets the kind guard it never had, so a card cannot be given
+2. **The database (0361).** `card_grants` gets the kind guard it never had, so a card cannot be given
    one of these at level 2 at all; `role_permissions_guard` refuses the cell; and
    `permission_activities_guard_kind` refuses the kind change itself if any card or cell already holds
    one of them at Edit, so the migration cannot quietly contradict the live data.
@@ -56,29 +56,44 @@ without the file — or the file without the migration — is a red build either
 precedent is the same: `0355` shipped in one commit with `catalogue.ts` and `cards.ts`
 (`59b17c80`, 2026-11-11). So: one PR, the smallest it can be.
 
-## The migration number, which is NOT clean and is the one thing to know
+## The migration number: 0361, and it took three attempts to get right
 
-**Two live branches are numbered 0360.** `claude/adopter-update-app` (PR #1513, open and titled
-"[unfinished]") carries `0360_adoption_update_channel_app.sql` and **has already applied it to dev**,
-which is why `apply-migrations --status` now lists two 0360 rows with no file on `main`. The brief
-this stream was given said the one-migration-at-a-time slot was free, because the check that was run
-looked at `claude/*` branches for migration files on the day `claude/refusal-keys-group-7` merged and
-`adopter-update-app` was missed.
+**It is `0361`, not `0360`, because PR #1513 already claims `0360`.** `claude/adopter-update-app`
+(open, titled "[unfinished]") carries `0360_adoption_update_channel_app.sql` and had already applied
+it to dev. The brief this stream was given said the one-migration-at-a-time slot was free, because the
+check that was run looked at `claude/*` branches on the day `claude/refusal-keys-group-7` merged and
+missed `adopter-update-app`.
 
-**It was numbered 0361 first, and that was wrong.** The pre-commit hook refused it, correctly:
-numbers belong to `main`, not to a branch, so the next number after `main`'s `0359` is `0360` and an
-unmerged branch never owns one. Taking 0361 would have left a permanent gap on `main` to preserve an
-unmerged branch's claim.
+**The two local checks disagree with each other, and CI is the one that is right.** This is the part
+worth knowing, because it will catch the next stream too:
 
-**So this is genuinely two in-flight migrations at once, against the rule, and it is disclosed rather
-than tidied away.** Proceeding was this stream's call, not Lutan's and not the planner's: his rulings
-were given the same day, the other branch is unfinished, and the hazard is reversible. What whoever
-merges second has to do — almost certainly #1513, since it is unfinished:
+- The **pre-commit hook** runs `check-migration-numbers.mjs` with no network. Its open-PR check needs
+  `gh`, so it is skipped, and all it can see is that `main` ends at `0359`. It therefore **refuses
+  `0361` as a gap and tells you to rename to `0360`** — which is exactly what this stream did, on the
+  reasoning that numbers belong to `main` and an unmerged branch never owns one.
+- **CI runs the same script with `gh` available**, so it sees the open PR and fails the `migration-numbers`
+  job: *"open PR 1513 already adds 0360_adoption_update_channel_app.sql, the same number 0360. Whichever
+  merges second must renumber; ask the other stream, or take the next free number."*
 
-- rename its file to `0361_…`,
-- `node scripts/apply-migrations.mjs --forget 0360_adoption_update_channel_app.sql` on dev, which
-  exists for exactly this (a migration applied under a number and renumbered before merge),
-- re-apply it under the new name.
+Both halves of the script are correct about what they can see; the hook simply cannot see open PRs, and
+its remedy is confidently wrong whenever another PR holds the number. **So the rule in practice is:
+`main`'s highest plus one, unless an open PR has taken it, in which case the next free number — and only
+CI or `gh pr list` can tell you which.** Numbering by the hook alone produced a red check here.
+
+What that cost, and what it leaves: the file was applied to dev as `0360_…`, so the renumber needed
+`node scripts/apply-migrations.mjs --forget 0360_readonly_activities_and_stock_usage_card.sql` (dev only;
+it exists for exactly this) and a re-apply under `0361`. **Nothing is left behind on dev** —
+`--status` lists one unmerged row, #1513's own `0360`, which is that stream's to carry.
+
+**Two in-flight migrations at once is still against the rule**, and proceeding was this stream's call,
+not Lutan's and not the planner's: his rulings were given the same day, the other branch is unfinished,
+and `0361` is additive and reversible in two statements. It is disclosed here rather than tidied away.
+
+**One more thing the renumber broke, mentioned because the fix was silent and the damage was not.**
+Replacing `0360` with `0361` across `docs/backlog.md` by text also rewrote two copies of the vet
+clinic's postcode (`Chiang Mai 50360`) and a sentence belonging to another item. Caught by reading the
+diff rather than by any check, and the file was reverted and edited by hand. A number is a bad thing to
+search and replace for.
 
 ## Measured
 
@@ -86,18 +101,18 @@ merges second has to do — almost certainly #1513, since it is unfinished:
   `85 catalogue activities; 14 Admin-only on purpose, 0 UNRULED; 56 cards`. `foundNotRuled` is empty
   and `adminOnlyOnPurpose` stays at the fourteen dated rulings.
 - `node scripts/check-production.mjs activities-grantable --env test` — exit **0** against the dev
-  database, after applying 0360: the live `card_grants` table agrees, naming all fourteen rulings and
+  database, after applying 0361: the live `card_grants` table agrees, naming all fourteen rulings and
   no unruled gap.
 - `node scripts/apply-migrations.mjs --dry-run` then the real apply: both **ok**. The file's own
   assertion block checks the four kinds, that there are exactly four, that `stock.usage` reached both
   cards, and that the four reads are still held.
 - `node scripts/gates.mjs` — four zeros.
 
-**Not measured on production, and one consequence to expect there.** Production does not have 0360
+**Not measured on production, and one consequence to expect there.** Production does not have 0361
 yet, so until it is applied in a release, `activities-grantable --env production` will **FAIL** on
 `stock.usage at edit`: the record that excused it is gone from the allow-list, as the trap in #1511's
 decision file required, and the card grant that closes it lives in this migration. That is the
-ordinary state of any card-grant migration between merge and release, and it clears when 0360 is
+ordinary state of any card-grant migration between merge and release, and it clears when 0361 is
 applied. Nothing else in the check moves.
 
 ## Analysis is by card here, as the rule requires

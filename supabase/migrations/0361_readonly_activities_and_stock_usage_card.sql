@@ -42,7 +42,7 @@ alter table permission_activities
   add constraint permission_activities_kind_check check (kind in ('level', 'yesno', 'readonly'));
 
 comment on table permission_activities is
-  'The catalogue (§4), seeded in 0132 and kept equal to src/lib/permissions/catalogue.ts by a check that lint runs. kind level = Edit/Read/None, yesno = Yes/No, readonly = Read/None (0360: nothing is ever done at Edit, so the setting is not offered).';
+  'The catalogue (§4), seeded in 0132 and kept equal to src/lib/permissions/catalogue.ts by a check that lint runs. kind level = Edit/Read/None, yesno = Yes/No, readonly = Read/None (0361: nothing is ever done at Edit, so the setting is not offered).';
 
 -- ---------------------------------------------------------------------------
 -- 2. The guards, before any row is changed, so they protect this file too
@@ -70,7 +70,7 @@ begin
       using errcode = 'check_violation';
   end if;
   if v_activity_kind = 'readonly' and new.level <> 1 then
-    raise exception '% is a Read/None activity; its only level is 1. Nothing is done at Edit (0360).', new.activity
+    raise exception '% is a Read/None activity; its only level is 1. Nothing is done at Edit (0361).', new.activity
       using errcode = 'check_violation';
   end if;
   return new;
@@ -97,7 +97,7 @@ begin
       using errcode = 'check_violation';
   end if;
   if v_kind = 'readonly' and new.level <> 1 then
-    raise exception '% is a Read/None activity; a card grants it at 1. Nothing is done at Edit (0360).', new.activity
+    raise exception '% is a Read/None activity; a card grants it at 1. Nothing is done at Edit (0361).', new.activity
       using errcode = 'check_violation';
   end if;
   return new;
@@ -182,25 +182,25 @@ begin
    where key in ('photos.resident_medical', 'reports.expenses', 'resident.who_and_where', 'roles.view')
      and kind <> 'readonly';
   if v_bad is not null then
-    raise exception '0360 FAILED: still not Read/None: %', v_bad;
+    raise exception '0361 FAILED: still not Read/None: %', v_bad;
   end if;
 
   select count(*) into v_n from public.permission_activities where kind = 'readonly';
   if v_n <> 4 then
-    raise exception '0360 FAILED: % Read/None activities, expected 4', v_n;
+    raise exception '0361 FAILED: % Read/None activities, expected 4', v_n;
   end if;
 
   select count(*) into v_n from public.card_grants
    where activity = 'stock.usage' and card in ('food_forecast', 'medicine_forecast') and level = 2;
   if v_n <> 2 then
-    raise exception '0360 FAILED: stock.usage is on % of the two forecast cards', v_n;
+    raise exception '0361 FAILED: stock.usage is on % of the two forecast cards', v_n;
   end if;
 
   -- The reads these four carry are the whole point of keeping them: a dozen cards hold them.
   select count(*) into v_n from public.card_grants
    where activity in ('photos.resident_medical', 'reports.expenses', 'resident.who_and_where', 'roles.view');
   if v_n = 0 then
-    raise exception '0360 FAILED: no card holds any of the four reads any more';
+    raise exception '0361 FAILED: no card holds any of the four reads any more';
   end if;
-  raise notice '0360 ok: four activities are Read/None, % cards hold their reads, stock.usage is on both forecast cards', v_n;
+  raise notice '0361 ok: four activities are Read/None, % cards hold their reads, stock.usage is on both forecast cards', v_n;
 end $a$;

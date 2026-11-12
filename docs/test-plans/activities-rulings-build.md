@@ -10,8 +10,8 @@
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3002` |
 | PR | #1515 |
 | Tested by / date | Claude (Opus 5) / 2026-11-12 |
-| Carries a migration? | yes — `0360_readonly_activities_and_stock_usage_card.sql` |
-| Tested at SHA | `dace25a6` plus the docs and release-note commit on this branch |
+| Carries a migration? | yes — `0361_readonly_activities_and_stock_usage_card.sql` |
+| Tested at SHA | the branch tip at the time of the final gates run; the gates block below is that run |
 
 ## 1. Scope and risk
 
@@ -43,15 +43,15 @@ the block above is that run.
 
 ## 3. Schema and data
 
-- [ ] Migration number is one above the highest on `main`, and no other in-flight branch carries one — pending: **the number is right and the second half of this line is NOT true, and it is deliberate.** `0360` is one above `main`'s `0359`, which the pre-commit hook enforces and which is why an attempt to take `0361` was refused. But `claude/adopter-update-app` (PR #1513, open, "[unfinished]") also carries a `0360` and has already applied it to dev, so two in-flight branches carry a migration. Proceeding was this stream's call, disclosed in `docs/decisions/2026-11-12-readonly-activities-and-stock-usage-card.md` with the exact recovery for whoever merges second (rename to `0361`, `--forget` the stale dev row, re-apply). The release manager needs to know before the production apply
-- [x] `node scripts/apply-migrations.mjs --status` reviewed before applying — `362 applied, 1 pending`; it is what surfaced the duplicate `0360` above
-- [x] `node scripts/apply-migrations.mjs --dry-run` reviewed — `dry-run 0360_readonly_activities_and_stock_usage_card.sql … ok`, exit 0
-- [x] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` — `applying 0360_… ok`; `--status` then read `363 applied, 0 pending`
+- [ ] Migration number is one above the highest on `main`, and no other in-flight branch carries one — pending: **the number is now right and the second half of this line is NOT true, deliberately.** It is `0361`: `main` ends at `0359`, but PR #1513 (open, "[unfinished]") already claims `0360`, so the next free number is `0361`. Getting there took a renumber in each direction — the pre-commit hook has no network, so it cannot see open PRs and refuses `0361` as a gap, while CI runs the same script with `gh` and fails `migration-numbers` on the duplicate. CI is the authority; the hook's remedy is wrong whenever another PR holds the number. Two in-flight branches still carry a migration at once, which is against the rule and was this stream's call. Both are in `docs/decisions/2026-11-12-readonly-activities-and-stock-usage-card.md`, and the release manager needs to know before the production apply
+- [x] `node scripts/apply-migrations.mjs --status` reviewed before applying — `362 applied, 1 pending`; it is what surfaced the duplicate `0360` above, by listing a row no file on `main` accounts for
+- [x] `node scripts/apply-migrations.mjs --dry-run` reviewed — `dry-run 0360_readonly_activities_and_stock_usage_card.sql … ok`, exit 0, and again as `0361_…` after the renumber
+- [x] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` — first as `0360_…`, then, after CI refused that number, the row was removed with `--forget` and the file re-applied as `0361_…`. `--status` reads `0 pending` and lists no row of this stream's under the old name
 - [x] File is re-runnable — the `kind` check constraint is dropped by discovered name and re-added, both catalogue rows and the card grant are `on conflict … do update`, and all four functions are `create or replace` with `drop trigger if exists` before each `create trigger`
 - [x] Existing rows still read correctly after the change (checked against real dev data) — the file's own assertion block ran against dev's rows: the four activities are `readonly`, there are exactly four, `stock.usage` is on both forecast cards at level 2, and the four reads are still granted by cards (`raise notice … % cards hold their reads`)
 - [x] **Constraints and defaults exercised against real rows** — the `--dry-run` is that harness: it runs the real DDL inside `begin … rollback` against dev's live rows, and the file's `do $a$` block raises on any of the four assertions above, so a dry-run that reported `ok` proves them. What the guards assert, and what makes this migration safe rather than merely applied: `permission_activities_guard_kind` refuses the kind change outright if **any** `role_permissions` cell or `card_grants` row holds one of the four at Edit — so the change could not have silently contradicted live data, and the fact that it applied is itself the evidence that no card or cell held one at Edit. The reciprocal guards were exercised by the upserts in the same file: `card_grants_guard_kind` passed `stock.usage` at 2 (a yes/no activity's only level) and would have raised on 1
 - [x] Down-migration written, or the reason one is not needed is stated — not written, and the reason is that the change is reversible in one statement with nothing to lose: `update permission_activities set kind = 'level' where key in (…)` plus `delete from card_grants where activity = 'stock.usage'`. No column, table, view or row was dropped and no data was rewritten. Stated here rather than shipped as a file, since the repo does not keep unused down-migrations
-- [x] Production apply plan stated for the release manager — apply `0360_readonly_activities_and_stock_usage_card.sql` to `dbkodyyxxhtygxcxmfcu` with `node scripts/apply-migrations.mjs --env production` **before** the deploy, because the code half reads the grant. Expect **one knock-on**: until it is applied, `node scripts/check-production.mjs activities-grantable` on production FAILS on `stock.usage at edit`, since the allow-list record that excused it is gone (as #1511's decision file required) and the card grant that closes it is in this file. That clears with the apply
+- [x] Production apply plan stated for the release manager — apply `0361_readonly_activities_and_stock_usage_card.sql` to `dbkodyyxxhtygxcxmfcu` with `node scripts/apply-migrations.mjs --env production` **before** the deploy, because the code half reads the grant. Expect **one knock-on**: until it is applied, `node scripts/check-production.mjs activities-grantable` on production FAILS on `stock.usage at edit`, since the allow-list record that excused it is gone (as #1511's decision file required) and the card grant that closes it is in this file. That clears with the apply
 
 ## 4. Functional checks
 
@@ -152,7 +152,9 @@ what `requirePermission` does — the status is 200 because the refusal is a pag
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| 1 | low | The brief's claim that the one-migration-at-a-time slot was free was wrong: `claude/adopter-update-app` (PR #1513) carries `0360` and had already applied it to dev | accepted and disclosed — decision file names the recovery for whoever merges second; not a defect in this change |
+| 1 | low | The brief's claim that the one-migration-at-a-time slot was free was wrong: `claude/adopter-update-app` (PR #1513) carries `0360` and had already applied it to dev | accepted and disclosed — this migration is `0361`; the decision file records both the clash and which check to trust |
+| 2 | low | The pre-commit hook and CI disagree about migration numbers: the hook has no network, cannot run the open-PR check, and told this stream to rename `0361` to `0360`, which CI then failed | accepted, not fixed here — recorded in the decision file so the next stream trusts CI or `gh pr list`; changing the hook is somebody's item |
+| 3 | low | Renumbering by searching `docs/backlog.md` for `0360` also rewrote two copies of a postcode (`Chiang Mai 50360`) and a sentence of another item | fixed — reverted and edited by hand; caught by reading the diff, not by a check |
 
 ## Left for manual verification
 

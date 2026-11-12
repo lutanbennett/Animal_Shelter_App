@@ -402,7 +402,7 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // Card review 2, his answers of 2026-10-28 (0280): three cards, each at READ, because the diet list, the medicine list and the cashflow
   // outgoings are Admin tasks and stay with Admin (outside the card system). Read sees the page; every control that changes something asks
   // the same activity at edit, so none of them is drawn for a holder of one of these cards.
-  // stock.usage added 2026-11-12 (0360): Lutan ruled "Stock between counts" onto these two existing cards rather than a card of its
+  // stock.usage added 2026-11-12 (0361): Lutan ruled "Stock between counts" onto these two existing cards rather than a card of its
   // own, because it is a read-only report over the very stock figures they already show. It is the "Stock between counts" link on
   // Diets, Medications and Deliveries, and the page behind it. Nothing that changes a figure is added: correcting a count still
   // asks stock.correct, which is Admin-only by his ruling of 2026-11-09.

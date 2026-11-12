@@ -18,7 +18,7 @@ const granted = bundleOfCards(CARD_KEYS); // activity -> highest level any card 
 const gaps = [];
 for (const a of ACTIVITIES) {
   const have = granted.get(a.key); // undefined | "read" | "edit"
-  // A "readonly" activity has no edit level to be granted (2026-11-12, 0360), so an edit gap on one is not a gap: it is a
+  // A "readonly" activity has no edit level to be granted (2026-11-12, 0361), so an edit gap on one is not a gap: it is a
   // setting that no longer exists. A yes/no activity is only ever asked at edit.
   const levels = a.kind === "yesno" ? ["edit"] : a.kind === "readonly" ? ["read"] : ["read", "edit"];
   for (const lvl of levels) {

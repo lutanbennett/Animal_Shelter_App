@@ -28,7 +28,7 @@
  * the list rather than leave it as a placeholder, because a setting that does nothing is a trap -- someone
  * grants it and expects a result. "readonly" is how that removal is said, and it is enforced three ways:
  * the type system refuses can(perms, key, "edit"), the database refuses a card_grants or role_permissions
- * row at level 2 (0360), and the Admin-only check (check-ungranted-activities) stops counting an edit gap
+ * row at level 2 (0361), and the Admin-only check (check-ungranted-activities) stops counting an edit gap
  * that can no longer exist. Admin is unaffected: it sits outside the card system (can.ts).
  */
 export type ActivityKind = "level" | "yesno" | "readonly";
