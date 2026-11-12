@@ -5,6 +5,7 @@ import { runWriteAction, unexpectedFailure, type ActionResult, type WriteMessage
 import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { dbRefusal } from "@/lib/db-refusal";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -211,7 +212,8 @@ export async function mergeDoctors(
       p_from: fromId,
       p_into: intoId,
     });
-    if (error) return refuse(error.message);
+    // merge_doctors raises keys since 0365, so its refusals reach the reader in their own language.
+    if (error) return dbRefusal("doctors.mergeDoctors", error, t);
     revalidateDoctorPages(clinicId);
     return { ok: true };
   });

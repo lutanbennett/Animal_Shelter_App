@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { dbRefusal } from "@/lib/db-refusal";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { ensureResidentPhotosFolder, getDriveClient, uploadImageToFolder } from "@/lib/google/drive";
@@ -105,7 +106,9 @@ async function handlePost(request: Request, { params }: { params: Promise<{ id: 
     } catch {
       // Best effort.
     }
-    return NextResponse.json({ error: error?.message ?? (await getT()).t.uploads.errors.couldNotRecordFile }, { status: 500 });
+    // record_attachment raises keys since 0365; dbRefusal() words them in the reader's language. A missing row carries no error, so it keeps the generic words.
+    const words = error ? dbRefusal("clinicVisits.report.record", error, t).error : t.uploads.errors.couldNotRecordFile;
+    return NextResponse.json({ error: words }, { status: 500 });
   }
   if (note) await supabase.from("attachments").update({ caption: note }).eq("id", row.attachment.id);
 

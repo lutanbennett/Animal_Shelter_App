@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
+import { dbRefusal } from "@/lib/db-refusal";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { ensureEventFolder, getDriveClient, uploadImageToFolder } from "@/lib/google/drive";
@@ -85,7 +86,10 @@ async function handlePost(request: Request, { params }: { params: Promise<{ id: 
   const attachmentId = (recorded as { attachment: { id: string } }[] | null)?.[0]?.attachment.id;
   if (recordError || !attachmentId) {
     await orphan();
-    return NextResponse.json({ error: recordError?.message ?? (await getT()).t.uploads.errors.couldNotRecordFile }, { status: 500 });
+    // record_attachment raises keys since 0365; dbRefusal() words them in the reader's language. A missing row carries no error, so it keeps the generic words.
+    const { t } = await getT();
+    const words = recordError ? dbRefusal("events.photos.record", recordError, t).error : t.uploads.errors.couldNotRecordFile;
+    return NextResponse.json({ error: words }, { status: 500 });
   }
 
   const { data: last } = await supabase

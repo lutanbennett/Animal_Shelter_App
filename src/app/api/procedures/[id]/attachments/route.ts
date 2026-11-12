@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
+import { dbRefusal } from "@/lib/db-refusal";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import {
@@ -164,7 +165,8 @@ async function handlePost(
   );
 
   if (recordError) {
-    return NextResponse.json({ error: recordError.message }, { status: 500 });
+    // record_attachment raises keys since 0365; dbRefusal() words them in the reader's language.
+    return NextResponse.json({ error: dbRefusal("procedures.attachments.record", recordError, (await getT()).t).error }, { status: 500 });
   }
 
   const row = (recordResult as { attachment: { id: string } }[])[0];

@@ -6,6 +6,7 @@ import { hasAdminRole } from "@/lib/auth/require-admin";
 import { hasTwoStep } from "@/lib/auth/two-step";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { dbRefusal } from "@/lib/db-refusal";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { isCardKey, type CardKey } from "@/lib/permissions/cards";
 import { isGroupIconKey } from "@/lib/home/group-icons";
@@ -92,12 +93,12 @@ async function apply(supabase: Supabase, roleId: string, cards: CardKey[], where
   // Two inputs since 0261. The app and that migration ship together: a caller and a function that disagree on the input
   // list is PGRST202 "function not found" on every save, which is what 0.40.2 did.
   const { error } = await supabase.rpc("set_role_cards", { p_role: roleId, p_cards: cards });
-  // The two photo-approver refusals (0221, 0222) are written for the person reading them; show them as they are. Any other
-  // check failure keeps the generic words, so a constraint name never reaches the browser.
-  if (error?.code === "23514" && /approve photos/i.test(error.message ?? "") && /^(Give a role|This is the last role)/.test(error.message ?? "")) {
-    return { ok: false, error: error.message };
-  }
-  if (error) return databaseFailure(where, error, t.common);
+  // set_role_cards raises keys since 0365, so dbRefusal() words every one of its three refusals in the reader's
+  // language -- including the two photo-approver ones (0221, 0222), which used to be shown as the raw English the
+  // database raised. The regex that recognised them, and its 23514 allow-list, are gone with them: a key is matched
+  // by name, and anything that is not a key still falls through to databaseFailure()'s generic words, so a
+  // constraint name never reaches the browser.
+  if (error) return dbRefusal(where, error, t);
   return { ok: true };
 }
 

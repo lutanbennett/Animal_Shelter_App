@@ -77,6 +77,8 @@ export const unreleased: ReleaseNote[] = [
   "Anyone with the Food forecast or Medicine forecast card can now open Stock between counts, the report that compares what was used between two stocktakes with what was planned. It was open to the administrator only. Correcting a count is unchanged and stays with the administrator.",
   "If recording a death, withdrawing one, or filing a deceased resident’s records is refused, the reason now shows in Thai when the app is in Thai. Before, a few of these reasons always appeared in English.",
   "If merging two medications, procedure types or blood test types is refused, the reason now shows in Thai when the app is in Thai. Before, these reasons always appeared in English.",
+  "Two more kinds of refusal now show in Thai when the app is in Thai, where before they always appeared in English: merging two doctors on a clinic's doctor list, and adding any file to the app — a resident or event photo, a video, a clinic report or a bill page. The Thai wording has not been checked by a Thai speaker.",
+  { text: "When giving a role a card or taking one away under Settings → Who does what is refused, the reason now shows in Thai when the app is in Thai. That includes the two warnings about leaving nobody able to approve photos, which until now always appeared in English however the app was set. The Thai wording has not been checked by a Thai speaker.", cards: ["who_does_what"] },
 ];
 
 /** Newest first. */

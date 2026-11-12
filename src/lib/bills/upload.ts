@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
+import { dbRefusal } from "@/lib/db-refusal";
 import { can, type Permissions } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { getDriveClient, ensureBillsFolder, uploadImageToFolder } from "@/lib/google/drive";
@@ -110,7 +111,10 @@ export async function fileBillPhoto(
     } catch {
       // Best effort.
     }
-    return NextResponse.json({ error: error?.message ?? (await getT()).t.uploads.errors.couldNotRecordFile }, { status: 500 });
+    // record_attachment raises keys since 0365; dbRefusal() words them in the reader's language. A missing row carries no error, so it keeps the generic words.
+    const { t } = await getT();
+    const words = error ? dbRefusal("bills.upload.record", error, t).error : t.uploads.errors.couldNotRecordFile;
+    return NextResponse.json({ error: words }, { status: 500 });
   }
   return NextResponse.json({
     attachmentId: row.attachment.id,
