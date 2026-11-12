@@ -10,7 +10,7 @@
 | Backlog item | `docs/backlog.md` → `#f56bs` (Assistant) and `#7bd5u` (Public website) |
 | Branch / worktree | `claude/close-two-recorded-items` @ `C:\Development\Animal_Shelter_close-two-recorded-items` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3003` |
-| PR | opened from this branch; number added below once it exists |
+| PR | #1530 |
 | Tested by / date | Claude (stream `close-two-recorded-items`) / 2026-11-12 |
 | Carries a migration? | no |
 | Tested at SHA | `0e6826185` |
