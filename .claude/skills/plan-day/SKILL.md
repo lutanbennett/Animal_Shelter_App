@@ -339,7 +339,7 @@ never a figure.
 | scale | band |
 |---|---|
 | Floor, before any work | **~107–111k on 2026-11-08** — re-measure, never carry forward |
-| **Ordinary well-briefed stream — the default** | **120–145k** |
+| **Ordinary well-briefed stream — the default** | **146–175k** |
 | Quick win (1–3 files, answer already on the item) | 110–170k |
 | Routing into surfaces that already exist | 120–165k |
 | Schema PR, single file | 140–155k |
