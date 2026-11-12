@@ -73,6 +73,7 @@ export const unreleased: ReleaseNote[] = [
   "An adopter who signs in with the email they gave the shelter can now send news about their animal with up to six photos or videos. Nothing they send appears on the website until a person has read it and agreed, and their words go to Management → Translations so the other language can be drafted and approved. Photos can be up to 15 MB and videos up to 150 MB, and a progress bar shows while a video is sending.",
   "Anyone with the Food forecast or Medicine forecast card can now open Stock between counts, the report that compares what was used between two stocktakes with what was planned. It was open to the administrator only. Correcting a count is unchanged and stays with the administrator.",
   "If recording a death, withdrawing one, or filing a deceased resident’s records is refused, the reason now shows in Thai when the app is in Thai. Before, a few of these reasons always appeared in English.",
+  "If merging two medications, procedure types or blood test types is refused, the reason now shows in Thai when the app is in Thai. Before, these reasons always appeared in English.",
 ];
 
 /** Newest first. */
