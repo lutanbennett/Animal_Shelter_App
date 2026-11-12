@@ -13,7 +13,7 @@
 | PR | filled in when opened |
 | Tested by / date | Claude (Opus 5) · 2026-11-12 |
 | Carries a migration? | no |
-| Tested at SHA | filled in before the plan is committed |
+| Tested at SHA | `cb9339b74` (the merge of `origin/main`; the gates below ran on it) |
 
 ## 1. Scope and risk
 
@@ -28,7 +28,11 @@
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`
 
 ```
-GATES BLOCK PLACEHOLDER
+=== gates: typecheck exited 0 after 183s
+=== gates: lint exited 0 after 335s
+=== gates: test exited 0 after 64s
+=== gates: build exited 0 after 181s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR (runs the same four gates, among its other checks) — n/a: not yet — the PR does not exist at this commit
