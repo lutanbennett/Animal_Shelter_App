@@ -3249,6 +3249,7 @@ const en = {
       doneRejects: (n: number) => (n === 1 ? "1 row was not added. Download it, fix it and bring it in again." : n + " rows were not added. Download them, fix them and bring them in again."),
       seeBills: "See the bills",
       again: "Start again with another file",
+      photoGone: "the photo is no longer in the Bills inbox",
       fault: {
         notUtf8: "This file is not saved as UTF-8, so Thai names would come out wrong. Save it again as CSV UTF-8 and choose it again.",
         utf16: "This file is saved as Unicode text (UTF-16). Save it again as CSV UTF-8 and choose it again.",

@@ -105,7 +105,7 @@ export async function importBills(formData: FormData, requestId: string | null):
     const failed: Reject[] = [...parsed.rejects];
     let added = 0;
     for (const row of parsed.good) {
-      const why = await writeRow(supabase, row);
+      const why = await writeRow(supabase, row, t.bills.import.photoGone);
       if (why) failed.push({ line: row.line, code: "writeFailed", detail: why, cells: cellsOf(parsed.header, row) });
       else added++;
     }
@@ -136,7 +136,7 @@ function cellsOf(header: string[], row: GoodRow): string[] {
 type Db = Awaited<ReturnType<typeof createClient>>;
 
 /** Writes one row; returns the reason it failed, or null. */
-async function writeRow(supabase: Db, row: GoodRow): Promise<string | null> {
+async function writeRow(supabase: Db, row: GoodRow, photoGone: string): Promise<string | null> {
   const table = row.route === "utility" ? "utility_bills" : "general_bills";
   const common = { kind_id: row.kindId, premises_id: row.placeId, account_id: row.accountId, amount: row.amount, bill_date: row.date };
   const values: Record<string, string | number | null> = row.route === "utility" ? { ...common, covers_month: row.coversMonth } : common;
@@ -158,7 +158,7 @@ async function writeRow(supabase: Db, row: GoodRow): Promise<string | null> {
     .eq("owner_type", "bill_inbox"); // never any other attachment, whatever the id
   if (moveError || !photo || !count) {
     await supabase.from(table).delete().eq("id", bill.id);
-    return moveError?.message ?? "the photo is no longer in the Bills inbox";
+    return moveError?.message ?? photoGone;
   }
   // The card the photo came from is empty now unless it held more pages.
   const { count: left } = await supabase
