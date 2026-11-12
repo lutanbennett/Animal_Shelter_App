@@ -422,7 +422,7 @@ function CardView({
             </select>
           </label>
         )}
-        {kind?.route === "utility" && (
+        {kind?.offered && kind.route === "utility" && (
           <label className="flex flex-col gap-1 text-sm font-medium text-muted">
             {t.bills.utilities.covers}
             <input type="month" value={coversMonth} onChange={(e) => setCoversMonth(e.target.value)} className={`${inputClass} w-44`} />
@@ -438,7 +438,7 @@ function CardView({
 
       <div className="flex flex-col gap-2">
         <p className="text-sm font-medium text-foreground">{b.forWhat}</p>
-        {kind?.route === "general" && (
+        {kind?.offered && kind.route === "general" && (
           <div>
             <ActionButton
               variant="primary"
@@ -450,7 +450,7 @@ function CardView({
             </ActionButton>
           </div>
         )}
-        {kind?.route === "utility" && (
+        {kind?.offered && kind.route === "utility" && (
           <div>
             <ActionButton
               variant="primary"
