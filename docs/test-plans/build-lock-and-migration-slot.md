@@ -6,7 +6,7 @@
 |---|---|
 | Feature | Tree lock tracks its build child; migration check says whether a file is applied |
 | Backlog item | `docs/backlog.md` → #9975c, #y1x2r |
-| Branch / worktree | `claude/build-lock-and-migration-slot` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/build-lock-and-migration-slot` @ `C:\Development\Animal_Shelter_build-lock-and-migration-slot` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | see PR |
 | Tested by / date | Claude / 2026-11-12 |
