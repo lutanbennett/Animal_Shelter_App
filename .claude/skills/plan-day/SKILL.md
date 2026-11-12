@@ -257,9 +257,10 @@ unranked. Per candidate:
    any stream here change what another's checks READ? If the other merely has to ignore a red, say so in
    its brief; if its deliverable IS the measurement, move one. **Intersect the actual file lists before
    moving anything** — a shared directory is not a collision, a shared file is.
-3. **At most one migration-carrying stream per batch.** Two in one batch means one schema PR or one moves.
-   **An answer of his can create a migration out of nothing**, so where an open question of his could
-   need the database to change, the slot is provisional until he answers — say so.
+3. **State a migration expectation; never present it as a reservation.** The number is settled at COMMIT time by
+   `check-migration-numbers.mjs`, which reads open PRs; a planner does not own the slot (sessions outside the plan take
+   numbers, and a `migration=none` stream took `0364` the same day). Prefer one migration-carrying stream per batch, and
+   where an open question of his could need schema, write the brief as "expected none, may need one".
 4. **Schema-first items span adjacent batches** — schema in batch N, app in N+1, never together.
    **The exception is structural: a NEW CARD cannot be split**, because `check-cards-count` asserts an
    exact count from `cards.ts` and `check-card-grants` proves the database against it, so both halves

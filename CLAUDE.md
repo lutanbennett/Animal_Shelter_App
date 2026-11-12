@@ -793,9 +793,9 @@ dev server running, none of it matters.
   `claude/<feature>-schema` branch holding only the migration (additive,
   re-runnable, harmless to code that doesn't know about it), merged and
   applied to dev the same day; then the feature branch created from the
-  updated `main`. Only one in-flight branch may carry a migration at a
-  time, so two streams can never claim the same number and the dev
-  database never carries schema that `main` doesn't. If two streams both
+  updated `main`. Aim for one in-flight branch carrying a migration at a
+  time; nothing reserves the slot, so `check-migration-numbers.mjs` (it reads open PRs) settles the number at commit. If it says
+  your file is already applied to dev, do NOT renumber it: stop and report. If two streams both
   need schema, their migrations go in one schema PR.
 - Apply with `node scripts/apply-migrations.mjs` (`--dry-run` first for
   anything non-trivial, `--status` to look). It records each file in
