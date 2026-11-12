@@ -53,6 +53,11 @@ export type ManualTopic = {
    * scripts/acceptance-matrix.mjs fails when it names an activity no card grants.
    */
   activity?: ActivityKey;
+  /**
+   * The topic is about a section's front page, which opens for any one of many cards. Its cards are the ones whose bundle
+   * makes opensAnyIn() true for that section: the same question the menu link and the home tile ask (for-topic.ts).
+   */
+  opensSection?: "operations" | "management" | "settings";
   /** "read" when the topic is for whoever can look at the activity, not only change it (Enclosures, Maintenance board…). */
   activityLevel?: "read";
   /**

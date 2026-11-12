@@ -118,3 +118,13 @@ test("Cards at a glance lists only the cards held; Admin sees the whole catalogu
   assert.deepEqual(cardsForTable(holding(), CARD_KEYS), []);
   assert.deepEqual(cardsForTable(null, CARD_KEYS), []);
 });
+
+test("the Operations topic is a reader's when their cards open the Operations front page, and the unassigned state is gone", () => {
+  const ops = manual.sections.flatMap((s) => s.topics).find((t) => t.id === "shelter-operations");
+  assert.equal(cardsOfTopic(ops).kind, "cards");
+  assert.ok(cardsOfTopic(ops).cards.length > 0);
+  assert.equal(topicView(ops, holding("bills")), "notMine");
+  assert.equal(topicView(ops, admin), "mine");
+  const covering = manual.sections.flatMap((s) => s.topics).find((t) => t.id === "home-covering-another-role");
+  assert.equal(cardsOfTopic(covering).kind, "everyone");
+});

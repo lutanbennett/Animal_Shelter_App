@@ -197,7 +197,8 @@ const manual: Manual = {
         },
         {
           id: "shelter-operations",
-          // UNASSIGNED (2026-11-09, manual-topics-by-card): the Operations front page opens for any one of a dozen cards, so no one card owns it.
+          opensSection: "operations",
+          needsMenu: true,
           title: "Operations: the daily work",
           path: "Operations (in the menu)",
           intro:
@@ -350,7 +351,7 @@ const manual: Manual = {
         },
         {
           id: "home-covering-another-role",
-          // UNASSIGNED (2026-11-09, manual-topics-by-card): about holding a second set of cards for a while, which no card grants.
+          everyone: true,
           title: "Home screen: if you cover another role",
           path: "Home",
           intro:
