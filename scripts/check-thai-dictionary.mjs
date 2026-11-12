@@ -66,6 +66,7 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { exitWith } from "./lib/exit.mjs";
+import { namedArgPositions } from "./lib/english-in-ts-positions.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
@@ -502,6 +503,14 @@ function userFacingLiterals(ts, sf, rel) {
         for (const a of node.arguments ?? []) values(a, take);
       } else if (/\.setCustomValidity$/.test(callee)) {
         for (const a of node.arguments ?? []) values(a, take);
+      } else {
+        // A function named in scripts/lib/english-in-ts-positions.mjs, read at
+        // the argument positions that file records. Narrow on purpose: the
+        // second argument of ANY call would flood the report.
+        for (const n of namedArgPositions(callee) ?? []) {
+          const arg = (node.arguments ?? [])[n];
+          if (arg) values(arg, take);
+        }
       }
     } else if (isEntry && ts.isReturnStatement(node) && node.expression) {
       values(node.expression, take);
