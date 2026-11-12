@@ -10,7 +10,7 @@
 | Backlog item | `docs/backlog.md` → none; the handover is process bookkeeping and closes no item |
 | Branch / worktree | `claude/planner-handover-741` @ `C:\Development\Animal_Shelter_planner-handover-741` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3009` (not started; no runtime surface) |
-| PR | #1516 |
+| PR | #1518 |
 | Tested by / date | Claude (planner) / 2026-11-12 |
 | Carries a migration? | no |
 | Tested at SHA | 40a9a254 |
