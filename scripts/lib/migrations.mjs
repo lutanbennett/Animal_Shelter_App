@@ -55,6 +55,31 @@ export const KNOWN_DUPLICATES = new Map([
  * with the same number as one of `freshNames`. `ownBranch` is skipped so a PR
  * never collides with itself. Returns [{ name, number, pr, other }].
  */
+/**
+ * Every migration number another open PR already adds, as number -> { pr, file }. The companion of
+ * collisionsWithOpenPrs: that one answers "has somebody taken MY number", this one "which numbers are
+ * taken at all", which is what "the next free number" has to mean. Without it the check was
+ * unsatisfiable while another PR held the number after main's highest: the number itself failed as a
+ * collision, and the next one failed as a gap (2026-11-12, PRs #1513 and #1515).
+ */
+export function numbersClaimedByOpenPrs(prs, ownBranch) {
+  const claimed = new Map();
+  for (const pr of prs ?? []) {
+    if (ownBranch && pr.headRefName === ownBranch) continue;
+    for (const f of pr.files ?? []) {
+      const path = f.path ?? f;
+      if (!path.startsWith(`${MIGRATIONS_DIR}/`)) continue;
+      const file = path.slice(MIGRATIONS_DIR.length + 1);
+      if (!MIGRATION_NAME.test(file)) continue;
+      const n = numberOf(file);
+      // Lowest PR number wins, so the answer does not depend on the order gh listed them.
+      const held = claimed.get(n);
+      if (!held || pr.number < held.pr) claimed.set(n, { pr: pr.number, file });
+    }
+  }
+  return claimed;
+}
+
 export function collisionsWithOpenPrs(freshNames, prs, ownBranch) {
   const hits = [];
   for (const pr of prs) {

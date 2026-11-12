@@ -56,44 +56,61 @@ without the file — or the file without the migration — is a red build either
 precedent is the same: `0355` shipped in one commit with `catalogue.ts` and `cards.ts`
 (`59b17c80`, 2026-11-11). So: one PR, the smallest it can be.
 
-## The migration number: 0361, and it took three attempts to get right
+## The migration number: 0361, and the check that could not be satisfied
 
-**It is `0361`, not `0360`, because PR #1513 already claims `0360`.** `claude/adopter-update-app`
-(open, titled "[unfinished]") carries `0360_adoption_update_channel_app.sql` and had already applied
-it to dev. The brief this stream was given said the one-migration-at-a-time slot was free, because the
-check that was run looked at `claude/*` branches on the day `claude/refusal-keys-group-7` merged and
-missed `adopter-update-app`.
+**It is `0361`, because PR #1513 already claims `0360`.** `claude/adopter-update-app` (open, titled
+"[unfinished]") carries `0360_adoption_update_channel_app.sql` and had already applied it to dev. The
+brief this stream was given said the one-migration-at-a-time slot was free: the check behind that
+looked at `claude/*` branches on the day `claude/refusal-keys-group-7` merged, and missed this one.
 
-**The two local checks disagree with each other, and CI is the one that is right.** This is the part
-worth knowing, because it will catch the next stream too:
+### No number passed, and that was a defect in the check
 
-- The **pre-commit hook** runs `check-migration-numbers.mjs` with no network. Its open-PR check needs
-  `gh`, so it is skipped, and all it can see is that `main` ends at `0359`. It therefore **refuses
-  `0361` as a gap and tells you to rename to `0360`** — which is exactly what this stream did, on the
-  reasoning that numbers belong to `main` and an unmerged branch never owns one.
-- **CI runs the same script with `gh` available**, so it sees the open PR and fails the `migration-numbers`
-  job: *"open PR 1513 already adds 0360_adoption_update_channel_app.sql, the same number 0360. Whichever
-  merges second must renumber; ask the other stream, or take the next free number."*
+Worth reading before trusting a refusal from it, because the refusal was confident and wrong:
 
-Both halves of the script are correct about what they can see; the hook simply cannot see open PRs, and
-its remedy is confidently wrong whenever another PR holds the number. **So the rule in practice is:
-`main`'s highest plus one, unless an open PR has taken it, in which case the next free number — and only
-CI or `gh pr list` can tell you which.** Numbering by the hook alone produced a red check here.
+- `0360` failed the **open-PR** rule — *"open PR 1513 already adds 0360_adoption_update_channel_app.sql,
+  the same number"* — whose own advice is *"take the next free number"*.
+- `0361` failed the **gap** rule, because `evaluate()` worked out "one past the highest" from `main`
+  **alone**: `main` ended at `0359`, so the only number it would accept was `0360`.
 
-What that cost, and what it leaves: the file was applied to dev as `0360_…`, so the renumber needed
-`node scripts/apply-migrations.mjs --forget 0360_readonly_activities_and_stock_usage_card.sql` (dev only;
-it exists for exactly this) and a re-apply under `0361`. **Nothing is left behind on dev** —
-`--status` lists one unmerged row, #1513's own `0360`, which is that stream's to carry.
+So the two halves of one script contradicted each other, and the check was **unsatisfiable** while
+another open PR held `main`'s highest + 1. Lutan chose to fix it rather than wait for the other stream
+or park this work.
 
-**Two in-flight migrations at once is still against the rule**, and proceeding was this stream's call,
-not Lutan's and not the planner's: his rulings were given the same day, the other branch is unfinished,
-and `0361` is additive and reversible in two statements. It is disclosed here rather than tidied away.
+**The fix, in `scripts/check-migration-numbers.mjs` and `scripts/lib/migrations.mjs`:** "the next free
+number" now means *not on main and not added by another open PR*. `numbersClaimedByOpenPrs()` is the new
+pure helper (lowest PR wins, so `gh`'s ordering cannot change the answer), the open PRs are read once and
+feed both halves, and a file whose number another PR holds is reported **once**, by the collision half
+that names the PR. `evaluate()` is now exported and has seven tests, including this exact case as data.
+Nothing was weakened: a number already on main, a gap with nothing holding it, two files sharing a
+number, and a collision with an open PR all still fail, each proven by a test.
 
-**One more thing the renumber broke, mentioned because the fix was silent and the damage was not.**
+### The hook is still offline, and may still send you the wrong way
+
+The pre-commit hook runs the same script with `--staged`, which **never touches the network on purpose**
+(the script's own header: a hook runs in every worktree on the machine, so it must be fast and must fail
+open). With no PR data it cannot know a number is claimed, so **it will tell you to rename `0361` to
+`0360`, and it will be wrong whenever another open PR holds the number.** That was not changed, because
+making the hook fetch would slow every commit in every stream.
+
+**So: CI, or `gh pr list`, is the authority on migration numbers. The hook is a fast local sanity check.**
+This stream's renumbering commit is `--no-verify` for that reason, which the script's header names as
+the deliberate bypass (*"CI will still say"*); Lutan was asked in chat first, because his `CLAUDE.md`
+forbids skipping a hook without it.
+
+What the renumber left behind: nothing on dev. The file had been applied as `0360_…`, so it needed
+`node scripts/apply-migrations.mjs --forget 0360_readonly_activities_and_stock_usage_card.sql` (dev only,
+and the flag exists for exactly this) and a re-apply under `0361`. `--status` now lists one unmerged row,
+#1513's own `0360`, which is that stream's to carry.
+
+**Two in-flight migrations at once is still against the rule**, and proceeding was this stream's call:
+his rulings were given the same day, the other branch is unfinished, and `0361` is additive and
+reversible in two statements.
+
+**One more thing the renumber broke, recorded because the fix was silent and the damage was not.**
 Replacing `0360` with `0361` across `docs/backlog.md` by text also rewrote two copies of the vet
 clinic's postcode (`Chiang Mai 50360`) and a sentence belonging to another item. Caught by reading the
-diff rather than by any check, and the file was reverted and edited by hand. A number is a bad thing to
-search and replace for.
+diff, not by any check; reverted and edited by hand. A four-digit number is a bad thing to search and
+replace for.
 
 ## Measured
 
@@ -106,7 +123,11 @@ search and replace for.
 - `node scripts/apply-migrations.mjs --dry-run` then the real apply: both **ok**. The file's own
   assertion block checks the four kinds, that there are exactly four, that `stock.usage` reached both
   cards, and that the four reads are still held.
-- `node scripts/gates.mjs` — four zeros.
+- `node scripts/gates.mjs` — four zeros. The first run reported `lint=1` while the pipe it was read
+  through returned 0: `check-permission-catalogue`'s check B read the words `activity: "read"` inside a
+  new doc comment as an activity key. Reworded and re-run in full.
+- `node --test scripts/check-migration-numbers.test.mjs` — **13 pass, 0 fail**, the five that existed
+  before plus eight for the numbering fix above.
 
 **Not measured on production, and one consequence to expect there.** Production does not have 0361
 yet, so until it is applied in a release, `activities-grantable --env production` will **FAIL** on
