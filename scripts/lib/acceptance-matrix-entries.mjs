@@ -1225,6 +1225,15 @@ export const ENTRIES = {
       expect: "Record a delivery opens with the cost filled in. When it is saved the bill is on that delivery and the card is gone.",
     },
   ],
+  "bills-import": [
+    {
+      activity: "Add many bills at once from a spreadsheet",
+      needs: "bills.general",
+      device: "desktop",
+      do: "Open Bills, tap Add many bills from a spreadsheet, download the template, fill it in, choose the file and tap Check the file, then tap the Add button.",
+      expect: "The preview lists the rows that will be added and the rows that cannot, with a reason each. After the Add button the good rows appear under Utility bills and Other bills, and the rows that were not added can be downloaded.",
+    },
+  ],
   "bills-utility": [
     {
       activity: "File a utility bill by the month it covers",
