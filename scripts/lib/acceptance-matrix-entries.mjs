@@ -133,7 +133,7 @@ export const ENTRIES = {
   "print-manual": [
     {
       activity: "Print the manual as a PDF",
-      device: "desktop",
+      device: "both",
       do: "Open the User manual and tap Print this as a PDF.",
       expect: "A PDF opens holding the topics for your role, and it can be saved or printed.",
     },
@@ -501,7 +501,7 @@ export const ENTRIES = {
       activity: "Record a death",
       needs: "placement.death",
       device: "phone",
-      do: "Tap the broken-heart icon, enter the date and cause, and confirm. Use a made-up resident.",
+      do: "Tap Record death (the broken-heart button in the resident's details at the top), enter the date and cause, and confirm. Use a made-up resident.",
       expect: "The status becomes Deceased, the resident leaves the public pages, and only the bio and photos can still be changed.",
     },
   ],
@@ -607,7 +607,7 @@ export const ENTRIES = {
       needs: "medical.weight",
       device: "phone",
       do: "Open Weight on a resident, tap Log weight, enter kg and the date, and save.",
-      expect: "The weight chart updates. Weighing the same resident twice on one day corrects the first reading instead of adding a second.",
+      expect: "The new weight shows as Latest; the chart appears from the second reading. Weighing the same resident twice on one day corrects the first reading instead of adding a second.",
     },
   ],
   "record-weight": [
@@ -849,7 +849,7 @@ export const ENTRIES = {
       needs: "maintenance.jobs:read",
       device: "both",
       do: "Open Maintenance and switch Assigned to between Me and Everyone.",
-      expect: "The jobs show in columns by status, coloured when overdue or blocked.",
+      expect: "On a desktop the jobs show in columns by status; on a phone they show as a list under status tabs. Overdue or blocked jobs are coloured.",
     },
   ],
   "maintenance-board-edit": [

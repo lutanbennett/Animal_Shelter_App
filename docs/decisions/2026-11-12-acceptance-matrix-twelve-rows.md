@@ -24,3 +24,25 @@ October's R-numbers come from `docs/uat/dry-run-2026-10-03-staff.md`, which numb
 | (boundaries) | "5 boundaries" in the brief vs 4 printed | see below | | |
 
 Nothing is unmapped and nothing has split. Numbers will drift again: use the title, not the number.
+
+## Verdicts
+
+Method for every row: **read the app code** (no browser driving; nothing here needed a press). Generated matrix output is not tracked in git (only the generator, entries file and checks are), so nothing generated was committed.
+
+| Today | Verdict | What the code shows |
+|---|---|---|
+| R011 Print manual PDF | **corrected** | `src/app/manual/page.tsx` shows the link at every width. Device `desktop` became `both`. |
+| R036 Move enclosure | already correct | Housing card buttons always show their words (`StatCard.tsx`, `<span>{action.label}</span>`); the October "unlabelled icon" finding no longer holds. |
+| R037 Send to hospital | already correct | Same. |
+| R039 Foster placement | already correct | Same ("Foster / adopt"). |
+| R042 Record a death | **corrected** | The button is labelled "Record death" on a phone (`ResidentHub.tsx`, `md:sr-only`); the step now says so instead of "the broken-heart icon". |
+| R044 Placement history | already correct | The Housing & Status card links to `/housing`, which lists placements. |
+| R049 Book a clinic visit | already correct | `ClinicVisitForm.tsx`: status is never changed for the user; a past date left on Scheduled stays Scheduled, with a hint. October's "saved as Completed" no longer holds. |
+| R052 Stop a prescription early | already correct | Already says it stays under Current today (changed after October). |
+| R054 Log a weight | **corrected** | `WeightChart` renders nothing under two readings; the page shows "Latest". Expected result now says so. |
+| R086 Maintenance board | **corrected** | `MaintenanceBoard.tsx`: columns from `md`, chips + list below. Expected result now says both. |
+| R087 Change a job's status | already correct | Already has the phone path (Move job on) and the desktop drag. |
+| Boundaries count | **meaningless now, no edit** | October's "5 vs 4" compared a brief to the Staff sheet. Staff is retired; no count is typed anywhere. Boundaries are generated per role from `docs/role-walkthrough.md` (today admin 2, management 3, doctor 19, volunteer 8, public viewer 7, visitor 3). |
+
+Not settled: nothing needed a phone. A real phone's handling of the PDF (R011) and a real mouse drag (R087) stay untested, as in October.
+Role-keyed rows: none of the twelve is keyed on a role by this stream's edits; the matrix's role columns come from the generator and were not reshaped. App defects found: none.
