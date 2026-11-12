@@ -166,6 +166,26 @@
       "guard": "loadAdopterScope plus adopter_may_submit(contact, resident) before the insert; sender is the matched contact; a daily cap. Naming an approval state still needs text.approve."
     },
     {
+      "file": "src/lib/adopter/media.ts",
+      "for": "The adopter media gate (loadOwnUpdate asks the scope and the update with the service role) and the one attachments insert for an adopter's photo or video, because an adopter holds no card and record_attachment asks has_permission.",
+      "guard": "loadOwnUpdate (src/lib/adopter/media.ts) before any Drive or database write: verified email -> live contact, adopter_may_submit(contact, resident) (0357), and the update is this contact's own app-sent one about that resident; a cap of files per update; the file is born unapproved (attachments_approval_stamp, 0346). Same shape as account/password/actions.ts (Lutan, 2026-11-12)."
+    },
+    {
+      "file": "src/app/adopter-update/media/photo/route.ts",
+      "for": "Files an adopter's photo in the update's own dated Drive folder and records it through recordAdopterFile.",
+      "guard": "loadOwnUpdate (src/lib/adopter/media.ts) before any Drive or database write: verified email -> live contact, adopter_may_submit(contact, resident) (0357), and the update is this contact's own app-sent one about that resident; a cap of files per update; the file is born unapproved (attachments_approval_stamp, 0346). Same shape as account/password/actions.ts (Lutan, 2026-11-12)."
+    },
+    {
+      "file": "src/app/adopter-update/media/video/start/route.ts",
+      "for": "Opens a Drive resumable upload for an adopter's video and records the promise in video_uploads (service role only, 0229).",
+      "guard": "loadOwnUpdate (src/lib/adopter/media.ts) before any Drive or database write: verified email -> live contact, adopter_may_submit(contact, resident) (0357), and the update is this contact's own app-sent one about that resident; a cap of files per update; the file is born unapproved (attachments_approval_stamp, 0346). Same shape as account/password/actions.ts (Lutan, 2026-11-12)."
+    },
+    {
+      "file": "src/app/adopter-update/media/video/finish/route.ts",
+      "for": "Checks Drive holds the promised video, records it through recordAdopterFile and closes the video_uploads row.",
+      "guard": "loadOwnUpdate (src/lib/adopter/media.ts) before any Drive or database write: verified email -> live contact, adopter_may_submit(contact, resident) (0357), and the update is this contact's own app-sent one about that resident; a cap of files per update; the file is born unapproved (attachments_approval_stamp, 0346). Same shape as account/password/actions.ts (Lutan, 2026-11-12)."
+    },
+    {
       "file": "src/app/adopter-update/page.tsx",
       "for": "Reads the adopter's OWN rows (sender_contact_id is theirs) so they see their copy and its waiting state.",
       "guard": "loadAdopterScope on the same request; never reads public_adoption_updates or anyone else's rows."
