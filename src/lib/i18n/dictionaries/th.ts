@@ -229,6 +229,7 @@ const th: Dictionary = {
     billsSettings: "ตั้งค่าบิล",
     billsUtilities: "บิลค่าสาธารณูปโภค",
     billsGeneral: "บิลอื่นๆ",
+    billsImport: "เพิ่มจากสเปรดชีต",
     vets: "คลินิก",
     medications: "ยา",
     medicationList: "รายการยา",
