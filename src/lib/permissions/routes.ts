@@ -88,7 +88,7 @@ export const ROUTES: readonly RouteEntry[] = [
   {
     path: "/deliveries",
     activity: "stock.delivery",
-    icon: HandHeart,
+    icon: Truck,
     label: (t) => t.deliveries.title,
     device: "any",
     menu: true,
@@ -184,7 +184,7 @@ export const ROUTES: readonly RouteEntry[] = [
     // The suppliers list (0338): the businesses the shelter buys from, kept apart from Contacts, which holds only people.
     path: "/management/suppliers",
     activity: "suppliers.directory",
-    icon: HandHeart,
+    icon: Truck,
     label: (t) => t.nav.suppliers,
     device: "any",
     menu: false,
@@ -194,7 +194,7 @@ export const ROUTES: readonly RouteEntry[] = [
     path: "/suppliers",
     activity: "suppliers.directory",
     level: "read",
-    icon: HandHeart,
+    icon: Truck,
     label: (t) => t.nav.suppliers,
     device: "any",
     menu: false,
