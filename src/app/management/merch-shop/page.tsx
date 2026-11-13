@@ -22,21 +22,38 @@ type Product = {
   photo_drive_file_id: string | null;
   shown: boolean;
   archived_at: string | null;
-  variants: { id: string; size: string | null; colour: string | null; shelter_stock: number; shown: boolean }[];
+  variants: {
+    id: string;
+    size: string | null;
+    colour: string | null;
+    shelter_stock: number;
+    shown: boolean;
+  }[];
 };
 
-const inputClass = "w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary";
-const buttonClass = "rounded border border-border bg-surface px-3 py-1 text-sm font-medium text-foreground hover:border-primary";
-const primaryClass = "rounded bg-primary px-3 py-1 text-sm font-medium text-white";
+const inputClass =
+  "w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary";
+const buttonClass =
+  "rounded border border-border bg-surface px-3 py-1 text-sm font-medium text-foreground hover:border-primary";
+const primaryClass =
+  "rounded bg-primary px-3 py-1 text-sm font-medium text-white";
 
-export default async function MerchShopPage(props: PageProps<"/management/merch-shop">) {
+export default async function MerchShopPage(
+  props: PageProps<"/management/merch-shop">,
+) {
   const { supabase, perms } = await requirePermission("merch.manage", "read");
   const { t } = await getT();
   const m = t.merchStaff;
   const sp = await props.searchParams;
-  const tab = sp.tab === "catalogue" ? "catalogue" : sp.tab === "email" ? "email" : "orders";
+  const tab =
+    sp.tab === "catalogue"
+      ? "catalogue"
+      : sp.tab === "email"
+        ? "email"
+        : "orders";
   const canEdit = can(perms, "merch.manage", "edit");
-  const str = (v: string | string[] | undefined) => (typeof v === "string" ? v : "");
+  const str = (v: string | string[] | undefined) =>
+    typeof v === "string" ? v : "";
   const ok = str(sp.ok);
   const err = str(sp.err);
 
@@ -49,7 +66,9 @@ export default async function MerchShopPage(props: PageProps<"/management/merch-
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 md:p-6">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">{t.nav.merchShop}</h1>
+        <h1 className="text-2xl font-semibold text-foreground">
+          {t.nav.merchShop}
+        </h1>
         <p className="text-sm text-muted">{m.subtitle}</p>
       </div>
       <nav className="flex flex-wrap gap-2" aria-label={m.title}>
@@ -73,8 +92,12 @@ export default async function MerchShopPage(props: PageProps<"/management/merch-
           {m.err[err as keyof typeof m.err] ?? m.err.failed}
         </p>
       )}
-      {tab === "orders" && <Orders supabase={supabase} q={str(sp.q)} state={str(sp.state)} />}
-      {tab === "catalogue" && <Catalogue supabase={supabase} canEdit={canEdit} />}
+      {tab === "orders" && (
+        <Orders supabase={supabase} q={str(sp.q)} state={str(sp.state)} />
+      )}
+      {tab === "catalogue" && (
+        <Catalogue supabase={supabase} canEdit={canEdit} />
+      )}
       {tab === "email" && <EmailTab supabase={supabase} />}
     </main>
   );
@@ -82,18 +105,30 @@ export default async function MerchShopPage(props: PageProps<"/management/merch-
 
 type Db = Awaited<ReturnType<typeof requirePermission>>["supabase"];
 
-async function Orders({ supabase, q, state }: { supabase: Db; q: string; state: string }) {
+async function Orders({
+  supabase,
+  q,
+  state,
+}: {
+  supabase: Db;
+  q: string;
+  state: string;
+}) {
   const { t } = await getT();
   const m = t.merchStaff;
   let query = supabase
     .from("merch_orders")
-    .select("id, order_no, buyer_name, total_thb, total_charged, currency, payment_state, created_at")
+    .select(
+      "id, order_no, buyer_name, total_thb, total_charged, currency, payment_state, created_at",
+    )
     .order("created_at", { ascending: false })
     .limit(200);
-  if (state === "awaiting" || state === "paid" || state === "cancelled") query = query.eq("payment_state", state);
+  if (state === "awaiting" || state === "paid" || state === "cancelled")
+    query = query.eq("payment_state", state);
   // Search by number or name; the characters PostgREST's filter syntax uses are removed rather than escaped.
   const term = q.replace(/[,()*%\\]/g, " ").trim();
-  if (term) query = query.or(`order_no.ilike.%${term}%,buyer_name.ilike.%${term}%`);
+  if (term)
+    query = query.or(`order_no.ilike.%${term}%,buyer_name.ilike.%${term}%`);
   const { data, error } = await query;
   const states: [string, string][] = [
     ["", m.all],
@@ -107,7 +142,12 @@ async function Orders({ supabase, q, state }: { supabase: Db; q: string; state: 
         <input type="hidden" name="tab" value="orders" />
         <label className="flex flex-col text-xs text-muted">
           {m.search}
-          <input name="q" defaultValue={q} placeholder={m.searchPlaceholder} className={inputClass} />
+          <input
+            name="q"
+            defaultValue={q}
+            placeholder={m.searchPlaceholder}
+            className={inputClass}
+          />
         </label>
         <label className="flex flex-col text-xs text-muted">
           {m.colState}
@@ -124,7 +164,9 @@ async function Orders({ supabase, q, state }: { supabase: Db; q: string; state: 
         </button>
       </form>
       {error && <p className="text-sm text-danger">{m.err.failed}</p>}
-      {!error && !data?.length && <p className="text-sm text-muted">{m.noOrders}</p>}
+      {!error && !data?.length && (
+        <p className="text-sm text-muted">{m.noOrders}</p>
+      )}
       {!!data?.length && (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
@@ -141,16 +183,27 @@ async function Orders({ supabase, q, state }: { supabase: Db; q: string; state: 
               {data.map((o) => (
                 <tr key={o.id} className="border-t border-border">
                   <td className="py-1 pr-3">
-                    <Link href={`/management/merch-shop/order/${o.id}`} className="font-medium text-primary underline">
+                    <Link
+                      href={`/management/merch-shop/order/${o.id}`}
+                      className="font-medium text-primary underline"
+                    >
                       {o.order_no}
                     </Link>
                   </td>
                   <td className="py-1 pr-3">{o.buyer_name}</td>
                   <td className="py-1 pr-3">
-                    {Number(o.total_thb).toLocaleString()} THB{o.currency !== "THB" ? ` (${o.total_charged} ${o.currency})` : ""}
+                    {Number(o.total_thb).toLocaleString()} THB
+                    {o.currency !== "THB"
+                      ? ` (${o.total_charged} ${o.currency})`
+                      : ""}
                   </td>
-                  <td className="py-1 pr-3">{m.state[o.payment_state as keyof typeof m.state] ?? o.payment_state}</td>
-                  <td className="py-1 pr-3">{new Date(o.created_at).toLocaleDateString("en-GB")}</td>
+                  <td className="py-1 pr-3">
+                    {m.state[o.payment_state as keyof typeof m.state] ??
+                      o.payment_state}
+                  </td>
+                  <td className="py-1 pr-3">
+                    {new Date(o.created_at).toLocaleDateString("en-GB")}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -161,83 +214,153 @@ async function Orders({ supabase, q, state }: { supabase: Db; q: string; state: 
   );
 }
 
-async function Catalogue({ supabase, canEdit }: { supabase: Db; canEdit: boolean }) {
+async function Catalogue({
+  supabase,
+  canEdit,
+}: {
+  supabase: Db;
+  canEdit: boolean;
+}) {
   const { t } = await getT();
   const m = t.merchStaff;
   const [products, suppliers] = await Promise.all([
     supabase
       .from("merch_products")
-      .select("id, name, description, price_thb, postage_thailand_thb, postage_overseas_thb, supplier_id, photo_drive_file_id, shown, archived_at, variants:merch_variants(id, size, colour, shelter_stock, shown)")
+      .select(
+        "id, name, description, price_thb, postage_thailand_thb, postage_overseas_thb, supplier_id, photo_drive_file_id, shown, archived_at, variants:merch_variants(id, size, colour, shelter_stock, shown)",
+      )
       .order("sort_order")
       .order("created_at")
       .returns<Product[]>(),
-    supabase.from("suppliers").select("id, name").is("archived_at", null).order("name").returns<{ id: string; name: string }[]>(),
+    supabase
+      .from("suppliers")
+      .select("id, name")
+      .is("archived_at", null)
+      .order("name")
+      .returns<{ id: string; name: string }[]>(),
   ]);
   const list = products.data ?? [];
   const supplierOptions = suppliers.data ?? [];
-  const productForm = (p?: Product) => (
-    <form action={saveProduct} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-      {p && <input type="hidden" name="id" value={p.id} />}
-      <label className="flex flex-col text-xs text-muted">
-        {m.name}
-        <input name="name" required defaultValue={p?.name ?? ""} className={inputClass} />
-      </label>
-      <label className="flex flex-col text-xs text-muted">
-        {m.supplier}
-        <select name="supplierId" defaultValue={p?.supplier_id ?? ""} className={inputClass}>
-          <option value="">{m.noSupplier}</option>
-          {supplierOptions.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="flex flex-col text-xs text-muted sm:col-span-2">
-        {m.description}
-        <textarea name="description" rows={2} defaultValue={p?.description ?? ""} className={inputClass} />
-      </label>
-      <label className="flex flex-col text-xs text-muted">
-        {m.price}
-        <input name="price" type="number" min="0" step="0.01" required defaultValue={p?.price_thb ?? ""} className={inputClass} />
-      </label>
-      <label className="flex flex-col text-xs text-muted">
-        {m.photo}
-        <input name="photo" defaultValue={p?.photo_drive_file_id ?? ""} className={inputClass} />
-      </label>
-      <label className="flex flex-col text-xs text-muted">
-        {m.postageThailand}
-        <input name="postageThailand" type="number" min="0" step="0.01" required defaultValue={p?.postage_thailand_thb ?? ""} className={inputClass} />
-      </label>
-      <label className="flex flex-col text-xs text-muted">
-        {m.postageOverseas}
-        <input name="postageOverseas" type="number" min="0" step="0.01" required defaultValue={p?.postage_overseas_thb ?? ""} className={inputClass} />
-      </label>
-      <div className="sm:col-span-2">
-        <button type="submit" className={primaryClass}>
-          {p ? m.save : m.addProduct}
-        </button>
-      </div>
-    </form>
-  );
+  // Gated here as well as at its two call sites, so the control and its guard sit together (saveProduct asks merch.manage:edit).
+  const productForm = (p?: Product) =>
+    canEdit && (
+      <form
+        action={saveProduct}
+        className="grid grid-cols-1 gap-2 sm:grid-cols-2"
+      >
+        {p && <input type="hidden" name="id" value={p.id} />}
+        <label className="flex flex-col text-xs text-muted">
+          {m.name}
+          <input
+            name="name"
+            required
+            defaultValue={p?.name ?? ""}
+            className={inputClass}
+          />
+        </label>
+        <label className="flex flex-col text-xs text-muted">
+          {m.supplier}
+          <select
+            name="supplierId"
+            defaultValue={p?.supplier_id ?? ""}
+            className={inputClass}
+          >
+            <option value="">{m.noSupplier}</option>
+            {supplierOptions.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col text-xs text-muted sm:col-span-2">
+          {m.description}
+          <textarea
+            name="description"
+            rows={2}
+            defaultValue={p?.description ?? ""}
+            className={inputClass}
+          />
+        </label>
+        <label className="flex flex-col text-xs text-muted">
+          {m.price}
+          <input
+            name="price"
+            type="number"
+            min="0"
+            step="0.01"
+            required
+            defaultValue={p?.price_thb ?? ""}
+            className={inputClass}
+          />
+        </label>
+        <label className="flex flex-col text-xs text-muted">
+          {m.photo}
+          <input
+            name="photo"
+            defaultValue={p?.photo_drive_file_id ?? ""}
+            className={inputClass}
+          />
+        </label>
+        <label className="flex flex-col text-xs text-muted">
+          {m.postageThailand}
+          <input
+            name="postageThailand"
+            type="number"
+            min="0"
+            step="0.01"
+            required
+            defaultValue={p?.postage_thailand_thb ?? ""}
+            className={inputClass}
+          />
+        </label>
+        <label className="flex flex-col text-xs text-muted">
+          {m.postageOverseas}
+          <input
+            name="postageOverseas"
+            type="number"
+            min="0"
+            step="0.01"
+            required
+            defaultValue={p?.postage_overseas_thb ?? ""}
+            className={inputClass}
+          />
+        </label>
+        <div className="sm:col-span-2">
+          <button type="submit" className={primaryClass}>
+            {p ? m.save : m.addProduct}
+          </button>
+        </div>
+      </form>
+    );
 
   return (
     <section className="flex flex-col gap-4">
       {products.error && <p className="text-sm text-danger">{m.err.failed}</p>}
       {canEdit && (
         <details className="rounded border border-border bg-surface p-3">
-          <summary className="cursor-pointer text-sm font-medium text-foreground">{m.addProduct}</summary>
+          <summary className="cursor-pointer text-sm font-medium text-foreground">
+            {m.addProduct}
+          </summary>
           <div className="mt-3">{productForm()}</div>
         </details>
       )}
       {!list.length && <p className="text-sm text-muted">{m.noProducts}</p>}
       {list.map((p) => (
-        <article key={p.id} className="flex flex-col gap-3 rounded border border-border bg-surface p-3">
+        <article
+          key={p.id}
+          className="flex flex-col gap-3 rounded border border-border bg-surface p-3"
+        >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-base font-semibold text-foreground">
               {p.name}{" "}
               <span className="text-xs font-normal text-muted">
-                {p.archived_at ? m.archived : p.shown ? m.shownLabel : m.hiddenLabel} · {Number(p.price_thb).toLocaleString()} THB
+                {p.archived_at
+                  ? m.archived
+                  : p.shown
+                    ? m.shownLabel
+                    : m.hiddenLabel}{" "}
+                · {Number(p.price_thb).toLocaleString()} THB
               </span>
             </h2>
             {canEdit && (
@@ -245,7 +368,11 @@ async function Catalogue({ supabase, canEdit }: { supabase: Db; canEdit: boolean
                 {!p.archived_at && (
                   <form action={setProductState}>
                     <input type="hidden" name="id" value={p.id} />
-                    <input type="hidden" name="what" value={p.shown ? "hide" : "show"} />
+                    <input
+                      type="hidden"
+                      name="what"
+                      value={p.shown ? "hide" : "show"}
+                    />
                     <button type="submit" className={buttonClass}>
                       {p.shown ? m.hide : m.show}
                     </button>
@@ -253,7 +380,11 @@ async function Catalogue({ supabase, canEdit }: { supabase: Db; canEdit: boolean
                 )}
                 <form action={setProductState}>
                   <input type="hidden" name="id" value={p.id} />
-                  <input type="hidden" name="what" value={p.archived_at ? "restore" : "archive"} />
+                  <input
+                    type="hidden"
+                    name="what"
+                    value={p.archived_at ? "restore" : "archive"}
+                  />
                   <button type="submit" className={buttonClass}>
                     {p.archived_at ? m.restore : m.archive}
                   </button>
@@ -279,11 +410,27 @@ async function Catalogue({ supabase, canEdit }: { supabase: Db; canEdit: boolean
                   {canEdit ? (
                     <>
                       <td colSpan={3} className="py-1">
-                        <form action={saveVariant} className="flex flex-wrap items-center gap-2">
+                        <form
+                          action={saveVariant}
+                          className="flex flex-wrap items-center gap-2"
+                        >
                           <input type="hidden" name="id" value={v.id} />
-                          <input name="stock" type="number" min="0" step="1" defaultValue={v.shelter_stock} aria-label={m.stock} className={`${inputClass} w-24`} />
+                          <input
+                            name="stock"
+                            type="number"
+                            min="0"
+                            step="1"
+                            defaultValue={v.shelter_stock}
+                            aria-label={m.stock}
+                            className={`${inputClass} w-24`}
+                          />
                           <label className="flex items-center gap-1 text-xs text-muted">
-                            <input type="checkbox" name="shown" defaultChecked={v.shown} /> {m.shownLabel}
+                            <input
+                              type="checkbox"
+                              name="shown"
+                              defaultChecked={v.shown}
+                            />{" "}
+                            {m.shownLabel}
                           </label>
                           <button type="submit" className={buttonClass}>
                             {m.save}
@@ -304,8 +451,13 @@ async function Catalogue({ supabase, canEdit }: { supabase: Db; canEdit: boolean
           </table>
           {canEdit && (
             <details>
-              <summary className="cursor-pointer text-sm text-primary">{m.addVariant}</summary>
-              <form action={saveVariant} className="mt-2 flex flex-wrap items-end gap-2">
+              <summary className="cursor-pointer text-sm text-primary">
+                {m.addVariant}
+              </summary>
+              <form
+                action={saveVariant}
+                className="mt-2 flex flex-wrap items-end gap-2"
+              >
                 <input type="hidden" name="productId" value={p.id} />
                 <label className="flex flex-col text-xs text-muted">
                   {m.size}
@@ -317,10 +469,18 @@ async function Catalogue({ supabase, canEdit }: { supabase: Db; canEdit: boolean
                 </label>
                 <label className="flex flex-col text-xs text-muted">
                   {m.stock}
-                  <input name="stock" type="number" min="0" step="1" defaultValue={0} className={inputClass} />
+                  <input
+                    name="stock"
+                    type="number"
+                    min="0"
+                    step="1"
+                    defaultValue={0}
+                    className={inputClass}
+                  />
                 </label>
                 <label className="flex items-center gap-1 text-xs text-muted">
-                  <input type="checkbox" name="shown" defaultChecked /> {m.shownLabel}
+                  <input type="checkbox" name="shown" defaultChecked />{" "}
+                  {m.shownLabel}
                 </label>
                 <button type="submit" className={buttonClass}>
                   {m.addVariant}
@@ -330,7 +490,9 @@ async function Catalogue({ supabase, canEdit }: { supabase: Db; canEdit: boolean
           )}
           {canEdit && (
             <details>
-              <summary className="cursor-pointer text-sm text-primary">{m.editProduct}</summary>
+              <summary className="cursor-pointer text-sm text-primary">
+                {m.editProduct}
+              </summary>
               <div className="mt-2">{productForm(p)}</div>
             </details>
           )}
@@ -347,22 +509,67 @@ async function EmailTab({ supabase }: { supabase: Db }) {
   const unsent = await unsentParts(supabase).catch(() => null);
   const ids = unsent ? [...unsent.keys()] : [];
   const [sup, log] = await Promise.all([
-    ids.length ? supabase.from("suppliers").select("id, name, email, delivery_method").in("id", ids).returns<{ id: string; name: string; email: string | null; delivery_method: string }[]>() : Promise.resolve({ data: [] as { id: string; name: string; email: string | null; delivery_method: string }[] }),
-    supabase.from("merch_supplier_emails").select("id, sent_to, part_count, body, sent_at, supplier:suppliers(name)").order("sent_at", { ascending: false }).limit(50).returns<{ id: string; sent_to: string; part_count: number; body: string; sent_at: string; supplier: { name: string } | null }[]>(),
+    ids.length
+      ? supabase
+          .from("suppliers")
+          .select("id, name, email, delivery_method")
+          .in("id", ids)
+          .returns<
+            {
+              id: string;
+              name: string;
+              email: string | null;
+              delivery_method: string;
+            }[]
+          >()
+      : Promise.resolve({
+          data: [] as {
+            id: string;
+            name: string;
+            email: string | null;
+            delivery_method: string;
+          }[],
+        }),
+    supabase
+      .from("merch_supplier_emails")
+      .select(
+        "id, sent_to, part_count, body, sent_at, supplier:suppliers(name)",
+      )
+      .order("sent_at", { ascending: false })
+      .limit(50)
+      .returns<
+        {
+          id: string;
+          sent_to: string;
+          part_count: number;
+          body: string;
+          sent_at: string;
+          supplier: { name: string } | null;
+        }[]
+      >(),
   ]);
   const byId = new Map((sup.data ?? []).map((s) => [s.id, s]));
   return (
     <section className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold text-foreground">{m.unsentTitle}</h2>
+        <h2 className="text-lg font-semibold text-foreground">
+          {m.unsentTitle}
+        </h2>
         <p className="text-sm text-muted">{m.unsentHelp}</p>
-        {unsent === null && <p className="text-sm text-danger">{m.err.failed}</p>}
-        {unsent && unsent.size === 0 && <p className="text-sm text-muted">{m.unsentNone}</p>}
+        {unsent === null && (
+          <p className="text-sm text-danger">{m.err.failed}</p>
+        )}
+        {unsent && unsent.size === 0 && (
+          <p className="text-sm text-muted">{m.unsentNone}</p>
+        )}
         {unsent &&
           [...unsent].map(([supplierId, parts]) => {
             const s = byId.get(supplierId);
             return (
-              <div key={supplierId} className="rounded border border-border bg-surface p-3 text-sm">
+              <div
+                key={supplierId}
+                className="rounded border border-border bg-surface p-3 text-sm"
+              >
                 <p className="font-medium text-foreground">
                   {s?.name ?? supplierId} · {m.partsCount(parts.length)}
                 </p>
@@ -374,7 +581,13 @@ async function EmailTab({ supabase }: { supabase: Db }) {
                 <ul className="list-disc pl-5 text-muted">
                   {parts.map((p) => (
                     <li key={p.id}>
-                      {p.order_no}: {p.items.map((i) => `${i.quantity} × ${[i.product_name, i.size, i.colour].filter(Boolean).join(" / ")}`).join(", ")}
+                      {p.order_no}:{" "}
+                      {p.items
+                        .map(
+                          (i) =>
+                            `${i.quantity} × ${[i.product_name, i.size, i.colour].filter(Boolean).join(" / ")}`,
+                        )
+                        .join(", ")}
                     </li>
                   ))}
                 </ul>
@@ -386,11 +599,18 @@ async function EmailTab({ supabase }: { supabase: Db }) {
         <h2 className="text-lg font-semibold text-foreground">{m.logTitle}</h2>
         {!log.data?.length && <p className="text-sm text-muted">{m.logNone}</p>}
         {log.data?.map((e) => (
-          <details key={e.id} className="rounded border border-border bg-surface p-3 text-sm">
+          <details
+            key={e.id}
+            className="rounded border border-border bg-surface p-3 text-sm"
+          >
             <summary className="cursor-pointer text-foreground">
-              {new Date(e.sent_at).toLocaleString("en-GB")} · {e.supplier?.name ?? ""} · {e.sent_to} · {m.partsCount(e.part_count)}
+              {new Date(e.sent_at).toLocaleString("en-GB")} ·{" "}
+              {e.supplier?.name ?? ""} · {e.sent_to} ·{" "}
+              {m.partsCount(e.part_count)}
             </summary>
-            <pre className="mt-2 whitespace-pre-wrap text-xs text-muted">{e.body}</pre>
+            <pre className="mt-2 whitespace-pre-wrap text-xs text-muted">
+              {e.body}
+            </pre>
           </details>
         ))}
       </div>
