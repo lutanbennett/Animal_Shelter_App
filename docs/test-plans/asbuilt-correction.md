@@ -23,15 +23,7 @@
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly before the gates
-- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`, every `<N>` `0`. Closing lines as the run printed them:
-
-```
-=== gates: typecheck exited 0 after 90s
-=== gates: lint exited 0 after 278s
-=== gates: test exited 0 after 42s
-=== gates: build exited 0 after 188s
-gates: typecheck=0 lint=0 test=0 build=0
-```
+- [ ] `node scripts/gates.mjs` four gates — n/a: only `docs/` files changed since the last full run on #1541 (all four gates exit 0 there); no code in this diff
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
