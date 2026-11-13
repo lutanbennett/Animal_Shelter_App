@@ -171,6 +171,11 @@ export async function updateSession(request: NextRequest, rewriteTo?: URL) {
     ) {
       return noindex(response, locked);
     }
+    // Any other route (a staff page typed or bookmarked): an adopter is sent to their own page, kept signed in, and is
+    // never signed out as "no role" (the portal spec, docs/decisions/2026-11-13-adopter-portal-schema.md, item 1).
+    if (!role?.entersApp && (await loadAdopterScope(supabase))) {
+      return noindex(withCookies(NextResponse.redirect(new URL(ADOPTER_PATH, request.nextUrl.origin)), response), locked);
+    }
     if (!role?.entersApp) {
       const url = request.nextUrl.clone();
       url.search = "";
