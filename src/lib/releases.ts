@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "On the Thai labels screen, a proposed label now says who proposed it, by name, instead of \"someone else\". Your own proposals still read \"Proposed by you\".", cards: ["view_translations", "translations"] },
 ];
 
 /** Newest first. */

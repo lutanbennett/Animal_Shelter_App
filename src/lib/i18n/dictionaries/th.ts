@@ -7871,6 +7871,8 @@ const th: Dictionary = {
     waitingTitle: "ภาษาไทยที่เสนอไว้ รออนุมัติ",
     proposedByYou: (when: string) => `คุณเสนอไว้ · ${when}`,
     proposedBySomeone: (when: string) => `มีผู้อื่นเสนอไว้ · ${when}`,
+    // UNREVIEWED: machine-written Thai, awaiting a Thai reader.
+    proposedByName: (name: string, when: string) => `${name} เสนอไว้ · ${when}`,
     proposalOutOfDate: "ภาษาอังกฤษเปลี่ยนไปหลังจากเสนอข้อความนี้ — โปรดตรวจว่าภาษาไทยยังตรงกันก่อนอนุมัติ",
     englishWhenProposed: "ภาษาอังกฤษตอนที่เสนอ",
     approveLabel: "บันทึกและอนุมัติ",
