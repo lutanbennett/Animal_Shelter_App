@@ -9,7 +9,7 @@
 |---|---|
 | Feature | waiting-on-lutan |
 | Backlog item | none; stream brief of 2026-11-13 (closes nothing) |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/waiting-on-lutan` @ `C:\Development\Animal_Shelter_waiting-on-lutan` |
 | Dev server | not needed (documents only) |
 | PR | pending: opened after this commit |
 | Tested by / date | Claude, 2026-11-13 |
@@ -215,8 +215,8 @@ assurance.
 Gates, scripts, server-side behaviour, and any browser check that was actually
 driven rather than assumed. Signed by whoever ran them — Claude may sign this.
 
-- [ ] Everything in this checklist that could be verified without human eyes was run, not assumed
-- [ ] Nothing is ticked that was not actually executed
+- [x] Everything in this checklist that could be verified without human eyes was run, not assumed
+- [x] Nothing is ticked that was not actually executed
 
 Automated checks by: Claude  Date: 2026-11-13
 
@@ -232,9 +232,9 @@ Manual verification by: pending: Lutan reads the list and says which entries are
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR
-- [ ] Handed to the production release manager
+- [x] Open defects are either fixed or explicitly accepted above (none found)
+- [ ] Checklist pasted into the PR — n/a: the plan is committed with the PR and linked from it
+- [ ] Handed to the production release manager — n/a: documents-only, nothing ships
 
 Result: pass
 
