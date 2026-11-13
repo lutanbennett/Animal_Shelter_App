@@ -6,6 +6,8 @@
  *   node scripts/list-thai-added.mjs 2026-11-01              markdown to stdout
  *   node scripts/list-thai-added.mjs 2026-11-01 --out x.md   write it to a file (hand that to the reader)
  *   node scripts/list-thai-added.mjs <commit> --json         machine-readable
+ *   node scripts/list-thai-added.mjs 2026-11-12 --skip-read 2026-11-12..4bf320928   leave out what an earlier read covered
+ *   node scripts/list-thai-added.mjs 2026-11-12 --until <commit>   as the dictionaries stood at a commit, not now
  *   node scripts/list-thai-added.mjs 2026-11-01 --count      totals per kind and area, no text
  *
  * WHAT COUNTS AS "ADDED" — three kinds, each under its own heading, because they are three
@@ -139,6 +141,17 @@ export function tally(entries) {
   return out;
 }
 
+/**
+ * Drop what was already read. readSet is the entries a past read covered (the diff from its base
+ * to the commit its list was made at, with the English as it stood there). An entry is dropped when
+ * its key is in that set and its English has not changed since, so the reader's own Thai
+ * corrections are not served again but a later English change still is.
+ */
+export function withoutRead(entries, readSet) {
+  const read = new Map(readSet.map((e) => [e.path, e.en]));
+  return entries.filter((e) => !(read.has(e.path) && read.get(e.path) === e.en));
+}
+
 /* ------------------------------------------------------------------ git */
 const git = (...args) =>
   execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
@@ -171,7 +184,8 @@ async function loadAt(rev) {
   return result;
 }
 
-async function loadNow() {
+async function loadNow(until) {
+  if (until) return loadAt(resolveRev(until));
   const r = {};
   for (const name of ["en", "th"]) {
     r[name] = flatten((await import(pathToFileURL(path.join(root, DICT_DIR, `${name}.ts`)).href)).default);
@@ -182,13 +196,20 @@ async function loadNow() {
 async function main() {
   const args = process.argv.slice(2);
   const outAt = args.indexOf("--out");
-  const since = args.find((a, i) => !a.startsWith("--") && (outAt < 0 || i !== outAt + 1));
+  const since = args.find((a, i) => !a.startsWith("--") && (outAt < 0 || i !== outAt + 1) && !(["--until", "--skip-read"].includes(args[i - 1])));
   if (!since) {
     console.error("usage: node scripts/list-thai-added.mjs <YYYY-MM-DD | commit> [--out file] [--json] [--count]");
     process.exit(2);
   }
   const rev = resolveRev(since);
-  const entries = diffDictionaries(await loadAt(rev), await loadNow());
+  const untilAt = args.indexOf("--until");
+  const until = untilAt >= 0 ? args[untilAt + 1] : null;
+  let entries = diffDictionaries(await loadAt(rev), await loadNow(until));
+  const skipAt = args.indexOf("--skip-read");
+  if (skipAt >= 0) {
+    const [rBase, rEnd] = args[skipAt + 1].split("..");
+    entries = withoutRead(entries, diffDictionaries(await loadAt(resolveRev(rBase)), await loadAt(resolveRev(rEnd))));
+  }
   let text;
   if (args.includes("--json")) text = JSON.stringify({ since, baseCommit: rev, entries }, null, 2);
   else if (args.includes("--count")) {

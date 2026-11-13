@@ -47,3 +47,11 @@ test("markdown shows both languages with placeholders as {a}; an empty list says
   assert.match(md, /1 strings in 1 areas/);
   assert.match(renderMarkdown([], "x"), /Nothing to read/);
 });
+
+test("withoutRead drops what a past read covered, but not a later English change", async () => {
+  const { withoutRead } = await import("./list-thai-added.mjs");
+  const e = (path, en) => ({ kind: "reworded", path, area: "a", en, th: "x", wasEn: null });
+  const read = [e("a.one", "One"), e("a.two", "Two")];
+  const now = [e("a.one", "One"), e("a.two", "Two changed"), e("a.three", "Three")];
+  assert.deepEqual(withoutRead(now, read).map((x) => x.path), ["a.two", "a.three"]);
+});
