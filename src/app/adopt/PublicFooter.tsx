@@ -8,6 +8,7 @@ import { staffLoginHref } from "@/lib/site-hosts";
 import { localizedHref } from "@/lib/public-paths";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
 import { hasPublicShopLinks } from "@/lib/shop/shop-links";
+import { hasPublicMerchProducts } from "@/lib/merch/shop";
 import { FacebookIcon } from "@/components/FacebookIcon";
 import { InstagramIcon } from "@/components/InstagramIcon";
 import { MessengerIcon } from "@/components/MessengerIcon";
@@ -38,10 +39,11 @@ const smallLink =
  */
 export async function PublicFooter({ content }: { content?: SiteContent | null }) {
   const { t, locale } = await getT();
-  const [site, showFriends, showShop] = await Promise.all([
+  const [site, showFriends, showShop, showMerch] = await Promise.all([
     content === undefined ? createClient().then(loadSiteContent) : content,
     hasPublicFriends(),
     createClient().then(hasPublicShopLinks),
+    createClient().then(hasPublicMerchProducts),
   ]);
   const hidden = hiddenPagesOf(site?.hidden_public_pages);
   const hours = visitingHoursLines(locale, site);
@@ -150,7 +152,8 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
               (page) =>
                 !isPageHidden(page.key, hidden) &&
                 (page.key !== "friends" || showFriends) &&
-                (page.key !== "shop" || showShop),
+                (page.key !== "shop" || showShop) &&
+                (page.key !== "shop-merch" || showMerch),
             )
             .map((page) => (
               <Link key={page.key} href={localizedHref(page.href, locale)} className={footerLink}>{page.label(t)}</Link>

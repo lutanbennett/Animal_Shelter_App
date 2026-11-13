@@ -26,7 +26,7 @@ const baht = (n: number) => `฿${n.toLocaleString("en-US", { maximumFractionDig
  * bought, what to pay and how, the payment state and each part's tracking. No name, address, email or phone.
  */
 export default async function MerchOrderPage({ params }: { params: Promise<{ id: string }> }) {
-  await requirePageVisible("shop");
+  await requirePageVisible("shop-merch");
   const { id } = await params;
   const order = await loadOrderView(id);
   if (!order) notFound();
@@ -44,7 +44,7 @@ export default async function MerchOrderPage({ params }: { params: Promise<{ id:
 
   return (
     <main className="flex flex-1 flex-col">
-      <PublicHeader current="shop" trail={[{ label: t.publicNav.getInvolved }, { label: s.navLabel, href: localizedHref("/shop/merch", locale) }, { label: s.orderTitle }]} />
+      <PublicHeader current="shop-merch" trail={[{ label: t.publicNav.getInvolved }, { label: s.navLabel, href: localizedHref("/shop/merch", locale) }, { label: s.orderTitle }]} />
       <div className={`${PUBLIC_FRAME} flex max-w-3xl flex-col gap-6 py-10`}>
         <ClearCart />
         <h1 className="font-display text-[40px] font-bold leading-[1.05] text-site-ink sm:text-5xl">{s.orderTitle}</h1>
