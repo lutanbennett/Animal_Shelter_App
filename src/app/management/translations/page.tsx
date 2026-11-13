@@ -61,6 +61,7 @@ export default async function TranslationsPage(props: PageProps<"/management/tra
         canManage={can(perms, "translations.manage")}
         canPropose={can(perms, "translations.propose")}
         viewerId={user.id}
+        reviewerNames={reviewerNames}
       />
     </main>
   );
