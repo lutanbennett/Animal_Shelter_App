@@ -37,7 +37,15 @@ because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
 - [x] `node scripts/worktree.mjs sync` — see the PR body
-- [x] `node scripts/gates.mjs` ends with `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — GATES_PLACEHOLDER
+- [x] `node scripts/gates.mjs` ends with `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — exit codes read from the file the run wrote:
+
+```
+=== gates: typecheck exited 0 after 158s
+=== gates: lint exited 0 after 339s
+=== gates: test exited 0 after 70s
+=== gates: build exited 0 after 280s
+gates: typecheck=0 lint=0 test=0 build=0
+```
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
