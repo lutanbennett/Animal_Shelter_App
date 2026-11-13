@@ -96,6 +96,10 @@ dietrx as (
          (select count(*) from prescriptions p where p.resident_id = r.id and p.end_date is null and p.archived_at is null) rx
     from residents r where r.name = 'ZZ fixture diet and prescription'
 ),
+mortal as (
+  select r.name, coalesce((select s.is_deceased from resident_current_state s where s.resident_id = r.id), false) is_deceased
+    from residents r where r.name = 'ZZ fixture mortal'
+),
 kinds as (
   select count(*) filter (where key in ('materials', 'cleaning_products')) general_kinds,
          count(*) filter (where key = 'utilities') utility_kinds
@@ -117,6 +121,8 @@ union all
 select 'a Shelter Friend supplier (row 11a)', coalesce((select name || ': published=' || published from friend), 'MISSING')
 union all
 select 'resident with a diet and a prescription (rows 11b, 11c)', coalesce((select name || ': ' || diets || ' running diet(s), ' || rx || ' live prescription(s)' from dietrx), 'MISSING')
+union all
+select 'a living resident to record a death for (row 8)', coalesce((select name || ': is_deceased=' || is_deceased from mortal), 'MISSING')
 union all
 select 'bill kinds the press needs', (select 'general-route ' || general_kinds || ', utility-route ' || utility_kinds from kinds)
 -- The same four questions asked of the WHOLE of dev, not just this script's rows: a stream should know
@@ -151,6 +157,7 @@ declare
   v_photo_res uuid;
   v_bill uuid;
   v_job uuid;
+  v_mortal uuid;
   v_diet_res uuid;
   v_diet uuid;
   v_med uuid;
@@ -347,6 +354,31 @@ begin
   if not exists (select 1 from prescriptions where resident_id = v_diet_res and end_date is null and archived_at is null) then
     insert into prescriptions (resident_id, medication_id, start_date, dose_quantity, schedule_unit, schedule_every, created_by)
     values (v_diet_res, v_med, current_date - 3, 1, 'day', 1, v_taker);
+  end if;
+
+  -- ---------------------------------------------------------------------
+  -- H. A living resident to record a death for (row 8, the assistant's confirm). Pressing it
+  --    closes the record, so re-running replaces the resident: the dead one is
+  --    set aside and a fresh one made.
+  -- ---------------------------------------------------------------------
+  select id into v_mortal from residents where name = 'ZZ fixture mortal' limit 1;
+  -- A placement history is append-only (it cannot be un-ended), so a resident already pressed to death
+  -- is set aside under a name that still starts "ZZ fixture" (so --remove takes it) and a new one is made.
+  if v_mortal is not null and coalesce((select s.is_deceased from resident_current_state s where s.resident_id = v_mortal), false) then
+    update residents set name = 'ZZ fixture mortal (used ' || to_char(now(), 'MMDD-HH24MISS') || ')' where id = v_mortal;
+    v_mortal := null;
+  end if;
+  if v_mortal is null then
+    insert into residents (name, species, intake_date, created_by)
+    values ('ZZ fixture mortal', 'Dog', current_date - 30, v_taker)
+    returning id into v_mortal;
+  end if;
+  if not exists (select 1 from placement_history where resident_id = v_mortal and end_date is null) then
+    select e.id into v_encl from enclosures e join zones z on z.id = e.zone_id
+     where z.name = 'Lifecycle' and e.name = 'Unassigned' limit 1;
+    insert into placement_history (resident_id, placement_type, start_date, zone_id, enclosure_id, created_by)
+    values (v_mortal, 'Intake', now() - interval '30 days',
+            (select zone_id from enclosures where id = v_encl), v_encl, v_taker);
   end if;
 
   perform set_config('app.deceased_lock_bypass', 'off', true);
