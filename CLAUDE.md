@@ -852,6 +852,38 @@ cited by every Security item, yet still read open a week later. Finding a line
 that agrees with an item is not the test; whether the bad outcome can still
 happen is.
 
+## Writing about the house network: the value goes in the Desktop notes
+
+**This is a writing rule, not a scrub.** Nobody is being asked to go hunting
+through git history, and a history rewrite was considered and rejected on
+2026-11-01. Apply it as you write; there is nothing to go back and clean.
+
+**The rule, in one line: put the VALUE in the network notes on Lutan's Desktop
+and the MEANING in the repo.** *"Its WAN-side MAC, not the LAN-side one"* tells a
+future reader everything the digits would and costs nothing. Where a document
+needs an example address, use a placeholder (`<your model machine's address>`),
+not a real one. Addresses, MACs, device models and network names live in the
+Desktop notes.
+
+**Why it bites: the repo has been public since 2026-09-18, on purpose** (private
+would cap GitHub Actions at 2,000 free minutes a month against roughly 30,000
+used, so CI would stop), **and git history keeps every version — so a value
+committed once cannot be taken back by editing the file.**
+
+**The headline of the search behind this is reassuring, and worth knowing before
+you worry.** On 2026-11-01 nothing secret was found: no env file, credentials
+JSON, private key, JWT or service-role-shaped string has ever been committed on
+any branch, and no MAC, Wi-Fi name, tunnel id or account id is in the tree. What
+*was* published is a drive serial (since removed), four LAN addresses and two
+device models — none of them a credential. **Nothing was rotated and no history
+was rewritten.** `docs/decisions/2026-11-01-hardware-identifiers-in-a-public-repo.md`
+holds the full reasoning and names the scans, so nobody re-derives them.
+
+**It is not only a disclosure rule, and this is the shape to copy.** The drive
+serial was sitting inside an `fdisk` command, which made that line a latent
+wrong-disk command in a private repo too (#1158). The tidy-up was a side effect
+of a better command.
+
 ## A trap in this shell: `git show <rev>:<path>` lies about dotted paths
 
 Git Bash rewrites any argument containing `:` as a Windows path list, so
