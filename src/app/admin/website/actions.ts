@@ -332,7 +332,7 @@ export async function proposeSiteContent(
       p_row_key: "site",
       p_patch: built.patch,
     });
-    if (error) return refuse(error.message);
+    if (error) return dbRefusal("website.proposeSiteContent", error, t);
     revalidatePath("/photos/approve");
     return { ok: true, success: t.admin.website.pages.proposed };
   });
@@ -446,7 +446,7 @@ export async function proposeSitePage(
       p_row_key: slug,
       p_patch: { title, body: (formData.get("body") as string | null)?.trim() ?? "" },
     });
-    if (error) return refuse(error.message);
+    if (error) return dbRefusal("website.proposeSitePage", error, t);
     revalidatePath("/photos/approve");
     return { ok: true, success: t.admin.website.pages.proposed };
   });

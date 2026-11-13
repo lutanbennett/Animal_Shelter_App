@@ -105,7 +105,7 @@ export async function previewRecurrence(
         p_to: addDaysIso(from, MAX_SPAN_DAYS - 1),
       })
       .limit(count);
-    if (error) return refuse(error.message);
+    if (error) return dbRefusal("recurringJobs.previewRecurrence", error, t);
     // A set-returning scalar function comes back as bare values; tolerate the
     // one-key-object shape too, which PostgREST has used for them.
     const dates = ((data ?? []) as unknown[]).map((value) =>
@@ -127,7 +127,7 @@ export async function eligibilityForLink(
   return runAction("recurringJobs.eligibilityForLink", t.common.somethingWentWrong, async () => {
     if (!can(await loadPermissions(), "recurring.manage")) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
-    const { eligibility, error } = await loadEligibility(supabase, roleKeys, needsForLinks([linkPath]));
+    const { eligibility, error } = await loadEligibility(supabase, roleKeys, t, needsForLinks([linkPath]));
     if (error) return refuse(error);
     return { ok: true, eligibility };
   });
@@ -208,6 +208,7 @@ async function setAssignees(supabase: Supabase, jobId: string, userIds: string[]
  */
 async function whoCannotDo(
   supabase: Supabase,
+  t: Dictionary,
   linkPath: string | null,
   userIds: string[],
 ): Promise<{ names: string[]; error: string | null }> {
@@ -223,6 +224,7 @@ async function whoCannotDo(
   const { eligibility, error: eligibilityError } = await loadEligibility(
     supabase,
     people.flatMap((user) => user.role_keys ?? [user.role_key]),
+    t,
     needsForLinks([linkPath]),
   );
   if (eligibilityError) return { names: [], error: eligibilityError };
@@ -237,13 +239,13 @@ async function whoCannotDo(
 /** whoCannotDo's answer as a refusal: its error, or who can't and why; null when everyone can. */
 async function cannotDoProblem(
   supabase: Supabase,
+  t: Dictionary,
   linkPath: string | null,
   userIds: string[],
 ): Promise<string | null> {
-  const { names, error } = await whoCannotDo(supabase, linkPath, userIds);
+  const { names, error } = await whoCannotDo(supabase, t, linkPath, userIds);
   if (error) return error;
   if (names.length === 0) return null;
-  const { t } = await getT();
   return t.management.recurringJobs.errors.assigneeCannotDo(names.join(", "));
 }
 
@@ -300,7 +302,7 @@ export async function saveRecurringJob(
     // Before the row is written, so pointing the link at a page someone on the
     // team cannot open is refused whole rather than saved half-way.
     const assigneeIds = [...new Set(fields.assigneeIds)];
-    const cannotDo = await cannotDoProblem(supabase, linkPath, assigneeIds);
+    const cannotDo = await cannotDoProblem(supabase, t, linkPath, assigneeIds);
     if (cannotDo) return refuse(cannotDo);
 
     let jobId = id;
@@ -414,7 +416,7 @@ export async function handOverRecurringJobs(input: HandOverInput, requestId: str
       for (const job of jobs.filter((j) => j.assignee_ids.includes(input.fromUserId))) {
         const team = [...new Set([...job.assignee_ids.filter((id) => id !== input.fromUserId), ...toIds])];
         const problem =
-          (await cannotDoProblem(supabase, job.link_path, team)) ?? (await setAssignees(supabase, job.id, team));
+          (await cannotDoProblem(supabase, t, job.link_path, team)) ?? (await setAssignees(supabase, job.id, team));
         if (problem) failed.push(`${job.title}: ${problem}`);
         else changed += 1;
       }
@@ -433,6 +435,7 @@ export async function handOverRecurringJobs(input: HandOverInput, requestId: str
     const today = todayIso();
     const { open, error: openError } = await loadOpenOccurrences(
       supabase,
+      (e) => dbRefusal("recurringJobs.handOverRecurringJobs", e, t).error,
       jobs,
       new Set(jobs.map((j) => j.id)),
       today,
@@ -448,7 +451,7 @@ export async function handOverRecurringJobs(input: HandOverInput, requestId: str
       const team = [...new Set([...o.team.filter((id) => id !== input.fromUserId), ...toIds])];
       // reassign_recurring_job() takes any live staff login; whether they can
       // open the job's page is checked here.
-      const cannotDo = await cannotDoProblem(supabase, o.job.link_path, team);
+      const cannotDo = await cannotDoProblem(supabase, t, o.job.link_path, team);
       if (cannotDo) {
         failed.push(`${o.job.title}, ${o.occurs_on}: ${cannotDo}`);
         continue;

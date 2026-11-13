@@ -6,10 +6,12 @@ import {
   MAX_SPAN_DAYS,
   loadOpenOccurrences,
   loadRecurringJobs,
+  type DescribeDbError,
   type OpenOccurrence,
 } from "@/lib/recurring-jobs/queries";
 import { timeOfDayRank } from "@/lib/recurring-jobs/rule";
 import { canDoJob, needsForLinks } from "@/lib/recurring-jobs/eligibility";
+import { dbRefusal } from "@/lib/db-refusal";
 import { loadEligibility } from "@/lib/recurring-jobs/eligibility-load";
 import type { MyTask, MyTaskSection } from "./types";
 
@@ -29,6 +31,7 @@ export const RECURRING_DAYS_AHEAD = 6;
  */
 async function loadMine(
   supabase: SupabaseClient,
+  describe: DescribeDbError,
   userId: string,
   today: string,
   to: string,
@@ -50,7 +53,7 @@ async function loadMine(
     ...jobs.filter((job) => job.assignee_ids.includes(userId)).map((job) => job.id),
     ...(covered.data ?? []).map((row) => row.job_id),
   ]);
-  const result = await loadOpenOccurrences(supabase, jobs, ids, today, to);
+  const result = await loadOpenOccurrences(supabase, describe, jobs, ids, today, to);
   return { ...result, open: result.open.filter((o) => o.team.includes(userId)) };
 }
 
@@ -63,7 +66,13 @@ export async function loadMyRecurringTasks(
   today: string,
 ): Promise<MyTaskSection> {
   const section: MyTaskSection = { source: "recurring", tasks: [], error: null };
-  const { open, error } = await loadMine(supabase, userId, today, addDaysIso(today, RECURRING_DAYS_AHEAD));
+  const { open, error } = await loadMine(
+    supabase,
+    (e) => dbRefusal("recurringJobs.loadMine", e, t).error,
+    userId,
+    today,
+    addDaysIso(today, RECURRING_DAYS_AHEAD),
+  );
   if (error) return { ...section, error };
   if (open.length === 0) return section;
 
@@ -79,6 +88,7 @@ export async function loadMyRecurringTasks(
   const { eligibility, error: eligibilityError } = await loadEligibility(
     supabase,
     Array.isArray(role) ? role : [role],
+    t,
     needsForLinks(open.map((o) => o.job.link_path)),
   );
   if (eligibilityError) return { ...section, error: eligibilityError };
@@ -133,6 +143,6 @@ export async function countMyUrgentRecurring(
   userId: string,
   today: string,
 ): Promise<number> {
-  const { open } = await loadMine(supabase, userId, today, today);
+  const { open } = await loadMine(supabase, () => "", userId, today, today);
   return open.length;
 }

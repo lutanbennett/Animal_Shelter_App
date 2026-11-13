@@ -50,6 +50,9 @@ const JOB_COLUMNS =
 const OCCURRENCE_COLUMNS =
   "job_id, occurs_on, outcome, done_by, done_at, note, reassigned_by, reassigned_at, reassign_note";
 
+/** How a caller words a database error: `(e) => dbRefusal(where, e, t).error`, or `() => ""` where the error is discarded. */
+export type DescribeDbError = (error: { code?: string; message?: string; details?: string | null }) => string;
+
 /** recurring_job_dates and recurrence_dates refuse more than this (0095). */
 export const MAX_SPAN_DAYS = 731;
 
@@ -82,6 +85,7 @@ export async function loadRecurringJobs(
  */
 export async function loadJobDates(
   supabase: SupabaseClient,
+  describe: DescribeDbError,
   from: string,
   to: string,
   jobIds: string[],
@@ -93,7 +97,7 @@ export async function loadJobDates(
       .rpc("recurring_job_dates", { p_from: from, p_to: to })
       .in("job_id", jobIds)
       .range(offset, offset + PAGE - 1);
-    if (error) return { dates, error: error.message };
+    if (error) return { dates, error: describe(error) };
     const data = (raw ?? null) as { job_id: string; occurs_on: string }[] | null;
     for (const row of data ?? []) {
       const list = dates.get(row.job_id) ?? [];
@@ -243,6 +247,7 @@ export function openOccurrences(
  */
 export async function loadOpenOccurrences(
   supabase: SupabaseClient,
+  describe: DescribeDbError,
   allJobs: RecurringJob[],
   jobIds: Set<string>,
   today: string,
@@ -260,7 +265,7 @@ export async function loadOpenOccurrences(
   const from = lookBackFrom(wanted, today, to);
 
   const [dateResult, rowResult] = await Promise.all([
-    loadJobDates(supabase, from, to, ids),
+    loadJobDates(supabase, describe, from, to, ids),
     loadOccurrenceRows(supabase, from, to, ids),
   ]);
   const error = dateResult.error ?? rowResult.error;
