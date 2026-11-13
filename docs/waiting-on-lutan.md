@@ -18,7 +18,6 @@ session named, and it will be handed over by itself.
 | `#aaqtl` | Dry-run the three deploy steps and hand you the order, so you only press what is written. | Three steps become a short, checked sequence. |
 | `#u2bo6` | Prepare the comparison sheet: the twenty bios and twenty vet notes, each translated by both models, side by side. | The managers only read and mark; they do not set anything up. |
 | `#hzmxi` / `#c7zjk` / `#y1dqu` | Export the Thai strings a Thai speaker must read as one sheet, with the 25 changed ones marked. (`scripts/list-thai-added.mjs` already builds the list.) | The reader opens one file. |
-| `#eh2dt` | A checklist of exactly which page texts still lack Thai, so nobody hunts. | Typing only, no discovery. |
 | `#7bd5u` | Nothing a stream can do alone: it needs a quiet machine. A stream can have the measurements ready to run in one go. | Your part is "leave the machine alone for one session". |
 
 Items nothing can shrink: the two standing steps (section F), the purchase (`#gvnrr`), and the Director's own edits.
@@ -42,11 +41,6 @@ First: the QR image and id in hand. Whether they are already entered on producti
 **B3. `#8dfud`: the shelter's LINE id.**
 Unblocks: a LINE QR code in the website footer and phone menu (a small stream, afterwards).
 Your part: say what the shelter's LINE id is, or confirm it has none. The item says the Director enters it; the Thai-address half already shipped, do not list it as outstanding. Who enters it is *not established*; Settings, then Website, is where it goes.
-
-**B4. `#eh2dt`: Thai text for the public pages (hours of typing, not a build).**
-Unblocks: Thai readers seeing the page instead of an "English for now" notice.
-Your part: have the Foster, Volunteer, Donate, Home and Adopt page texts typed in at Management, then Translations. The item calls it the shelter's job, like `#5j6kj`. A staff member or the Director can do it; whether it should be you is not required.
-First: someone who writes Thai. Shrink: see section A.
 
 ## C. A decision only you can make
 
@@ -102,6 +96,10 @@ The first four use the list written on your Desktop on 2026-11-10; it is not in 
 
 - **Major versus minor on every release.** A major release mails the admin list (currently one person), cannot be undone, and so the call is yours each time. Claude tells you plainly when it comes up.
 - **The production Worker deploy.** Yours by your instruction of 2026-10-02, every release.
+
+## Removed at your word
+
+- `#eh2dt` (Thai text for the public pages): you said on 2026-11-13 that the Thai pages are all done. It is taken off this list; the backlog item is for the planner to close.
 
 ## Not established in this snapshot
 
