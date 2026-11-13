@@ -12,13 +12,13 @@
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3001` |
 | PR | see PR |
 | Tested by / date | Claude, 2026-11-13 |
-| Carries a migration? | yes, 0366 |
+| Carries a migration? | yes, 0367 |
 | Tested at SHA | 35880b046 |
 
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence, and it matches what the backlog item asked for — `recurrence_dates`, `recurring_job_dates`, `role_can` and `propose_website_draft` raise dotted keys instead of English sentences, so their refusals reach a Thai reader in Thai; this was the last group
-- [x] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs) — `supabase/migrations/0366_…sql`, `supabase/harness/0366_…_harness.sql`, `src/lib/i18n/dictionaries/{en,th}.ts`, `src/lib/releases.ts`, `src/lib/recurring-jobs/{eligibility-load,queries}.ts`, `src/lib/my-tasks/recurring.ts`, `src/app/management/recurring-jobs/{actions,page}.tsx`, `src/app/admin/website/actions.ts`, `docs/hard-coded-security-registry.json`. No `worker/` change
+- [x] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs) — `supabase/migrations/0367_…sql`, `supabase/harness/0367_…_harness.sql`, `src/lib/i18n/dictionaries/{en,th}.ts`, `src/lib/releases.ts`, `src/lib/recurring-jobs/{eligibility-load,queries}.ts`, `src/lib/my-tasks/recurring.ts`, `src/app/management/recurring-jobs/{actions,page}.tsx`, `src/app/admin/website/actions.ts`, `docs/hard-coded-security-registry.json`. No `worker/` change
 - [x] Cards affected identified (the cards whose behaviour changes; who holds them today is labelled context only), plus whether admin and the signed-out public are affected — **no card's grants change.** Only the words of a refusal change. Activities asked are untouched: `recurring.manage` (inside `role_can`) and `website.propose`. Admin is unaffected (outside the card system); the signed-out public cannot reach any of these functions
 - [x] Anything explicitly **out of scope** written down, so the release manager is not surprised — the `maybe`, `masked` and `developer` classes stay English on purpose (decision file); the Thai wording being read by a Thai speaker (`#y1dqu`); group 9's two findings, deliberately not acted on
 
@@ -43,15 +43,15 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 ## 3. Schema and data — *skip if no migration*
 
-- [x] Migration number is one above the highest on `main`, and no other in-flight branch carries one — `0366`, one above `0365`; `check-migration-numbers.mjs` printed `ok — 0366_… (against origin/main …, highest 0365…)`, which reads open PRs
-- [x] `node scripts/apply-migrations.mjs --status` reviewed before applying — the dry-run's own header read `368 applied, 1 pending`, the pending one being `0366`
-- [x] `node scripts/apply-migrations.mjs --dry-run` reviewed — `dry-run 0366_… ok`; it depends on no other pending file
-- [x] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` — `applying 0366_… ok`
+- [x] Migration number is one above the highest on `main`, and no other in-flight branch carries one — `0367`, one above `0365`; `check-migration-numbers.mjs` printed `ok — 0367_… (against origin/main …, highest 0365…)`, which reads open PRs
+- [x] `node scripts/apply-migrations.mjs --status` reviewed before applying — the dry-run's own header read `368 applied, 1 pending`, the pending one being `0367`
+- [x] `node scripts/apply-migrations.mjs --dry-run` reviewed — `dry-run 0367_… ok`; it depends on no other pending file
+- [x] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` — `applying 0367_… ok`
 - [x] File is re-runnable (`if not exists` / `or replace` / `drop … if exists`) — four `create or replace function` statements, nothing else (grants and comments from earlier files are preserved by `or replace`)
 - [x] Existing rows still read correctly after the change (checked against real dev data) — no table, column, view or constraint is touched; five `raise` lines change text. Nothing reads a refusal message from a row
-- [x] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness — `supabase/harness/0366_refusal_keys_last_group_harness.sql`, `ZZ fixture` logins and roles, nothing committed. **Asserted: each of the five raises was provoked and its message compared to the exact key**, plus a control that a login asking `role_can` about its OWN role is answered rather than refused. Verdict: `HARNESS-OK 0366: 5 of 5 raises provoked and each gave its KEY, not a sentence. Nothing missed.` The generator also asserted one match per substitution and diffed back: 5 lines changed, all `raise`/`using errcode`
+- [x] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness — `supabase/harness/0367_refusal_keys_last_group_harness.sql`, `ZZ fixture` logins and roles, nothing committed. **Asserted: each of the five raises was provoked and its message compared to the exact key**, plus a control that a login asking `role_can` about its OWN role is answered rather than refused. Verdict: `HARNESS-OK 0367: 5 of 5 raises provoked and each gave its KEY, not a sentence. Nothing missed.` The generator also asserted one match per substitution and diffed back: 5 lines changed, all `raise`/`using errcode`
 - [x] Down-migration written, or the reason one is not needed is stated — not written; the `-- undo:` header names the reversal (re-apply the four bodies from `0095`, `0277` and `0315`). Text inside function bodies, nothing structural
-- [x] Production apply plan stated for the release manager (which file, which project, when) — `0366_refusal_keys_last_group.sql` to `dbkodyyxxhtygxcxmfcu`, **before the deploy**, run bare: `node scripts/apply-migrations.mjs --env production`
+- [x] Production apply plan stated for the release manager (which file, which project, when) — `0367_refusal_keys_last_group.sql` to `dbkodyyxxhtygxcxmfcu`, **before the deploy**, run bare: `node scripts/apply-migrations.mjs --env production`
 
 ## 4. Functional checks
 
@@ -124,10 +124,10 @@ Analysed by card. No card's grants change; what changes is the language of the r
 
 ### Migration ordering — *skip if no migration*
 
-- [x] **Does this PR contain both a migration and code that reads it?** — **Yes** (`0366` and the callers). Production apply before the deploy; either order is benign (old code meeting a key shows the generic wording with a reference; new code meeting an old sentence falls to `databaseFailure()`'s generic words)
+- [x] **Does this PR contain both a migration and code that reads it?** — **Yes** (`0367` and the callers). Production apply before the deploy; either order is benign (old code meeting a key shows the generic wording with a reference; new code meeting an old sentence falls to `databaseFailure()`'s generic words)
 - [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — deferred: production release manager
 - [ ] For a **destructive or rewriting** migration only: a production backup exists and is fresh — n/a: four `create or replace function`, no table, column, view or row touched
-- [x] Apply plan stated: which file, which project, and whether it runs before or after the deploy — `0366_refusal_keys_last_group.sql`, project `dbkodyyxxhtygxcxmfcu`, **before** the deploy
+- [x] Apply plan stated: which file, which project, and whether it runs before or after the deploy — `0367_refusal_keys_last_group.sql`, project `dbkodyyxxhtygxcxmfcu`, **before** the deploy
 
 ### Rollback
 

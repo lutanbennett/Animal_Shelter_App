@@ -1,7 +1,7 @@
 # Refusal keys, group 10: the last group of person-read English (#3nuwy)
 
 `recurrence_dates` and `recurring_job_dates` (both live in `0095`), `role_can` (`0277`, `security definer`) and
-`propose_website_draft` (`0315`, `security definer`) now raise keys. Migration `0366`; each body is the live one with only its
+`propose_website_draft` (`0315`, `security definer`) now raise keys. Migration `0367`; each body is the live one with only its
 raise lines changed, generated from those files by a script that asserted its match count on every substitution and diffed back
 against the originals (5 lines changed, all `raise` lines). **This ends the programme: `node scripts/measure-sql-refusals.mjs`
 reads "of the person-read (user + forwarded-and-masked), 0 messages are still English" (28 functions, 89 messages keyed).**
@@ -50,14 +50,14 @@ through `dbRefusal`.
 ## 0262's rule and the security check
 
 `role_can` and `propose_website_draft` are `security definer`; their checks (`auth.role()`, `has_permission('recurring.manage')`,
-`has_permission('website.propose')`) are untouched. `check-hard-coded-security.mjs` flagged `role_can` in `0366` because its body
+`has_permission('website.propose')`) are untouched. `check-hard-coded-security.mjs` flagged `role_can` in `0367` because its body
 still contains `r.key = p_role_key` (the role being **asked about**, not a rule on the caller, and the Admin test reads
 `roles.is_admin`); it is declared under `database.declared` with the same reason `0272` and `0277` carry. It prints
 "no coded security outside the Admin bypass".
 
 ## Proof
 
-`supabase/harness/0366_refusal_keys_last_group_harness.sql`: 5 of 5 raises provoked, each asserting the message **is** the key
+`supabase/harness/0367_refusal_keys_last_group_harness.sql`: 5 of 5 raises provoked, each asserting the message **is** the key
 (plus a control that asking about one's own role is answered, not refused). Not driven on screen in Thai: none of the five
 refusals is reachable by pressing a button as the app is built (the span is capped, `role_can` is asked only about permitted
 roles, the website proposal buttons are drawn only to holders of the card).

@@ -90,7 +90,7 @@ const th: Dictionary = {
     "recurring_job.not_found": () => "ไม่พบงานประจำนี้แล้ว โปรดโหลดหน้านี้ใหม่เพื่อดูสถานะล่าสุด",
     "recurring_job.date_handed_over": () => "งานของวันนี้ถูกมอบหมายให้คนอื่นแล้ว",
     "recurring_job.not_assigned": () => "เฉพาะผู้ที่ได้รับมอบหมายงานนี้หรือฝ่ายจัดการเท่านั้นที่บันทึกได้",
-    // UNREVIEWED Thai (not yet read by a human, #y1dqu): the four group 10 refusals (0366).
+    // UNREVIEWED Thai (not yet read by a human, #y1dqu): the four group 10 refusals (0367).
     "recurring_job.span_too_long": () => "ขอวันที่ได้ครั้งละไม่เกินสองปี",
     "role.eligibility_not_allowed": () => "สิทธิ์ของคุณไม่รวมการตรวจสอบว่าบทบาทนั้นทำอะไรได้บ้าง",
     "website.propose_not_allowed": () => "สิทธิ์ของคุณไม่รวมการเสนอการเปลี่ยนแปลงเว็บไซต์",

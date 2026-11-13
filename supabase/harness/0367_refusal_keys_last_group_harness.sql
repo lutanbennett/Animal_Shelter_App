@@ -1,6 +1,6 @@
--- Rollback harness for 0366_refusal_keys_last_group.sql. Dev only.
+-- Rollback harness for 0367_refusal_keys_last_group.sql. Dev only.
 -- Success is the HARNESS-OK message, raised on purpose so nothing commits.
---   node scripts/run-harness.mjs supabase/harness/0366_refusal_keys_last_group_harness.sql
+--   node scripts/run-harness.mjs supabase/harness/0367_refusal_keys_last_group_harness.sql
 --
 -- Every probe asserts the REFUSAL MESSAGE IS THE KEY, not merely that the call was refused.
 -- Fixtures are named "ZZ fixture ..." and nothing is committed.
@@ -66,7 +66,7 @@ begin
   if got = 'website.draft_table_invalid' then seen := seen + 1;
   else missed := missed || format(' [5 draft_table_invalid -> %s]', got); end if;
 
-  raise exception 'HARNESS-OK 0366: % of 5 raises provoked and each gave its KEY, not a sentence.%',
+  raise exception 'HARNESS-OK 0367: % of 5 raises provoked and each gave its KEY, not a sentence.%',
     seen, case when missed = '' then ' Nothing missed.' else ' MISSED:' || missed end;
 end $h$;
 
