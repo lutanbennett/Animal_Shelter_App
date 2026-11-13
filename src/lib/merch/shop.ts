@@ -78,7 +78,7 @@ export function variantLabel(v: { size: string | null; colour: string | null }):
  * exists. The buyer is always shown the rate and its date, and staff match the money by order number before
  * marking the order paid.
  */
-export const RATES_AS_OF = "2026-11-14";
+export const RATES_AS_OF = "2026-11-13";
 export const RATES_THB_PER_UNIT: Record<string, number> = {
   USD: 35,
   EUR: 38,

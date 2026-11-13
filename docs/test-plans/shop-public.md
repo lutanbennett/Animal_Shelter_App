@@ -84,7 +84,7 @@ it. Everything outside those comments is judged.
 | Branch / worktree | `claude/shop-public` @ `C:\Development\Animal_Shelter_shop-public` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3006` |
 | PR | see the PR for this branch |
-| Tested by / date | Claude, 2026-11-14 |
+| Tested by / date | Claude, 2026-11-13 |
 | Carries a migration? | no |
 | Tested at SHA | fd6897c6e |
 
@@ -290,7 +290,7 @@ driven rather than assumed. Signed by whoever ran them — Claude may sign this.
 - [x] Everything in this checklist that could be verified without human eyes was run, not assumed
 - [x] Nothing is ticked that was not actually executed
 
-Automated checks by: Claude  Date: 2026-11-14
+Automated checks by: Claude  Date: 2026-11-13
 
 ### Manual verification
 
