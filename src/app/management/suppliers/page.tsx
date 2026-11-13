@@ -19,11 +19,11 @@ export default async function SuppliersAdminPage(props: PageProps<"/management/s
   const searchParams = await props.searchParams;
   const showArchived = searchParams.archived === "1";
 
-  let suppliersQuery = supabase.from("suppliers").select(SUPPLIER_COLUMNS).order("name");
+  let suppliersQuery = supabase.from("suppliers").select(`${SUPPLIER_COLUMNS}, delivery_method`).order("name");
   if (!showArchived) suppliersQuery = suppliersQuery.is("archived_at", null);
 
   const [suppliersResult, archivedResult, friendsResult] = await Promise.all([
-    suppliersQuery.returns<Supplier[]>(),
+    suppliersQuery.returns<(Supplier & { delivery_method: string })[]>(),
     // Counted in both modes: hidden, it is what the toggle would reveal.
     supabase.from("suppliers").select("id", { count: "exact", head: true }).not("archived_at", "is", null),
     // Friends reads need friends.manage or friends.view (0155); a login with neither simply sees no badge.
