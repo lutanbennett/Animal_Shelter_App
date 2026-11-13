@@ -69,9 +69,12 @@ function shortBaht(value: number, locale: "en" | "th"): string {
 export function CashflowChart({
   months,
   shown,
+  incomeAverage = null,
 }: {
   months: CashflowMonth[];
   shown: ReadonlySet<CashflowCategory>;
+  /** Average recorded gifts per month over past months, drawn as a labelled reference line; null draws nothing. */
+  incomeAverage?: number | null;
 }) {
   const { t, locale } = useI18n();
   const labels = t.management.cashflow;
@@ -98,7 +101,7 @@ export function CashflowChart({
     if (width == null || months.length === 0) return null;
     const plotW = Math.max(width - MARGIN.left - MARGIN.right, 40);
     const plotH = HEIGHT - MARGIN.top - MARGIN.bottom;
-    const max = Math.max(...months.map((m) => monthTotal(m, shown)), 0);
+    const max = Math.max(...months.map((m) => monthTotal(m, shown)), incomeAverage ?? 0, 0);
     const ticks = moneyTicks(max);
     const top = Math.max(ticks[ticks.length - 1], 1);
     const y = (n: number) => MARGIN.top + plotH - (n / top) * plotH;
@@ -133,7 +136,7 @@ export function CashflowChart({
     });
     const labelEvery = slot < 44 ? 2 : 1;
     return { plotW, plotH, ticks, y, columns, baselineY, slot, labelEvery, max };
-  }, [width, months, shown, order, locale]);
+  }, [width, months, shown, order, locale, incomeAverage]);
 
   function onKeyDown(e: React.KeyboardEvent) {
     if (!layout) return;
@@ -251,6 +254,28 @@ export function CashflowChart({
               )}
             </g>
           ))}
+          {incomeAverage != null && (
+            <g>
+              <line
+                x1={MARGIN.left}
+                x2={MARGIN.left + layout.plotW}
+                y1={layout.y(incomeAverage)}
+                y2={layout.y(incomeAverage)}
+                stroke="var(--foreground)"
+                strokeWidth={1.5}
+                strokeDasharray="6 4"
+              />
+              <text
+                x={MARGIN.left + layout.plotW}
+                y={layout.y(incomeAverage) - 4}
+                textAnchor="end"
+                fontSize={11}
+                fill="var(--foreground)"
+              >
+                {labels.income.chartLine(shortBaht(incomeAverage, locale))}
+              </text>
+            </g>
+          )}
         </svg>
       )}
 

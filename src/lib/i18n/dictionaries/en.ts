@@ -4134,6 +4134,20 @@ const en = {
       couldntLoad: "Couldn't load the stock counts",
       couldntLoadPlan: "Couldn't load the plan",
       couldntLoadDeliveries: "Couldn't load the deliveries",
+      income: {
+        heading: "Gifts received (recorded, not a forecast)",
+        note: (months: number) =>
+          `What the donation register shows as received in the last ${months} complete months. These are past figures, not a prediction: no future month is guessed. Gifts in kind have no baht figure and are not counted.`,
+        average: "Average gifts per month",
+        averageDetail: (months: number) => `Average of the last ${months} complete months of recorded gifts.`,
+        against: "Average gifts minus outgoings per month",
+        againstDetail:
+          "Past average gifts against the forecast monthly outgoings above. Below zero means recent giving has not covered this forecast.",
+        received: "Received",
+        inKind: (n: number) => `+${n} in kind`,
+        chartLine: (amount: string) => `Past average gifts ${amount}/month`,
+        couldntLoad: "Couldn't load the recorded gifts, so the income side is not shown.",
+      },
       csv: {
         download: "Download CSV",
         yes: "yes",
