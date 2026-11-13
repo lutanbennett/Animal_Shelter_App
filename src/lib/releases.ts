@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "The last of the messages the database used to show only in English now appear in the language you read the app in: the date preview on a recurring job, the check of whether a role can open a job's page, and proposing a change to the website for approval. Every earlier group of these messages was done in the same way, so none is left in English. The Thai wording has not yet been checked by a Thai speaker.",
 ];
 
 /** Newest first. */
