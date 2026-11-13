@@ -59,7 +59,7 @@ and what is left to do on the date is to measure. It was measured.
 UAT's own credentials (its own client in `.env.deploy.uat`) were used.
 
 - `--env uat` (report): `walked 347 folders, 916 files, 0 shortcuts / anyone-shared 0 / failed 0`, exit 0.
-- `--env uat --remove`: RESULT_PLACEHOLDER
+- `--env uat --remove`: `walked 347 folders, 916 files, 0 shortcuts / anyone-shared 0 / changed 0 / skipped 1263 (already had no anyone permission) / failed 0`, exit 0. A no-op, as expected on a tree that is already private (347 + 916 = 1,263 items, all skipped).
 
 **Exercised** (read from the code): the recursive walk from the root, folder paging, folders **and files** both handled, the
 three-way folder/file/shortcut count, per-item `permissions.list`, and the skip path for an item that already has no `anyone`
