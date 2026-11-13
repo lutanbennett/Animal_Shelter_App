@@ -209,7 +209,7 @@ Automated checks by: Claude Opus 5 (production release manager session)  Date: 2
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — pending: the list is not empty and nobody has looked yet; only the person who looks may tick this
 
-Manual verification by: pending: the two items above — the release mail's title and sender name, and a Thai reader for the offline page and the refusal wording
+Manual verification by: pending: a Thai reader for the offline page and the refusal wording. The other item is CLOSED, and not by a person: the mail arrived, and its subject (`[Production] Lanna Care release 0.45.0: …`) and sender name (`Lanna Care Production`) were read from the message itself — in docs/releases/2026-11-12-0-45-0.md
 
 ### Result
 
