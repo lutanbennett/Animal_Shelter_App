@@ -152,7 +152,9 @@ begin
   select count(*) into v_n from role_permissions where role_id = a;
   if v_n <> 1 then raise exception 'ASSERT after removing residents, % cells remain, not just my_tasks'' one', v_n; end if;
 
-  -- the photo-approver guards. Nobody else approves in this transaction (rolled back): remove the cell from every other role.
+  -- the photo-approver guards. The database raises a KEY since 0365 (#3nuwy), not a sentence, so these assert the key: it is
+  -- the only thing that tells the two refusals apart. That each key has wording in en.ts and th.ts is check-sql-refusal-keys'.
+  -- A renamed key fails here with the new one printed; follow it, do not loosen this to a pattern. Nobody else approves in this transaction (rolled back): remove the cell from every other role.
   delete from role_permissions where activity = 'photos.approve';
   delete from role_cards where role_id in (a, b, c);
 
@@ -161,7 +163,7 @@ begin
     raise exception 'ASSERT add_photos was given while nobody approves';
   exception when check_violation then
     get stacked diagnostics v_msg = message_text;
-    if v_msg not like 'Give a role the Approve photos card first%' then raise exception 'ASSERT wrong refusal: %', v_msg; end if;
+    if v_msg is distinct from 'role_cards.needs_an_approver_first' then raise exception 'ASSERT wrong refusal: %', v_msg; end if;
   end;
 
   -- approve + add together is allowed (this role approves after the call), and a second role may then add photos
@@ -176,7 +178,7 @@ begin
     raise exception 'ASSERT the last approver was taken away while roles still add photos';
   exception when check_violation then
     get stacked diagnostics v_msg = message_text;
-    if v_msg not like 'This is the last role that can approve photos%' then raise exception 'ASSERT wrong refusal: %', v_msg; end if;
+    if v_msg is distinct from 'role_cards.last_approver' then raise exception 'ASSERT wrong refusal: %', v_msg; end if;
   end;
 
 
