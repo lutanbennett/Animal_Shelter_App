@@ -149,7 +149,7 @@ Automated checks by: Claude  Date: 2026-11-13
 
 ### Manual verification
 
-pending: the Thai wording and the chart's average line with real gifts, listed above
+Manual verification by: pending: the Thai wording and the chart's average line with real gifts, listed above
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — pending: items 1 and 2 above need a person
 
@@ -157,7 +157,7 @@ pending: the Thai wording and the chart's average line with real gifts, listed a
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR — pending: pasted when the PR is opened
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — pending: at release
 
 Result: pass
 
