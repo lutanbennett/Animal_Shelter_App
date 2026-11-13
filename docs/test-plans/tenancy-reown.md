@@ -9,7 +9,7 @@
 |---|---|
 | Feature | |
 | Backlog item | `docs/backlog.md` → |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/tenancy-reown` @ `C:\Development\Animal_Shelter_tenancy-reown` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | |
 | Tested by / date | |
@@ -232,8 +232,8 @@ Manual verification by: n/a: nothing a person needs to look at
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR
-- [ ] Handed to the production release manager
+- [ ] Checklist pasted into the PR — pending: pasted into the PR body by the release manager
+- [ ] Handed to the production release manager — pending: production apply
 
 Result: pass
 
