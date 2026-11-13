@@ -8,6 +8,7 @@ import { requirePageVisible } from "@/lib/public-page-access";
 import { PublicHeader } from "../../../../adopt/PublicHeader";
 import { PublicFooter } from "../../../../adopt/PublicFooter";
 import { localizedHref } from "@/lib/public-paths";
+import { ClearCart } from "./ClearCart";
 import { loadOrderView } from "@/lib/merch/checkout";
 import { variantLabel, RATES_THB_PER_UNIT, RATES_AS_OF } from "@/lib/merch/shop";
 import { loadPublicDonationChannels, channelText } from "@/lib/site/donation-channels";
@@ -45,6 +46,7 @@ export default async function MerchOrderPage({ params }: { params: Promise<{ id:
     <main className="flex flex-1 flex-col">
       <PublicHeader current="shop" trail={[{ label: t.publicNav.getInvolved }, { label: s.navLabel, href: localizedHref("/shop/merch", locale) }, { label: s.orderTitle }]} />
       <div className={`${PUBLIC_FRAME} flex max-w-3xl flex-col gap-6 py-10`}>
+        <ClearCart />
         <h1 className="font-display text-[40px] font-bold leading-[1.05] text-site-ink sm:text-5xl">{s.orderTitle}</h1>
         <p className="text-lg">
           {s.orderNo}: <strong>{order.order_no}</strong> · {s.state[order.payment_state] ?? order.payment_state}
