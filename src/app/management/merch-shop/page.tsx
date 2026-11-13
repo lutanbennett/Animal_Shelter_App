@@ -2,8 +2,9 @@ import Link from "next/link";
 import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
+import { loadAppUsersById, appUserName } from "@/lib/auth/app-users";
 import { unsentParts } from "@/lib/merch/supplier-email";
-import { saveProduct, saveVariant, setProductState } from "./actions";
+import { saveProduct, saveVariant, saveRate, setProductState } from "./actions";
 
 /**
  * The merchandise shop, staff side (docs/merch-shop.md). Gated on merch.manage, the activity its card (run_merch_shop)
@@ -50,7 +51,9 @@ export default async function MerchShopPage(
       ? "catalogue"
       : sp.tab === "email"
         ? "email"
-        : "orders";
+        : sp.tab === "rates"
+          ? "rates"
+          : "orders";
   const canEdit = can(perms, "merch.manage", "edit");
   const str = (v: string | string[] | undefined) =>
     typeof v === "string" ? v : "";
@@ -61,6 +64,7 @@ export default async function MerchShopPage(
     ["orders", m.tabOrders],
     ["catalogue", m.tabCatalogue],
     ["email", m.tabEmail],
+    ["rates", m.tabRates],
   ];
 
   return (
@@ -99,11 +103,44 @@ export default async function MerchShopPage(
         <Catalogue supabase={supabase} canEdit={canEdit} />
       )}
       {tab === "email" && <EmailTab supabase={supabase} />}
+      {tab === "rates" && <RatesTab supabase={supabase} canEdit={canEdit} />}
     </main>
   );
 }
 
 type Db = Awaited<ReturnType<typeof requirePermission>>["supabase"];
+
+async function RatesTab({ supabase, canEdit }: { supabase: Db; canEdit: boolean }) {
+  const { t, locale } = await getT();
+  const m = t.merchStaff;
+  const { data } = await supabase.from("merch_exchange_rates").select("currency, thb_per_unit, set_at, set_by").order("currency");
+  const ids = [...new Set((data ?? []).map((r) => r.set_by).filter((v): v is string => !!v))];
+  const people = await loadAppUsersById(supabase, ids);
+  return (
+    <section className="flex flex-col gap-3">
+      <p className="text-sm text-muted">{m.ratesHelp}</p>
+      <ul className="flex flex-col gap-2">
+        {(data ?? []).map((r) => (
+          <li key={r.currency} className="flex flex-wrap items-center gap-3 rounded border border-border bg-surface p-3">
+            <strong className="w-12">{r.currency}</strong>
+            {canEdit ? (
+              <form action={saveRate} className="flex items-center gap-2">
+                <input type="hidden" name="currency" value={r.currency} />
+                <input name="rate" type="number" step="0.0001" min="0.0001" defaultValue={Number(r.thb_per_unit)} required aria-label={m.ratesColRate} className={inputClass + " w-28"} />
+                <button className={primaryClass}>{m.ratesSave}</button>
+              </form>
+            ) : (
+              <span>{Number(r.thb_per_unit)}</span>
+            )}
+            <span className="text-xs text-muted">
+              {m.ratesSetOn(new Date(r.set_at).toLocaleDateString(locale === "th" ? "th-TH" : "en-GB"), (r.set_by && appUserName(people.get(r.set_by))) || m.ratesUnknown)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 
 async function Orders({
   supabase,

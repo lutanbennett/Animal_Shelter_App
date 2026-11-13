@@ -5,7 +5,7 @@ import { requirePageVisible } from "@/lib/public-page-access";
 import { PublicHeader } from "../../../adopt/PublicHeader";
 import { PublicFooter } from "../../../adopt/PublicFooter";
 import { localizedHref } from "@/lib/public-paths";
-import { RATES_THB_PER_UNIT } from "@/lib/merch/shop";
+import { loadRates } from "@/lib/merch/checkout";
 import { CheckoutForm } from "./CheckoutForm";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -19,6 +19,8 @@ export default async function MerchCheckoutPage() {
   await requirePageVisible("shop-merch");
   const { t, locale } = await getT();
   const s = t.merchShop;
+  // A failed read leaves overseas currencies out rather than quoting a stale figure; Thailand still works.
+  const currencies = await loadRates().then(Object.keys, () => [] as string[]);
   return (
     <main className="flex flex-1 flex-col">
       <PublicHeader current="shop-merch" trail={[{ label: t.publicNav.getInvolved }, { label: s.navLabel, href: localizedHref("/shop/merch", locale) }, { label: s.checkoutTitle }]} />
@@ -32,7 +34,7 @@ export default async function MerchCheckoutPage() {
             note: s.note, placeOrder: s.placeOrder, placing: s.placing, errEmpty: s.errEmpty, errUnavailable: s.errUnavailable,
             errCurrency: s.errCurrency, errFailed: s.errFailed, errFields: s.errFields,
           }}
-          currencies={Object.keys(RATES_THB_PER_UNIT)}
+          currencies={currencies}
           shopHref={localizedHref("/shop/merch", locale)}
         />
       </div>

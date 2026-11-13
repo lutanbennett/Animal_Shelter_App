@@ -1,6 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { RATES_THB_PER_UNIT, MAX_QTY, type CartLine } from "./shop";
+import { MAX_QTY, type CartLine } from "./shop";
 
 export type PlaceOrderInput = {
   lines: CartLine[];
@@ -26,6 +26,17 @@ export type PlaceOrderResult = { ok: true; orderId: string } | { ok: false; erro
  * The write is ONE database transaction, place_merch_order() (0373, security invoker, service_role only): stock is taken
  * with a row lock, so a race refuses the loser rather than overselling, and an interrupted write rolls back whole.
  */
+/**
+ * Baht per one unit of each currency an overseas buyer may be quoted in, read from merch_exchange_rates (0374), which staff
+ * edit on /management/merch-shop. NO FALLBACK TO A CONSTANT: a failed read throws, because a silent fall back to a stale
+ * figure is the fault this table exists to remove. Callers turn the throw into "overseas not available right now".
+ */
+export async function loadRates(): Promise<Record<string, number>> {
+  const { data, error } = await createAdminClient().from("merch_exchange_rates").select("currency, thb_per_unit");
+  if (error) throw new Error(`Merchandise: could not read the exchange rates: ${error.message}`);
+  return Object.fromEntries((data ?? []).map((r) => [r.currency as string, Number(r.thb_per_unit)]));
+}
+
 export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {
   const lines = new Map<string, number>();
   for (const l of input.lines) {
@@ -37,7 +48,11 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
   let rate: number | null = null;
   if (input.currency !== "THB") {
-    rate = RATES_THB_PER_UNIT[input.currency] ?? null;
+    try {
+      rate = (await loadRates())[input.currency] ?? null;
+    } catch {
+      return { ok: false, error: "failed" };
+    }
     if (input.region !== "overseas" || rate === null) return { ok: false, error: "currency" };
   } else if (input.region === "overseas" && input.paymentMethod === "promptpay") {
     return { ok: false, error: "currency" };

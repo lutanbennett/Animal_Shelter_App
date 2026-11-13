@@ -78,20 +78,5 @@ export function variantLabel(v: { size: string | null; colour: string | null }):
   return [v.size, v.colour].filter(Boolean).join(" · ");
 }
 
-/**
- * Baht per one unit of each currency an overseas buyer may be quoted in, with the date it was set.
- * No paid rate service (zero ongoing cost): this is a dated figure edited here until a staff-edited rate screen
- * exists. The buyer is always shown the rate and its date, and staff match the money by order number before
- * marking the order paid.
- */
-export const RATES_AS_OF = "2026-11-13";
-export const RATES_THB_PER_UNIT: Record<string, number> = {
-  USD: 35,
-  EUR: 38,
-  GBP: 44,
-  AUD: 23,
-  SGD: 26,
-};
-
 export type CartLine = { variantId: string; quantity: number };
 export const MAX_QTY = 20;
