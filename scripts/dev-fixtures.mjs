@@ -308,6 +308,8 @@ begin
   if v_contact is null then
     insert into contacts (name, type) values ('ZZ fixture friend', 'Vendor') returning id into v_contact;
   end if;
+  -- Publish and Up/Down (row 11a) change these; re-running puts the card back to a draft at the bottom.
+  update shelter_friends set published = false, sort_order = 9999 where contact_id = v_contact;
   if not exists (select 1 from shelter_friends where contact_id = v_contact) then
     insert into shelter_friends (contact_id, blurb, help_kind, published, sort_order)
     values (v_contact, 'ZZ fixture: a supplier to press the Shelter Friend controls against.', 'Discount', false, 9999);
@@ -334,6 +336,8 @@ begin
   end if;
   select id into v_diet from diets order by name limit 1;
   if v_diet is null then raise exception 'dev has no diet recipe to give the fixture resident'; end if;
+  -- End today (row 11b) stamps end_date; re-running puts the diet back to running.
+  update resident_diets set end_date = null where resident_id = v_diet_res and end_date is not null;
   if not exists (select 1 from resident_diets where resident_id = v_diet_res and end_date is null) then
     insert into resident_diets (resident_id, diet_id, start_date, meals_per_day, created_by)
     values (v_diet_res, v_diet, current_date - 7, 2, v_taker);
