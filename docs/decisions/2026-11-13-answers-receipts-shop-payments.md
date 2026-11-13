@@ -53,6 +53,21 @@ Each supplier has its **own delivery method**, set on the supplier screen. Today
 so nothing repeats and nothing is missed. Other methods (a file, a link, a supplier's own system)
 are **added later as further options, without changing the shop.**
 
+## Foster carer and adopter access (#d6wxo)
+
+**For the planner to file.** Asked in chat on 2026-11-13 how a foster carer's or adopter's access
+should be controlled, Lutan answered that they **authenticate on the website page, add their updates
+from the website, and are limited to just the residents they have adopted.** This is recorded as the
+**database rule limiting them to their own animals**, **not a card**. That mapping is **the writer's
+reading of his words**: he did not pick the option by name. It settles the gate #d6wxo said was
+still open. The shape (a public website page with its own sign-in) was already settled on 2026-11-12.
+
+## Thai read routine cadence (#y1dqu)
+
+**For the planner to file.** Asked in chat on 2026-11-13, Lutan confirmed the Thai read routine runs
+**weekly**, as `docs/thai-read-routine.md` recommends. **The cadence is settled.** The first read
+itself still needs a Thai reader and is **not answered**.
+
 ## Not answered
 
 - **#s0jgi — phone day.** Not answered. Two roles are being looked at (the volunteer and bills
