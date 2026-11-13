@@ -1649,6 +1649,23 @@ const manual: Manual = {
           ],
         },
         {
+          id: "merch-shop",
+          title: "Running the merchandise shop",
+          activity: "merch.manage",
+          path: "Management → Merchandise shop",
+          intro:
+            "The shelter's own goods (T-shirts and the like) sold from the website. There is no card payment: a buyer pays by PromptPay (Thailand) or Wise (overseas) and you match the money, then press Mark paid. Only paid orders ever go to a supplier.",
+          steps: [
+            "Catalogue tab: Add a product with its name, price and both postage prices (Thailand and overseas, for one item). A new product is hidden until you press Show. Under each product add its sizes and colours and type how many the shelter holds on its own shelf. Archive retires a product but keeps it on past orders.",
+            "A product with no supplier can only be sold from the shelf. Choose a supplier and anything the shelf cannot cover is made and posted by that supplier.",
+            "Orders tab: every order, newest first. Search by order number or buyer name, or pick a state. Open an order to see who it is for, what was ordered and how it is split: one part per supplier and one for the shelter's own shelf.",
+            "When the money arrives (your bank statement for PromptPay, Wise for overseas), open the order, type the reference and press Mark paid. An order that has not been paid can be cancelled; what it took from the shelf goes back.",
+            "On each part, type the carrier and tracking number and set it to Shipped, then Delivered. Sent to supplier is set only by the daily email, never by hand.",
+            "Supplier email tab: shows the paid parts still waiting to go, and every email sent. Each supplier gets one email a day listing only paid, not-yet-sent parts, with the buyer's delivery name and address and no prices. A supplier with no email address is flagged here: add one on Management → Suppliers. The delivery method is set on the same screen. A lost email is handled by reading the log; there is no re-send.",
+            "Prices for overseas buyers use an exchange rate that is, for now, set by a developer and always shown to the buyer with its date.",
+          ],
+        },
+        {
           id: "shelter-friends",
           title: "Shelter Friends — thanking the businesses that help",
           activity: "friends.manage",
