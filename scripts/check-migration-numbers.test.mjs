@@ -112,3 +112,19 @@ test("renumber advice: applied means do NOT renumber; not applied means renumber
   assert.match(renumberAdvice("0365_x.sql", "no"), /safe to renumber/);
   assert.match(renumberAdvice("0365_x.sql", "unknown"), /--is-applied 0365_x\.sql.*do NOT rename/s);
 });
+
+// #w8kq3: the hook (allowGap) cannot see open PRs, so a number past main's highest + 1 is accepted there.
+// A duplicate or a number main already holds is still refused. CI (no allowGap) stays strict.
+test("hook: a gap is accepted (allowGap), CI still refuses it", () => {
+  const f = ["supabase/migrations/0361_mine.sql"];
+  assert.equal(evaluate(f, MAIN, new Map(), { allowGap: true }).problems.length, 0);
+  assert.equal(evaluate(f, MAIN).problems.length, 1);
+});
+
+test("hook: a duplicate among new files and a number on main are still refused under allowGap", () => {
+  const dup = evaluate(["supabase/migrations/0361_a.sql", "supabase/migrations/0361_b.sql"], MAIN, new Map(), { allowGap: true });
+  assert.equal(dup.problems.length, 1);
+  assert.match(dup.problems[0], /shared with/);
+  const taken = evaluate(["supabase/migrations/0359_mine.sql"], MAIN, new Map(), { allowGap: true });
+  assert.match(taken.problems[0], /already taken on/);
+});

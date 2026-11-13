@@ -113,7 +113,7 @@ function hoursSinceFetch() {
  * and the next failed as a gap, and the check's own advice ("take the next free
  * number") was rejected by its own gap rule.
  */
-export function evaluate(candidate, mainBlobs, claimed = new Map()) {
+export function evaluate(candidate, mainBlobs, claimed = new Map(), { allowGap = false } = {}) {
   const mainNames = [...mainBlobs.keys()].sort();
   const highestName = mainNames.at(-1) ?? null;
   const highest = highestName ? numberOf(highestName) : 0;
@@ -145,6 +145,13 @@ export function evaluate(candidate, mainBlobs, claimed = new Map()) {
     if (claimed.has(n)) return;
     const want = nextFree();
     if (n === want) return ok.push(name);
+    // The hook cannot read open PRs, so it cannot know `want` is held by another PR (#1546/#1547, 2026-11-13).
+    // A number past it that nobody here uses is what CI told the stream to take: let it through. A duplicate or
+    // a number main holds is still refused. CI stays strict.
+    if (allowGap && n > want && !mainByNumber.has(n) && !fresh.slice(0, i).some((o) => numberOf(o) === n)) {
+      cursor = n + 1;
+      return ok.push(name);
+    }
     let why;
     if (mainByNumber.has(n)) why = `${pad(n)} is already taken on ${base} by ${mainByNumber.get(n)}`;
     else if (fresh.slice(0, i).some((o) => numberOf(o) === n))
@@ -222,7 +229,7 @@ function main() {
   const ownBranch = branchArg ?? process.env.GITHUB_HEAD_REF ?? git(["branch", "--show-current"]).out;
   const claimed = prs ? numbersClaimedByOpenPrs(prs, ownBranch) : new Map();
 
-  const { highestName, fresh, ok, problems } = evaluate(tree.out.split("\n").filter(Boolean), mainBlobs, claimed);
+  const { highestName, fresh, ok, problems } = evaluate(tree.out.split("\n").filter(Boolean), mainBlobs, claimed, { allowGap: staged });
 
   // The durable half: a number used by two files in the tree. Pure filename read. Never in the hook.
   const dupNotes = [];
