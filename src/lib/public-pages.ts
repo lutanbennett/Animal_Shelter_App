@@ -29,6 +29,7 @@ export type PublicSection =
   | "report-animal"
   | "about"
   | "shop"
+  | "shop-merch"
   | "privacy";
 
 /** A header menu group: the heading a page sits under, or none for a top-level link. */
@@ -181,6 +182,16 @@ export const PUBLIC_PAGES: PublicPage[] = [
     menu: { group: "get-involved" },
     footer: { column: "help", order: 9 },
     sitemap: { order: 12, changeFrequency: "monthly", priority: 0.5 },
+  },
+  {
+    // The shelter's own merchandise (/shop/merch; its own hide key since 0373, so it can go without Shop for the shelter).
+    // Menu, footer and sitemap show it only once a product is shown (hasPublicMerchProducts), as the affiliate shop does.
+    key: "shop-merch",
+    href: "/shop/merch",
+    label: (t) => t.merchShop.navLabel,
+    menu: { group: "get-involved" },
+    footer: { column: "help", order: 9.5 },
+    sitemap: { order: 15, changeFrequency: "weekly", priority: 0.5 },
   },
   {
     key: "desexing",

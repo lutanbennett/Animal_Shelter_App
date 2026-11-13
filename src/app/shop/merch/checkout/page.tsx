@@ -16,12 +16,12 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /** /shop/merch/checkout: the cart (kept in the browser) and the order form. The server prices everything again. */
 export default async function MerchCheckoutPage() {
-  await requirePageVisible("shop");
+  await requirePageVisible("shop-merch");
   const { t, locale } = await getT();
   const s = t.merchShop;
   return (
     <main className="flex flex-1 flex-col">
-      <PublicHeader current="shop" trail={[{ label: t.publicNav.getInvolved }, { label: s.navLabel, href: localizedHref("/shop/merch", locale) }, { label: s.checkoutTitle }]} />
+      <PublicHeader current="shop-merch" trail={[{ label: t.publicNav.getInvolved }, { label: s.navLabel, href: localizedHref("/shop/merch", locale) }, { label: s.checkoutTitle }]} />
       <div className={`${PUBLIC_FRAME} flex flex-col gap-6 py-10`}>
         <h1 className="font-display text-[40px] font-bold leading-[1.05] text-site-ink sm:text-5xl">{s.checkoutTitle}</h1>
         <CheckoutForm

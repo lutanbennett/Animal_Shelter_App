@@ -31,6 +31,12 @@ export type MerchVariant = {
 
 export type MerchCatalogueItem = MerchProduct & { variants: MerchVariant[] };
 
+/** Whether any product is shown: the menu, the footer and the sitemap list the merchandise shop only then. */
+export async function hasPublicMerchProducts(supabase: SupabaseClient): Promise<boolean> {
+  const { count, error } = await supabase.from("public_merch_products").select("id", { count: "exact", head: true });
+  return !error && (count ?? 0) > 0;
+}
+
 export async function loadMerchCatalogue(supabase: SupabaseClient): Promise<MerchCatalogueItem[]> {
   const [p, v] = await Promise.all([
     supabase

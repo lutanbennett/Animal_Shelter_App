@@ -11,6 +11,8 @@ import { HeroPhoto } from "./HeroPhoto";
 import { GalleryPhotos, type GalleryPhotoRow } from "./GalleryPhotos";
 import { FeaturedResident, type FeaturedResidentOption } from "./FeaturedResident";
 import { ImpactBaselines } from "./ImpactBaselines";
+import { PublicCount } from "./PublicCount";
+import { IN_CARE_STATUSES } from "@/lib/management/report";
 import { SHELTER_STATS_COLUMNS, type ImpactBaselineRow, type ShelterStats } from "@/lib/site/impact";
 import type { LiveSwitchRow } from "./ImpactBaselines";
 import { DonationChannels } from "./DonationChannels";
@@ -83,6 +85,21 @@ export default async function WebsitePage({
   const { t } = await getT();
 
   const supabase = await createClient();
+
+  // The pairing is a read of resident data, so it asks what that read asks (resident.record at read, 0249), not the
+  // website guard. Not read, and not drawn, where false. "Public" is public_resident_profiles, the view the adoption
+  // pages read (private.on_website, 0350): public_resident_cards answers for every animal, so it would overcount.
+  let pairing: { inCare: number; isPublic: number } | null = null;
+  if (can(perms, "resident.record", "read")) {
+    const [careRes, publicRes] = await Promise.all([
+      supabase.from("resident_current_state").select("resident_id", { count: "exact", head: true }).in("current_status", [...IN_CARE_STATUSES]),
+      supabase.from("public_resident_profiles").select("id", { count: "exact", head: true }),
+    ]);
+    if (careRes.error || publicRes.error || careRes.count === null || publicRes.count === null) {
+      throw new Error(`Website admin: could not count residents: ${(careRes.error ?? publicRes.error)?.message ?? "no count returned"}`);
+    }
+    pairing = { inCare: careRes.count, isPublic: publicRes.count };
+  }
 
   const [
     contentRead,
@@ -248,6 +265,7 @@ export default async function WebsitePage({
                   featuredResidentId={content.featured_resident_id}
                   residents={publicResidents}
                 />
+                {pairing && <PublicCount inCare={pairing.inCare} isPublic={pairing.isPublic} labels={t.admin.website.impact.publicCount} />}
                 <ImpactBaselines
                   rows={baselinesResult.data ?? []}
                   liveSwitches={liveSwitchesResult.data ?? []}
