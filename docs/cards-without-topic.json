@@ -1,1 +1,8 @@
-{ "cards": {} }
+{
+  "cards": {
+    "run_merch_shop": {
+      "date": "2026-11-14",
+      "reason": "The card's page (/management/merch-shop) does not exist yet: this PR is the schema, the card and the specification (docs/merch-shop.md). A manual topic for a screen nobody can open would describe nothing. The shop-staff stream builds the screens and must write the topic and delete this record in the same PR."
+    }
+  }
+}

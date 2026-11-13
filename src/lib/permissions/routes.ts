@@ -340,6 +340,17 @@ export const ROUTES: readonly RouteEntry[] = [
     menu: false,
   },
   {
+    // The merchandise shop, staff side (0369). Asks merch.manage. The page is built by the shop-staff stream; this entry is what lets its card open it.
+    path: "/management/merch-shop",
+    activity: "merch.manage",
+    level: "read",
+    icon: ShoppingBag,
+    label: (t) => t.nav.merchShop,
+    device: "any",
+    menu: false,
+    section: "management",
+  },
+  {
     path: "/management/foundation-papers/board-ids",
     activity: "foundation.id_copies",
     level: "read",

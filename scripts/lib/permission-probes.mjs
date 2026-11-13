@@ -176,6 +176,9 @@ export const PROBES = [
   // check-who-does-what.mjs (dev has no shop_links row of its own; docs/decisions/2026-10-30-shop-page-finish.md).
   { activity: "shop.manage", level: "edit", sql: `insert into shop_links (title, link_url) values ('Probe shop', 'https://example.invalid/probe')` },
   { activity: "shop.manage", level: "read", sql: `select 1 from shop_links where id = $SHOP` },
+  // 0369: the merch tables ask merch.manage and nothing else. The read runs against $MERCH, a fixture product of check-who-does-what.mjs.
+  { activity: "merch.manage", level: "edit", sql: `insert into merch_products (name, price_thb) values ('Probe product', 1)` },
+  { activity: "merch.manage", level: "read", sql: `select 1 from merch_products where id = $MERCH` },
 ];
 
 // A statement a read on a Yes/No activity: "read" there means "needs Yes".

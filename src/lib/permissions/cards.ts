@@ -72,7 +72,8 @@ export type NewCardKey =
   | "approve_text"
   | "foundation_papers"
   | "foundation_id_copies"
-  | "view_foundation_papers";
+  | "view_foundation_papers"
+  | "run_merch_shop";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -223,6 +224,9 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   foundation_id_copies: { includes: [], bundle: [{ activity: "foundation.id_copies", level: "edit" }], opens: "/management/foundation-papers/board-ids" },
   // 0368 (#t1zyc B): the same papers at READ only, for an outside accountant. Never the ID copies: those stay their own, narrower card.
   view_foundation_papers: { includes: [], bundle: [{ activity: "foundation.papers", level: "read" }], opens: "/management/foundation-papers" },
+  // 0369 (#cjxq0): the staff side of the merchandise shop: catalogue, orders, marking paid, tracking, supplier delivery method. Exactly merch.manage at edit.
+  // Given to no role. Not manage_shop_page, which is the affiliate-links page.
+  run_merch_shop: { includes: [], bundle: [{ activity: "merch.manage", level: "edit" }], opens: "/management/merch-shop" },
   recurring_jobs: {
     includes: [],
     bundle: [{ activity: "recurring.manage" }, { activity: "recurring.do_any" }, { activity: "recurring.do_own" }],
@@ -509,6 +513,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   foundation_papers: (t) => t.appHome.cards.foundationPapers,
   foundation_id_copies: (t) => t.appHome.cards.foundationIdCopies,
   view_foundation_papers: (t) => t.appHome.cards.viewFoundationPapers,
+  run_merch_shop: (t) => t.appHome.cards.runMerchShop,
   food_forecast: (t) => t.appHome.cards.foodForecast,
   medicine_forecast: (t) => t.appHome.cards.medicineForecast,
   view_cashflow: (t) => t.appHome.cards.viewCashflow,
