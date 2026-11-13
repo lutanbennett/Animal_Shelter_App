@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Coins, CalendarRange, CircleHelp, Download } from "lucide-react";
+import { Coins, CalendarRange, CircleHelp, Download, HandCoins, Scale } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
 import { downloadCsv } from "@/lib/csv";
 import { formatBaht, formatMonth } from "@/lib/format";
@@ -23,6 +23,7 @@ import {
   type CashflowRow,
 } from "@/lib/management/cashflow";
 import type { ClinicForecastBasis } from "@/lib/management/clinic-forecast";
+import { INCOME_MONTHS, type IncomeHistory } from "@/lib/management/cashflow-income";
 import { CashflowChart } from "./CashflowChart";
 
 /**
@@ -45,6 +46,8 @@ export function CashflowView({
   rows,
   clinicBasis,
   fixedMonthly,
+  income = null,
+  incomeError = false,
   from,
   to,
   canEditFixedOutgoings = false,
@@ -62,6 +65,10 @@ export function CashflowView({
   to: string;
   /** How the clinic line was worked out, for the explanation under the table. */
   clinicBasis: ClinicForecastBasis;
+  /** Recorded gifts, past months only; null when this login may not read donations, so nothing about income is drawn. */
+  income?: IncomeHistory | null;
+  /** The donations read failed: say so rather than draw an empty income side. */
+  incomeError?: boolean;
   /** Active fixed outgoings per month (0114), or null when none are listed. */
   fixedMonthly: number | null;
 }) {
@@ -210,8 +217,63 @@ export function CashflowView({
           phone: five stacked series in 375px is unreadable, and the table
           below says the same thing better at that width. */}
       <section className="hidden md:block">
-        <CashflowChart months={months} shown={shown} />
+        <CashflowChart months={months} shown={shown} incomeAverage={income?.average ?? null} />
       </section>
+
+      {(income || incomeError) && (
+        <section className="flex flex-col gap-2" aria-labelledby="cashflow-income-heading">
+          <h2 id="cashflow-income-heading" className="text-sm font-semibold text-foreground">
+            {c.income.heading}
+          </h2>
+          {income ? (
+            <>
+              <p className="text-xs text-muted">{c.income.note(INCOME_MONTHS)}</p>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                <StatCard
+                  title={c.income.average}
+                  value={formatBaht(income.average, locale)}
+                  detail={c.income.averageDetail(INCOME_MONTHS)}
+                  icon={HandCoins}
+                />
+                <StatCard
+                  title={c.income.against}
+                  value={formatBaht(income.average - perMonth, locale)}
+                  detail={c.income.againstDetail}
+                  icon={Scale}
+                  tone={income.average - perMonth < 0 ? "warning" : "success"}
+                />
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[20rem] border-collapse text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted">
+                      <th scope="col" className="py-2 pr-3 font-medium">{c.table.month}</th>
+                      <th scope="col" className="py-2 pl-3 text-right font-medium">{c.income.received}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="tabular-nums">
+                    {income.months.map((m) => (
+                      <tr key={m.month} className="border-b border-border/60">
+                        <th scope="row" className="py-2 pr-3 text-left font-normal text-muted">
+                          {formatMonth(new Date(m.month), locale, true)}
+                        </th>
+                        <td className="py-2 pl-3 text-right">
+                          {formatBaht(m.amount, locale)}
+                          {m.inKind > 0 && (
+                            <span className="ml-1 text-xs text-muted">{c.income.inKind(m.inKind)}</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-danger">{c.income.couldntLoad}</p>
+          )}
+        </section>
+      )}
 
       <section className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
