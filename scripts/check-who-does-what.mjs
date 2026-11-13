@@ -92,9 +92,12 @@ const PROBES = ALL_PROBES.filter((p) => !p.expect);
 const F = {};
 for (const k of ["R_IN", "R_OUT", "BARE", "CATEGORY", "DEAD", "ENC", "ZONE", "JOB", "PROJECT", "CLINIC", "OTHER_CLINIC", "DOCTOR", "DOCTOR2", "CONTACT", "CARER", "FRIEND", "RECEIPT", "DIET", "IMM_TYPE", "OUTGOING", "JOB_NONE", "JOB_ALL", "ATT_IN", "ATT_OUT", "SHOP", "MERCH", "REPORT"]) F[k] = randomUUID();
 const ID = Object.fromEntries(PRINCIPALS.map((p) => [p, randomUUID()]));
-const cat = await query("select id from project_folders where top_level_category = 'Events' and parent_folder_id is null limit 1");
+// project_folders_before_write refuses to create a root (only migration 0034 seeds them) and gives a child its parent's
+// category, so the harness cannot make a root and does not need 'Events' specifically: any root will do. Dev held only
+// 'Shelter Projects' on 2026-11-14, which is why the old lookup for 'Events' alone made this check unrunnable.
+const cat = await query("select id from project_folders where parent_folder_id is null order by (top_level_category = 'Events') desc, top_level_category limit 1");
 F.CATEGORY = cat.body?.[0]?.id;
-if (!F.CATEGORY) throw new Error("no root project folder for 'Events' on dev");
+if (!F.CATEGORY) throw new Error("no root project folder on dev (migration 0034 seeds them; the harness cannot create one, the trigger forbids it)");
 const lit = (id) => `'${id}'::uuid`;
 const dq = (s) => { let tag = "p"; while (s.includes(`$${tag}$`)) tag += "x"; return `$${tag}$${s}$${tag}$`; };
 // A probe that looks a row up in a list ("(select id from medication ... limit 1)") is asking two things:
