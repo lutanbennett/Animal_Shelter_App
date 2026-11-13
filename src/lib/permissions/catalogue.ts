@@ -139,6 +139,7 @@ export const ACTIVITIES = [
   { key: "diets.settings", kind: "yesno", area: "settings", sort: 87, requires: [], probes: [] },
   { key: "text.approve", kind: "yesno", area: "settings", sort: 88, requires: [], probes: [] },
   // 0362 (#98se8): the foundation's own papers. foundation.id_copies is the narrower one: copies of board members' ID cards and household registrations.
+  { key: "merch.manage", kind: "level", area: "management", sort: 92, requires: [], probes: [] },
   { key: "foundation.papers", kind: "level", area: "management", sort: 90, requires: [], probes: [] },
   { key: "foundation.id_copies", kind: "level", area: "management", sort: 91, requires: [], probes: [] },
   { key: "contacts.browse", kind: "yesno", area: "contacts", sort: 57, requires: [], probes: [] },

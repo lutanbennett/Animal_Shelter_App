@@ -24,7 +24,7 @@
 
 -- 1. The activity and the card ------------------------------------------------------------------------------------------------
 insert into permission_activities (key, kind, area, sort)
-values ('merch.manage', 'level', 'management', 91)
+values ('merch.manage', 'level', 'management', 92)
 on conflict (key) do update set kind = excluded.kind, area = excluded.area;
 
 insert into card_grants (card, activity, level)
@@ -201,23 +201,107 @@ create policy suppliers_update_perm on suppliers for update to authenticated
   with check ((select has_permission('contacts.directory')) or (select has_permission('merch.manage')));
 
 -- 5. Access: merch.manage on every table; the stamps come from the session ----------------------------------------------------------
-do $$
-declare t text;
-begin
-  foreach t in array array['merch_products', 'merch_variants', 'merch_orders', 'merch_order_parts', 'merch_order_items', 'merch_supplier_emails'] loop
-    execute format('alter table %I enable row level security', t);
-    execute format('drop policy if exists %I on %I', t || '_select_perm', t);
-    execute format('create policy %I on %I for select to authenticated using ((select has_permission(''merch.manage'', ''read'')))', t || '_select_perm', t);
-    execute format('drop policy if exists %I on %I', t || '_insert_perm', t);
-    execute format('create policy %I on %I for insert to authenticated with check ((select has_permission(''merch.manage'')))', t || '_insert_perm', t);
-    execute format('drop policy if exists %I on %I', t || '_update_perm', t);
-    execute format('create policy %I on %I for update to authenticated using ((select has_permission(''merch.manage''))) with check ((select has_permission(''merch.manage'')))', t || '_update_perm', t);
-    execute format('drop policy if exists %I on %I', t || '_delete_perm', t);
-    execute format('create policy %I on %I for delete to authenticated using ((select has_permission(''merch.manage'')))', t || '_delete_perm', t);
-    execute format('revoke all on %I from anon, authenticated, service_role', t);
-    execute format('grant select, insert, update, delete on %I to authenticated, service_role', t);
-  end loop;
-end $$;
+alter table merch_products enable row level security;
+drop policy if exists merch_products_select_perm on merch_products;
+create policy merch_products_select_perm on merch_products for select to authenticated
+  using ((select has_permission('merch.manage', 'read')));
+drop policy if exists merch_products_insert_perm on merch_products;
+create policy merch_products_insert_perm on merch_products for insert to authenticated
+  with check ((select has_permission('merch.manage')));
+drop policy if exists merch_products_update_perm on merch_products;
+create policy merch_products_update_perm on merch_products for update to authenticated
+  using ((select has_permission('merch.manage')))
+  with check ((select has_permission('merch.manage')));
+drop policy if exists merch_products_delete_perm on merch_products;
+create policy merch_products_delete_perm on merch_products for delete to authenticated
+  using ((select has_permission('merch.manage')));
+revoke all on merch_products from anon, authenticated, service_role;
+grant select, insert, update, delete on merch_products to authenticated, service_role;
+
+alter table merch_variants enable row level security;
+drop policy if exists merch_variants_select_perm on merch_variants;
+create policy merch_variants_select_perm on merch_variants for select to authenticated
+  using ((select has_permission('merch.manage', 'read')));
+drop policy if exists merch_variants_insert_perm on merch_variants;
+create policy merch_variants_insert_perm on merch_variants for insert to authenticated
+  with check ((select has_permission('merch.manage')));
+drop policy if exists merch_variants_update_perm on merch_variants;
+create policy merch_variants_update_perm on merch_variants for update to authenticated
+  using ((select has_permission('merch.manage')))
+  with check ((select has_permission('merch.manage')));
+drop policy if exists merch_variants_delete_perm on merch_variants;
+create policy merch_variants_delete_perm on merch_variants for delete to authenticated
+  using ((select has_permission('merch.manage')));
+revoke all on merch_variants from anon, authenticated, service_role;
+grant select, insert, update, delete on merch_variants to authenticated, service_role;
+
+alter table merch_orders enable row level security;
+drop policy if exists merch_orders_select_perm on merch_orders;
+create policy merch_orders_select_perm on merch_orders for select to authenticated
+  using ((select has_permission('merch.manage', 'read')));
+drop policy if exists merch_orders_insert_perm on merch_orders;
+create policy merch_orders_insert_perm on merch_orders for insert to authenticated
+  with check ((select has_permission('merch.manage')));
+drop policy if exists merch_orders_update_perm on merch_orders;
+create policy merch_orders_update_perm on merch_orders for update to authenticated
+  using ((select has_permission('merch.manage')))
+  with check ((select has_permission('merch.manage')));
+drop policy if exists merch_orders_delete_perm on merch_orders;
+create policy merch_orders_delete_perm on merch_orders for delete to authenticated
+  using ((select has_permission('merch.manage')));
+revoke all on merch_orders from anon, authenticated, service_role;
+grant select, insert, update, delete on merch_orders to authenticated, service_role;
+
+alter table merch_order_parts enable row level security;
+drop policy if exists merch_order_parts_select_perm on merch_order_parts;
+create policy merch_order_parts_select_perm on merch_order_parts for select to authenticated
+  using ((select has_permission('merch.manage', 'read')));
+drop policy if exists merch_order_parts_insert_perm on merch_order_parts;
+create policy merch_order_parts_insert_perm on merch_order_parts for insert to authenticated
+  with check ((select has_permission('merch.manage')));
+drop policy if exists merch_order_parts_update_perm on merch_order_parts;
+create policy merch_order_parts_update_perm on merch_order_parts for update to authenticated
+  using ((select has_permission('merch.manage')))
+  with check ((select has_permission('merch.manage')));
+drop policy if exists merch_order_parts_delete_perm on merch_order_parts;
+create policy merch_order_parts_delete_perm on merch_order_parts for delete to authenticated
+  using ((select has_permission('merch.manage')));
+revoke all on merch_order_parts from anon, authenticated, service_role;
+grant select, insert, update, delete on merch_order_parts to authenticated, service_role;
+
+alter table merch_order_items enable row level security;
+drop policy if exists merch_order_items_select_perm on merch_order_items;
+create policy merch_order_items_select_perm on merch_order_items for select to authenticated
+  using ((select has_permission('merch.manage', 'read')));
+drop policy if exists merch_order_items_insert_perm on merch_order_items;
+create policy merch_order_items_insert_perm on merch_order_items for insert to authenticated
+  with check ((select has_permission('merch.manage')));
+drop policy if exists merch_order_items_update_perm on merch_order_items;
+create policy merch_order_items_update_perm on merch_order_items for update to authenticated
+  using ((select has_permission('merch.manage')))
+  with check ((select has_permission('merch.manage')));
+drop policy if exists merch_order_items_delete_perm on merch_order_items;
+create policy merch_order_items_delete_perm on merch_order_items for delete to authenticated
+  using ((select has_permission('merch.manage')));
+revoke all on merch_order_items from anon, authenticated, service_role;
+grant select, insert, update, delete on merch_order_items to authenticated, service_role;
+
+alter table merch_supplier_emails enable row level security;
+drop policy if exists merch_supplier_emails_select_perm on merch_supplier_emails;
+create policy merch_supplier_emails_select_perm on merch_supplier_emails for select to authenticated
+  using ((select has_permission('merch.manage', 'read')));
+drop policy if exists merch_supplier_emails_insert_perm on merch_supplier_emails;
+create policy merch_supplier_emails_insert_perm on merch_supplier_emails for insert to authenticated
+  with check ((select has_permission('merch.manage')));
+drop policy if exists merch_supplier_emails_update_perm on merch_supplier_emails;
+create policy merch_supplier_emails_update_perm on merch_supplier_emails for update to authenticated
+  using ((select has_permission('merch.manage')))
+  with check ((select has_permission('merch.manage')));
+drop policy if exists merch_supplier_emails_delete_perm on merch_supplier_emails;
+create policy merch_supplier_emails_delete_perm on merch_supplier_emails for delete to authenticated
+  using ((select has_permission('merch.manage')));
+revoke all on merch_supplier_emails from anon, authenticated, service_role;
+grant select, insert, update, delete on merch_supplier_emails to authenticated, service_role;
 
 grant usage, select on sequence merch_order_no_seq to authenticated, service_role;
 
