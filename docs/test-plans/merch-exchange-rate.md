@@ -237,7 +237,7 @@ Manual verification by: n/a: nothing left that needs a person's eyes beyond the 
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR — n/a: the plan is committed with the branch
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — pending: the production release manager reads it before deploy
 
 Result: pass
 
