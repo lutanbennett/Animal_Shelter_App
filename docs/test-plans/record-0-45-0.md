@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none. The record and handover are procedure (`docs/release-procedure.md` rule 3), not backlog items. The Pi's under-voltage finding is carried in the handover rather than filed: it is hardware on Lutan's premises, not work to schedule |
 | Branch / worktree | `claude/record-0-45-0` @ `C:\Development\Animal_Shelter_cut-release-0-45-0` (the cut's own worktree, reused after its PR merged, rather than a fourth folder) |
 | Dev server | n/a: nothing in this PR is served, imported or rendered |
-| PR | TBD |
+| PR | #1540 |
 | Tested by / date | Claude Opus 5 (production release manager) / 2026-11-13 |
 | Carries a migration? | no |
 | Tested at SHA | this branch's own head, cut from `origin/main` at `15854dd4`; `check-docs-only.mjs` is the check that matters and it is read below |
@@ -25,8 +25,8 @@
 
 - [x] `node scripts/worktree.mjs sync` — run before committing; `origin/main` had moved two backlog commits ahead of the cut (`46ceb197`), and those are merged in rather than left to conflict
 - [x] `node scripts/gates.mjs` — **n/a, and deliberately so.** This is a documents-only PR; `scripts/check-docs-only.mjs` decides, and `ci.yml` gates every heavy job on it (paperwork rule 1). The rule also says **not** to touch code to make a check run, so nothing here does
-- [x] `node scripts/check-docs-only.mjs --base origin/main` — run **after committing**, which is the only way it can answer: TBD
-- [x] `node scripts/check-test-plan.mjs --base origin/main` run the way CI runs it — TBD
+- [x] `node scripts/check-docs-only.mjs --base origin/main` — run **after committing**, which is the only way it can answer: exit **0**, `docs-only: true — 5 path(s), all documents`, *"The heavy jobs will skip; test-plan still runs."* It also prints `deps-changed: false`, so `audit` will show **`skipped`** — not a pass, and correct here
+- [x] `node scripts/check-test-plan.mjs --base origin/main` run the way CI runs it — exit **0**, *"the plan is complete and correct, and 2 item(s) await a person"*, and *"Nothing to fix."* The two awaiting a person are the cut plan's Thai reader, which is real. The five `deferred:` gates it lists are the cut's, and **the record now answers all five**
 
 ## 3. Schema and data
 
@@ -79,15 +79,15 @@
 - [x] Timezone-sensitive behaviour proved, not observed at a convenient hour — n/a: see section 5
 - [x] For a boundary or banding change, the assertions cover both edges — n/a: no threshold in this PR
 - [x] Evidence pasted into this plan and the record is the tool's actual output, unedited
-- [x] Public pages re-checked after a cache purge — TBD
+- [x] Public pages re-checked after a cache purge — **both zones purged and proved by re-fetch**, each `HTTP 200 (CF MISS)`: production 99847 bytes, test 99923, UAT 99917. **`CF MISS` is the assertion** — it proves the fetch reached the origin and not the cache just purged. The three sizes differ because each environment's bundle differs, which the record explains rather than leaving to look like a fault. Stated honestly: this was `curl` and the purge script's own re-fetch, not a real browser with a `locale` cookie
 
 ### Deploy safety
 
-- [x] `deploy: <env> → Supabase project <ref>` line read on every deploy, and each named the right project — TBD
+- [x] `deploy: <env> → Supabase project <ref>` line read on every deploy, and each named the right project — test `qxkmhwybjggxvsfxsxbd`, production `dbkodyyxxhtygxcxmfcu` (read from Lutan's own terminal while it built), UAT `fsjagxmxjosauwmxwype`. **UAT's was read before anything else**, as the runbook requires
 - [x] `strip-baked-env: removed N env var(s)` seen — **14 on production**, read from the log rather than assumed. Lutan's log is UTF-16 (PowerShell `tee`), so it was de-nulled with `tr -d '\000'` before reading
 - [x] Any new secret/env var exists in the production Cloudflare environment — none introduced by this release
-- [x] **Mail went, and it was read rather than assumed** — TBD
-- [x] **The production Worker was confirmed from the Worker, not from the log** — TBD
+- [x] **Mail went, and it was read rather than assumed** — `release mail for 0.45.0 [Production]: sent 1, skipped 1` from the deploy's own output, Lutan confirming receipt, **and the message itself**: subject `[Production] Lanna Care release 0.45.0: …`, sender name `Lanna Care Production`, one recipient, sent ten seconds after `Current Version ID`. **Neither the name nor the subject says UAT** — the first proof since `RELEASE_MAIL_ENV` was fixed, which closes `#w4k9n`. Test and UAT both got `--no-mail`, read back as `[off]: sent 0, skipped 3` and `--no-mail, not announcing 0.45.0.` — belt and braces, because mail to every admin cannot be undone
+- [x] **The production Worker was confirmed from the Worker, not from the log** — `wrangler deployments list --env production` shows `v0.45.0` at **100%**, version `01eba824-…` matching the log's `Current Version ID`; UAT the same at `51b41065-…`. This is the `0.40.3` rule and it is not ceremony: `0.44.3` had two deploys *finish* without deploying. Production's `v0.44.3` (`eecb02cc…`) is still listed at 0%, so the rollback position is visible rather than assumed
 
 ### Migration ordering
 
