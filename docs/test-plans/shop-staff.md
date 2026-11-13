@@ -86,7 +86,7 @@ it. Everything outside those comments is judged.
 | PR | pending: not opened at this commit |
 | Tested by / date | Claude, 2026-11-13 |
 | Carries a migration? | no |
-| Tested at SHA | 8acac287f |
+| Tested at SHA | fa9305262 |
 
 ## 1. Scope and risk
 
@@ -115,10 +115,10 @@ indistinguishable from one that passed.
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`, every N 0. Closing lines exactly as the run printed them:
 
 ```
-=== gates: typecheck exited 0 after 10s
-=== gates: lint exited 0 after 135s
-=== gates: test exited 0 after 32s
-=== gates: build exited 0 after 50s
+=== gates: typecheck exited 0 after 7s
+=== gates: lint exited 0 after 116s
+=== gates: test exited 0 after 47s
+=== gates: build exited 0 after 68s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
