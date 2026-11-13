@@ -73,7 +73,8 @@ export type NewCardKey =
   | "foundation_papers"
   | "foundation_id_copies"
   | "view_foundation_papers"
-  | "run_merch_shop";
+  | "run_merch_shop"
+  | "review_animal_reports";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -227,6 +228,8 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // 0369 (#cjxq0): the staff side of the merchandise shop: catalogue, orders, marking paid, tracking, supplier delivery method. Exactly merch.manage at edit.
   // Given to no role. Not manage_shop_page, which is the affiliate-links page.
   run_merch_shop: { includes: [], bundle: [{ activity: "merch.manage", level: "edit" }], opens: "/management/merch-shop" },
+  // 0372 (#z1qn7): the staff side of the public report-an-animal form: see what has come in and mark it handled. Exactly animal_report.manage at edit.
+  review_animal_reports: { includes: [], bundle: [{ activity: "animal_report.manage", level: "edit" }], opens: "/management/animal-reports" },
   recurring_jobs: {
     includes: [],
     bundle: [{ activity: "recurring.manage" }, { activity: "recurring.do_any" }, { activity: "recurring.do_own" }],
@@ -514,6 +517,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   foundation_id_copies: (t) => t.appHome.cards.foundationIdCopies,
   view_foundation_papers: (t) => t.appHome.cards.viewFoundationPapers,
   run_merch_shop: (t) => t.appHome.cards.runMerchShop,
+  review_animal_reports: (t) => t.appHome.cards.reviewAnimalReports,
   food_forecast: (t) => t.appHome.cards.foodForecast,
   medicine_forecast: (t) => t.appHome.cards.medicineForecast,
   view_cashflow: (t) => t.appHome.cards.viewCashflow,

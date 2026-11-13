@@ -1666,6 +1666,20 @@ const manual: Manual = {
           ],
         },
         {
+          id: "animal-reports",
+          title: "Handling animal reports from the public",
+          activity: "animal_report.manage",
+          path: "Management → Animal reports",
+          intro:
+            "Anyone can use the website's Report an animal page to tell the shelter about a stray, an injured animal, a welfare concern or a lost pet. Each report lands here for you to read and deal with. The page has no photo upload yet.",
+          steps: [
+            "The list shows newest first: what it is about, the kind of animal, when it came in, what the person wrote, where the animal is and how to reach them. The buttons along the top show only one status at a time.",
+            "Every report starts as New. Ring or write to the person yourself using the phone or email they gave: there is no reply button here.",
+            "Set the status to In progress while someone is dealing with it, Resolved when it is finished, or Dismissed for a report that is a mistake or a repeat, then press Save. Nothing is ever deleted from this screen.",
+            "The reporter's name and contact are personal details. Do not copy them anywhere else.",
+          ],
+        },
+        {
           id: "shelter-friends",
           title: "Shelter Friends — thanking the businesses that help",
           activity: "friends.manage",

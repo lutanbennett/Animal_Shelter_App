@@ -208,7 +208,7 @@ const ANON_FUNCTIONS = new Set([
 const ANON_OK = /^(public_|site_)/;
 // Tables that deliberately take a public INSERT (and nothing else) from anon. Each needs its own proof in
 // check-public-views.mjs that anon cannot read, change or delete a row.
-const ANON_INSERT_TABLES = new Set(["desexing_drive_signups"]);
+const ANON_INSERT_TABLES = new Set(["desexing_drive_signups", "animal_reports"]);
 
 /** Statements of a stripped file, trimmed, with blanks dropped. */
 function statements(sql) {

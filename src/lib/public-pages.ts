@@ -26,6 +26,7 @@ export type PublicSection =
   | "appeals"
   | "events"
   | "desexing"
+  | "report-animal"
   | "about"
   | "shop"
   | "privacy";
@@ -188,6 +189,17 @@ export const PUBLIC_PAGES: PublicPage[] = [
     menu: { group: "services" },
     footer: { column: "help", order: 11 },
     sitemap: { order: 4, changeFrequency: "weekly", priority: 0.6 },
+  },
+  {
+    // Never hidden, on purpose: a way to report an injured animal is not something to switch off by accident, and
+    // leaving it out of the hide list needs no change to 0256's constraint (docs/decisions/2026-11-13-report-an-animal.md).
+    key: "report-animal",
+    href: "/services/report-animal",
+    label: (t) => t.animalReport.navLabel,
+    neverHidden: true,
+    menu: { group: "services" },
+    footer: { column: "help", order: 12 },
+    sitemap: { order: 4, changeFrequency: "monthly", priority: 0.6 },
   },
   {
     key: "our-work",

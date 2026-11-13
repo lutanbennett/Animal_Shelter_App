@@ -389,6 +389,7 @@ const EXEMPT = {
   "/events/[id]": { public: true, why: "Public website: one public_fundraising_events row and its approved public_fundraising_event_photos." },
   "/campaigns/[id]": { public: true, why: "Public website: one public_appeals row and its public_appeal_photos." },
   "/services/sterilisation": { public: true, why: "Public website: public_desexing_drives (0233), the drive and a count of places left, never a sign-up." },
+  "/services/report-animal": { public: true, why: "Public website: a form that writes one report as anon (0372) and reads nothing back." },
   "/adopt/international": { public: true, why: "Public website: static page from site_content." },
   "/our-work": { public: true, why: "Public website: the public_projects views (0042)." },
   "/our-work/[id]": { public: true, why: "Public website: one public_projects row." },
@@ -517,6 +518,7 @@ for (const k of known) console.log(`KNOWN ${k}`);
 const GUARD = /\b(?:can|requirePermission|requireAdminUser|assertAdminRole|hasAdminRole|canEditItemSettings|refuseUnlessAdmin)\(/;
 const ADMIN_CHECK = /\b(?:requireAdminUser|assertAdminRole|hasAdminRole|refuseUnlessAdmin)\(/;
 const NO_ACTIVITY = {
+  "services/report-animal/actions.ts": "the public report-an-animal form, signed out by definition: written as the anon role with insert-only column grants (0372), so the database decides; it never reads a report back",
   "shop/merch/checkout/actions.ts": "the public checkout, signed out by definition: placeOrder (src/lib/merch/checkout.ts, recorded in the hard-coded-security registry) takes only variant ids and quantities and re-reads every price from the tables",
   "adopter-update/actions.ts": "an adopter holds no staff card on purpose (#l5gxn): sendAdopterUpdate verifies the email, takes the contact from loadAdopterScope and asks adopter_may_submit(contact, resident) before the one insert",
   "services/sterilisation/actions.ts": "the public sign-up, signed out by definition: written as the anon role with insert-only column grants (0233), so the database gate decides; it never reads a sign-up back",

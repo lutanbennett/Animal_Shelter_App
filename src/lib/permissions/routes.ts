@@ -351,6 +351,17 @@ export const ROUTES: readonly RouteEntry[] = [
     section: "management",
   },
   {
+    // Reports of animals from the public form (0372). Asks animal_report.manage; its card is review_animal_reports.
+    path: "/management/animal-reports",
+    activity: "animal_report.manage",
+    level: "read",
+    icon: HandHeart,
+    label: (t) => t.nav.animalReports,
+    device: "any",
+    menu: false,
+    section: "management",
+  },
+  {
     path: "/management/foundation-papers/board-ids",
     activity: "foundation.id_copies",
     level: "read",
