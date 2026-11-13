@@ -6,7 +6,7 @@
 |---|---|
 | Feature | A proposed Thai label names who proposed it |
 | Backlog item | `docs/backlog.md` → #41yhe |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/proposed-by-name` @ `C:\Development\Animal_Shelter_proposed-by-name` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | see the PR for this branch |
 | Tested by / date | Claude, 2026-11-13 |
