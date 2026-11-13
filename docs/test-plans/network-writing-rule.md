@@ -10,10 +10,10 @@
 | Backlog item | `docs/backlog.md` → `#1wf15` ("A WRITING RULE, NOT A SCRUB: when writing about the house network, put the VALUE in the Desktop notes and the MEANING in the repo") |
 | Branch / worktree | `claude/network-writing-rule` @ `C:\Development\Animal_Shelter_network-writing-rule` |
 | Dev server | n/a: docs only, no page to open — `node scripts/worktree.mjs dev` → `http://localhost:3001` if one were needed |
-| PR | GATES_PR_PLACEHOLDER |
+| PR | pending: opened immediately after this commit; the PR carries the same three files and nothing else |
 | Tested by / date | Claude (Opus 5) / 2026-11-13 |
 | Carries a migration? | no |
-| Tested at SHA | GATES_SHA_PLACEHOLDER |
+| Tested at SHA | 672898577 — the commit this header is in is the next one, which only replaces these two header cells |
 
 ## 1. Scope and risk
 
