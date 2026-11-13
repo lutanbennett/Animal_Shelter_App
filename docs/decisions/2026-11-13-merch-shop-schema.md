@@ -1,4 +1,4 @@
-# Merchandise shop: schema, card and route (2026-11-14, #cjxq0)
+# Merchandise shop: schema, card and route (2026-11-13, #cjxq0)
 
 Migration `0369_merch_shop_schema.sql`; specification `docs/merch-shop.md`. The inputs are the answers recorded in
 `docs/decisions/2026-11-13-answers-receipts-shop-payments.md`, **given by Lutan in chat, not read from the Director in

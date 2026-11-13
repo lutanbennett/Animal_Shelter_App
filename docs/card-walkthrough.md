@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-59 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+60 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -313,6 +313,17 @@ Result: pending
 0. Sign in with `--cards view_foundation_papers`. The home screen shows the **View foundation papers** tile (or the tile of a card that includes it).
 1. Open `/management/foundation-papers`: it loads.
 2. **See:** Foundation papers (bylaws, certificates, minutes, statements, tax ID, bank statements) (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Run the merchandise shop (`run_merch_shop`)
+
+- Opens: `/management/merch-shop`
+
+0. Sign in with `--cards run_merch_shop`. The home screen shows the **Run the merchandise shop** tile (or the tile of a card that includes it).
+1. Open `/management/merch-shop`: it loads.
+2. **TODO:** Run the merchandise shop: products, orders, payment marks, suppliers' delivery method. Do it on a disposable record named `walk-run_merch_shop`. Question: where should this write show afterwards (which page, which row)?
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending

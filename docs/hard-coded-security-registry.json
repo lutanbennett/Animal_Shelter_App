@@ -782,7 +782,7 @@
       {
         "migration": "0369_merch_shop_schema.sql",
         "item": "grant to anon",
-        "reason": "SELECT on the public views public_merch_products and public_merch_variants (new) and EXECUTE on is_public_drive_file(text), restated with one more branch. The existing public-site pattern (0285, 0314): the six merch tables stay revoked from anon, a view shows only a shown, unarchived product and the sizes of one, with no supplier, no stock count and no creator. It lets anon read what the shelter chose to publish, not do anything. docs/decisions/2026-11-14-merch-shop-schema.md."
+        "reason": "SELECT on the public views public_merch_products and public_merch_variants (new) and EXECUTE on is_public_drive_file(text), restated with one more branch. The existing public-site pattern (0285, 0314): the six merch tables stay revoked from anon, a view shows only a shown, unarchived product and the sizes of one, with no supplier, no stock count and no creator. It lets anon read what the shelter chose to publish, not do anything. docs/decisions/2026-11-13-merch-shop-schema.md."
       },
       {
         "migration": "0316_project_photos_approval.sql",

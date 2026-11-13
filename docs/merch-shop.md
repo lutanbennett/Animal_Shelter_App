@@ -3,7 +3,7 @@
 **Backlog item `#cjxq0`. Schema, card and this specification landed in migration `0369_merch_shop_schema.sql`
 (stream `shop-schema`, 2026-11-14). Two later streams build the screens from this file:
 `shop-public` (the public catalogue, cart and checkout) and `shop-staff` (the staff screens).**
-Decisions behind it: `docs/decisions/2026-11-14-merch-shop-schema.md`.
+Decisions behind it: `docs/decisions/2026-11-13-merch-shop-schema.md`.
 
 ## Read this first: what this is NOT, and one caveat
 

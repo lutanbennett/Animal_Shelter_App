@@ -1,7 +1,7 @@
 -- consumer: none
 --
 -- SCHEMA half of backlog #cjxq0, the online merchandise shop (Lutan, 2026-10-10: built into the website; answers recorded in
--- docs/decisions/2026-11-13-answers-receipts-shop-payments.md; shape in docs/decisions/2026-11-14-merch-shop-schema.md; the specification
+-- docs/decisions/2026-11-13-answers-receipts-shop-payments.md; shape in docs/decisions/2026-11-13-merch-shop-schema.md; the specification
 -- the two app streams build from is docs/merch-shop.md). Nothing in src/ reads any of this yet.
 --
 -- NOT the affiliate-links page (0285, shop_links, /shop). That is a different feature and is untouched.
