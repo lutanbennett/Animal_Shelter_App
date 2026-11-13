@@ -1,244 +1,165 @@
-# Planner handover — edition `744`, 2026-11-13
+# Planner handover — edition `745`, 2026-11-13
 
-**This is a DELTA against `743`.** It says what changed, corrects its predecessor, and reports what each
-of `743`'s owed items did. Figures, batch composition and ports live in `.plan-day.md`.
+**This is a DELTA against `744`.** It says what changed, corrects its predecessor, and reports what each
+of `744`'s owed items did. Figures, batch composition and ports live in `.plan-day.md`.
 
 **It outranks nothing.** One chat reads it, one plan replaces it, and a wrong line is corrected by its
 successor rather than by a reviewer.
 
-**WHICH PLAN'S FIGURES THIS REPORTS: THE THIRD 2026-11-12 PLAN'S** — eight of its nine, read on the
-morning of 2026-11-13 from merged PRs. **This edition's own plan is the 2026-11-13 one, which ran to
-TWELVE streams, and it carries NO figures here. They belong to `745`.** A missing set is not a lost one.
+**WHICH PLAN'S FIGURES THIS REPORTS: THE FIRST 2026-11-13 PLAN'S** — fourteen streams, ten measured, read
+on the morning of 2026-11-13 and recorded in `.plan-day.md`. **This edition's own plan is the SECOND
+2026-11-13 one, which ran to ELEVEN streams in four batches, and it carries NO figures here. They belong
+to `746`.** A missing set is not a lost one.
 
 ---
 
-## THE LEAD: `743` GOT A FACT WRONG AND A STREAM OBEYED IT TO A DEAD END. CHECK THE HANDOVER, NOT JUST THE ITEM.
+## THE LEAD: EVERY BRIEF IN THIS PLAN WAS DATED A DAY INTO THE FUTURE, AND CI CAUGHT IT TWICE
 
-**`743` lines 32–33 say `0188_bills_owner_types.sql` adds four values to `attachment_owner_type` *"and no
-`general_bill`"*, and concluded the `general-bill-photos` stream needed two migration files. THAT IS
-WRONG.** `supabase/migrations/0304_bills_owner_types_sites.sql` adds **both** `general_bill` and
-`utility_bill`; `src/lib/bills/upload.ts:18,39` carries the type and asks `bills.general` for it; and
-`src/app/bills/general/page.tsx:95` renders the gallery. **It shipped in PR #1368 on 2026-11-07, five
-days before the brief was written.**
+**Today was 2026-11-13. The planner wrote 2026-11-14 into every brief, every backlog note, the plan file
+and three prescribed decision filenames.** Two streams obeyed, named their decision files
+`2026-11-14-*.md`, and `decision-dates` — which blocks — went red on both:
 
-**What saved it was step zero.** The stream read the enum, found the value, stopped with **no commits and
-no PR**, and said so. **That is the guard working, and its figure is correctly `unmeasured`.** What it
-cost was a worktree, a brief and a session.
+> `FAIL docs/decisions/2026-11-14-reviewer-name.md is dated 2026-11-14, after today (2026-11-13): rename it`
 
-**THE LESSON IS NARROWER AND MORE USEFUL THAN "CHECK YOUR FACTS": `743`'s own text contains the check
-that would have caught it** — *"a grep that finds nothing is not a finding"*, written about a different
-stream on the same page. **The planner grepped `0188`, found four values, and concluded the fifth did not
-exist anywhere.** The enum had been extended by a later file. **So: a `grep` of ONE migration never
-establishes what an enum holds. Grep the whole directory, or read the live type.**
+**Lutan noticed before the planner did**, asking *"Why are the decision dates failing on every stream?"*
+Those two runs (43394960705, 43393187587) were the only red CI of the day. Both streams renamed and merged.
 
-**AND THE SECOND-ORDER LESSON, WHICH IS WHY THIS IS THE LEAD: a handover is believed more readily than an
-item, because it was written by a planner for a planner.** An item's prose gets tested by step zero; a
-handover's assertion gets copied into a brief. **Treat a factual claim in this document as an item's
-prose: dated, and to be re-measured before it is briefed.**
+**HOW IT HAPPENED, BECAUSE THE MECHANISM IS THE USEFUL PART:** the planner opened a fresh chat, read
+handover `744` (dated 2026-11-13) and a `.plan-day.md` whose batches were all closed, and concluded a new
+day had begun. **It had not: this was the SECOND plan of the same day.** Two documents that each said
+"2026-11-13" were read as evidence that it was now the 14th.
 
-## WHAT ELSE IN `743` IS SUPERSEDED
+**THE GUARD IS ONE LINE AND IT COSTS NOTHING: read the date from the system and compare it with the date
+on the handover you just read.** If they are the same, you are the second plan of that day — which is a
+normal thing to be, and `SKILL.md` already allows it. **Never derive today's date from a document.**
 
-1. **`743`'s owed item 6 — *"`#d6wxo` STILL CANNOT BE BRIEFED"* — is answered.** See the owed-items
-   section below. **It is briefable now.**
-2. **`743`'s owed item 2 said #1531's next group was owed. The previous `.plan-day.md` claimed it had
-   been filed. It had not** — `grep -c "group 10" docs/backlog.md` was **0** on the morning of
-   2026-11-13. **Filed then.** **The lesson: a plan file saying a thing was filed is not the thing being
-   filed. Grep the backlog.**
-3. **`743`'s owed item 4 — `#79sqf` at 21 of 25 — is 24 of 25 and the pressing half is CLOSED** (#1542).
-   Row 10's `UndoDeathForm` was correctly never pressed and given no card. **What is left is the check
-   half only**, which is in flight as of this edition.
-4. **`743`'s operational note about `drive-sharing.mjs` held and is worth keeping:** `--env production`
-   is an **exact-match** allow rule — **in the foreground it runs; with the background flag it is refused
-   as `[Production Reads]`.**
+**AND THE RESIDUE IS STILL OWED:** PR **#1557** and PR **#1560** have merged bodies citing
+`docs/decisions/2026-11-14-migration-number-hook.md` and `2026-11-14-merch-shop-schema.md`, **neither of
+which exists** — the real files are the `2026-11-13-` ones. A future session grepping those names finds
+nothing. **`gh pr comment` was refused in the planner's session as `[External System Writes]`, and asking
+a stream to post it would have been cross-session permission laundering, so it was not done.** It needs
+one comment on each PR from Lutan, or a permission rule.
 
 ---
 
-## THE FIGURES — the third 2026-11-12 plan's nine, eight measured
+## WHAT ELSE IN `744` IS SUPERSEDED
 
-| slug | PR | band | actual | model / effort | floor | reading? |
-|---|---|---|---|---|---|---|
-| `refusal-keys-group-9` | #1531 | 160–195k | 286,557 | **opus-5 / medium** | 86,015 | **NOT a reading** |
-| `control-press-fixtures` | #1532 | 180–230k | 310,209 | **opus-5 / medium** | 86,015 | **NOT a reading** |
-| `close-two-recorded-items` | #1530 | 110–150k | 267,500 | **opus-5 / medium** | 89,066 | **NOT a reading** |
-| `worker-cpu-fallback-paper` | #1535 | 170–215k | 195,816 | **started opus-5, switched mid-flight** | 88,351 | **NOT clean** |
-| `thai-strings-queue` | #1533 | 150–195k | 141,341 | sonnet-5-5 / low | 84,776 | valid — 5.8% under |
-| `env-readers-and-decision` | #1534 | 145–190k | 163,564 | sonnet-5-5 / low | 85,435 | valid, in band |
-| `donate-promptpay-qr` | #1538 | 110–170k | 248,815 | **opus-5 / medium** | 85,518 | **NOT a reading** |
-| `rule3-second-argument` | #1537 | 120–165k | 242,406 | **opus-5 / medium** | 86,755 | **NOT a reading** |
-| `general-bill-photos` | none | 190–250k | **unmeasured** | — | — | no PR: already shipped |
-
-**TWO VALID READINGS OUT OF NINE, AND THAT IS A STATEMENT ABOUT THE INSTRUMENT, NOT THE STREAMS.** Five
-ran on `opus-5` at `medium` against a `sonnet-5-5`/`low` recommendation. **The dials are his and a dial he
-sets is a choice, never a deviation to flag** — what is wrong is reading a figure from one pair against a
-band measured on another, and **three of the five said so themselves in their own PR bodies before anyone
-asked.**
-
-**THE SIZE OF THE DIFFERENCE, MEASURED FOR THE FIRST TIME — AND `+25%` IS NOWHERE NEAR IT.** Against band
-midpoints: **2.06×, 1.78×, 1.70×, 1.61×, 1.51× — mean 1.73×, about +73%.** The `medium` adjustment is
-**+25%** and is explicitly *for effort on the same model*. **Above the floor the spread is wider and the
-SMALL rows are hit hardest:** `close-two-recorded-items` spent **178,434 above its floor** where its band
-allowed about **43,000** — **4.1×**. **A quick win has almost no above-floor allowance to absorb a dial
-change, so the cheapest row produces the most alarming number.**
-
-**THE FLOOR: 84,776 to 89,066, mean 86,491, from eight figures.** The previous day's nine, all on
-Sonnet 5.5 at `low`, gave **84,458 to 88,730, mean 86,526** — **35 tokens apart on the mean, across a
-model change.** **That is the floor's one great virtue: it is comparable across dials**, because it
-measures the brief and the harness rather than the thinking. **Re-derive it tomorrow; never carry it
-forward.**
+- **`744`'s owed item 3, "brief length may move the floor — NOT ESTABLISHED", is now SUPPORTED and still
+  not closed.** Four briefs were measured before their folders were cleared; the three usable pairs are
+  **monotonic — longest brief, highest floor, in order** — and across 7,742 characters the floor moved
+  5,227 tokens. **The counter-example `744` leaned on (`refusal-keys-group-10`) rested on a figure that
+  has since been superseded by a corrected comment.** The effect is about 2.7× larger than the briefs'
+  own token cost explains, so **the mechanism is not simply "the brief is in the window"** and the honest
+  reading is still three points. Keep testing it; a shorter brief may be a real saving.
+- **#1547's figure is 236,476, not the 218,435 `744` reported.** Its corrected comment arrived and says
+  so in terms. **The deadlock work is measured after all**, and `744`'s line calling it unmeasured is wrong.
+- **`744`'s owed item 5, "`#d6wxo` IS BRIEFABLE", was right but incomplete** — see the next section.
+- **`744`'s owed item 6 is spent: `#z1qn7` was offered a third time and ACCEPTED**, and is batch 4's
+  migration-carrying stream. Do not re-offer it.
+- **`744`'s owed item 7 is closed**: `waiting-on-lutan`'s folder, and every other folder from batches 1–3,
+  are cleared. The registry now holds only the main checkout, the backlog worktree and batch 4's two.
 
 ---
 
-## WHAT `743`'s OWED ITEMS DID — all seven answered
+## THE BIGGEST FACT OF THIS PLAN: THERE IS NOW A SECOND EXCEPTION TO THE CARD RULE
 
-1. **MEASURE THE NINE** — done, above. The `#md4rq` warning fired exactly as written: five of the nine
-   had to be excluded on their dials.
-2. **FILE #1531's NEXT GROUP** — was **not** filed despite the plan file saying so; filed 2026-11-13 on
-   `#3nuwy`, with group 9's two reported-not-acted-on findings (`merge_doctors`' unreachable second
-   raise; the `doctors` SELECT policy asking `clinics.list`). **The group then SHIPPED the same day**
-   (#1547): the meter reads **0 person-read English messages** and `#3nuwy` is ticked.
-3. **BATCH 3's THREE HYPOTHESES** — all three resolved. `general-bill-photos`: the enum **did** hold
-   `general_bill` and it stopped (the lead, above). `donate-promptpay-qr`: **both halves had shipped**,
-   and it found and fixed the one real gap — working down a bank statement safely.
-   `rule3-second-argument`: **0 `user`-class strings** in `driveErrorMessage`'s second argument,
-   `RULE_3_BLOCKS` left `false`, and it proved the position fires with a planted positive and a negative
-   control.
-4. **`#79sqf`** — superseded item 3, above.
-5. **HELD WORKTREES** — all cleared on 2026-11-13 except `waiting-on-lutan`, still held.
-6. **`#d6wxo`'s GATE — ANSWERED, and the answer needs handling carefully.** Asked in chat on 2026-11-13,
-   he said a foster carer or adopter **authenticates on the website page, adds updates from the website,
-   and is limited to just the residents they have adopted**
-   (`docs/decisions/2026-11-13-answers-receipts-shop-payments.md`, recorded *for the planner to file*;
-   filed the same day). **The decision file records the limit as *"a database rule, not a card"* — which
-   is RIGHT about the data scope and would be catastrophic read as "no card needed".** The two halves are
-   different questions: **WHAT a carer may do is an ABILITY and must come from a card, with no
-   exceptions**; **WHICH ROWS they may do it to is a DATA SCOPE**, which is exactly what
-   `on_volunteer_floor()` and `current_doctor_resident_ids()` already do. **A stream reading "not a card"
-   as "no card needed" would build the one forbidden thing.** Still not established: whether an adopter's
-   login is an app login at all, and how it is linked to the contact row. **The writer also flagged that
-   the mapping is their reading of his words — he did not pick an option by name.**
-7. **`#yy9fz`** — **CLOSED 2026-11-13** (#1543). Production re-measured clean and the UAT rehearsal
-   recorded. The script refuses `--remove`/`--restore` on production outright with no override, so it was
-   a confirmation by construction.
+**Lutan was offered three shapes for the adopter / foster-carer gate, was told IN TERMS that the one he
+was choosing would be the first non-Admin exception to his own zero-exceptions rule, and answered in
+writing: *"Yes, an exception"*.** It is recorded in `CLAUDE.md`'s card section (#1561),
+`docs/decisions/2026-11-13-adopter-portal-card-exception.md`, and
+`docs/hard-coded-security-registry.json` as `outsideTheCardSystem.websiteAccount`, `counted: false`.
+
+**Its scope, and nothing wider:** a non-staff account that signs in on the **public website**, posts
+updates and photos **only on residents it adopted or fosters**, has them **approved by staff before
+publishing**, and **reaches nothing else**. **Like Admin, it is not a precedent**, and everything beyond
+that stays card-governed — staff approval of those updates included.
+
+**WHY A PLANNER MUST KNOW THIS BEFORE BRIEFING ANYTHING NEAR IT:** until #1561 merged, `CLAUDE.md` told
+every session that nothing but a card may grant an ability. **A stream briefed on the portal against the
+unamended rule would have been building the one thing the repo's own rules forbid**, and the blocking
+`hard-coded-security` job is built around that rule. **The ordering — record the exception first, in its
+own small stream, then build — was the single best sequencing decision of this plan, and it is the shape
+to copy for any future exception.** Do not put the exception to him again; it is settled.
 
 ---
 
-## THE TWO INCIDENTS OF 2026-11-13 WORTH CARRYING
+## THE THREE INCIDENTS OF THIS PLAN WORTH CARRYING
 
-**(1) TWO MIGRATION-CARRYING STREAMS IN ONE BATCH DEADLOCKED BOTH PRs, AND IT WAS THE PLANNER'S FAULT.**
-The skill prefers one per batch; this planner breached it deliberately, reasoning that the alternative
-left an item half-built. **Both streams numbered their file `0366`.** It cost **two interruptions** —
-*"The streams have a migration number conflict, can you sort it out"*, then *"Are you fixing this? they
-are both just sitting there."*
-
-**AND THE MITIGATION THE PLANNER WROTE INTO BOTH BRIEFS FIRED AND WAS USELESS, WHICH IS THE PART TO
-LEARN.** Both briefs said: do not assume a number, the other stream is in this batch, run
-`check-migration-numbers.mjs` first. **Both streams ran it. Both were told ok. Both got `0366`** — the
-checker settles the number from **open PRs**, and neither PR existed when either file was committed. **No
-wording can fix that.** So the conclusion is **one migration-carrying stream per batch**, not a better
-sentence.
-
-**WHY IT DEADLOCKED RATHER THAN BEING A RENAME, and this is filed as `#w8kq3`:** CI tells whichever
-merges second to *"take the next free number — which this check now works out for you, counting the
-numbers open PRs hold"*, i.e. `0367`, **and CI would accept it.** But the **pre-commit hook** runs the
-same script with `--staged`, which deliberately does not read open PRs, so it knew only that `main`'s
-highest was `0365`, called `0367` a gap, and **exited 3.** Meanwhile the other PR was red because this
-one held `0366`. **`migration-numbers` blocks, so neither could move.** **`KNOWN_DUPLICATES` does not
-rescue it — checked:** it is consulted only for duplicates within one tree, while
-`collisionsWithOpenPrs()` raises unconditionally, so an entry leaves **both** PRs red.
-
-**THE UNLOCK, AND IT NEEDED HIM:** the planner's `gh pr close` was **denied as `[External System
-Writes]`**, chained and bare, and **asking a stream to run it instead was refused on purpose** — that is
-cross-session permission laundering. With his go: close one PR → the number frees → the other goes green
-and merges → `main`'s highest becomes `0366` → **the `0367` commit satisfies the hook honestly.** Nothing
-bypassed. **Afterwards `--status` showed 369 files and 369 applied rows, zero drift both ways**, because
-the stream had cleared its stale dev row with `apply-migrations.mjs --forget` (dev only; it refuses
-production and uat). **It had also declined the hook's own suggested remedy of renaming back to `0366`,
-which was right.**
-
-**(2) A BAND RAISED AT BRIEFING WAS VINDICATED, AND IT POINTS THE OPPOSITE WAY FROM `#md4rq`.**
-`proposed-by-name` was planned at 120–165k on the plan line *"one join"*. Reading the files showed the
-join **does not open for the login that needs it**: `public.app_users` is gated by
-`private.works_with_logins()` (`0263:72–82`), which asks `maintenance.jobs`, `maintenance.bills`,
-`stock.delivery` or `recurring.manage` — **not any translations card** — so a translations-only login
-reads zero rows and `appUserLabel(undefined)` returns **`"—"`**, a dash with no error and nothing in a
-log. Band raised to **160–185k**; it came in at **179,467, in band**. **Against the original guess it
-would have read as a 9% overrun while nothing overran.** **So a figure is only evidence against the band
-it was actually priced at — dials AND band.**
+- **A RED PERMISSIONS CHECK READS AS AN AUTHENTICATION FAULT, AND COST AN INTERRUPTION.** Lutan asked
+  *"Why is my authentication failing on the shop staff stream"*. Nothing was failing: the stream had
+  signed in, driven the screens and opened #1565. What was red was `control-activity`, on one NEW finding
+  — `src/app/management/merch-shop/page.tsx:179 <form action> saveProduct: no gate` — because the page
+  opens at `merch.manage` **read** while saving asks **edit**, so a read-only login was offered a Save
+  button. **The tell to give him: a sign-in fault stops a session working at all; this one let the stream
+  finish the whole feature and surfaced only in CI.** **The briefing lesson: a page whose READ level is
+  lower than its WRITE level needs the button rule as a NUMBERED DELIVERABLE**, not left to the block
+  every brief carries. It is written into `adopter-portal-app`'s brief as deliverable 6 — **check next
+  round whether that fired.**
+- **A QUOTED HEREDOC THROUGH THE BASH TOOL ATE THE BACKSLASHES IN A REGEX.** `'\\['` reached the file as
+  `'\['`, turning an anchored match into a character class that matched nothing — so a guard written to
+  fail loudly passed by finding nothing, and `findIndex` returned −1 in silence. **Write a script with the
+  Write tool when it contains regex escapes.** The same shape bit the block-parser in the brief assembler
+  minutes later, where `brief-blocks.md`'s CRLF made every fence fail to match; **normalise line endings
+  before parsing any repo file.**
+- **A STREAM'S REPORT IS A REPORT, NOT PROOF — AND CHECKING IT PAID TWICE.** `shop-public` reported four
+  findings at merge; all four verified in the tree and three became `#m3kpq`. `shop-staff` reported its
+  `control-activity` fix; reading the pushed commit confirmed the gate was real and in the right shape.
+  **Both checks were cheap. File nothing, and tell him nothing is done, on a report alone.**
 
 ---
 
-## STANDING CHECKS — four new
+## STANDING CHECKS — three new
 
-- **`#md4rq` SHIPPED** (#1545). **The `band=` field in a brief header and in the `stream-usage:` comment
-  now carries its dials**: `band=160-195k@sonnet-5-5/low`. `worktree.mjs streams` passes the suffix
-  through unchanged, so no script needed changing. **A comment without a band is the OLD form and is not
-  a fault** — tomorrow's set will hold both.
-- **`SKILL.md` step 8 no longer reads as a gate.** It used to end *"Then stop"*, and a planner read that
-  as needing his permission before batch 2 — on a day he had agreed all the streams in one go. He asked
-  *"Why did you have to wait for me to setup the next batch when I already gave the plan day order?"*
-  **Once a batch has MERGED, set up the next one without asking.** *Never nine worktrees* is a reason to
-  wait for the merge, never a reason to ask. **The one case that still presents first: a FRESH
-  conversation resuming a plan it did not write.**
-- **A folder can hold a branch other than the one its name suggests.** `worktree.mjs done <folder>`
-  refuses, names the right command, and says **`--force` does not override this**. Read it; do not reach
-  for the flag.
-- **`src/lib/releases.ts` and `docs/backlog.md` are CRLF in a worktree.** A line-index edit script that
-  assumes `\n` silently finds no anchor. **Detect the line ending.**
+- **THE STALE TITLE HAS NOW BEEN CAUGHT EIGHT TIMES** (`#v3knd`, ticked by #1562 with its title still
+  reading *"STILL SHOWS NO NAME"*). **The pattern is settled enough to act on rather than re-derive: the
+  stream that ticks an item does not re-read its title, so the planner must — every batch, for every item
+  a stream touched.** `check-stale-titles.mjs` is a heuristic and will not catch them all.
+- **AN ITEM HE HAS RANKED IS NOT TO BE DISMISSED ON A READING OF ITS TITLE.** The planner wrote that
+  `#1wf15` had *"nothing to build"*; an unplanned stream (#1559) then closed it. **Read the item's tail
+  before concluding there is no work in it.**
+- **`docs/backlog.md` IS `eol=lf` IN THE WORKTREE TODAY** (`git ls-files --eol` says `i/lf w/lf`), so the
+  CRLF trap the last three handovers warn about did not apply. **`src/lib/releases.ts` may still differ.
+  Detect it; do not assume either way in either direction.**
 
 ---
 
 ## FOR YOUR FIRST TURN
 
-Read `.plan-day.md` first. **It stands at 12 of 12 and this edition resets the counter, so you are
+Read `.plan-day.md` first. **It stands at 11 of 11 and this edition resets the counter, so you are
 planning FROM SCRATCH.**
 
-**Tell him at the start that the sync plus three `worktree.mjs new` runs plus three briefs is about half
-an hour.** `743` recorded that as the fix for an interruption and it still holds.
+**Tell him at the start that the sync plus the `worktree.mjs new` runs plus the briefs is about half an
+hour.** Three editions have now recorded that as the fix for an interruption and it still holds.
 
 **WHAT IS OWED:**
 
-1. **MEASURE THE 2026-11-13 PLAN'S TWELVE.** Batch 1: `drive-lockdown-confirmation` (#1543, 177,233),
-   `asbuilt-hardware-stack` (#1541, 226,555), `control-press-last-four` (#1542, 208,089) — **already read
-   and recorded in `.plan-day.md`, all three on the recommended pair.** Batch 2: #1545 (146,906), #1546
-   (179,467), #1547 (218,435 — **and a corrected comment was asked for, because the first was posted
-   before the renumber, so the deadlock work is unmeasured**). Plus `waiting-on-lutan` (#1548, 202,671,
-   `rescoped=yes`), the two unplanned streams **`director-questions` (#1549) and `record-answers` (#1550),
-   which posted NO usage comment and are `unmeasured`**, and **batch 3's three**, which were in flight
-   when this was written.
-2. **CHECK BATCH 3's THREE HYPOTHESES.** Did `foundation-read-card` need no new activity (both foundation
-   activities are `kind: "level"`, so a `read` already exists), and did it keep the card to
-   `foundation.papers` and away from the board members' ID copies? Did
-   `control-activity-false-positives` close three of the four allow-list rows with prop-value tracing, and
-   did it leave row 1 (*"needs predicate implication"*) with a rewritten reason rather than forcing it?
-   Did `two-conditions-now-met` confirm `miniflare` now asks for `sharp` 0.35.5 itself, and what did
-   `audit` say when it **ran for real** on that PR?
-3. **ONE OBSERVATION TO RE-TEST, NOT TO BELIEVE: brief length may move the floor.** `waiting-on-lutan`'s
-   floor was **90,793**, above the whole eight-figure range and above every other figure in its plan, and
-   its brief was the longest written that day. **But `refusal-keys-group-10`'s brief was nearly as long
-   and its floor was 85,250, the second lowest.** **NOT ESTABLISHED.** Re-derive the floor from the
-   complete set and see whether the longest brief's floor is high again. **If it is, a shorter brief is a
-   real saving rather than a style preference.**
-4. **`#cjxq0` IS THE BEST STREAM AVAILABLE AND IT IS BUILDABLE NOW.** His shop answers came in on
-   2026-11-13 and **nothing answered is a blocker**: a first stream can build the catalogue, the cart, the
-   orders list, the daily supplier email and the manual payment steps **with no products loaded**.
-   **Payments are decided — manual for both, no card processor**, so do not brief an integration. Two
-   points are undecided and are **not** blockers: who owns an order enquiry, and the logo files (his).
-   **Caveat with a clock on it: these answers were given in chat, not read from the Director in writing.**
-5. **`#d6wxo` IS BRIEFABLE** — with the card-versus-scope distinction in owed item 6 above written into
-   the brief, and with the two unestablished points named as the first thing to settle.
-6. **`#z1qn7` HAS BEEN OFFERED TWICE AND DECLINED TWICE** (2026-11-13, against two small closers). It is
-   the one real feature left that nobody is blocking — a new surface people submit data through, 200–270k.
-   **Offer it first, and do not re-offer it inside a plan he has already set.**
-7. **`waiting-on-lutan`'s WORKTREE IS STILL HELD.** Merged (#1548), nothing beyond main. **Clear it when
-   that session closes; do not tear a held folder down.**
-8. **`docs/waiting-on-lutan.md` EXISTS NOW** (#1548) — a dated list of what the backlog needs from him,
-   grouped by what kind of act each one is, with a **Desktop copy sent to him**. **It is a dated snapshot,
-   not a tracker.** Read it before compiling any such list again, and **re-date it rather than trusting
-   it**: `#t1zyc`(A), `#dxjz2` and `#eh2dt` have already moved since it was written.
+1. **MEASURE THIS PLAN'S ELEVEN**, from the merged PRs: #1557 `migration-number-hook`, #1558
+   `bills-chips`, #1560 `shop-schema`, #1559 `network-writing-rule` (**unplanned, no dials set**), #1561
+   `record-card-exception`, #1562 `reviewer-name`, #1563 `shop-public`, #1564 `adopter-portal-schema`,
+   #1565 `shop-staff`, plus batch 4's two (`report-animal`, `adopter-portal-app`), which were in flight
+   when this was written. **All eleven were briefed `@sonnet-5-5/low`**; compare each comment's `model=`
+   and `effort=` with that before counting any figure as evidence.
+2. **RE-DERIVE THE FLOOR FROM THE COMPLETE SET AND NEVER CARRY IT FORWARD.** This plan's predecessor gave
+   **84,526–90,793, mean 87,343 from ten figures** — the mean has moved 817 tokens in three plans. **And
+   re-test brief length against it**, which is now the most promising open question about cost.
+3. **CHECK BATCH 4's TWO HYPOTHESES.** Did `report-animal` build ONE form with a "what is this about"
+   choice rather than two, and which did it choose for the open question it was handed — a page under the
+   existing `/services` prefix, or a new top-level prefix touching `PUBLIC_PAGE_PREFIXES`, the Worker's
+   cache lists, the hide keys and the sitemap? Did `adopter-portal-app` answer whether
+   `public_adoption_updates` shows an approved update on a **fostered** resident, and did it **report**
+   a view change rather than taking a migration number it was told was not its own?
+4. **`#m3kpq` NEEDS A MIGRATION SLOT.** Three deferred merch-shop schema pieces, filed in `## Fundraising`
+   directly after `#cjxq0`: `place_merch_order()` does not exist, there is no `page:shop-merch` hide key
+   (so hiding `page:shop` hides the affiliate page too), and the three `merch_*` tables have no audit
+   triggers. **All three are additive schema on the same tables — one stream, not three.**
+   `check-audited-tables.mjs` passes today, so none of it is red.
+5. **`src/lib/merch/shop.ts:81` HOLDS A DATED EXCHANGE-RATE CONSTANT** (`RATES_AS_OF = "2026-11-13"`),
+   whose own comment says it stands *"until a staff-edited rate screen exists"*. `shop-staff` was asked
+   for that screen; **read its PR before assuming either way.**
+6. **FOUR BATCHES IS NOT THE NEW SHAPE.** This plan grew to eleven streams because he added two mid-plan
+   and the one-migration-per-batch rule would not let the result fit in three. `SKILL.md` assumes three
+   batches of three. **Plan three; let him add.**
 
-**Do NOT re-ask him about:** the Thai read cadence (**weekly, settled 2026-11-13** — `#y1dqu`); drop-ship
-or B2B (**neither; `#hj1c5` is closed**); the donation provider (option 3, no integration); the Worker fix
-(keep the website up, app says offline); whether admin screens need Thai (they stay English); `#aaqtl`,
-which is three deploy steps of his; the production Drive **write** guard, which stays; or `#52y56`'s move
-and rotation — **the item is TICKED: *Done when* asked for the move OR a decision file, and the file was
-written. If the move is ever wanted it is a NEW item.**
+**Do NOT re-ask him about:** the adopter-portal exception (settled, in writing, above); whether
+`#z1qn7` should be built (he said yes on 2026-11-13); the shop's payments (manual both ways, no
+processor); or anything on `744`'s own do-not-re-ask list, all of which still holds.
