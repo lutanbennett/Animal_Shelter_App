@@ -77,7 +77,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 ## 7. Documentation
 
 - [x] Backlog item ticked in `docs/backlog.md` on this branch
-- [x] Decision file `docs/decisions/2026-11-14-migration-number-hook.md`
+- [x] Decision file `docs/decisions/2026-11-13-migration-number-hook.md`
 - [ ] `README.md` still accurate — n/a: not mentioned there
 - [ ] **Release notes.** n/a: a developer hook; no shelter user would notice
 - [x] Commit messages say why, not just what
