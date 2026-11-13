@@ -1,4 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { dbRefusal } from "@/lib/db-refusal";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { JOB_NEEDS, needKey, type Eligibility, type Need } from "./eligibility";
 
 /** How many role_can() calls run at once: hundreds in one burst took 25 s and failed with "fetch failed" (2026-10-23). */
@@ -14,11 +16,13 @@ const CONCURRENCY = 12;
  * would be refused, loudly, rather than answered.
  *
  * Fails closed: on an error, `eligibility` lacks every answer, so nobody can
- * do any page-bound job, and `error` says why for the caller to show.
+ * do any page-bound job, and `error` says why for the caller to show, in the reader's language (a refusal key from
+ * role_can() is worded through dbRefusal, #3nuwy group 10).
  */
 export async function loadEligibility(
   supabase: SupabaseClient,
   roles: readonly (string | null | undefined)[],
+  t: Dictionary,
   needs: readonly Need[] = JOB_NEEDS,
 ): Promise<{ eligibility: Eligibility; error: string | null }> {
   // `roles` are role keys; an unknown key is asked and answered "no" by role_can().
@@ -34,7 +38,7 @@ export async function loadEligibility(
             p_activity: need.activity,
             p_level: need.level,
           });
-          return { need, role, yes: data === true, error: error?.message ?? null };
+          return { need, role, yes: data === true, error: error ? dbRefusal("recurringJobs.loadEligibility", error, t).error : null };
         }),
       )),
     );

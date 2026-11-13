@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { dbRefusal } from "@/lib/db-refusal";
 import { addDaysIso, todayIso } from "@/lib/format";
 import { appUserName, loadAppUsersById, type AppUser } from "@/lib/auth/app-users";
 import { isTestLogin } from "@/lib/auth/test-login";
@@ -34,6 +35,7 @@ export default async function RecurringJobsPage() {
   const { t } = await getT();
   const supabase = await createClient();
   const today = todayIso();
+  const describe = (e: Parameters<typeof dbRefusal>[1]) => dbRefusal("recurringJobs.page", e, t).error;
 
   const [{ jobs, error }, peopleResult, staffingResult, recordResult] = await Promise.all([
     loadRecurringJobs(supabase),
@@ -58,8 +60,8 @@ export default async function RecurringJobsPage() {
 
   const activeIds = jobs.filter((job) => job.active).map((job) => job.id);
   const [nextResult, openResult] = await Promise.all([
-    loadJobDates(supabase, today, addDaysIso(today, NEXT_DATES_DAYS - 1), activeIds),
-    loadOpenOccurrences(supabase, jobs, new Set(activeIds), today, addDaysIso(today, COVER_DAYS_AHEAD)),
+    loadJobDates(supabase, describe, today, addDaysIso(today, NEXT_DATES_DAYS - 1), activeIds),
+    loadOpenOccurrences(supabase, describe, jobs, new Set(activeIds), today, addDaysIso(today, COVER_DAYS_AHEAD)),
   ]);
 
   // Names for everyone mentioned: the usual teams (archived included, so a
@@ -99,6 +101,7 @@ export default async function RecurringJobsPage() {
   const eligibilityResult = await loadEligibility(
     supabase,
     roleKeys,
+    t,
     needsForLinks(jobs.map((job) => job.link_path)),
   );
   // Someone who can still sign in but whose role cannot open the job's page:
