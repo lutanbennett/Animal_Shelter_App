@@ -197,3 +197,17 @@ export async function cancelOrder(formData: FormData) {
   await g.supabase.from("merch_order_parts").update({ status: "cancelled" }).eq("order_id", id).neq("status", "delivered");
   return done(path, "ok", "cancelled");
 }
+
+const RATES = `${BACK}?tab=rates`;
+
+/** Set the baht-per-unit rate for one currency. Asks merch.manage at edit (guard), as the table's update policy does. */
+export async function saveRate(formData: FormData) {
+  const g = await guard();
+  if (!g) return done(RATES, "err", "notAllowed");
+  const currency = str(formData, "currency");
+  const rate = num(formData, "rate");
+  if (!currency || rate === null || rate <= 0 || rate >= 100000000) return done(RATES, "err", "invalid");
+  const { data, error } = await g.supabase.from("merch_exchange_rates").update({ thb_per_unit: rate }).eq("currency", currency).select("currency");
+  if (error || !data?.length) return done(RATES, "err", "failed");
+  return done(RATES, "ok", "saved");
+}

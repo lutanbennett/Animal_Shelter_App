@@ -62,6 +62,7 @@ export const AUDITED_TABLES = [
   "shop_links",
   // The merchandise shop (0373). merch_orders is logged without the buyer's name, email, phone, address or note.
   "merch_products",
+  "merch_exchange_rates",
   "merch_orders",
   "merch_order_parts",
   // Money in and out (0168, 0195, 0308).
@@ -136,6 +137,7 @@ const NAME_FROM_IMAGE: Record<AuditedTable, NameColumns> = {
   public_stat_switches: { cols: ["key"] },
   shop_links: { cols: ["title"] },
   merch_products: { cols: ["name"] },
+  merch_exchange_rates: { cols: ["currency"] },
   merch_orders: { cols: ["order_no"] },
   merch_order_parts: { cols: [] },
   donations: { cols: ["donor_name"] },

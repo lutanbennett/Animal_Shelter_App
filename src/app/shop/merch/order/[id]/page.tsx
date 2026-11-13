@@ -10,7 +10,7 @@ import { PublicFooter } from "../../../../adopt/PublicFooter";
 import { localizedHref } from "@/lib/public-paths";
 import { ClearCart } from "./ClearCart";
 import { loadOrderView } from "@/lib/merch/checkout";
-import { variantLabel, RATES_THB_PER_UNIT, RATES_AS_OF } from "@/lib/merch/shop";
+import { variantLabel } from "@/lib/merch/shop";
 import { loadPublicDonationChannels, channelText } from "@/lib/site/donation-channels";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -58,7 +58,7 @@ export default async function MerchOrderPage({ params }: { params: Promise<{ id:
             <h2 className="text-lg font-semibold">{s.howToPay}</h2>
             <p className="text-sm">{order.region === "thailand" ? s.payThai(amount) : s.payOverseas(amount)}</p>
             {order.region === "overseas" && order.exchange_rate && (
-              <p className="text-xs text-muted">{s.rateLine(String(order.exchange_rate ?? RATES_THB_PER_UNIT[order.currency]), RATES_AS_OF)}</p>
+              <p className="text-xs text-muted">{s.rateLine(String(order.exchange_rate), order.created_at.slice(0, 10))}</p>
             )}
             {order.payment_method === "wise_link" && <p className="text-sm">{s.payByLink}</p>}
             {order.payment_method !== "wise_link" && channels.length === 0 && <p className="text-sm">{s.noPayDetails}</p>}
