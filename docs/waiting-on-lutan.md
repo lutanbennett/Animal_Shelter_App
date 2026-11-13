@@ -56,13 +56,11 @@ It takes one sentence to answer, and a stream can brief the build the same day.
 
 None of these has a command written here. Ask in chat when you reach the step.
 
-**D1. `#dxjz2`: the production Worker deploy.** The code merged 2026-11-12 and **none of it is live until you deploy it.** This one is yours by your instruction of 2026-10-02 and a session never runs it. Ask the release session for the exact command at the moment you are ready. The speed ceiling for the website path is unmeasured, so it may degrade rather than being guaranteed.
+**D1. `#aaqtl`: three deploy steps that make Thai label proposals work on production.** Retitled 2026-11-12: the code is done and the 91 drafts are in. The three steps are in the item, in order. The last one needs a machine login whose password you hold; it is not on this computer's settings file, which is consistent with the steps not being done (not itself the gap). After the steps, the release note for admins is written in the PR that closes it. Ask the planner session for the three steps in order when you start. Time: not established.
 
-**D2. `#aaqtl`: three deploy steps that make Thai label proposals work on production.** Retitled 2026-11-12: the code is done and the 91 drafts are in. The three steps are in the item, in order. The last one needs a machine login whose password you hold; it is not on this computer's settings file, which is consistent with the steps not being done (not itself the gap). After the steps, the release note for admins is written in the PR that closes it. Ask the planner session for the three steps in order when you start. Time: not established.
+**D2. `#z04wr`: runbook steps 5 to 9 of `docs/self-hosted-model-runbook.md`.** Waits behind the model machine existing; whether it exists is *not established*. Claude's half is done.
 
-**D3. `#z04wr`: runbook steps 5 to 9 of `docs/self-hosted-model-runbook.md`.** Waits behind the model machine existing; whether it exists is *not established*. Claude's half is done.
-
-**D4. `#civwx`: the backups' own Google identity.** Waits behind production moving to the shelter's own Google account. It is done guided, with you, one step at a time. `#rqv5c` is that move (section E).
+**D3. `#civwx`: the backups' own Google identity.** Waits behind production moving to the shelter's own Google account. It is done guided, with you, one step at a time. `#rqv5c` is that move (section E).
 
 ## E. A person or a conversation
 
@@ -100,6 +98,8 @@ The first four use the list written on your Desktop on 2026-11-10; it is not in 
 ## Removed at your word
 
 - `#eh2dt` (Thai text for the public pages): you said on 2026-11-13 that the Thai pages are all done. It is taken off this list; the backlog item is for the planner to close.
+
+- `#dxjz2` (production Worker deploy): you said you had already released this morning, and `docs/releases/2026-11-12-0-45-0.md` records the production Worker deploy and the offline page as shipped in 0.45.0. For the planner to close. What stays open on it is not yours: the speed ceiling of the website path is unmeasured.
 
 ## Not established in this snapshot
 
