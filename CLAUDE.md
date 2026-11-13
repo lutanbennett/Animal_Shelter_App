@@ -254,8 +254,8 @@ two or three at once; more than that and merging becomes the bottleneck.
    `mcp__ccd_session_mgmt__get_session` with **`session_id: "self"`** (both require the field; omitting it fails on `get_session`; self: the process is alive, so it
    cannot be `unavailable`, and it cannot read the planner's window), then posts ONE comment on its
    own PR with `gh pr comment`, in this one-line form:
-   `stream-usage: slug=<feature> tokens=<context.tokensUsed> messages=<Messages category> model=<model> effort=<effort> started=<session start> merged=<now UTC> compacted=<yes|no|unknown> rescoped=<yes|no> finished=<yes|blocked>`.
-   Any field you cannot read is `unmeasured`, **never a guess** and never a figure from a neighbour.
+   `stream-usage: slug=<feature> tokens=<context.tokensUsed> messages=<Messages category> model=<model> effort=<effort> band=<lo-hi>k@<model>/<effort> started=<session start> merged=<now UTC> compacted=<yes|no|unknown> rescoped=<yes|no> finished=<yes|blocked>`.
+   `band=` is copied from your brief's header (`unmeasured` if none); it makes the comment self-describing, so a figure from other dials reads as "band does not apply", not an overrun. A comment with no `band=` is the old form and is not a fault. Any field you cannot read is `unmeasured`, **never a guess** and never a figure from a neighbour.
    `compacted=yes` if the window was compacted or cleared (the figure is then a remainder, and a
    floor-sized `messages` on a long session is the tell); `rescoped=yes` if you were corrected
    mid-flight or the job changed size; `finished=blocked` if you stopped early. You report; the

@@ -10,7 +10,7 @@ forgiving instead of carrying block E.
 
 **One more block, not in this file because it is per-batch:** tell each stream to post its
 `stream-usage:` comment immediately before `gh pr merge`, as a NUMBERED deliverable rather than a
-closing paragraph — `CLAUDE.md`'s merge train has the exact one-line form, and both
+closing paragraph — copy the header's `band=` into it — `CLAUDE.md`'s merge train has the exact one-line form, and both
 `get_usage` and `get_session` need `session_id: "self"`. As prose in a closing paragraph it was
 missed by the one stream that reached the merge by a different path; numbered, it has gone 3 of 3.
 
