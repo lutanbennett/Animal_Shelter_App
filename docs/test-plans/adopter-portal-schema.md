@@ -36,7 +36,7 @@
 - [ ] Existing rows still read correctly — n/a: no table or column changed; Adopt placements answer exactly as before
 - [x] Constraints exercised in a rollback harness — `scripts/check-portal-account.mjs` HARNESS-OK: open foster carer in, other contact out, archived out, out after the placement closes
 - [x] Down-migration — not needed: re-create 0357's bodies
-- [ ] Production apply plan — deferred: release manager; 0371 goes with the next release
+- [ ] Production apply plan — pending: release manager applies 0371 with the next release
 
 ## 4. Functional checks
 
