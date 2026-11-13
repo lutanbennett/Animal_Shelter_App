@@ -179,6 +179,9 @@ export const PROBES = [
   // 0369: the merch tables ask merch.manage and nothing else. The read runs against $MERCH, a fixture product of check-who-does-what.mjs.
   { activity: "merch.manage", level: "edit", sql: `insert into merch_products (name, price_thb) values ('Probe product', 1)` },
   { activity: "merch.manage", level: "read", sql: `select 1 from merch_products where id = $MERCH` },
+  // 0372: animal_reports asks animal_report.manage and nothing else. Both run against $REPORT, a fixture row of check-who-does-what.mjs.
+  { activity: "animal_report.manage", level: "edit", sql: `update animal_reports set status = status where id = $REPORT` },
+  { activity: "animal_report.manage", level: "read", sql: `select 1 from animal_reports where id = $REPORT` },
 ];
 
 // A statement a read on a Yes/No activity: "read" there means "needs Yes".

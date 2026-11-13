@@ -847,6 +847,16 @@
         "migration": "0350_public_visible_one_expression.sql",
         "item": "grant to anon",
         "reason": "SELECT on the existing public views public_resident_profiles and public_enclosures, each restated with the same grants as before. Nothing is newly granted: anon already read both, and the new private.on_website view is granted to nobody (the public views read it as their owner). They now include an animal under a running, text-approved appeal even if not adoption-ready (Lutan, 2026-11-09), and stop reading is_public_visible. The existing public-site pattern: it lets anon read what the shelter chose to publish, not do anything. docs/decisions/2026-11-10-public-visible-one-expression.md."
+      },
+      {
+        "migration": "0372_animal_reports.sql",
+        "item": "policy animal_reports.animal_reports_anon_insert",
+        "reason": "The public report-an-animal form (#z1qn7). anon may INSERT one report, with status forced to new by the policy check, and nothing else: no read, update or delete. The same shape as the desexing sign-up (0233, 0297). It grants the visitor no ability beyond leaving a message for staff, who read and handle reports only with animal_report.manage (its card is review_animal_reports)."
+      },
+      {
+        "migration": "0372_animal_reports.sql",
+        "item": "grant to anon",
+        "reason": "INSERT on named columns of animal_reports (id, kind, species, description, location, reporter_name, reporter_phone, reporter_email) and nothing else; no SELECT, so a report is never readable by the public. scripts/check-public-views.mjs proves anon cannot read, change or delete a row and cannot set status."
       }
     ],
     "stubs": [
