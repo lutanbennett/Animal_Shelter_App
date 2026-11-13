@@ -1,5 +1,6 @@
 import "server-only";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAppEnv } from "@/lib/app-env";
 
@@ -56,7 +57,7 @@ type Row = {
 };
 
 /** Every part waiting for a supplier, grouped by supplier, oldest first. Takes any client: staff screen (RLS) or cron. */
-export async function unsentParts(db: ReturnType<typeof createAdminClient>) {
+export async function unsentParts(db: SupabaseClient) {
   const { data, error } = await db
     .from("merch_order_parts")
     .select("id, supplier_id, created_at, order:merch_orders!inner(order_no, buyer_name, ship_address, ship_country, payment_state), items:merch_order_items(product_name, size, colour, quantity)")

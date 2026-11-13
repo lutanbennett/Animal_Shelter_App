@@ -3,7 +3,6 @@ import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
 import { unsentParts } from "@/lib/merch/supplier-email";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { saveProduct, saveVariant, setProductState } from "./actions";
 
 /**
@@ -345,7 +344,7 @@ async function EmailTab({ supabase }: { supabase: Db }) {
   const { t } = await getT();
   const m = t.merchStaff;
   // The list reads as the signed-in login (RLS: merch.manage read); the cron reads the same shape with the service role.
-  const unsent = await unsentParts(supabase as unknown as ReturnType<typeof createAdminClient>).catch(() => null);
+  const unsent = await unsentParts(supabase).catch(() => null);
   const ids = unsent ? [...unsent.keys()] : [];
   const [sup, log] = await Promise.all([
     ids.length ? supabase.from("suppliers").select("id, name, email, delivery_method").in("id", ids).returns<{ id: string; name: string; email: string | null; delivery_method: string }[]>() : Promise.resolve({ data: [] as { id: string; name: string; email: string | null; delivery_method: string }[] }),
