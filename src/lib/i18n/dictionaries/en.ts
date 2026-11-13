@@ -1568,6 +1568,9 @@ const en = {
         resident_diets: "Resident diet",
         user_roles: "Role given to a login",
         shop_links: "Shop link",
+        merch_products: "Merchandise product",
+        merch_orders: "Merchandise order",
+        merch_order_parts: "Merchandise order part",
         donations: "Donation",
         donation_lines: "Donation line",
         donation_receipts: "Donation receipt",
@@ -2778,6 +2781,13 @@ const en = {
         liveHeading: "Today's counts",
         liveSubtitle: "Counted by the system from the animals in your care, so there is nothing to type. Switch off any you would rather not show. A count under {min} is left off the home page whatever the switch says.",
         belowMin: "Switched on, but the count is only {count} and counts under {min} are left off the home page, so nothing shows yet. It appears by itself once the count reaches {min}.",
+        publicCount: {
+          heading: "Animals on the website",
+          subtitle: "How many animals are in your care, and how many of them visitors can see on the adoption pages. The difference is what is still to publish.",
+          inCare: "In care (at the shelter, in a foster home or in hospital)",
+          public: "Shown on the website",
+          gap: "In care but not shown",
+        },
       },
       donate: {
         heading: "Ways to give",

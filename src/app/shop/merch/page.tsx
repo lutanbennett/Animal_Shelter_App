@@ -46,7 +46,7 @@ const baht = (n: number) => `฿${n.toLocaleString("en-US", { maximumFractionDig
  * public_merch_variants only. An empty catalogue is the normal first state and says so.
  */
 export default async function MerchShopPage() {
-  await requirePageVisible("shop");
+  await requirePageVisible("shop-merch");
   const supabase = await createClient();
   const { t, locale } = await getT();
   const s = t.merchShop;
@@ -61,7 +61,7 @@ export default async function MerchShopPage() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <PublicHeader current="shop" trail={[{ label: t.publicNav.getInvolved }, { label: s.navLabel }]} />
+      <PublicHeader current="shop-merch" trail={[{ label: t.publicNav.getInvolved }, { label: s.navLabel }]} />
 
       <div className={`${PUBLIC_FRAME} flex flex-col gap-6 py-10`}>
         <div className="flex flex-col gap-2">

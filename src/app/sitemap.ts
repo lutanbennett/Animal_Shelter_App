@@ -4,6 +4,7 @@ import { isPublicSiteLocked } from "@/lib/public-site";
 import { hiddenPagesOf, isPageHidden, sitemapPages } from "@/lib/public-pages";
 import { loadSiteContent } from "@/lib/site/content";
 import { hasPublicShopLinks } from "@/lib/shop/shop-links";
+import { hasPublicMerchProducts } from "@/lib/merch/shop";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { localizedHref } from "@/lib/public-paths";
 
@@ -44,7 +45,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // A hidden page, or a section it sits in, is not listed, nor are the pages under it.
   const hidden = hiddenPagesOf((await loadSiteContent(supabase))?.hidden_public_pages);
 
-  const [residents, projects, appeals, events, hasShopLinks] = await Promise.all([
+  const [residents, projects, appeals, events, hasShopLinks, hasMerch] = await Promise.all([
     supabase.from("public_resident_profiles").select("id").returns<{ id: string }[]>(),
     supabase
       .from("public_projects")
@@ -54,13 +55,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     supabase.from("public_appeals").select("id").in("status", ["live", "funded"]).returns<{ id: string }[]>(),
     supabase.from("public_fundraising_events").select("id, event_date").returns<{ id: string; event_date: string }[]>(),
     hasPublicShopLinks(supabase),
+    hasPublicMerchProducts(supabase),
   ]);
 
   // The static public pages, the home page first; /adopt#how-to-adopt is a
   // fragment of /adopt and so not listed twice. Shop for the shelter is left out
   // while it has no entry shown, as the menu leaves it out: an empty page to index.
   const pages: MetadataRoute.Sitemap = sitemapPages()
-    .filter((page) => !isPageHidden(page.key, hidden) && (page.key !== "shop" || hasShopLinks))
+    .filter((page) => !isPageHidden(page.key, hidden) && (page.key !== "shop" || hasShopLinks) && (page.key !== "shop-merch" || hasMerch))
     .flatMap((page) =>
       twin({ url: abs(page.href), changeFrequency: page.sitemap.changeFrequency, priority: page.sitemap.priority }, page.href),
     );
