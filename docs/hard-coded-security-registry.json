@@ -750,6 +750,11 @@
         "reason": "Re-declared only to key the Admin short-circuit on roles.is_admin instead of the name 'admin'. The remaining key read is the role being asked about (r.key = p_role_key), not a rule on the caller; the Admin test no longer reads a name."
       },
       {
+        "migration": "0367_refusal_keys_last_group.sql",
+        "item": "function public.role_can reads a role",
+        "reason": "Re-declared only to change the text of its one refusal into the key role.eligibility_not_allowed (#3nuwy group 10, docs/decisions/2026-11-13-refusal-keys-group-10.md). Body otherwise the live 0277 one: the key read is still the role being asked about (r.key = p_role_key), not a rule on the caller, and the Admin test still reads roles.is_admin. No access rule added or changed."
+      },
+      {
         "migration": "0285_shop_links.sql",
         "item": "grant to anon",
         "reason": "SELECT on the public view public_shop_links (the public Shop for the shelter page: shown entries, named columns only, Friend name and logo read from public_shelter_friends) and EXECUTE on is_public_drive_file(text), restated with one more branch. Both are the existing public-site pattern (0191); the table shop_links itself is revoked from anon. It lets anon read what the shelter chose to publish, not do anything. docs/decisions/2026-10-30-affiliate-links-schema.md."
