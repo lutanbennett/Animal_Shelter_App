@@ -54,7 +54,7 @@ const PER_ITEM_PAGE_PREFIXES = ["/r", "/e"];
  * a named animal and shows how much has been given, and a figure kept for ten minutes after
  * an appeal closed or reached its goal would keep asking (docs/decisions/2026-10-16-appeals-public-pages.md).
  */
-export const NOT_EDGE_CACHED_PAGE_PREFIXES = ["/r", "/e", "/campaigns", "/services"];
+export const NOT_EDGE_CACHED_PAGE_PREFIXES = ["/r", "/e", "/campaigns", "/services", "/shop/merch/checkout", "/shop/merch/order"];
 
 /** What the Worker may edge-cache: every public page except the above. */
 export const EDGE_CACHED_PAGE_PREFIXES = PUBLIC_PAGE_PREFIXES.filter((p) => !NOT_EDGE_CACHED_PAGE_PREFIXES.includes(p));
@@ -119,6 +119,9 @@ export function isWebsitePageWhenOff(pathname: string): boolean {
 
 /** Whether the Worker may edge-cache this public page. */
 export function isEdgeCachedPage(pathname: string): boolean {
+  // A not-cached prefix may sit UNDER a cached one (/shop/merch/checkout under /shop), which the exact-match filter above cannot
+  // express, so it is asked of the path itself.
+  if (NOT_EDGE_CACHED_PAGE_PREFIXES.some((prefix) => underPrefix(pathname, prefix))) return false;
   return pathname === "/" || EDGE_CACHED_PAGE_PREFIXES.some((prefix) => underPrefix(pathname, prefix));
 }
 
