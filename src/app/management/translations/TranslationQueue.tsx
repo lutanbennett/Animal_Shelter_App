@@ -77,7 +77,10 @@ export function TranslationQueue({
   canManage,
   canPropose,
   viewerId,
+  reviewerNames = {},
 }: {
+  /** Display names of the logins that reviewed prose rows, by id (login_display_name, 0370). */
+  reviewerNames?: Record<string, string>;
   prose: TranslationQueueRow[];
   labels: LabelItem[];
   show: Show;
@@ -93,7 +96,7 @@ export function TranslationQueue({
   /** This login, so a proposal can say whether it was theirs. */
   viewerId: string | null;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const tr = t.translations;
   const [prose, setProse] = useState(initialProse);
   const [labels, setLabels] = useState(initialLabels);
@@ -211,6 +214,11 @@ export function TranslationQueue({
                       </Link>
                     )}
                   </div>
+                  {row.reviewed_by && row.reviewed_at && reviewerNames[row.reviewed_by] && (
+                    <p className="mb-2 text-xs text-muted">
+                      {tr.reviewedByName(reviewerNames[row.reviewed_by], formatDate(row.reviewed_at, locale))}
+                    </p>
+                  )}
                   <TranslationPanel
                     key={`${row.id}:${row.updated_at}`}
                     row={row}

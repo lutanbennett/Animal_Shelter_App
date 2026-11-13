@@ -62,3 +62,19 @@ export async function countOpenTranslations(supabase: SupabaseClient): Promise<n
     .in("status", OPEN_STATUSES);
   return count ?? 0;
 }
+
+/**
+ * Names for login ids, through login_display_name() (0370): the display name, never an address. A translations-only
+ * login cannot read app_users, so this is the route for any screen with that gap. An id with no name is left out.
+ */
+export async function loadLoginNames(supabase: SupabaseClient, ids: (string | null)[]): Promise<Record<string, string>> {
+  const unique = [...new Set(ids.filter((id): id is string => !!id))];
+  const out: Record<string, string> = {};
+  await Promise.all(
+    unique.map(async (id) => {
+      const { data } = await supabase.rpc("login_display_name", { p_user: id });
+      if (typeof data === "string" && data) out[id] = data;
+    }),
+  );
+  return out;
+}
