@@ -1454,6 +1454,7 @@ const th: Dictionary = {
         user_roles: "บทบาทที่กำหนดให้ผู้ใช้",
         shop_links: "ลิงก์ร้านค้า",
         merch_products: "สินค้าที่ระลึก",
+        merch_exchange_rates: "อัตราแลกเปลี่ยนสินค้าที่ระลึก",
         merch_orders: "คำสั่งซื้อสินค้าที่ระลึก",
         merch_order_parts: "ส่วนของคำสั่งซื้อสินค้าที่ระลึก",
         donations: "เงินบริจาค",

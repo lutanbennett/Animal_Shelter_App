@@ -1569,6 +1569,7 @@ const en = {
         user_roles: "Role given to a login",
         shop_links: "Shop link",
         merch_products: "Merchandise product",
+        merch_exchange_rates: "Merchandise exchange rate",
         merch_orders: "Merchandise order",
         merch_order_parts: "Merchandise order part",
         donations: "Donation",
