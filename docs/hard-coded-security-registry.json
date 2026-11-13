@@ -379,7 +379,7 @@
     },
     {
       "file": "src/lib/merch/checkout.ts",
-      "for": "Writes a merchandise order for a signed-out buyer, by calling place_merch_order() (0373: one transaction covering the order, its parts and items and the shelter-stock decrement on merch_variants; security invoker, executable by service_role only), and reads one order back by id for the status page. No merch_* table is open to anon (0369).",
+      "for": "Writes a merchandise order for a signed-out buyer, by calling place_merch_order() (0373: one transaction covering the order, its parts and items and the shelter-stock decrement on merch_variants; security invoker, executable by service_role only), reads one order back by id for the status page, and reads the staff-set exchange rates (merch_exchange_rates, 0374) to quote an overseas buyer. No merch_* table is open to anon (0369).",
       "guard": "Nothing from the browser is trusted but variant ids and quantities: every price, postage figure, name and source is re-read from the real tables, a hidden or archived variant is refused, a stock decrement is conditional on the value just read, and a failure undoes what was written. The status read selects no name, address, email or phone and asks for a v4 uuid that cannot be guessed. Grants no ability to anyone: it records what a buyer asked to buy."
     }
   ],

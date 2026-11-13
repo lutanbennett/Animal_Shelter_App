@@ -17,6 +17,9 @@ create table if not exists merch_exchange_rates (
   set_at       timestamptz not null default now()
 );
 
+-- record_audit() (0195) names the row by its uuid id, so the table carries one beside the currency key.
+alter table merch_exchange_rates add column if not exists id uuid not null default gen_random_uuid();
+
 comment on table merch_exchange_rates is
   'Baht per one unit of each currency the merchandise shop quotes an overseas buyer in (0374). Edited by staff holding merch.manage; the buyer is shown the rate and its date. An order keeps the rate it was quoted at (merch_orders.exchange_rate).';
 

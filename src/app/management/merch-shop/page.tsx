@@ -133,7 +133,7 @@ async function RatesTab({ supabase, canEdit }: { supabase: Db; canEdit: boolean 
               <span>{Number(r.thb_per_unit)}</span>
             )}
             <span className="text-xs text-muted">
-              {m.ratesSetOn(new Date(r.set_at).toLocaleDateString(locale === "th" ? "th-TH" : "en-GB"), (r.set_by && appUserName(people.get(r.set_by))) || m.ratesUnknown)}
+              {m.ratesSetOn(new Date(r.set_at).toLocaleDateString(locale === "th" ? "th-TH" : "en-GB"), (people.has(r.set_by ?? "") ? appUserName(people.get(r.set_by ?? "")) : m.ratesUnknown))}
             </span>
           </li>
         ))}
