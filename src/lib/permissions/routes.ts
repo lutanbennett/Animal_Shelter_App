@@ -572,6 +572,16 @@ export const ROUTES: readonly RouteEntry[] = [
     menu: false,
   },
   {
+    // Add many bills from a spreadsheet: opens for whoever may file utility OR general bills, the same test as canImportBills.
+    path: "/bills/import",
+    activity: "bills.utilities",
+    alsoActivity: "bills.general",
+    icon: Receipt,
+    label: (t) => t.nav.billsImport,
+    device: "any",
+    menu: false,
+  },
+  {
     // Settings → Units (0252): the units of measure ingredients and medicines are counted in.
     path: "/admin/units",
     activity: "reference.types",
