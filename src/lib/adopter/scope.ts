@@ -15,7 +15,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 /** Where an adopter login lands and works. */
 export const ADOPTER_PATH = "/adopter-update";
 
-export type AdopterResident = { residentId: string; contactId: string; name: string; code: string | null };
+export type AdopterResident = { residentId: string; contactId: string; name: string; code: string | null; fostered: boolean };
 
 export type AdopterScope = { email: string; residents: AdopterResident[] };
 
@@ -44,7 +44,7 @@ export async function loadAdopterScope(supabase: SupabaseClient): Promise<Adopte
     if (scopeError) throw new Error(scopeError.message);
     for (const rid of (ids ?? []) as string[]) {
       if (residents.some((r) => r.residentId === rid)) continue;
-      residents.push({ residentId: rid, contactId: c.id, name: "", code: null });
+      residents.push({ residentId: rid, contactId: c.id, name: "", code: null, fostered: false });
     }
   }
   if (residents.length === 0) return contacts?.length ? { email, residents } : null;
@@ -54,7 +54,17 @@ export async function loadAdopterScope(supabase: SupabaseClient): Promise<Adopte
     .in("id", residents.map((r) => r.residentId))
     .returns<{ id: string; name: string; resident_code: string | null }[]>();
   if (nameError) throw new Error(nameError.message);
+  const { data: places, error: placeError } = await admin
+    .from("placement_history")
+    .select("resident_id, carer_id, placement_type")
+    .in("resident_id", residents.map((r) => r.residentId))
+    .in("carer_id", residents.map((r) => r.contactId))
+    .in("placement_type", ["Adopt", "Foster"])
+    .is("end_date", null)
+    .returns<{ resident_id: string; carer_id: string; placement_type: string }[]>();
+  if (placeError) throw new Error(placeError.message);
   for (const r of residents) {
+    r.fostered = (places ?? []).some((p) => p.resident_id === r.residentId && p.carer_id === r.contactId && p.placement_type === "Foster");
     const row = rows?.find((x) => x.id === r.residentId);
     r.name = row?.name ?? "";
     r.code = row?.resident_code ?? null;
