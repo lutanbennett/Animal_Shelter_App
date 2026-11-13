@@ -257,6 +257,21 @@ still said the cause was *"not yet confirmed"* with four candidate causes, two a
 
 ## 4. Band evidence
 
+### Dials mismatch, 2026-11-13 (read from `stream-usage:` comments on the previous plan's merged PRs)
+
+| slug | PR | band | actual | model/effort | ÷ midpoint |
+|---|---|---|---|---|---|
+| close-two-recorded-items | #1530 | 110–150k | 267,500 | opus-5/medium | 2.06× |
+| donate-promptpay-qr | #1538 | 110–170k | 248,815 | opus-5/medium | 1.78× |
+| rule3-second-argument | #1537 | 120–165k | 242,406 | opus-5/medium | 1.70× |
+| refusal-keys-group-9 | #1531 | 160–195k | 286,557 | opus-5/medium | 1.61× |
+| control-press-fixtures | #1532 | 180–230k | 310,209 | opus-5/medium | 1.51× |
+| thai-strings-queue | #1533 | 150–195k | 141,341 | sonnet-5-5/low | 0.82× valid |
+| env-readers-and-decision | #1534 | 145–190k | 163,564 | sonnet-5-5/low | 0.98× valid |
+| worker-cpu-fallback-paper | #1535 | 170–215k | 195,816 | switched mid-flight | not clean |
+
+Mean of the five opus/medium ratios 1.73× (the `medium` +25% adjustment is same-model only, so it would not have fixed this). Small rows are hit hardest: close-two-recorded-items spent 178,434 above its floor against about 43,000 allowed (4.1×). **The floor did not move:** eight floors 84,776–89,066, mean 86,491, vs 86,526 the previous day on Sonnet 5.5/low — 35 tokens apart across a model change. This stream's own run (sonnet-5-5/low, read from `get_session` self) is a seventh data point, added in its `stream-usage:` comment. Decision: `docs/decisions/2026-11-13-band-dials-mismatch.md`.
+
 **The readings behind each row of `SKILL.md`'s table.** Bands have been wrong by +50% and −39% in
 consecutive batches, so revise from actuals and never treat a row as settled.
 

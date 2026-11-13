@@ -134,7 +134,7 @@ leftovers is (e), after the list. Then per stream, in sequence:
 1. `node C:/Development/Animal_Shelter_App/scripts/worktree.mjs new <slug>`
 2. Write `C:/Development/Animal_Shelter_<slug>/.brief.md` (gitignored) — **the blocks every brief carries
    are in `brief-blocks.md`; assemble from there rather than retyping.** Add the task half: the item
-   verbatim, **a first line `<!-- stream: slug=<slug> port=<port> model=<model> effort=<effort> band=<lo-hi>k migration=<none|n> -->` (`worktree.mjs streams` reads it)**, the branch, the port, which half of a schema-first item this is, the numbered deliverables,
+   verbatim, **a first line `<!-- stream: slug=<slug> port=<port> model=<model> effort=<effort> band=<lo-hi>k@<model>/<effort> migration=<none|n> -->` (`worktree.mjs streams` reads it; the band carries the dials it was measured on, e.g. `band=120-160k@sonnet-5-5/low`, so a figure from other dials is visibly not that band's)**, the branch, the port, which half of a schema-first item this is, the numbered deliverables,
    what the stream does NOT own and who owns it this batch, and the banding note.
 3. Then steps 3 and 4 of the hard sequence above. **Do not start sessions.**
 
@@ -318,7 +318,7 @@ an unplanned interruption is a briefing defect even when every check is green.
 
 ## 8. Finish
 
-One line that running `/plan-day` again after these merge sets up the next batch. **Then stop.** (The
+Once the current batch has MERGED, **set up the next batch without asking him** — he triggers the plan and you sequence its batches (2026-11-11); *never nine worktrees* is a reason to wait for the merge, never a reason to ask permission. **What ends a turn is handing the list back, not a request for a go-ahead.** (The one case that does re-present: a FRESH conversation resuming a plan it did not write presents the batch first, because to him nothing was ever proposed — the 2026-11-08 incident. Resuming ≠ asking.) Tell him in one line that running `/plan-day` again sets up the next batch. (The
 list itself is step 4 of the hard sequence above; this is the third place it used to be restated, and
 restating it three times is what let the sequence be broken.)
 
@@ -385,7 +385,9 @@ planner's job. A permissions schema PR carries **+30k of proof**. Asking for rea
 adds **~30k** whatever the code shape. *"Modelled on an existing screen"* is not a discount until you
 list what that screen does **not** do. Reconciling two sources of truth bands on the harder side.
 
-**`medium`: band at `low` and state the +25% adjusted figure beside it.** Never quote a `low` band at a
+**A FIGURE WHOSE MODEL OR EFFORT DID NOT MATCH ITS BRIEF IS NOT EVIDENCE ABOUT ESTIMATING, IN EITHER DIRECTION.** Counted in, it reads a quick win as under-priced and can inflate later bands for work that never needed it. Compare the `stream-usage:` comment's `model=`/`effort=` with the `@dials` on its `band=`: if they differ, print "band does not apply", never a variance, and keep it out of every revision. The floor (`tokens − messages`) is still comparable across dials. This is a reading rule, never a limit: a band warns and forecasts, it never gates. Evidence: `reference.md` §4.
+
+**`medium`: band at `low` and state the +25% adjusted figure beside it (same model only).** Never quote a `low` band at a
 `medium` stream without saying so — it manufactures a false overrun, which is how a good band gets
 corrected into a bad one. **Never raise effort to fix an overrun**; the cure is a tighter brief.
 **Recommend, never plan around a dial** — he sets them, and no model finding is drawable from a dial you
