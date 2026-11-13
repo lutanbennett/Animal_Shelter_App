@@ -80,10 +80,7 @@ card — no exceptions."* And, the rule in full:
   **Like Admin, it is not a precedent:** it is that one account class, and nothing else may sit outside the card system by
   citing it or Admin. **Everything a non-staff account could do beyond posting updates on its own animals stays
   card-governed**, and **staff approval of those updates is itself card-governed.** It does **not** touch the Admin bypass
-  and does **not** loosen the rule for any app login. **Not yet built:** whether the sign-in is an app login at all, and how
-  it links to the contact row, are the first things the portal stream settles; when it lands it records itself under
-  `outsideTheCardSystem` in `docs/hard-coded-security-registry.json` as a named exception, not as debt. Until then the
-  check has nothing to ignore. Settled; do not put it to him again.
+  and does **not** loosen the rule for any app login. **Shape settled 2026-11-13 (`docs/decisions/2026-11-13-adopter-portal-schema.md`):** an ordinary sign-in holding no role and no card, linked to the contact by its verified email, scoped by the open Adopt or Foster placement (`adopter_may_submit`, 0371); it records itself under `outsideTheCardSystem.websiteAccount` in `docs/hard-coded-security-registry.json`, as a named exception and not debt; `scripts/check-portal-account.mjs` proves a login with no cards reads nothing. The screens are `adopter-portal-app`'s. Settled; do not put it to him again.
 - **The target is zero, and the check asserts zero** (2026-10-25,
   `docs/decisions/2026-10-25-no-coded-security-inventory.md`; it replaced the ratchet of
   `2026-10-24-hard-coded-security-ratchet.md`). `node scripts/check-hard-coded-security.mjs` has no

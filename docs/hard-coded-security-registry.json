@@ -25,7 +25,21 @@
       "It is not debt: no baseline, no count, never ratcheted.",
       "It is not a precedent: Admin only, all-or-nothing."
     ],
-    "counted": false
+    "counted": false,
+    "websiteAccount": {
+      "what": "The adopter / foster-carer website account: a non-staff sign-in that may post progress updates and photos only on residents it has adopted or fosters, has them approved by staff before publishing, and reaches nothing else.",
+      "decision": "docs/decisions/2026-11-13-adopter-portal-card-exception.md; shape settled in docs/decisions/2026-11-13-adopter-portal-schema.md",
+      "why": "Lutan, 2026-11-13, offered three shapes and told this would be the first non-Admin exception to his zero-exceptions rule: \"Yes, an exception\".",
+      "mechanism": "An ordinary sign-in that holds NO role row and NO card. Its only reach is the service-role call sites listed under serviceRoleSites (src/lib/adopter/* and src/app/adopter-update/*), each of which verifies the sign-in email, resolves it to a live contact and asks adopter_may_submit() (0357, widened to Foster in 0371) before it writes. Proven by scripts/check-portal-account.mjs: a roleless login holds no permission and reads no row of any of 111 tables.",
+      "approval": "Staff approval stays card-governed: text.approve (card approve_text) for the words, photos.approve (card approve_photos) for the files. No card is added; none is needed.",
+      "rules": [
+        "One account class, nothing wider. No profile, messaging, list of other animals or donation history.",
+        "Not a precedent: nothing else may sit outside the card system by citing this or Admin.",
+        "Does not touch the Admin bypass and loosens nothing for any app login.",
+        "Not debt: no baseline, never counted."
+      ],
+      "counted": false
+    }
   },
   "stillDecidesAccess": [],
   "notAccess": [
