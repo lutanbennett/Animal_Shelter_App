@@ -58,8 +58,18 @@
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`
 
 ```
-GATES_OUTPUT_PLACEHOLDER
+=== gates: typecheck exited 0 after 27s
+=== gates: lint exited 0 after 182s
+=== gates: test exited 0 after 35s
+=== gates: build exited 0 after 101s
+
+gates: typecheck=0 lint=0 test=0 build=0
 ```
+
+  Run in this worktree after `sync`, with all three of this PR's files on disk. The first run of
+  the day was piped into `tail -30`, which threw away the three earlier per-gate lines, so it was
+  re-run without the pipe rather than reconstructing them — those timings are the part only a real
+  run has, which is the whole point of pasting them.
 
 - [ ] CI green on the PR (runs the same four gates, among its other checks) — n/a: not yet — the PR does not exist at this commit
 
