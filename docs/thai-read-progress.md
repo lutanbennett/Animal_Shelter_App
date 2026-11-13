@@ -17,8 +17,7 @@ The 2026-11-13 read covered the list as it stood at commit `4bf320928`. Run:
 
 That leaves out everything the 2026-11-13 read covered (unless its English changed since). Measured 2026-11-13: 74 strings,
 which are the ones merged after the list was made, so they were never read. After the next read, add its own
-`<base>..<commit>` range beside this one and pass both. Not covered by this boundary: the 34 `uploads` strings (added
-2026-11-03, read in the finish session; see its decision file).
+`<base>..<commit>` range beside this one and pass both. The 34 `uploads` strings (added 2026-11-03) were read in the finish session (2026-11-13), none changed. Of the 74, 66 were only the บัตรสิทธิ์ rewording and were not shown; the 8 new ones were read. Rulings applied then: supplier = ซัพพลายเออร์, size = ขนาด everywhere. Rule 3 now blocks. See `docs/decisions/2026-11-13-thai-read-finish.md`.
 
 ## What was changed
 
