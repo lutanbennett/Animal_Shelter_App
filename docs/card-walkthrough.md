@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-58 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+59 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -302,6 +302,17 @@ Result: pending
 0. Sign in with `--cards foundation_id_copies`. The home screen shows the **Board ID copies** tile (or the tile of a card that includes it).
 1. Open `/management/foundation-papers/board-ids`: it loads.
 2. **Do:** Board members' ID card and household registration copies. Use a disposable record named `walk-foundation_id_copies`. **Read-back:** the copy shows in the list on /management/foundation-papers/board-ids and not on the Foundation papers page; Open serves it through /api/documents/<id>. Use a made-up fixture, never a real ID copy.
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## View foundation papers (`view_foundation_papers`)
+
+- Opens: `/management/foundation-papers`
+
+0. Sign in with `--cards view_foundation_papers`. The home screen shows the **View foundation papers** tile (or the tile of a card that includes it).
+1. Open `/management/foundation-papers`: it loads.
+2. **See:** Foundation papers (bylaws, certificates, minutes, statements, tax ID, bank statements) (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
