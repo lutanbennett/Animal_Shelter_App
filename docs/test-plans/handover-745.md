@@ -160,7 +160,7 @@ Automated checks by: Claude (planner session)  Date: 2026-11-13
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — pending: the two PR body corrections on #1557 and #1560, which need Lutan or a permission rule
 
 Manual verification by: pending: the two PR body corrections, which need Lutan or a permission rule
 
