@@ -16,14 +16,14 @@ Removed because they were wrong or are now answered:
 
 ## 1. Things only you can do
 
-- **`#kxksr`: enter the shelter's PromptPay number and QR image** under Settings, then Website, then Ways to give. The shop's Thai checkout will also use it. Whether it is entered: *not established* (needs the production database or the signed-in screen).
-- **`#8dfud`: the shelter's LINE id**, if it has one. A LINE QR on the website waits for it. *Not established* whether it exists.
+- **`#kxksr`: set up PromptPay** under Management, then Website, then the **Donate** tab. **Confirmed open 2026-11-13 on the live screen:** only DonorBox and PayPal exist. Add PromptPay with its id and account name and save; the QR upload only appears on the card once it exists. You need the shelter's PromptPay id and QR image, which you do not have yet. The shop's Thai checkout will also use it.
+- **`#8dfud`: the shelter's LINE id**, if it has one (Management, then Website, then the **Contact** tab). **Confirmed 2026-11-13: none exists yet.** A LINE QR on the website waits for it.
 - **`#t1zyc`: the accountant's login**, once you have their details: Settings, then Security, put it in the Accountant group.
-- **`#aaqtl`: the machine login for Thai label proposals**, its card and its password secret. Step 1 and the Worker deploy are done by 0.45.0. Whether the rest was done: *not established*. Ask the release session to read the live state before you do anything.
+- **`#aaqtl`: the machine login for Thai label proposals**, its card and its password secret. **Confirmed 2026-11-13 on the live Security screen: the login does not exist** (only two people's logins). Step 1 and the Worker deploy are done by 0.45.0. Ask the release session for the remaining steps when you are ready.
 - **`#gvnrr`: buy the Pi battery** when the sale comes.
 - **`#mzu7v`: book the Home Assistant walkthrough.**
 - **`#rqv5c` and `#civwx`: the Drive move to the shelter's own Google account, then the backups' own identity.** You are working towards it; `#civwx` is guided, with you, after it. Do not chase before the end of November.
-- **`#z04wr`: the self-hosted model runbook, steps 5 to 9**, once the model machine exists (*not established* whether it does).
+- **`#z04wr`: the self-hosted model runbook, steps 5 to 9**, once the model machine exists (**confirmed 2026-11-13: it does not exist yet**).
 
 ## 2. A decision of yours, with no date
 
@@ -48,5 +48,4 @@ Removed because they were wrong or are now answered:
 
 ## Not established in this snapshot
 
-- Whether `#kxksr`, `#8dfud`, `#aaqtl` and `#z04wr` are done: the production database could not be read from the checkout used, because it needs a credentials file kept elsewhere.
 - Why the Pi rebooted on 2026-11-11 and 2026-11-12: at least one matches a deliberate power-pull drill. The rest were not matched to a drill and are not a finding.
