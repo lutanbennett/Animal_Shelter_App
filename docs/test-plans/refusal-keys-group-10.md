@@ -13,7 +13,7 @@
 | PR | see PR |
 | Tested by / date | Claude, 2026-11-13 |
 | Carries a migration? | yes, 0367 |
-| Tested at SHA | 35880b046 |
+| Tested at SHA | 002cb419a |
 
 ## 1. Scope and risk
 
