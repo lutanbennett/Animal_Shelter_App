@@ -1,6 +1,6 @@
-# 2026-11-14: the adopter/foster-carer website account sits outside the card system (backlog #d6wxo)
+# 2026-11-13: the adopter/foster-carer website account sits outside the card system (backlog #d6wxo)
 
-**Decided by Lutan, 2026-11-14, in writing.** Offered three shapes for the portal's gate: (1) an ordinary app login holding
+**Decided by Lutan in writing (the backlog item dates his answer 2026-11-14; recorded here 2026-11-13).** Offered three shapes for the portal's gate: (1) an ordinary app login holding
 one new card, scoped by a database rule to the residents they adopted; (2) a website-only account outside the card system;
 (3) not now. He chose (2), was told it "needs you to agree an exception to your zero-exceptions rule, so I'd want it in
 writing from you", and answered: **"Yes, an exception."**

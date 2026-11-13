@@ -4,19 +4,19 @@
 
 | | |
 |---|---|
-| Feature | Record Lutan's 2026-11-14 exception for the adopter/foster-carer website account in `CLAUDE.md` |
+| Feature | Record Lutan's 2026-11-13 exception for the adopter/foster-carer website account in `CLAUDE.md` |
 | Backlog item | `docs/backlog.md` → #d6wxo (left open: the portal itself is not built) |
 | Branch / worktree | `claude/record-card-exception` @ `C:\Development\Animal_Shelter_record-card-exception` |
 | Dev server | not started — documentation only |
 | PR | pending |
-| Tested by / date | Claude / 2026-11-14 |
+| Tested by / date | Claude / 2026-11-13 |
 | Carries a migration? | no |
 | Tested at SHA | pending |
 
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence, and it matches what the backlog item asked for — records the one scoped exception in `CLAUDE.md`
-- [x] Files/areas touched listed — `CLAUDE.md`, `docs/decisions/2026-11-14-adopter-portal-card-exception.md`, this plan
+- [x] Files/areas touched listed — `CLAUDE.md`, `docs/decisions/2026-11-13-adopter-portal-card-exception.md`, this plan
 - [x] Roles affected identified — none; no code, policy or check changed
 - [x] Anything explicitly **out of scope** written down — the portal build, the registry record, the Admin bypass
 
@@ -66,7 +66,7 @@
 ## 7. Documentation
 
 - [ ] Backlog item ticked in `docs/backlog.md` — n/a: #d6wxo stays open, the portal is unbuilt; its note is the planner's to update
-- [x] Non-obvious design choices added as a new file in `docs/decisions/` — `2026-11-14-adopter-portal-card-exception.md`
+- [x] Non-obvious design choices added as a new file in `docs/decisions/` — `2026-11-13-adopter-portal-card-exception.md`
 - [x] `README.md` still accurate — it does not describe the card rule
 - [ ] **Release notes.** — n/a: nobody using the app would notice a rules-file change
 - [x] Commit messages say why, not just what
@@ -124,7 +124,7 @@
 - [x] Everything in this checklist that could be verified without human eyes was run, not assumed
 - [x] Nothing is ticked that was not actually executed
 
-Automated checks by: Claude  Date: 2026-11-14
+Automated checks by: Claude  Date: 2026-11-13
 
 ### Manual verification
 
