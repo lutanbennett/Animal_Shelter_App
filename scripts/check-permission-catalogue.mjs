@@ -397,6 +397,9 @@ const EXEMPT = {
   "/donate": { public: true, why: "Public website: a site_pages page (SitePageView), the same text for every visitor, signed in or not." },
   "/friends": { public: true, why: "Public website: public_shelter_friends (0076)." },
   "/shop": { public: true, why: "Public website: public_shop_links (0285), shown entries only." },
+  "/shop/merch": { public: true, why: "Public website: public_merch_products and public_merch_variants (0369), shown entries only." },
+  "/shop/merch/checkout": { public: true, why: "Public cart and order form for a signed-out buyer; the order is written by the server action, which re-prices everything." },
+  "/shop/merch/order/[id]": { public: true, why: "Public order status read by the order unguessable id; shows status and tracking only." },
   "/friends/join": { public: true, why: "Public website: a site_pages page (SitePageView), the same text for every visitor, signed in or not." },
   "/r/[code]": {
     public: true,
@@ -513,6 +516,7 @@ for (const k of known) console.log(`KNOWN ${k}`);
 const GUARD = /\b(?:can|requirePermission|requireAdminUser|assertAdminRole|hasAdminRole|canEditItemSettings|refuseUnlessAdmin)\(/;
 const ADMIN_CHECK = /\b(?:requireAdminUser|assertAdminRole|hasAdminRole|refuseUnlessAdmin)\(/;
 const NO_ACTIVITY = {
+  "shop/merch/checkout/actions.ts": "the public checkout, signed out by definition: placeOrder (src/lib/merch/checkout.ts, recorded in the hard-coded-security registry) takes only variant ids and quantities and re-reads every price from the tables",
   "adopter-update/actions.ts": "an adopter holds no staff card on purpose (#l5gxn): sendAdopterUpdate verifies the email, takes the contact from loadAdopterScope and asks adopter_may_submit(contact, resident) before the one insert",
   "services/sterilisation/actions.ts": "the public sign-up, signed out by definition: written as the anon role with insert-only column grants (0233), so the database gate decides; it never reads a sign-up back",
   "account/password/actions.ts": "changes the signed-in user's own password and name; its one service-role call clears their own must-change flag after the password check",
