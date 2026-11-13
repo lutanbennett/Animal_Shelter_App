@@ -20,6 +20,9 @@
  *      the first resolver's output is measured and must not move). A control with no gate falls back to the
  *      page(s) that render its file: every host page's guard must imply the action's activity.
  *
+ * Two further gate shapes are traced: (iv) a tab-array gate (`tabs={cond ? ALL : ["a"]}` with `panels={{ b: ... }}` draws b only under cond) and
+ * (v) a prop-literal narrowing (a control under `mode === "x"` is not reached from a host page that only passes another literal).
+ *
  * Verdicts: OK / FINDING / UNRESOLVED (printed by name, never passed) / "no static activity" (counted, not judged:
  * the action asks no card in code we can read — public or self-service actions).
  * Admin is ignored on purpose (outside the card system); an activity no card grants is #c4vn7's ruling, not a control fault.
@@ -195,7 +198,14 @@ function gatesFor(node, file) {
     if (ts.isConditionalExpression(p) && p.whenTrue === cur) conds.push(p.condition);
     else if (ts.isBinaryExpression(p) && p.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken && p.right === cur) conds.push(p.left);
     else if (ts.isIfStatement(p) && p.thenStatement === cur) conds.push(p.expression);
-    else if (ts.isBlock(p) || ts.isSourceFile(p)) {
+    else if (ts.isPropertyAssignment(p) && p.parent && ts.isObjectLiteralExpression(p.parent) && p.parent.parent && ts.isJsxExpression(p.parent.parent) && p.parent.parent.parent && ts.isJsxAttribute(p.parent.parent.parent) && p.parent.parent.parent.name.getText() === "panels") {
+      // PATTERN (iv), the tab-array gate: `<Tabs tabs={cond ? ALL : ["a"]} panels={{ b: <X/> }}/>` draws panel b only when cond holds,
+      // because the other arm's literal array does not list b. The gate is a prop array, not a JSX condition.
+      const key = p.name.getText().replace(/^["']|["']$/g, "");
+      const tabs = p.parent.parent.parent.parent.properties.find((a) => ts.isJsxAttribute(a) && a.name.getText() === "tabs");
+      const tx = tabs && tabs.initializer && ts.isJsxExpression(tabs.initializer) ? tabs.initializer.expression : null;
+      if (tx && ts.isConditionalExpression(tx) && ts.isArrayLiteralExpression(tx.whenFalse) && tx.whenFalse.elements.every((e) => strLit(e) !== null) && !tx.whenFalse.elements.some((e) => strLit(e) === key)) conds.push(tx.condition);
+    } else if (ts.isBlock(p) || ts.isSourceFile(p)) {
       for (const st of p.statements) {
         if (st.pos >= cur.pos) break;
         if (ts.isIfStatement(st) && /\breturn\b|\bredirect\b|\bnotFound\b/.test(st.thenStatement.getText())) {
@@ -430,6 +440,35 @@ function reach(expr, file, depth = 3, seen = new Set()) {
   return out;
 }
 
+/**
+ * PATTERN (v), a prop-literal narrowing. A control drawn under `mode === "conversions"` (a prop of its component) is reached from a host
+ * page only if that page can pass mode="conversions". A host page that renders this file's component with a DIFFERENT string literal for
+ * that prop, and never with the matching one, never draws the control, so its guard is not the control's concern.
+ */
+function excludedByLiteral(node, f, hp) {
+  const lits = [];
+  for (let cur = node, p = node.parent; p; cur = p, p = p.parent) {
+    let c = null;
+    if (ts.isConditionalExpression(p) && p.whenTrue === cur) c = p.condition;
+    else if (ts.isBinaryExpression(p) && p.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken && p.right === cur) c = p.left;
+    if (c && ts.isBinaryExpression(c) && c.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken && ts.isIdentifier(c.left) && strLit(c.right) !== null) lits.push({ name: c.left.text, lit: strLit(c.right) });
+  }
+  if (!lits.length) return false;
+  const hf = path.join(ROOT, hp.file), sf = sfs.get(hf);
+  if (!sf) return false;
+  const seen = lits.map(() => ({ other: false, match: false }));
+  (function v(n) {
+    if ((ts.isJsxOpeningElement(n) || ts.isJsxSelfClosingElement(n)) && importMap.get(hf)?.get(n.tagName.getText().split(".")[0])?.file === f) {
+      for (const a of n.attributes.properties) {
+        if (!ts.isJsxAttribute(a) || !a.initializer) continue;
+        lits.forEach((l, i) => { if (a.name.getText() === l.name) { const val = ts.isStringLiteral(a.initializer) ? a.initializer.text : strLit(a.initializer.expression); if (val === l.lit || val === null) seen[i].match = true; else seen[i].other = true; } });
+      }
+    }
+    ts.forEachChild(n, v);
+  })(sf);
+  return seen.some((x) => x.other && !x.match);
+}
+
 // ---- walk every control ------------------------------------------------------------------------
 const CONTROL_ATTRS = new Set(["onClick", "onSubmit", "action", "formAction"]);
 const R = { controls: 0, withAction: 0, ok: 0, noActivity: 0, none: 0, findings: [], unresolved: [] };
@@ -484,7 +523,7 @@ for (const [f, sf] of sfs) {
           const armGates = u.branch && u.branch.positive ? resolveCondition(u.branch.cond, u.branch.file).acts : [];
           const allGate = [...gates.acts, ...callerGates.acts, ...armGates, ...submitGates];
           if (allGate.some((g) => needU.some((d) => sat(g, d)))) { outcomes.push("gate"); continue; }
-          const hosts = [...hostPages(u.caller ? u.caller.file : f)].map((h) => pages.get(h));
+          const hosts = [...hostPages(u.caller ? u.caller.file : f)].map((h) => pages.get(h)).filter((hp) => u.caller || !excludedByLiteral(el2, f, hp));
           const hostOk = (hosts.length > 0 && hosts.every((hp) => hp.opens.length && opensAll(hp.opens, needU))) || (u.caller ? sameFileOk(u.caller.node, u.caller.file, needU) : sameFileOk(el, f, needU));
           if (hostOk) { outcomes.push("host"); continue; }
           outcomes.push("bad");

@@ -323,6 +323,26 @@ begin
   end if;
 
   -- ---------------------------------------------------------------------
+  -- H. A foundation paper and a bill with a receipt (#t1zyc B, #98se8 residue a): what the
+  --    View foundation papers and View expenses cards are pressed against. Fake Drive ids,
+  --    so the list and the link are real and only the final byte-fetch is not.
+  -- ---------------------------------------------------------------------
+  if not exists (select 1 from foundation_documents where title = 'ZZ fixture paper') then
+    insert into foundation_documents (category, title, note, drive_file_id, file_name, content_type)
+    values ('minutes', 'ZZ fixture paper', 'A fixture, not a real paper.', 'zz-fixture-paper', 'ZZ fixture paper.pdf', 'application/pdf');
+  end if;
+  select id into v_bill from general_bills where note = 'ZZ fixture general bill' limit 1;
+  if v_bill is null then
+    insert into general_bills (kind_id, bill_date, amount, note, added_by)
+    values ((select id from bill_kinds where archived_at is null order by key limit 1), current_date - 1, 321, 'ZZ fixture general bill', v_taker)
+    returning id into v_bill;
+  end if;
+  if not exists (select 1 from attachments where owner_type = 'general_bill' and owner_id = v_bill) then
+    insert into attachments (owner_type, owner_id, sub_folder, drive_file_id, file_name, uploaded_by, media_kind)
+    values ('general_bill', v_bill, 'Bills', 'zz-fixture-receipt', 'ZZ fixture receipt.jpg', v_taker, 'photo');
+  end if;
+
+  -- ---------------------------------------------------------------------
   -- G. A living resident with a running diet AND a live prescription
   --    (row 11b the per-row diet controls, row 11c /operations/feeding-list
   --    and /operations/medication-list). Borrows the first recipe and first
@@ -397,6 +417,9 @@ begin
     and owner_id in (select id from bills_inbox where note like 'ZZ fixture bill %');
   delete from bills_inbox where note like 'ZZ fixture bill %';
   delete from maintenance where title = 'ZZ fixture bill job';
+  delete from foundation_documents where title = 'ZZ fixture paper';
+  delete from attachments where owner_type = 'general_bill' and owner_id in (select id from general_bills where note = 'ZZ fixture general bill');
+  delete from general_bills where note = 'ZZ fixture general bill';
   delete from contacts where name = 'ZZ fixture friend';
   delete from recurring_job_occurrence_assignees where job_id in (select id from recurring_jobs where title = 'ZZ fixture daily job');
   delete from recurring_job_occurrences where job_id in (select id from recurring_jobs where title = 'ZZ fixture daily job');

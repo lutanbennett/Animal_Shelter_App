@@ -416,7 +416,7 @@ const EXEMPT = {
   "/home": { why: `The dispatcher every app role lands on: sends each to its configured home, or shows the tiles homeTilesFor(perms) derives from the registry, so every tile is a page E pins. Refuses a role that does not open the app. ${APP}` },
   "/my": {
     why: `A person's own task list; each list in it is loaded only behind can() for its activity, so the page shows nothing a role may not see. ${APP}`,
-    decides: ["maintenance.jobs:read", "maintenance.progress", "recurring.manage"],
+    decides: ["maintenance.jobs:read", "maintenance.progress", "recurring.do_any", "recurring.do_own", "recurring.manage"],
   },
   "/manual": { why: `The user manual: text for every app role; the body greys the topics that are not the reader's but hides none. ${APP}` },
   "/releases": { why: `What changed in each release, for every app role. The environment line is behind can(system.status). ${APP}`, decides: ["system.status"] },

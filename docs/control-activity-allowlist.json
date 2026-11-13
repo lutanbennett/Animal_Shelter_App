@@ -1,33 +1,4 @@
 {
   "rule": "A control drawn for a login whose cards its own action refuses (backlog #79sqf). scripts/check-control-activity.mjs fails on any finding not listed here and on any entry that is no longer a finding. Each entry is an unfixed fault or a recorded false positive from the check's first run (2026-11-11): FIX it and delete the entry, never treat it as a ruling that it is fine. Never add an entry to make a new control pass: draw the control only when can() asks the activity its action asks. Shrink-only.",
-  "entries": [
-    {
-      "file": "src/app/my/MyTaskList.tsx",
-      "control": "<ActionButton onClick> recordRecurringJob",
-      "found": "gated on maintenance.progress:edit; its action asks recurring.do_any:edit, recurring.do_own:edit",
-      "date": "2026-11-11",
-      "reason": "READ, FALSE POSITIVE of the check, narrowed 2026-11-11 (claude/control-check-false-positives): takeBack reaches recordRecurringJob only when `occursOn` is set, which is `item.kind === \"recurring\"`, and the button is drawn under `item.kind === \"recurring\" || canEditMaintenance`; the maintenance arm (setMaintenanceStatus) is now judged separately and passes on canEditMaintenance. What is left is that the recurring arm's guard is a PREDICATE ON THE ITEM, not a card (a recurring row only reaches Done-today because this login recorded it), which the check cannot relate to the gate. Needs predicate implication, not a new case."
-    },
-    {
-      "file": "src/components/ResidentPicker.tsx",
-      "control": "<RowActionButton onClick> setFeaturedResident",
-      "found": "no gate; host page(s) admin/website do not imply website.content:edit (passed by src/app/admin/website/FeaturedResident.tsx)",
-      "date": "2026-11-11",
-      "reason": "READ, FALSE POSITIVE of the check (2026-11-11, #79sqf, narrowed by claude/control-check-false-positives): the callback is now judged per caller, and the only caller with an action is FeaturedResident.tsx (the memes callers run none). What is left is a gate the check does not trace: /admin/website draws its Home tab, which holds FeaturedResident, only when `tabs={canContent ? WEBSITE_TABS : [\"gallery\"]}` (page.tsx:240), a prop ARRAY, not a JSX condition. Resolving it needs the tab-array gate taught, a fourth pattern."
-    },
-    {
-      "file": "src/components/ResidentPicker.tsx",
-      "control": "<ActionButton onClick> setFeaturedResident",
-      "found": "no gate; host page(s) admin/website do not imply website.content:edit (passed by src/app/admin/website/FeaturedResident.tsx)",
-      "date": "2026-11-11",
-      "reason": "READ, FALSE POSITIVE of the check (2026-11-11, #79sqf, narrowed by claude/control-check-false-positives): the callback is now judged per caller, and the only caller with an action is FeaturedResident.tsx (the memes callers run none). What is left is a gate the check does not trace: /admin/website draws its Home tab, which holds FeaturedResident, only when `tabs={canContent ? WEBSITE_TABS : [\"gallery\"]}` (page.tsx:240), a prop ARRAY, not a JSX condition. Resolving it needs the tab-array gate taught, a fourth pattern."
-    },
-    {
-      "file": "src/components/UnitsPanel.tsx",
-      "control": "<ActionButton onClick> deleteConversion",
-      "found": "no gate; host page(s) management/medications, management/diets do not imply diets.settings:edit, reference.types:edit",
-      "date": "2026-11-11",
-      "reason": "READ, FALSE POSITIVE (2026-11-11, #79sqf): the Delete button is drawn only when `mode === \"conversions\"`, which only /admin/medications passes, and that page refuses unless `canEditItemSettings(perms, \"medication\")`, exactly what mayEditMeasures() asks for a medicine. The diets and management/medications hosts pass `mode=\"price\"` and never draw it. A prop-conditional the check does not trace."
-    }
-  ]
+  "entries": []
 }
