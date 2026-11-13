@@ -2390,6 +2390,7 @@ const manual: Manual = {
           id: "foundation-papers",
           title: "The foundation's papers",
           activity: "foundation.papers",
+          activityLevel: "read",
           path: "Foundation papers",
           intro:
             "One safe place for the foundation's own papers: the bylaws, the registration certificate and licences, the minutes, the financial statements, the tax ID, and each month's bank statement and reconciliation. Only people given the Foundation papers card can see them.",

@@ -71,7 +71,8 @@ export type NewCardKey =
   | "diet_settings"
   | "approve_text"
   | "foundation_papers"
-  | "foundation_id_copies";
+  | "foundation_id_copies"
+  | "view_foundation_papers";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -220,6 +221,8 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // board members' ID copies: those are their own activity and their own card, a much narrower audience. Given to no role.
   foundation_papers: { includes: [], bundle: [{ activity: "foundation.papers", level: "edit" }], opens: "/management/foundation-papers" },
   foundation_id_copies: { includes: [], bundle: [{ activity: "foundation.id_copies", level: "edit" }], opens: "/management/foundation-papers/board-ids" },
+  // 0368 (#t1zyc B): the same papers at READ only, for an outside accountant. Never the ID copies: those stay their own, narrower card.
+  view_foundation_papers: { includes: [], bundle: [{ activity: "foundation.papers", level: "read" }], opens: "/management/foundation-papers" },
   recurring_jobs: {
     includes: [],
     bundle: [{ activity: "recurring.manage" }, { activity: "recurring.do_any" }, { activity: "recurring.do_own" }],
@@ -505,6 +508,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   approve_text: (t) => t.appHome.cards.approveText,
   foundation_papers: (t) => t.appHome.cards.foundationPapers,
   foundation_id_copies: (t) => t.appHome.cards.foundationIdCopies,
+  view_foundation_papers: (t) => t.appHome.cards.viewFoundationPapers,
   food_forecast: (t) => t.appHome.cards.foodForecast,
   medicine_forecast: (t) => t.appHome.cards.medicineForecast,
   view_cashflow: (t) => t.appHome.cards.viewCashflow,
