@@ -39,7 +39,7 @@ export default async function AdopterUpdatePage() {
       <header className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">{a.pageTitle}</h1>
-          <p className="mt-1 text-sm text-muted">{a.intro}</p>
+          <p className="mt-1 text-sm text-muted">{scope.residents.length > 0 && scope.residents.every((r) => r.fostered) ? a.introFoster : a.intro}</p>
         </div>
         <SignOutButton className="whitespace-nowrap rounded py-1 text-sm font-medium text-foreground hover:text-primary" />
       </header>
@@ -49,6 +49,7 @@ export default async function AdopterUpdatePage() {
         return (
           <section key={r.residentId} className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4">
             <h2 className="text-lg font-semibold text-foreground">{r.name}{r.code ? ` (${r.code})` : ""}</h2>
+            <p className="text-sm text-muted">{r.fostered ? a.placementFostered : a.placementAdopted}</p>
             <AdopterUpdateForm residentId={r.residentId} />
             {own.length > 0 && (
               <ul className="flex flex-col gap-2">
