@@ -413,6 +413,25 @@ every note carried across unchanged, nothing lost, nothing invented,
 `package.json` equals the newest entry, the file order still matches
 `compareVersions`, and the notes render with no `[object Object]` or `undefined`.
 
+**WHEN THE CUT PUBLISHES AN OWED NOTE, `--verify` NEEDS AN EXPLICIT BASE — AND TWO RELEASES RUNNING
+HAVE WORKED THAT OUT FROM SCRATCH.** `--verify` compares with `origin/main:src/lib/releases.ts`, and
+that **stops being the pre-cut state the moment the cut adds a note** — which the deferred-note step
+above tells you to do whenever a release closes a held-back note's step. Two assertions then fail on a
+count that is correct: `[6 vs 5]` on `0.44.3`, `[10 vs 9]` on `0.45.0`. **Do not read that as a bad
+cut, and never "fix" it by dropping the note.** Build the base yourself — `origin/main`'s `unreleased`
+plus exactly the note you added — and pass it:
+
+```bash
+MSYS_NO_PATHCONV=1 git show origin/main:src/lib/releases.ts > "$TMPDIR/base-releases.ts"
+# insert the one added note into that file's `unreleased` array, then:
+node scripts/cut-release.mjs <version> <date> <major|minor> --verify --base "$TMPDIR/base-releases.ts"
+```
+
+All 17 then pass, and *every note carried across character-identical* still means something — which is
+the whole point. A base of `origin/main` **plus your own note** is the only base against which the
+carried notes and the added one are both asserted rather than waved through. Record which base you
+built and why.
+
 Then `node scripts/gates.mjs` (must end `typecheck=0 lint=0 test=0 build=0`),
 `node scripts/check-release-guards.mjs`, a filled-in
 `docs/test-plans/cut-release-<version>.md`, `gh pr create`, CI green, merge.
