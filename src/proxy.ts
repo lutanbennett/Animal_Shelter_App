@@ -14,6 +14,8 @@ import { isPublicPage, thPathRest } from "@/lib/public-paths";
 const STATUS_ALERTS_PATH = "/api/status/alerts";
 /** Same for the calendar sweep (src/app/api/calendar/sweep/route.ts). */
 const CALENDAR_SWEEP_PATH = "/api/calendar/sweep";
+/** The merchandise shop's daily supplier email (src/app/api/merch/supplier-emails/route.ts): same bearer guard. */
+const MERCH_SUPPLIER_EMAILS_PATH = "/api/merch/supplier-emails";
 /** The read-only health feed Home Assistant polls (src/app/api/status/health/route.ts): GET only, guarded by its own bearer token. */
 const STATUS_HEALTH_PATH = "/api/status/health";
 
@@ -42,7 +44,7 @@ export default async function proxy(request: NextRequest) {
       return NextResponse.redirect(`https://${to}${request.nextUrl.pathname}${request.nextUrl.search}`, 307);
     }
   }
-  if ((request.nextUrl.pathname === STATUS_ALERTS_PATH || request.nextUrl.pathname === CALENDAR_SWEEP_PATH) && request.method === "POST") {
+  if ((request.nextUrl.pathname === STATUS_ALERTS_PATH || request.nextUrl.pathname === CALENDAR_SWEEP_PATH || request.nextUrl.pathname === MERCH_SUPPLIER_EMAILS_PATH) && request.method === "POST") {
     return NextResponse.next();
   }
   if (request.nextUrl.pathname === STATUS_HEALTH_PATH && request.method === "GET") {

@@ -19,6 +19,8 @@ import { updateSupplier } from "./actions";
 export type SupplierRow = Supplier & {
   /** Shelter Friend profile (0336): null when there is none, else whether it is published. */
   friend_published: boolean | null;
+  /** How merchandise orders reach this supplier (0369): a value with room to grow, today only daily_email. */
+  delivery_method: string;
 };
 
 /** The two boxes as they open for editing (a link at the front of the address opens already split, as for contacts). */
@@ -48,6 +50,7 @@ function SupplierRowItem({ supplier, canEdit }: { supplier: SupplierRow; canEdit
   const [address, setAddress] = useState(() => placeFields(supplier).address);
   const [mapUrl, setMapUrl] = useState(() => placeFields(supplier).mapUrl);
   const [notes, setNotes] = useState(supplier.notes ?? "");
+  const [deliveryMethod, setDeliveryMethod] = useState(supplier.delivery_method);
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -63,13 +66,14 @@ function SupplierRowItem({ supplier, canEdit }: { supplier: SupplierRow; canEdit
     setAddress(place.address);
     setMapUrl(place.mapUrl);
     setNotes(supplier.notes ?? "");
+    setDeliveryMethod(supplier.delivery_method);
   }
 
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
       const result = await updateCall((requestId) =>
-        updateSupplier(supplier.id, { name, phone, email, lineId, messengerId, whatsapp, address, mapUrl, notes }, requestId),
+        updateSupplier(supplier.id, { name, phone, email, lineId, messengerId, whatsapp, address, mapUrl, notes, deliveryMethod }, requestId),
       );
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
@@ -153,7 +157,19 @@ function SupplierRowItem({ supplier, canEdit }: { supplier: SupplierRow; canEdit
         </td>
         <td className="px-4 py-2">
           {editing ? (
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t.management.suppliers.createForm.notesPlaceholder} rows={2} className={`${inputClass} min-w-48`} />
+            <div className="flex flex-col gap-1">
+              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t.management.suppliers.createForm.notesPlaceholder} rows={2} className={`${inputClass} min-w-48`} />
+              <label className="flex flex-col text-xs text-muted">
+                {t.merchStaff.deliveryMethod}
+                <select value={deliveryMethod} onChange={(e) => setDeliveryMethod(e.target.value)} className={inputClass}>
+                  {Object.entries(t.merchStaff.deliveryMethods).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
           ) : (
             <span className="line-clamp-2 max-w-xs whitespace-pre-line text-muted">{supplier.notes ?? t.common.dash}</span>
           )}

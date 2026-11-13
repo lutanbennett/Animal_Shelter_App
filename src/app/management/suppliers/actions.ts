@@ -38,6 +38,8 @@ export type SupplierFields = {
   address: string | null;
   mapUrl: string | null;
   notes: string | null;
+  /** Optional: only the management screen sends it. Checked by the database against the known methods (0369). */
+  deliveryMethod?: string;
 };
 
 function optional(value: FormDataEntryValue | string | null | undefined) {
@@ -118,6 +120,7 @@ export async function updateSupplier(id: string, fields: SupplierFields, request
         address: place.address,
         map_url: place.map_url,
         notes: optional(fields.notes),
+        ...(fields.deliveryMethod ? { delivery_method: fields.deliveryMethod } : {}),
       })
       .eq("id", id)
       .select("id");

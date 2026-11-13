@@ -268,6 +268,16 @@
       "guard": "A shared secret in the request, not a session."
     },
     {
+      "file": "src/app/api/merch/supplier-emails/route.ts",
+      "for": "The merchandise shop daily supplier email run by the Worker's cron.",
+      "guard": "A shared secret in the request, not a session."
+    },
+    {
+      "file": "src/lib/merch/supplier-email.ts",
+      "for": "Reads paid, unsent supplier order parts and marks them sent; the merch tables are card-only for logins and a cron has none.",
+      "guard": "Called only from the secret-guarded route above."
+    },
+    {
       "file": "src/app/api/reels/finish/route.ts",
       "for": "Records a finished reel upload (video_uploads is service role only).",
       "guard": "can(perms, \"social.library\") on the signed-in caller, before any read; the reels row itself is written as the caller."

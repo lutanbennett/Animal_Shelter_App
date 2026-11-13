@@ -195,6 +195,8 @@ const worker = {
     }
     // The shelter calendar's safety net: sends any vet visit that is out of date. Never throws.
     stages.push(await runCalendarSweep(env, ctx));
+    // The merchandise shop's supplier email: once a day, on the first tick after 09:00 in Thailand (02:00 UTC).
+    stages.push(await runMerchSupplierEmails(env, ctx, controller));
     // Machine-drafted translations (worker/translations.mjs) share the trigger.
     // After the alerts so they can never delay one; runTranslations does not throw.
     await runTranslations(env);
@@ -222,6 +224,26 @@ async function runCalendarSweep(env, ctx) {
   } catch (err) {
     console.error(`calendar-sweep: ${err?.message ?? err}`);
     return `calendar-sweep: failed, ${err?.message ?? err}`;
+  }
+}
+
+async function runMerchSupplierEmails(env, ctx, controller) {
+  const at = new Date(controller.scheduledTime ?? Date.now());
+  // The cron fires every 15 minutes; the email is once a day, so only the 02:00-02:14 UTC tick runs it.
+  if (at.getUTCHours() !== 2 || at.getUTCMinutes() >= 15) return "merch-supplier-emails: not due";
+  if (!env.STATUS_ALERT_SITE) return "merch-supplier-emails: skipped, not set: STATUS_ALERT_SITE";
+  try {
+    const request = new Request(`${env.STATUS_ALERT_SITE}/api/merch/supplier-emails`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY ?? ""}` },
+    });
+    const response = await openNext.fetch(request, env, ctx);
+    const log = response.ok ? console.log : console.error;
+    log(`merch-supplier-emails: ${response.status} ${await response.text()}`);
+    return `merch-supplier-emails: ${response.status}`;
+  } catch (err) {
+    console.error(`merch-supplier-emails: ${err?.message ?? err}`);
+    return `merch-supplier-emails: failed, ${err?.message ?? err}`;
   }
 }
 
