@@ -77,6 +77,7 @@ export default async function MyPage() {
         today={today}
         canManage={can(perms, "recurring.manage")}
         canEditMaintenance={can(perms, "maintenance.progress")}
+        canRecordRecurring={can(perms, "recurring.do_any") || can(perms, "recurring.do_own")}
       />
     </main>
   );
