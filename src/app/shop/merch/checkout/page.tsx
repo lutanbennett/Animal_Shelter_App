@@ -11,7 +11,7 @@ import { CheckoutForm } from "./CheckoutForm";
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getT();
   // Per-buyer page: never indexed, and never edge-cached (NOT_EDGE_CACHED_PAGE_PREFIXES).
-  return { title: `${t.merchShop.checkoutTitle} · ${t.header.appName}`, robots: { index: false, follow: false } };
+  return { title: `${t.merchShop.checkoutTitle} · ${t.header.appName}`, robots: { index: false } };
 }
 
 /** /shop/merch/checkout: the cart (kept in the browser) and the order form. The server prices everything again. */

@@ -14,6 +14,8 @@ export function CheckoutForm({ text, currencies, shopHref }: { text: Text; curre
   const [region, setRegion] = useState<"thailand" | "overseas">("thailand");
   const [state, action, pending] = useActionState<OrderFormState, FormData>(submitOrder, { error: null });
 
+  // The cart lives in localStorage, which the server cannot read: it is loaded once after the first render.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setCart(readCart()), []);
 
   if (cart === null) return null;

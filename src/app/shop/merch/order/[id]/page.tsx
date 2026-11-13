@@ -16,7 +16,7 @@ import { loadPublicDonationChannels, channelText } from "@/lib/site/donation-cha
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getT();
   // Per-buyer page: never indexed, and never edge-cached (NOT_EDGE_CACHED_PAGE_PREFIXES).
-  return { title: `${t.merchShop.orderTitle} · ${t.header.appName}`, robots: { index: false, follow: false } };
+  return { title: `${t.merchShop.orderTitle} · ${t.header.appName}`, robots: { index: false } };
 }
 
 const baht = (n: number) => `฿${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
