@@ -58,18 +58,26 @@
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`
 
 ```
-=== gates: typecheck exited 0 after 27s
-=== gates: lint exited 0 after 182s
-=== gates: test exited 0 after 35s
-=== gates: build exited 0 after 101s
+=== gates: typecheck exited 0 after 72s
+=== gates: lint exited 0 after 179s
+=== gates: test exited 0 after 33s
+=== gates: build exited 0 after 114s
 
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-  Run in this worktree after `sync`, with all three of this PR's files on disk. The first run of
-  the day was piped into `tail -30`, which threw away the three earlier per-gate lines, so it was
-  re-run without the pipe rather than reconstructing them — those timings are the part only a real
-  run has, which is the whole point of pasting them.
+  Run in this worktree with all three of this PR's files on disk, **after the second `sync`** —
+  which brought in the `bills-chips` stream, including code under `src/`. An earlier run had
+  already passed, but its figures described the branch before that merge, so it was run again
+  rather than left to describe content that had moved. Those per-gate timings are the part only a
+  real run has, which is why they are pasted rather than retyped. (A first attempt was piped into
+  `tail -30`, which threw away the three earlier per-gate lines; it was re-run without the pipe
+  rather than reconstructing them.)
+
+  **This matters more than usual on this PR: CI skipped the gates.** The run is docs-only, so
+  `check-docs-only.mjs` set `docs-only=true` and 14 of the 17 jobs skipped — the `check` job that
+  runs these same four gates among them. The three that ran (`changes`, `decision-dates`,
+  `test-plan`) all passed. So this block is the only gate evidence for this change, by design.
 
 - [ ] CI green on the PR (runs the same four gates, among its other checks) — n/a: not yet — the PR does not exist at this commit
 
