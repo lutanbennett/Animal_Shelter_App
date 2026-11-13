@@ -30,3 +30,11 @@ which are the ones merged after the list was made, so they were never read. Afte
 
 - A supplier is ซัพพลายเออร์ on the shop staff pages and ผู้จัดจำหน่าย on the Who does what screen.
 - A size is ขนาด on the shop staff pages and ไซซ์ on the Who does what screen.
+
+## Second run (2026-11-14)
+
+- **List:** `node scripts/list-thai-added.mjs 2026-11-12 --skip-read 2026-11-12..4bf320928` at commit `4644759ef`: 126 strings (25 new, 101 Thai changed).
+- **Read:** the 25 new strings (admin 9, management 10, merchStaff 6), by a bilingual reader beside Lutan. **All passed, none changed.**
+- **Not shown:** the 101 "Thai changed" strings, which are the บัตรสิทธิ์ rewording already ruled on 2026-11-13.
+- **Seen:** the "by 7" in `ratesSetOn` is the list tool's placeholder for `${who}`, not real text.
+- **Next run:** pass both ranges: `--skip-read 2026-11-12..4bf320928 --skip-read 4bf320928..4644759ef`
