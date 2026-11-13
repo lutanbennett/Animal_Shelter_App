@@ -291,6 +291,7 @@ function LabelCard({
     draft_source_text: null,
     draft_proposed_at: null,
     draft_proposed_by: null,
+    draft_proposed_by_name: null,
   };
   /** What a label with no live Thai reads as once nothing is waiting on it. */
   const statusWithoutThai: LabelStatus = item.optional ? "as_typed" : "missing";
@@ -351,6 +352,7 @@ function LabelCard({
           draft_source_text: item.source_text,
           draft_proposed_at: new Date().toISOString(),
           draft_proposed_by: viewerId,
+          draft_proposed_by_name: null,
         });
       },
     );
@@ -424,9 +426,11 @@ function LabelCard({
             {draft}
           </p>
           <p className="mt-1 text-xs text-muted">
-            {(item.draft_proposed_by && viewerId && item.draft_proposed_by === viewerId
-              ? tr.proposedByYou
-              : tr.proposedBySomeone)(formatDate(item.draft_proposed_at, locale))}
+            {item.draft_proposed_by && viewerId && item.draft_proposed_by === viewerId
+              ? tr.proposedByYou(formatDate(item.draft_proposed_at, locale))
+              : item.draft_proposed_by_name
+                ? tr.proposedByName(item.draft_proposed_by_name, formatDate(item.draft_proposed_at, locale))
+                : tr.proposedBySomeone(formatDate(item.draft_proposed_at, locale))}
           </p>
           {draftStale && (
             <p className="mt-2 rounded border border-warning/40 bg-warning/10 p-2 text-xs text-foreground">
