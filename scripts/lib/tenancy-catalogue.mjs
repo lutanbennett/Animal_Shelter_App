@@ -15,6 +15,16 @@ export const ALLOWED = {
       "a re-owned role reads 0 rows. Stays owned by postgres and takes the tenant filter by hand in its join to user_roles " +
       "(multi-tenancy spike, 'What fought back' 2).",
   },
+  "function:public.login_display_name": {
+    reason:
+      "reads auth.users (RLS on, no policy; postgres cannot add one), so a re-owned role reads 0 rows. Stays owned by postgres; " +
+      "it must take the tenant filter by hand when the tenancy build lands (docs/decisions/2026-11-14-tenancy-reown.md).",
+  },
+  "function:public.label_translations": {
+    reason:
+      "builds dynamic SQL and reaches auth.users, which a re-owned role is refused (42501, measured by " +
+      "scripts/regress-tenancy-reown.mjs 2026-11-14). Stays owned by postgres (docs/decisions/2026-11-14-tenancy-reown.md).",
+  },
 };
 
 // Role that will own tenant-safe objects once the re-own stream has run. None exists yet.
