@@ -87,6 +87,15 @@ recurring as (
          (select count(*) from recurring_job_occurrences o where o.job_id = j.id and o.occurs_on = shelter_today()) done_today
     from recurring_jobs j where j.title = 'ZZ fixture daily job'
 ),
+friend as (
+  select c.name, sf.published from contacts c join shelter_friends sf on sf.contact_id = c.id where c.name = 'ZZ fixture friend'
+),
+dietrx as (
+  select r.name,
+         (select count(*) from resident_diets d where d.resident_id = r.id and d.end_date is null) diets,
+         (select count(*) from prescriptions p where p.resident_id = r.id and p.end_date is null and p.archived_at is null) rx
+    from residents r where r.name = 'ZZ fixture diet and prescription'
+),
 kinds as (
   select count(*) filter (where key in ('materials', 'cleaning_products')) general_kinds,
          count(*) filter (where key = 'utilities') utility_kinds
@@ -104,6 +113,10 @@ select 'a job for match-bill-to-job (row 9)', coalesce((select job_code || ' ' |
 union all
 select 'recurring job for /my take-back (row 1)',
        coalesce((select title || ': ' || assignees || ' assignee(s), acted-on today=' || done_today from recurring), 'MISSING (pass --login <email>)')
+union all
+select 'a Shelter Friend supplier (row 11a)', coalesce((select name || ': published=' || published from friend), 'MISSING')
+union all
+select 'resident with a diet and a prescription (rows 11b, 11c)', coalesce((select name || ': ' || diets || ' running diet(s), ' || rx || ' live prescription(s)' from dietrx), 'MISSING')
 union all
 select 'bill kinds the press needs', (select 'general-route ' || general_kinds || ', utility-route ' || utility_kinds from kinds)
 -- The same four questions asked of the WHOLE of dev, not just this script's rows: a stream should know
@@ -138,6 +151,10 @@ declare
   v_photo_res uuid;
   v_bill uuid;
   v_job uuid;
+  v_diet_res uuid;
+  v_diet uuid;
+  v_med uuid;
+  v_contact uuid;
   i int;
 begin
   -- 0026's lock makes a deceased resident's record read-only, which is exactly the state fixture A
@@ -281,6 +298,53 @@ begin
     delete from recurring_job_occurrences where job_id = v_job and occurs_on = shelter_today();
   end if;
 
+  -- ---------------------------------------------------------------------
+  -- F. A supplier marked as a Shelter Friend (row 11a). The card is
+  --    publish_shelter_friends and it already exists; what the page needs
+  --    is a row to draw its controls against. Unpublished, so the website
+  --    never shows it.
+  -- ---------------------------------------------------------------------
+  select id into v_contact from contacts where name = 'ZZ fixture friend' limit 1;
+  if v_contact is null then
+    insert into contacts (name, type) values ('ZZ fixture friend', 'Vendor') returning id into v_contact;
+  end if;
+  if not exists (select 1 from shelter_friends where contact_id = v_contact) then
+    insert into shelter_friends (contact_id, blurb, help_kind, published, sort_order)
+    values (v_contact, 'ZZ fixture: a supplier to press the Shelter Friend controls against.', 'Discount', false, 9999);
+  end if;
+
+  -- ---------------------------------------------------------------------
+  -- G. A living resident with a running diet AND a live prescription
+  --    (row 11b the per-row diet controls, row 11c /operations/feeding-list
+  --    and /operations/medication-list). Borrows the first recipe and first
+  --    medication on dev; makes neither.
+  -- ---------------------------------------------------------------------
+  select id into v_diet_res from residents where name = 'ZZ fixture diet and prescription' limit 1;
+  if v_diet_res is null then
+    insert into residents (name, species, intake_date, created_by)
+    values ('ZZ fixture diet and prescription', 'Dog', current_date - 30, v_taker)
+    returning id into v_diet_res;
+  end if;
+  if not exists (select 1 from placement_history where resident_id = v_diet_res and end_date is null) then
+    select e.id into v_encl from enclosures e join zones z on z.id = e.zone_id
+     where z.name = 'Lifecycle' and e.name = 'Unassigned' limit 1;
+    insert into placement_history (resident_id, placement_type, start_date, zone_id, enclosure_id, created_by)
+    values (v_diet_res, 'Intake', now() - interval '30 days',
+            (select zone_id from enclosures where id = v_encl), v_encl, v_taker);
+  end if;
+  select id into v_diet from diets order by name limit 1;
+  if v_diet is null then raise exception 'dev has no diet recipe to give the fixture resident'; end if;
+  if not exists (select 1 from resident_diets where resident_id = v_diet_res and end_date is null) then
+    insert into resident_diets (resident_id, diet_id, start_date, meals_per_day, created_by)
+    values (v_diet_res, v_diet, current_date - 7, 2, v_taker);
+  end if;
+  select id into v_med from medication order by name limit 1;
+  if v_med is null then raise exception 'dev has no medication to prescribe'; end if;
+  if not exists (select 1 from prescriptions where resident_id = v_diet_res and end_date is null and archived_at is null) then
+    insert into prescriptions (resident_id, medication_id, start_date, dose_quantity, schedule_unit, schedule_every, created_by)
+    values (v_diet_res, v_med, current_date - 3, 1, 'day', 1, v_taker);
+  end if;
+
   perform set_config('app.deceased_lock_bypass', 'off', true);
 end $fx$;
 `;
@@ -297,12 +361,15 @@ begin
     and owner_id in (select id from bills_inbox where note like 'ZZ fixture bill %');
   delete from bills_inbox where note like 'ZZ fixture bill %';
   delete from maintenance where title = 'ZZ fixture bill job';
+  delete from contacts where name = 'ZZ fixture friend';
   delete from recurring_job_occurrence_assignees where job_id in (select id from recurring_jobs where title = 'ZZ fixture daily job');
   delete from recurring_job_occurrences where job_id in (select id from recurring_jobs where title = 'ZZ fixture daily job');
   delete from recurring_job_assignees where job_id in (select id from recurring_jobs where title = 'ZZ fixture daily job');
   delete from recurring_jobs where title = 'ZZ fixture daily job';
 
   if v_res is not null then
+    delete from prescriptions where resident_id = any(v_res);
+    delete from resident_diets where resident_id = any(v_res);
     delete from attachments where owner_type = 'blood_test'
       and owner_id in (select id from blood_tests where resident_id = any(v_res));
     delete from blood_tests where resident_id = any(v_res);
