@@ -1,28 +1,18 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { refuseFor } from "@/lib/auth/require-role";
-import { loadPermissions } from "@/lib/permissions/load";
 import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
-import { canImportBills } from "@/lib/bills/import-access";
+import { requireAnyPermission } from "@/lib/permissions/require";
 import { loadImportCatalogue } from "@/lib/bills/import-load";
 import { tailoringOf } from "@/lib/bills/kinds";
 import { ImportBills } from "./ImportBills";
 
 /**
  * /bills/import — add many utility and general bills from a strict templated CSV. Opens for anyone who may file at least one
- * of the two (canImportBills: bills.utilities or bills.general); each row is then checked for its own destination's card.
- * Guarded like /bills itself, by hand, because the page opens on either of two activities.
+ * of the two (bills.utilities or bills.general); each row is then checked for its own destination's card.
+ * Opens on either of two activities, so it guards with requireAnyPermission naming both.
  */
 export default async function ImportBillsPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-  const perms = await loadPermissions();
-  if (!canImportBills(perms)) refuseFor(perms);
+  const { supabase, perms } = await requireAnyPermission(["bills.utilities", "bills.general"]);
 
   const mayRoute = { utility: can(perms, "bills.utilities"), general: can(perms, "bills.general") };
   const { t } = await getT();
