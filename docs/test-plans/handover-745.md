@@ -10,7 +10,7 @@
 | Backlog item | `docs/backlog.md` → none; the handover is a process document, written at the setup of a plan's last batch (`CLAUDE.md`, "Every PR merges on green") |
 | Branch / worktree | `claude/handover-745` @ `C:\Development\Animal_Shelter_handover-745` |
 | Dev server | not started — no code changed |
-| PR | PRNUMBER |
+| PR | https://github.com/lutanbennett/Animal_Shelter_App/pull/1566 |
 | Tested by / date | Claude (planner session) / 2026-11-13 |
 | Carries a migration? | no |
 | Tested at SHA | 53f0be2ed |
