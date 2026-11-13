@@ -960,6 +960,22 @@ export const ENTRIES = {
       expect: "An archived contact drops out of the pickers; a restored one returns.",
     },
   ],
+  "animal-reports": [
+    {
+      activity: "Read the animal reports from the public",
+      needs: "animal_report.manage",
+      device: "desktop",
+      do: "Open Management, then Animal reports.",
+      expect: "Reports sent in through the website are listed newest first, with what it is about, the animal, where, and how to reach the person.",
+    },
+    {
+      activity: "Mark an animal report In progress, Resolved or Dismissed",
+      needs: "animal_report.manage",
+      device: "desktop",
+      do: "On a report, choose a status and press Save.",
+      expect: "The page says Saved and the report shows the new status.",
+    },
+  ],
   "merch-shop": [
     {
       activity: "Add a product with sizes, stock and both postage prices",
