@@ -13,7 +13,7 @@
 | PR | filled in at `gh pr create` |
 | Tested by / date | Claude (Sonnet 5.5) / 2026-11-13 |
 | Carries a migration? | no |
-| Tested at SHA | SHA_PLACEHOLDER |
+| Tested at SHA | `7697528fd` |
 
 ## 1. Scope and risk
 
@@ -28,7 +28,15 @@
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`
 
 ```
-GATES_PLACEHOLDER
+=== gates: typecheck — npm run typecheck
+=== gates: typecheck exited 0
+=== gates: lint — npm run lint
+=== gates: lint exited 0
+=== gates: test — npm test
+=== gates: test exited 0
+=== gates: build — npm run build
+=== gates: build exited 0
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
