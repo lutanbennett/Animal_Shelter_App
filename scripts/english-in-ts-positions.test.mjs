@@ -61,9 +61,9 @@ test("rule 3 is still wired to the table", () => {
   assert.match(src, /namedArgPositions\(callee\)/);
 });
 
-test("RULE_3_BLOCKS is still false", () => {
-  // The flip waits on a Thai speaker reading the strings (#y1dqu) and on a day
-  // of PRs with no false positive. Not this stream's to make.
+test("RULE_3_BLOCKS is true: rule 3 fails the build", () => {
+  // Flipped 2026-11-13 after the uploads read and a sample of CI runs 9-13 Nov with no false positive
+  // (docs/decisions/2026-11-13-thai-read-finish.md).
   const src = readFileSync(path.join(here, "check-thai-dictionary.mjs"), "utf8");
-  assert.match(src, /const RULE_3_BLOCKS = false;/);
+  assert.match(src, /const RULE_3_BLOCKS = true;/);
 });

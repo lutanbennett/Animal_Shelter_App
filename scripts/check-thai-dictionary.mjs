@@ -429,14 +429,14 @@ function ruleTwo() {
 /* ---------------------------------------------------------------- rule 3 */
 
 /**
- * Rule 3 is REPORT-ONLY (it never fails the build). Same history as rule 2,
+ * Rule 3 BLOCKS since 2026-11-13 (it was report-only from 2026-11-03). Same history as rule 2,
  * which printed before it gated: the keys and callers for the routes came
  * first (t.uploads.errors), so what this lists is what a person can now act on.
  * What would have to be true before it blocks: a run of the check on a tree
  * with nothing flagged except named records, held for a day of PRs without a
  * false positive. docs/decisions/2026-11-03-thai-check-ts-extend.md.
  */
-const RULE_3_BLOCKS = false;
+const RULE_3_BLOCKS = true;
 
 /**
  * Rule 3's deliberate English in .ts files, by NAME and never as a count.

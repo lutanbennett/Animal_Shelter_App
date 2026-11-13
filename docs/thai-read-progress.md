@@ -10,9 +10,14 @@
 
 ## Next run
 
-Start the list from **2026-11-13** (strings added after this read):
-`node scripts/list-thai-added.mjs 2026-11-13`. Strings merged after 2026-11-13 and before the PR for this stream landed
-are not covered here, so a short list is normal.
+**Do not start from a date.** A date is not the boundary (a date-based list re-served about 300 already-read strings).
+The 2026-11-13 read covered the list as it stood at commit `4bf320928`. Run:
+
+`node scripts/list-thai-added.mjs 2026-11-12 --skip-read 2026-11-12..4bf320928`
+
+That leaves out everything the 2026-11-13 read covered (unless its English changed since). Measured 2026-11-13: 74 strings,
+which are the ones merged after the list was made, so they were never read. After the next read, add its own
+`<base>..<commit>` range beside this one and pass both. The 34 `uploads` strings (added 2026-11-03) were read in the finish session (2026-11-13), none changed. Of the 74, 66 were only the บัตรสิทธิ์ rewording and were not shown; the 8 new ones were read. Rulings applied then: supplier = ซัพพลายเออร์, size = ขนาด everywhere. Rule 3 now blocks. See `docs/decisions/2026-11-13-thai-read-finish.md`.
 
 ## What was changed
 
