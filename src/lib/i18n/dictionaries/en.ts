@@ -250,6 +250,7 @@ const en = {
     billsSettings: "Bills settings",
     billsUtilities: "Utility bills",
     billsGeneral: "Other bills",
+    billsImport: "Add from spreadsheet",
     vets: "Clinics",
     medications: "Medications",
     medicationList: "Medication list",

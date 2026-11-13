@@ -4,14 +4,14 @@ import { refuseFor } from "@/lib/auth/require-role";
 import { loadPermissions } from "@/lib/permissions/load";
 import { can } from "@/lib/permissions/can";
 import { canUseBills } from "@/lib/bills/access";
-import { canImportBills } from "@/lib/bills/import-access";
+import { canOpen, routeFor } from "@/lib/permissions/routes";
 import { getT } from "@/lib/i18n/get-t";
 import { localLabel } from "@/lib/translations/labels";
 import { appUserLabel, loadAppUsersById } from "@/lib/auth/app-users";
 import { formatDateTime, todayIso } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { kindsFor, tailoringOf, type BillKind } from "@/lib/bills/kinds";
-import Link from "next/link";
+import { ActionChips } from "@/components/ActionChips";
 import { BillsInbox, type BillCard, type BillSuggestion, type KindOption, type PlaceOption, type AccountOption } from "./BillsInbox";
 
 /** How far back a delivery or visit is offered as a likely match. */
@@ -38,6 +38,11 @@ export default async function BillsPage() {
 
   const { t, locale } = await getT();
   const b = t.bills;
+  // One chip per page that hangs off this one, each drawn only when the destination itself would open (same registry entry).
+  const chips = ["/bills/utilities", "/bills/general", "/bills/import", "/bills/settings"].flatMap((href) => {
+    const route = routeFor(href);
+    return route && canOpen(perms, route) ? [{ href, label: route.label(t) }] : [];
+  });
   const forDeliveries = can(perms, "stock.delivery");
   const forVisits = can(perms, "medical.visits", "edit");
   const forJobs = can(perms, "maintenance.bills");
@@ -216,26 +221,7 @@ export default async function BillsPage() {
         <p className="text-sm text-muted">{b.subtitle}</p>
       </div>
       {loadError && <p className="text-sm text-danger">{loadError.message}</p>}
-      {can(perms, "bills.utilities") && (
-        <Link href="/bills/utilities" className="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline">
-          {t.bills.utilities.open}
-        </Link>
-      )}
-      {can(perms, "bills.general") && (
-        <Link href="/bills/general" className="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline">
-          {t.bills.general.open}
-        </Link>
-      )}
-      {canImportBills(perms) && (
-        <Link href="/bills/import" className="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline">
-          {t.bills.import.open}
-        </Link>
-      )}
-      {can(perms, "bills.sites") && (
-        <Link href="/bills/settings" className="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline">
-          {b.settings.open}
-        </Link>
-      )}
+      <ActionChips chips={chips} />
       <BillsInbox cards={cardProps} suggestions={suggestions} canDeliver={forDeliveries} kinds={kindOptions} places={places} accounts={accountOptions} />
     </main>
   );
