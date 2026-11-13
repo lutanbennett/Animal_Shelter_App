@@ -60,6 +60,10 @@ export const AUDITED_TABLES = [
   // The four live counts on the home band, one switch each (0328): the name shown is the count's key.
   "public_stat_switches",
   "shop_links",
+  // The merchandise shop (0373). merch_orders is logged without the buyer's name, email, phone, address or note.
+  "merch_products",
+  "merch_orders",
+  "merch_order_parts",
   // Money in and out (0168, 0195, 0308).
   "donations",
   "donation_lines",
@@ -131,6 +135,9 @@ const NAME_FROM_IMAGE: Record<AuditedTable, NameColumns> = {
   site_content: { cols: [] },
   public_stat_switches: { cols: ["key"] },
   shop_links: { cols: ["title"] },
+  merch_products: { cols: ["name"] },
+  merch_orders: { cols: ["order_no"] },
+  merch_order_parts: { cols: [] },
   donations: { cols: ["donor_name"] },
   donation_lines: { cols: ["description"] },
   donation_receipts: { cols: ["number"] },

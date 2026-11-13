@@ -8,6 +8,7 @@ import { getSiteOrigin } from "@/lib/site-origin";
 import { createClient } from "@/lib/supabase/server";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
 import { hasPublicShopLinks } from "@/lib/shop/shop-links";
+import { hasPublicMerchProducts } from "@/lib/merch/shop";
 import { hasLiveAppeals } from "@/lib/appeals/public";
 import { preferredChannels, talkChannels } from "@/lib/site/channels";
 import { loadSiteContent, socialLinks, visitingHoursLines } from "@/lib/site/content";
@@ -78,12 +79,14 @@ export async function PublicHeader({
     },
     showFriends,
     showShop,
+    showMerch,
     liveAppeals,
     site,
   ] = await Promise.all([
     supabase.auth.getUser(),
     hasPublicFriends(),
     hasPublicShopLinks(supabase),
+    hasPublicMerchProducts(supabase),
     hasLiveAppeals(),
     loadSiteContent(supabase),
   ]);
@@ -119,6 +122,7 @@ export async function PublicHeader({
     if (p.key === "donate") return !showAppeals;
     if (p.key === "friends") return showFriends || current === "friends";
     if (p.key === "shop") return showShop || current === "shop";
+    if (p.key === "shop-merch") return showMerch || current === "shop-merch";
     return true;
   });
   const allEntries: PublicNavEntry[] = [];
