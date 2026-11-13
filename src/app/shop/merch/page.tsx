@@ -87,7 +87,7 @@ export default async function MerchShopPage() {
             return (
               <li key={p.id} className="flex flex-col gap-3 rounded border border-border bg-surface p-5">
                 {p.photo_drive_file_id && (
-                  <img src={driveImageUrl(p.photo_drive_file_id, 600)} alt={text.name} width={320} height={240} className="h-48 w-full rounded object-contain" />
+                  <img src={driveImageUrl(p.photo_drive_file_id, 400)} alt={text.name} width={320} height={240} className="h-48 w-full rounded object-contain" />
                 )}
                 <div className="flex flex-col gap-1">
                   <h2 className="text-lg font-semibold text-foreground">{text.name}</h2>

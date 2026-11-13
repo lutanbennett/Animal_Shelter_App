@@ -352,6 +352,11 @@
       "file": "worker/heartbeat.mjs",
       "for": "Writes one 'the trigger fired' row to status_alert_runs each time the 15-minute cron runs, so a dead cron can be told from a skipped stage.",
       "guard": "Worker only. Writes and patches only status_alert_runs; grants no access to anyone."
+    },
+    {
+      "file": "src/lib/merch/checkout.ts",
+      "for": "Writes a merchandise order (merch_orders, its parts and items, and the shelter-stock decrement on merch_variants) for a signed-out buyer, and reads one order back by id for the status page. No merch_* table is open to anon (0369).",
+      "guard": "Nothing from the browser is trusted but variant ids and quantities: every price, postage figure, name and source is re-read from the real tables, a hidden or archived variant is refused, a stock decrement is conditional on the value just read, and a failure undoes what was written. The status read selects no name, address, email or phone and asks for a v4 uuid that cannot be guessed. Grants no ability to anyone: it records what a buyer asked to buy."
     }
   ],
   "serviceRoleHelpers": [],

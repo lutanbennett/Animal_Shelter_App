@@ -99,3 +99,12 @@ test("otherLanguageHref: the toggle goes to the other address; staff pages stay 
   assert.equal(otherLanguageHref("/bills", "th"), null);
   assert.equal(otherLanguageHref("/th/bills", "en"), null);
 });
+
+test("the merchandise catalogue is edge-cached but its checkout and order pages never are", () => {
+  for (const p of ["/shop", "/shop/merch"]) assert.equal(isEdgeCachedPage(p), true, p);
+  for (const p of ["/shop/merch/checkout", "/shop/merch/order/0b6c7a52-1111-4222-8333-444455556666", "/shop/merch/order"]) {
+    assert.equal(isEdgeCachedPage(p), false, p);
+    assert.equal(isPublicPage(p), true, p);
+  }
+  assert.equal(isEdgeCachedPage(thPathRest("/th/shop/merch/checkout") ?? ""), false);
+});
