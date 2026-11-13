@@ -28,7 +28,7 @@ card — no exceptions."* And, the rule in full:
   `has_permission()`'s `r.key = 'admin'` (`0196_multi_role_logins.sql`). **Four things follow, each
   closing off a wrong turn:** **(1) Admin is never given cards** — not to satisfy the rule, not to
   make a check pass, not as tidying. **(2) Admin is not debt** — no entry in `mechanisms[]`, no
-  baseline, never ratcheted down. **(3) It is not a precedent** — Admin only, all-or-nothing;
+  baseline, never ratcheted down. **(3) It is not a precedent** — Admin only, all-or-nothing (one further, narrower exception was recorded 2026-11-13: the adopter website account, below);
   nothing else sits outside the card system by citing it. **(4) Do not reimplement it as "Admin
   holds every card"** — the short-circuit returns true *before* reading any cell, which is what *"no
   matter what cards exist"* requires; a card-shaped version silently fails the day a card is added.
@@ -70,6 +70,20 @@ card — no exceptions."* And, the rule in full:
   - **It is not a precedent.** It is that `perms.isAdmin` line in `can.ts` (the SQL decides Admin by `key = 'admin'`; the `roles.is_admin` flag exists since `0275` and moving the SQL onto it is a separate item), Admin only, all-or-nothing. Nothing else gets to sit
     outside the card system by citing it.
   Settled. Do not re-open it and never put it to him again.
+- **ONE SECOND EXCEPTION, RECORDED 2026-11-13: the adopter/foster-carer website account.** Lutan was offered three shapes
+  for the gate (an app login holding one new card scoped by a database rule; a website-only account outside the card system;
+  not now), was told in terms that the second would be **the first non-Admin exception to his own zero-exceptions rule**,
+  and answered in writing: *"Yes, an exception"*
+  (`docs/decisions/2026-11-13-adopter-portal-card-exception.md`). **Its scope, and nothing wider:** a non-staff account that
+  (1) signs in on the **public website**, not the app; (2) may post progress updates and photos **only on residents it has
+  adopted or fosters**; (3) has them **approved by staff before publishing**; and (4) **can reach nothing else at all**.
+  **Like Admin, it is not a precedent:** it is that one account class, and nothing else may sit outside the card system by
+  citing it or Admin. **Everything a non-staff account could do beyond posting updates on its own animals stays
+  card-governed**, and **staff approval of those updates is itself card-governed.** It does **not** touch the Admin bypass
+  and does **not** loosen the rule for any app login. **Not yet built:** whether the sign-in is an app login at all, and how
+  it links to the contact row, are the first things the portal stream settles; when it lands it records itself under
+  `outsideTheCardSystem` in `docs/hard-coded-security-registry.json` as a named exception, not as debt. Until then the
+  check has nothing to ignore. Settled; do not put it to him again.
 - **The target is zero, and the check asserts zero** (2026-10-25,
   `docs/decisions/2026-10-25-no-coded-security-inventory.md`; it replaced the ratchet of
   `2026-10-24-hard-coded-security-ratchet.md`). `node scripts/check-hard-coded-security.mjs` has no
