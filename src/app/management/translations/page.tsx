@@ -1,5 +1,5 @@
 import { getT } from "@/lib/i18n/get-t";
-import { loadTranslationQueue } from "@/lib/translations/queries";
+import { loadLoginNames, loadTranslationQueue } from "@/lib/translations/queries";
 import { labelPath, loadLabelTranslations, localLabel, SHOWS, type LabelItem, type LabelRow, type Show } from "@/lib/translations/labels";
 import { placeName } from "@/lib/enclosures/names";
 import { TranslationQueue } from "./TranslationQueue";
@@ -37,6 +37,7 @@ export default async function TranslationsPage(props: PageProps<"/management/tra
     path: labelPath(perms, row.table_name, row.row_id),
     context: contexts.get(`${row.table_name}:${row.row_id}`) ?? null,
   }));
+  const reviewerNames = await loadLoginNames(supabase, queue.rows.map((r) => r.reviewed_by));
   const error = queue.error ?? labelResult.error;
 
   return (

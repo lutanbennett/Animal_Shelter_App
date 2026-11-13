@@ -8146,6 +8146,7 @@ const en = {
     proposedByYou: (when: string) => `Proposed by you · ${when}`,
     proposedBySomeone: (when: string) => `Proposed by someone else · ${when}`,
     proposedByName: (name: string, when: string) => `Proposed by ${name} · ${when}`,
+    reviewedByName: (name: string, when: string) => `Reviewed by ${name} · ${when}`,
     proposalOutOfDate: "The English has changed since this was proposed — check the Thai still fits before you approve it.",
     englishWhenProposed: "English when this was proposed",
     approveLabel: "Save & approve",
