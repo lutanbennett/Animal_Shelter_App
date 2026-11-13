@@ -960,6 +960,36 @@ export const ENTRIES = {
       expect: "An archived contact drops out of the pickers; a restored one returns.",
     },
   ],
+  "merch-shop": [
+    {
+      activity: "Add a product with sizes, stock and both postage prices",
+      needs: "merch.manage",
+      device: "desktop",
+      do: "On the Catalogue tab, add a product, then add a size and colour with a stock count, and press Show.",
+      expect: "The product appears in the list, hidden until you press Show; once shown it appears on the public Merchandise page.",
+    },
+    {
+      activity: "Find an order and press Mark paid",
+      needs: "merch.manage",
+      device: "desktop",
+      do: "On the Orders tab, search for an order number, open it, type the bank or Wise reference and press Mark paid.",
+      expect: "The order says Paid, with the date and the reference. An unpaid order can instead be cancelled.",
+    },
+    {
+      activity: "Follow a part with its tracking number",
+      needs: "merch.manage",
+      device: "desktop",
+      do: "On a paid order, type the carrier and tracking number on a part and set it to Shipped.",
+      expect: "The part shows Shipped and keeps the tracking number.",
+    },
+    {
+      activity: "See what is waiting for a supplier and what was sent",
+      needs: "merch.manage",
+      device: "desktop",
+      do: "Open the Supplier email tab.",
+      expect: "Paid parts not yet sent are listed under their supplier, a supplier with no email address is flagged, and sent emails are listed with their text.",
+    },
+  ],
   "manage-suppliers": [
     {
       activity: "Add, edit, archive and restore a supplier",
