@@ -51,6 +51,8 @@ export type LabelRow = {
   draft_source_text: string | null;
   draft_proposed_at: string | null;
   draft_proposed_by: string | null;
+  /** The proposer's display name, else the part of their email before the @ (0366); never the address. */
+  draft_proposed_by_name: string | null;
 };
 
 /** One label as the page shows it: the row plus where it lives. */
