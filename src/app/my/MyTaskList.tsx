@@ -78,6 +78,7 @@ export function MyTaskList({
   today,
   canManage,
   canEditMaintenance,
+  canRecordRecurring,
 }: {
   sections: MyTaskSection[];
   /** What the reader marked done or skipped today, from the server. */
@@ -85,6 +86,8 @@ export function MyTaskList({
   today: string;
   canManage: boolean;
   canEditMaintenance: boolean;
+  /** Records a recurring job (Done today, or taking it back): the activities recordRecurringJob asks. */
+  canRecordRecurring: boolean;
 }) {
   const { t, locale } = useI18n();
   const statusWrite = useWriteCall();
@@ -287,7 +290,7 @@ export function MyTaskList({
                     {item.at && ` · ${formatDateTime(item.at, locale)}`}
                   </span>
                 </div>
-                {(item.kind === "recurring" || canEditMaintenance) && (
+                {(item.kind === "recurring" ? canRecordRecurring : canEditMaintenance) && (
                   <ActionButton
                     icon={Undo2}
                     compact
