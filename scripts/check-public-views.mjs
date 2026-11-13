@@ -357,6 +357,43 @@ for (const name of PUBLIC) {
   report(!read.ok, `${name}.owner_*: no public object carries a sign-up person column`, `HTTP ${read.status}`);
 }
 
+// Animal reports (0372) hold a reporter's own contact. anon may INSERT named columns and nothing else. The insert is proven
+// to reach the table's own checks (a 23514 refusal for a kind that does not exist), so the public write path is known
+// to be open and known to be checked. No row is created.
+{
+  const table = "animal_reports";
+  for (const [method, path, body] of [
+    ["GET", "?select=id&limit=1"],
+    ["GET", "?select=reporter_name,reporter_phone,reporter_email&limit=1"],
+    ["PATCH", `?${noRow}`, {}],
+    ["DELETE", `?${noRow}`],
+  ]) {
+    const call = await fetch(`${url}/rest/v1/${table}${path}`, {
+      method,
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    report(!call.ok, `${table}: anon ${method} is refused`, `HTTP ${call.status}`);
+  }
+  const insert = await fetch(`${url}/rest/v1/${table}`, {
+    method: "POST",
+    headers: { ...headers, "Content-Type": "application/json", Prefer: "return=minimal" },
+    body: JSON.stringify({ kind: "check-public-views-not-a-kind", description: "x", location: "x", reporter_email: "check@example.invalid" }),
+  });
+  const insertBody = await insert.text();
+  report(
+    !insert.ok && insertBody.includes("animal_reports_kind_check"),
+    `${table}: anon INSERT reaches the table's checks and is refused for a kind that does not exist`,
+    `HTTP ${insert.status}: ${insertBody.slice(0, 100)}`,
+  );
+  const forged = await fetch(`${url}/rest/v1/${table}`, {
+    method: "POST",
+    headers: { ...headers, "Content-Type": "application/json", Prefer: "return=minimal" },
+    body: JSON.stringify({ kind: "stray", description: "x", location: "x", reporter_email: "x@example.invalid", status: "resolved" }),
+  });
+  report(!forged.ok && !(await forged.text()).includes("animal_reports_kind_check"), `${table}: anon cannot set status`, `HTTP ${forged.status}`);
+}
+
 // is_public_drive_file must tell the two kinds of file apart when anon asks:
 // yes for a photo the public site shows, no for an internal attachment the
 // photo proxy also knows (a blood-test or procedure file). Skipped, not
