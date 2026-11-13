@@ -9,7 +9,7 @@
 | Branch / worktree | `claude/reviewer-name` @ `C:\Development\Animal_Shelter_reviewer-name` |
 | Dev server | `http://localhost:3008` |
 | PR | pending: opened after this commit |
-| Tested by / date | Claude / 2026-11-14 |
+| Tested by / date | Claude / 2026-11-13 |
 | Carries a migration? | yes — `0370_login_display_name.sql` |
 | Tested at SHA | c51a8a6e8 |
 
@@ -85,7 +85,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 ## 7. Documentation
 
 - [x] Backlog item ticked in `docs/backlog.md` on this branch
-- [x] Non-obvious design choices added as a new file in `docs/decisions/` — `2026-11-14-reviewer-name.md`
+- [x] Non-obvious design choices added as a new file in `docs/decisions/` — `2026-11-13-reviewer-name.md`
 - [ ] `README.md` still accurate — n/a: not mentioned there
 - [x] **Release notes.** `unreleased` gained a line, tagged `view_translations` and `translations`
 - [x] Commit messages say why, not just what
@@ -143,7 +143,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [x] Everything in this checklist that could be verified without human eyes was run, not assumed
 - [x] Nothing is ticked that was not actually executed
 
-Automated checks by: Claude  Date: 2026-11-14
+Automated checks by: Claude  Date: 2026-11-13
 
 ### Manual verification
 

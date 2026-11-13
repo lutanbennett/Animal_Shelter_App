@@ -19,7 +19,7 @@
 
 No new card. Showing the reviewer widens what `translations.view` reveals about a string, not what it can do. No fallback, no role read.
 
-## Proved on screen (dev, 2026-11-14)
+## Proved on screen (dev, 2026-11-13)
 
 A login holding exactly the `translations` card (none of the four login-listing cards) opened Management, then Translations, and read `Reviewed by Dev Reviewer Test · 13 Nov 2026` on a seeded row, not a dash. The seeded reviewer and name were removed afterwards.
 
