@@ -11,6 +11,7 @@ import {
 } from "@/lib/management/cashflow";
 import { fixedOutgoingRows, type FixedOutgoing } from "@/lib/management/fixed-outgoings";
 import { CLINIC_HISTORY_DAYS, clinicForecast, type ClinicVisit } from "@/lib/management/clinic-forecast";
+import { incomeHistory, incomeWindow, type GiftRow } from "@/lib/management/cashflow-income";
 import { CashflowView } from "./CashflowView";
 import { requirePermission } from "@/lib/permissions/require";
 import { can } from "@/lib/permissions/can";
@@ -92,6 +93,23 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
     ),
     estimate: clinicEstimate,
   });
+  // The income side. Reading gifts is the donation register's own activity (donation.receipt, what its
+  // RLS policies and /management/donations ask), NOT this page's, so it is read only when that is held and
+  // the view is handed nothing otherwise. Recorded history, never a forecast (cashflow-income.ts).
+  const canSeeIncome = can(perms, "donation.receipt");
+  let income = null;
+  let incomeError = false;
+  if (canSeeIncome) {
+    const win = incomeWindow(today);
+    const gifts = await supabase
+      .from("donations")
+      .select("received_on, donation_lines(amount)")
+      .gte("received_on", win.from)
+      .lt("received_on", win.to)
+      .returns<GiftRow[]>();
+    if (gifts.error) incomeError = true;
+    else income = incomeHistory(gifts.data ?? [], today);
+  }
   const rows = [
     // The RPC's own clinic rows (booked visits at the flat figure) are
     // superseded by clinic.rows.
@@ -154,6 +172,8 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
         <CashflowView
           rows={rows}
           clinicBasis={clinic.basis}
+          income={income}
+          incomeError={incomeError}
           fixedMonthly={fixedLines.some((l) => l.active) ? fixedMonthly : null}
           from={window.from}
           to={window.to}
