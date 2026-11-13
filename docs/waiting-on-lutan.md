@@ -26,12 +26,8 @@ Items nothing can shrink: the two standing steps (section F), the purchase (`#gv
 
 These need no deploy and nothing installed. Fastest wins first.
 
-**B1. `#t1zyc`: give the accountant access to expenses (about 5 minutes).**
-Unblocks: the outside accountant reading the shelter's expenses.
-Your part: open Settings, then Who does what. Find the accountant's group, tick the card **View expenses**, press save. On the same screen, check that a login is actually attached to that group. Reversible on the same screen. The card has been live since 2026-11-05 and **nothing holds it yet**.
-Answered 2026-11-13: expenses only. Do not add the cash-flow card.
-First: nothing. Whether a login is attached is *not established*; the screen shows it.
-Stream shrink: a read-only card for the foundation's papers is a separate small stream, and does not wait on this tick.
+**B1. `#t1zyc`: the accountant. Your part is DONE; one thing is left, and it waits on a person.**
+Seen on screen 2026-11-13: the card **View expenses** is already in the Accountant group and survived a reload. What is left: create the accountant a login (Settings, then Security) and put it in the Accountant group, once you have their details. A stream could separately build the read-only card for the foundation papers.
 
 **B2. `#kxksr`: enter the shelter's PromptPay details (about 10 minutes).**
 Unblocks: the donate page showing a real PromptPay number and QR.
@@ -56,7 +52,7 @@ It takes one sentence to answer, and a stream can brief the build the same day.
 
 None of these has a command written here. Ask in chat when you reach the step.
 
-**D1. `#aaqtl`: three deploy steps that make Thai label proposals work on production.** Retitled 2026-11-12: the code is done and the 91 drafts are in. The three steps are in the item, in order. The last one needs a machine login whose password you hold; it is not on this computer's settings file, which is consistent with the steps not being done (not itself the gap). After the steps, the release note for admins is written in the PR that closes it. Ask the planner session for the three steps in order when you start. Time: not established.
+**D1. `#aaqtl`: Thai label proposals on production. Narrower than the backlog says.** Two of its three steps are done by the 0.45.0 release: production is past the migration it names (`0296`, applied by the release), and the Worker was deployed in that release. What may be left is creating the machine login, giving it the `propose_translations` card, and setting its password secret. **Not established** whether that was done: the backlog says it was not on 2026-11-12, and nothing recorded since says it was. Ask the release session to check the live state before you do anything.
 
 **D2. `#z04wr`: runbook steps 5 to 9 of `docs/self-hosted-model-runbook.md`.** Waits behind the model machine existing; whether it exists is *not established*. Claude's half is done.
 
@@ -94,6 +90,10 @@ The first four use the list written on your Desktop on 2026-11-10; it is not in 
 
 - **Major versus minor on every release.** A major release mails the admin list (currently one person), cannot be undone, and so the call is yours each time. Claude tells you plainly when it comes up.
 - **The production Worker deploy.** Yours by your instruction of 2026-10-02, every release.
+
+## Corrected after Lutan checked (2026-11-13)
+
+Three entries were wrong when this list was first written: `#eh2dt`, `#dxjz2` and `#t1zyc`'s tick. `#aaqtl` was overstated. Each is noted below or above. Everything else on this list is as the backlog stated it on 2026-11-13 and has been checked only against release records and decision files, not against the live site or database.
 
 ## Removed at your word
 
