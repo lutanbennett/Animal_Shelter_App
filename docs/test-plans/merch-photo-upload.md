@@ -9,7 +9,7 @@
 |---|---|
 | Feature | merch-photo-upload |
 | Backlog item | `docs/backlog.md` → #qtnob |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/merch-photo-upload` @ `C:\Development\Animal_Shelter_merch-photo-upload` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | pending |
 | Tested by / date | Claude / 2026-11-14 |
