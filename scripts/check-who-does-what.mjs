@@ -90,7 +90,7 @@ const PRINCIPALS = ["admin", ...ROLES];
 const PROBES = ALL_PROBES.filter((p) => !p.expect);
 
 const F = {};
-for (const k of ["R_IN", "R_OUT", "BARE", "CATEGORY", "DEAD", "ENC", "ZONE", "JOB", "PROJECT", "CLINIC", "OTHER_CLINIC", "DOCTOR", "DOCTOR2", "CONTACT", "CARER", "FRIEND", "RECEIPT", "DIET", "IMM_TYPE", "OUTGOING", "JOB_NONE", "JOB_ALL", "ATT_IN", "ATT_OUT", "SHOP", "MERCH", "REPORT"]) F[k] = randomUUID();
+for (const k of ["R_IN", "R_OUT", "BARE", "CATEGORY", "DEAD", "ENC", "ZONE", "JOB", "PROJECT", "CLINIC", "OTHER_CLINIC", "DOCTOR", "DOCTOR2", "CONTACT", "CARER", "FRIEND", "RECEIPT", "DIET", "IMM_TYPE", "OUTGOING", "JOB_NONE", "JOB_ALL", "ATT_IN", "ATT_OUT", "SHOP", "MERCH", "REPORT", "DONATION"]) F[k] = randomUUID();
 const ID = Object.fromEntries(PRINCIPALS.map((p) => [p, randomUUID()]));
 // project_folders_before_write refuses to create a root (only migration 0034 seeds them) and gives a child its parent's
 // category, so the harness cannot make a root and does not need 'Events' specifically: any root will do. Dev held only
@@ -202,6 +202,8 @@ begin
   insert into merch_products (id, name, price_thb) values (${lit(F.MERCH)}, 'Harness product', 1);
   -- animal_report.manage probes (0372)
   insert into animal_reports (id, kind, description, location, reporter_email) values (${lit(F.REPORT)}, 'stray', 'Harness report', 'Harness', 'harness@example.invalid');
+  -- donation.receipt read probe (0168): a donation of the harness, rolled back with the rest
+  insert into donations (id, received_on, donor_name, method) values (${lit(F.DONATION)}, current_date, 'Harness donor', 'cash');
   insert into recurring_jobs (id, title, time_of_day, link_path, repeat, weekdays, starts_on) values
     (${lit(F.JOB_NONE)}, 'Harness job none', 'morning', '/', 'weekly', '{1,2,3,4,5,6,7}', current_date - 7),
     (${lit(F.JOB_ALL)}, 'Harness job all', 'morning', '/', 'weekly', '{1,2,3,4,5,6,7}', current_date - 7);
