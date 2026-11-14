@@ -81,7 +81,7 @@ it. Everything outside those comments is judged.
 |---|---|
 | Feature | wording-small-two (#d6xhs, #n2bkc) |
 | Backlog item | `docs/backlog.md` → |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/wording-small-two` @ `C:\Development\Animal_Shelter_wording-small-two` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | |
 | Tested by / date | Claude, 2026-11-14 |
@@ -279,8 +279,8 @@ assurance.
 Gates, scripts, server-side behaviour, and any browser check that was actually
 driven rather than assumed. Signed by whoever ran them — Claude may sign this.
 
-- [ ] Everything in this checklist that could be verified without human eyes was run, not assumed — deferred: release manager
-- [ ] Nothing is ticked that was not actually executed — deferred: release manager
+- [x] Everything in this checklist that could be verified without human eyes was run, not assumed
+- [x] Nothing is ticked that was not actually executed
 
 Automated checks by: Claude  Date: 2026-11-14
 
@@ -322,10 +322,10 @@ Manual verification by: n/a: no UI surface
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above — deferred: release manager
-- [ ] Checklist pasted into the PR — deferred: release manager
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Open defects are either fixed or explicitly accepted above — n/a: release-manager step, not this stream
+- [ ] Checklist pasted into the PR — n/a: release-manager step, not this stream
+- [ ] Handed to the production release manager — n/a: release-manager step, not this stream
 
 Result: pass
 
-Release manager acknowledgement: <name>  Date: <yyyy-mm-dd>
+Release manager acknowledgement: pending: release manager
