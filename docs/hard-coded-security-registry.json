@@ -328,6 +328,11 @@
       "guard": "Called from the facility-map editor actions, which ask can()."
     },
     {
+      "file": "src/lib/animal-reports/photo-store.ts",
+      "for": "Stores and reads the photo on a public animal report (private bucket, no storage policy).",
+      "guard": "Written only by the public report action after type, size and metadata checks; read only by the staff photo route, which asks animal_report.manage."
+    },
+    {
       "file": "src/lib/home/roles.ts",
       "for": "Reads a role's cards and cells by role key for the Admin preview and the board.",
       "guard": "Callers: Admin-only preview pages and the logins' own home."
