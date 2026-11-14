@@ -11,7 +11,7 @@
 | PR | pending: not opened at this commit |
 | Tested by / date | Claude, 2026-11-14 |
 | Carries a migration? | yes: 0376 |
-| Tested at SHA | GATES_SHA |
+| Tested at SHA | df77791af |
 
 ## 1. Scope and risk
 
@@ -40,7 +40,11 @@ indistinguishable from one that passed.
 - [x] `node scripts/gates.mjs` closing lines, exactly as the run printed them:
 
 ```
-GATES_BLOCK
+=== gates: typecheck exited 0 after 11s
+=== gates: lint exited 0 after 120s
+=== gates: test exited 0 after 31s
+=== gates: build exited 0 after 48s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 - [ ] CI green on the PR (runs the same four gates, among its other checks). — n/a: not yet — the PR does not exist at this commit
 
