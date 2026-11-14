@@ -213,11 +213,14 @@ begin
   insert into prescriptions (resident_id, medication_id, start_date) select id, (select id from medication order by id limit 1), current_date from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
   insert into immunization_records (resident_id, immunization_type_id, date_administered) select id, (select id from immunization_types limit 1), current_date from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
   insert into resident_diets (resident_id, diet_id, start_date) select id, ${lit(F.DIET)}, current_date - 1 from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
-  insert into adoption_updates (resident_id, received_on, channel) select id, current_date, 'visit' from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
+  -- share_publicly: text_review_queue() (text.approve's probe) lists only public text not yet reviewed, so it needs one such row
+  insert into adoption_updates (resident_id, received_on, channel, share_publicly) select id, current_date, 'visit', true from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
   -- A non-Medical sub folder: set_resident_profile_photo refuses a Medical photo (P0001), which made Admin, the control, fail the photos.resident_manage edit probe.
   insert into attachments (id, owner_type, owner_id, drive_file_id, file_name, sub_folder) values
     (${lit(F.ATT_IN)}, 'resident', ${lit(F.R_IN)}, 'harness-${F.R_IN}', 'x.jpg', 'Photos'),
     (${lit(F.ATT_OUT)}, 'resident', ${lit(F.R_OUT)}, 'harness-${F.R_OUT}', 'x.jpg', 'Photos');
+  -- Approved for the public site by an UPDATE, because the insert trigger (0346) always clears approval on a resident photo: set_resident_profile_photo refuses an unreviewed one (photo.profile_not_approved).
+  update attachments set approved_at = now() where id in (${lit(F.ATT_IN)}, ${lit(F.ATT_OUT)});
 end $setup$;
 create temp table harness_out (k text, res jsonb);
 grant all on harness_out to authenticated, service_role;
@@ -237,6 +240,8 @@ PROBES.forEach((p, i) => {
       const roleId = `(select id from public.roles where key = '${role}')`;
       const drops = p.sharedWith.map((a) => `delete from public.role_permissions where role_id = ${roleId} and activity = '${a}'`);
       tasks.push({ k: `${i}:${role}:flip2`, uid: ID[role], pre: [flipSql(role, p), ...drops].join("; "), sql });
+      // ...and a fourth, for a box that says NO while the database allows: the sharers taken away, this box left as it is.
+      tasks.push({ k: `${i}:${role}:drop`, uid: ID[role], pre: drops.join("; "), sql });
     }
   }
 });
@@ -304,6 +309,12 @@ PROBES.forEach((p, i) => {
     const says = allowsAt(cellOf(role, p.activity), p);
     let state = asis !== says ? "wrong" : flip === asis ? (says ? "sticky" : "inert") : "obeyed";
     let sharers = "";
+    if (state === "wrong" && !says && asis && p.sharedWith) {
+      // The same proof, the other way round: the box says no and the database allows because another box the role holds opens
+      // the same read. Shared only if the role holds a sharer and removing the sharers (this box untouched) closes the door.
+      const held = p.sharedWith.filter((a) => cellOf(role, a) > 0);
+      if (held.length && allowed(actual.get(`${i}:${role}:drop`), p) === false) { state = "shared"; sharers = held.join(", "); }
+    }
     if (state === "sticky" && p.sharedWith) {
       // Proved, not assumed: shared only if the role holds a sharer and removing it as well closes the door.
       const held = p.sharedWith.filter((a) => cellOf(role, a) > 0);
@@ -313,7 +324,7 @@ PROBES.forEach((p, i) => {
     const b = box.get(key) ?? { state: "obeyed", notes: [] };
     if (RANK[state] > RANK[b.state]) b.state = state;
     if (state !== "obeyed") {
-      const what = { shared: `allowed with the box set to no, because it is deliberately shared with ${sharers} (refused once both are taken away)`, wrong: `the box says ${says ? "yes" : "no"}, the database ${asis ? "allows" : "refuses"}`, sticky: "allowed with the box set to no", inert: "refused with the box set to yes" }[state];
+      const what = { shared: `${says ? "allowed with the box set to no" : "the box says no, the database allows"}, because it is deliberately shared with ${sharers} (refused once ${says ? "both are" : "those are"} taken away)`, wrong: `the box says ${says ? "yes" : "no"}, the database ${asis ? "allows" : "refuses"}`, sticky: "allowed with the box set to no", inert: "refused with the box set to yes" }[state];
       b.notes.push(`${p.level}: ${what}  (${short})`);
     }
     box.set(key, b);
@@ -382,6 +393,7 @@ if (faults.length) { console.log("\nFAULTS (a probe that cannot be trusted; noth
 if (unlisted.length) console.log(`\nFAIL: ${unlisted.length} box(es) wrong or sticky and not in FIXED_FOR_NOW. The page would show them as true.`);
 if (stale.length) console.log(`\nFAIL: STALE entries, every box they cover is obeyed now. Remove them: ${stale.map((e) => (e.closedBy ? `${e.id} (closedBy ${e.closedBy})` : e.id)).join(", ")}`);
 if (overListed.length) console.log(`\nFAIL: entries mark boxes that are obeyed (the grid would call a true box fixed). Take them out:\n  ${overListed.join("\n  ")}`);
+if (overListed.some((l) => l.startsWith("clinicRule: doctor "))) console.log(`\nNOTE: the "clinicRule: doctor" lines above are the EXPECTED doctor-cells test state, not a fault. Doctor is the role cards are tested on one at a time, so its boxes read as obeyed while it holds them; that is the proof the Who-does-what card save works. Do not file it, do not restore doctor's cards, do not hide it here (docs/decisions/2026-11-14-card-boxes-triage.md).`);
 if (unprobedMeasured.length) console.log(`\nFAIL: entries marked measured with no probed box: ${unprobedMeasured.map((e) => e.id).join(", ")} (set measured: false and say how it was read)`);
 const ok = !faults.length && !unlisted.length && !stale.length && !overListed.length && !unprobedMeasured.length;
 if (ok) console.log("\nOK: every probed box is obeyed or listed in FIXED_FOR_NOW.");
