@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "On Management → Merchandise shop → Exchange rates you can now add a new currency (for example CAD) with its baht rate, and remove one. A currency you add is offered to overseas buyers straight away; orders already placed keep the currency and rate they were quoted.", cards: ["run_merch_shop"] },
   { text: "Adding a shop link or a Shelter Friend no longer fails with \"You do not have permission to approve public text\" for someone who holds the card to manage the shop or Shelter Friends but not the one that approves public text.", cards: ["manage_shop_page", "publish_shelter_friends"] },
   { text: "The Report an animal page now lets the person reporting attach a photo (JPEG, PNG or WebP, up to 8 MB). Any location or phone details hidden inside the photo are removed before it is saved, and only staff can see it: it appears under the report on Animal reports.", cards: ["review_animal_reports"] },
 ];
