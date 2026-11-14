@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MerchPhotoField } from "@/components/MerchPhotoField";
 import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
@@ -350,14 +351,12 @@ async function Catalogue({
             className={inputClass}
           />
         </label>
-        <label className="flex flex-col text-xs text-muted">
-          {m.photo}
-          <input
-            name="photo"
-            defaultValue={p?.photo_drive_file_id ?? ""}
-            className={inputClass}
-          />
-        </label>
+        <MerchPhotoField
+          initialId={p?.photo_drive_file_id ?? ""}
+          canUpload
+          inputClass={inputClass}
+          words={{ choose: m.photoChoose, uploading: m.photoUploading, current: m.photoCurrent, idLabel: m.photoIdLabel, remove: m.photoRemove, failed: m.photoFailed }}
+        />
         <label className="flex flex-col text-xs text-muted">
           {m.postageThailand}
           <input
