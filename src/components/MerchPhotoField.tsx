@@ -49,7 +49,7 @@ export function MerchPhotoField({
       {id && (
         <div className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={driveImageUrl(id, 160)} alt={words.current} width={80} height={80} className="h-20 w-20 rounded border border-border object-contain" />
+          <img src={driveImageUrl(id, 160)} alt={words.current} width={80} height={80} className="h-20 w-20 rounded border border-border object-contain" onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} />
           <button type="button" className="underline" onClick={() => setId("")}>
             {words.remove}
           </button>
