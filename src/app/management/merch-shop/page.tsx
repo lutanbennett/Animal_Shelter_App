@@ -353,7 +353,7 @@ async function Catalogue({
         </label>
         <MerchPhotoField
           initialId={p?.photo_drive_file_id ?? ""}
-          canUpload
+          canUpload={canEdit}
           inputClass={inputClass}
           words={{ choose: m.photoChoose, uploading: m.photoUploading, current: m.photoCurrent, idLabel: m.photoIdLabel, remove: m.photoRemove, failed: m.photoFailed }}
         />
