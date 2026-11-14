@@ -577,6 +577,15 @@ read `--status` and carry on. If that job is red on the release commit, the rele
 is not ready; that is a stop like any red check. Do not empty `WRAPPED_WRITE_PATHS`
 to clear a failure: `scripts/check-worker-origin.mjs` asserts it is non-empty.
 
+**The tenancy catalogue lint, strict, on every database you applied to (before the deploy).** Added 2026-11-14 (`docs/decisions/2026-11-14-tenancy-lint-holes.md`). It is here, in the release, and not in CI, because it reads `pg_catalog` through the Management API and CI holds no `SUPABASE_ACCESS_TOKEN` (decided in #1573; not reopened). Run it right after the apply, so a new migration is judged against the schema it actually changed:
+
+```bash
+node scripts/check-tenancy-catalogue.mjs --env production --strict --tenant-role rls_definer
+node scripts/check-tenancy-catalogue.mjs --env test --strict --tenant-role rls_definer
+```
+
+**It asserts:** every API-reachable view and security definer function is owned by `rls_definer` (or invoker, or named in its allow-list), **and every public table with row-level security carries a `definer_all` policy**. **Exit 0 is the pass.** **Exit 1** names each object: a view or function still owned by `postgres` (re-own it, as `0375` did), or a table with no `definer_all` (copy the policy block from `0375_reown_definers.sql`; without it every view over that table reads 0 rows, a blank page and not a leak). **Exit 2** means it could not read the catalogue: not a pass, run it again with the token. A finding is a fix in a new migration, not a reason to skip the check.
+
 **Pull the main checkout before you apply, not after.** The step above assumes
 `main` is current and does not say so. On `0.20.0` the five migrations were
 applied and the deploy that should have followed within seconds was refused:

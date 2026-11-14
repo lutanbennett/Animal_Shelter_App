@@ -36,7 +36,7 @@ const key = (kind, schema, name) => `${kind}:${schema}.${name}`;
 
 // views: { schema, name, owner, opts, api } (api = anon or authenticated can select it AND reach its schema)
 // functions: { schema, name, owner, secdef, api } (api = anon or authenticated can execute it AND reach its schema)
-export function lintCatalogue({ views, functions }, { tenantRole = DEFAULT_TENANT_ROLE, allowed = ALLOWED } = {}) {
+export function lintCatalogue({ views, functions, tables = [] }, { tenantRole = DEFAULT_TENANT_ROLE, allowed = ALLOWED } = {}) {
   const findings = [];
   const allowedHit = [];
   const seen = new Set();
@@ -53,6 +53,15 @@ export function lintCatalogue({ views, functions }, { tenantRole = DEFAULT_TENAN
     if (!f.api || !f.secdef) continue;
     if (tenantRole && f.owner === tenantRole) continue;
     (allowed[k] ? allowedHit : findings).push({ rule: 2, object: k, owner: f.owner, why: allowed[k]?.reason });
+  }
+  // Rule 3: every public table with RLS on must carry the permissive `definer_all` policy (migration 0375). Without it a
+  // re-owned view over the table reads 0 rows: the blank-page failure, not a leak. WIDE rule: all RLS tables, not only
+  // those a view reads, because the next view over a table is exactly what nobody has written yet.
+  for (const t of tables) {
+    const k = key("table", t.schema, t.name);
+    seen.add(k);
+    if (!t.rls || t.hasDefinerAll) continue;
+    (allowed[k] ? allowedHit : findings).push({ rule: 3, object: k, owner: t.owner, why: allowed[k]?.reason });
   }
   // An allow-list entry is only meaningful while its object still exists in the catalogue (API-reachable or not).
   const stale = Object.keys(allowed).filter((k) => !seen.has(k));
@@ -73,3 +82,10 @@ select n.nspname as schema, p.proname as name, pg_get_userbyid(p.proowner) as ow
         or (has_function_privilege('authenticated', p.oid, 'execute') and has_schema_privilege('authenticated', n.oid, 'usage'))) as api
   from pg_proc p join pg_namespace n on n.oid = p.pronamespace
  where p.prokind = 'f' and n.nspname in ('public', 'private') order by 1, 2`;
+
+// RLS tables in public and whether each carries the definer_all policy (named in 0375_reown_definers.sql).
+export const TABLES_SQL = `
+select n.nspname as schema, c.relname as name, pg_get_userbyid(c.relowner) as owner, c.relrowsecurity as rls,
+       exists (select 1 from pg_policy p where p.polrelid = c.oid and p.polname = 'definer_all') as "hasDefinerAll"
+  from pg_class c join pg_namespace n on n.oid = c.relnamespace
+ where c.relkind in ('r', 'p') and n.nspname = 'public' order by 1, 2`;
