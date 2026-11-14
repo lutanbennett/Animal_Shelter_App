@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "The Report an animal page now lets the person reporting attach a photo (JPEG, PNG or WebP, up to 8 MB). Any location or phone details hidden inside the photo are removed before it is saved, and only staff can see it: it appears under the report on Animal reports.", cards: ["review_animal_reports"] },
 ];
 
 /** Newest first. */
