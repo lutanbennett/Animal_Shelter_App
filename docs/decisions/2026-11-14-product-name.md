@@ -27,11 +27,9 @@ plain rather than explaining it.
 | `cooperjaidee.com` | AVAILABLE |
 | `cooperjaidee.net` | AVAILABLE |
 
-**He is buying it tonight. Nothing is registered yet as this is written**, so:
+**REGISTERED THE SAME DAY. Lutan, 2026-11-14: *"ok cooperjaidee.org is now mine and available for use on cloudflare"*.** Confirmed by RDAP minutes later: `cooperjaidee.org` **registered 2026-11-14, expires 2028-11-14**, status *client transfer prohibited, add period* — the ordinary state of a fresh Cloudflare registration. **`.com` and `.net` were still free at that moment and he took neither**; asked which to make canonical, the recommendation was `.org` (every public deployment is already `.org`, the users are non-profits, and a `.org` beside a donate button is what a donor expects), with `.com` worth taking defensively and `.net` not worth taking at all.
 
-- **No stream may assume the domain resolves, and nothing deploys to it.** Registering it is a purchase and
-  his; `CLAUDE.md`'s zero-ongoing-cost rule means a domain is the one recurring cost he has accepted, and
-  only he decides which TLDs to take.
+- **It is registered, but it POINTS AT NOTHING and no stream may change that.** There is no DNS record, no Worker route, no Pages project and no certificate beyond what Cloudflare does by default. **Nothing deploys to it, and no code, test or document may assume it resolves.** Its first real use is the multi-tenancy build, which is a programme the planner sequences — not something a stream starts because a domain exists.
 - **`lannacareforanimals.org` is still production** and `lannacare.org` still 301s to it. **This decision
   changes neither**, and no DNS, Cloudflare or Worker change follows from it today.
 

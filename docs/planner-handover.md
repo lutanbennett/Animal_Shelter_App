@@ -187,8 +187,7 @@ here, and `.plan-day.md` is the authority, not this list.**
    restrictive per-shelter policies, `current_shelter_id()` and `is_trusted_caller()`. **The permanent
    canary diff becomes possible for the first time**, because there is finally a shelter concept to plant a
    second shelter into. **The hardening already shipped** (#1573, #1580) and is not revisited.
-   **Three things that are NOT unblocked and must not be assumed:** the domain is **not registered yet** —
-   nothing deploys to it and no stream may assume it resolves; **nothing in this repository is renamed**,
+   **Three things that are NOT unblocked and must not be assumed:** the domain **is registered** (`cooperjaidee.org`, 2026-11-14, confirmed by RDAP, expires 2028-11-14) **but points at nothing** — no DNS record, no Worker route, no Pages project — so **nothing deploys to it and no stream may assume it resolves**; **nothing in this repository is renamed**,
    because a rename of code, infrastructure or branding has not been asked for; and `lannacareforanimals.org`
    **remains production**, with `lannacare.org` still 301ing to it.
 
