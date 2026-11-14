@@ -176,9 +176,21 @@ here, and `.plan-day.md` is the authority, not this list.**
    reader. **The item's own durable question — should new Thai queue somewhere a Thai reader sees it, rather
    than being filed by hand — was deliberately put to him at the END of the reading.** Read #1578's PR for
    his answer before briefing round 3; if the PR does not say, **ask him in one line rather than guessing.**
-6. **THE PRODUCT NAME is still with him** and still blocks `#ykefa`'s build half — `shelter_id`, the pooling
-   policies, per-shelter Drive, the permanent canary diff. **It does not block the hardening**, which is how
-   two streams of it shipped without it. **Asking again is a status question he has already answered.**
+6. **THE PRODUCT NAME IS DECIDED, AND `#ykefa`'s BUILD HALF IS UNBLOCKED. Lutan, 2026-11-14, while this
+   edition was being written: *"ok we will use cooperjaidee as the system name"*, then *"I will buy the domain
+   tonight"*.** Three planner editions carried the name as the thing with him; **it is no longer.** Full
+   reasoning in `docs/decisions/2026-11-14-product-name.md`, which ships in this same PR.
+   **What this means for your first plan, and the restraint matters:** `#ykefa` is **≈50 hours (40–65)** and
+   the re-own measured its object counts **40% larger** than the spike priced (53 owner-run views and 92
+   definer functions, against 38 and 58). **It is a programme to SEQUENCE across days, not a stream to
+   brief in one go**, and the first piece is a design: `shelter_id` across the tenant tables, the
+   restrictive per-shelter policies, `current_shelter_id()` and `is_trusted_caller()`. **The permanent
+   canary diff becomes possible for the first time**, because there is finally a shelter concept to plant a
+   second shelter into. **The hardening already shipped** (#1573, #1580) and is not revisited.
+   **Three things that are NOT unblocked and must not be assumed:** the domain is **not registered yet** —
+   nothing deploys to it and no stream may assume it resolves; **nothing in this repository is renamed**,
+   because a rename of code, infrastructure or branding has not been asked for; and `lannacareforanimals.org`
+   **remains production**, with `lannacare.org` still 301ing to it.
 
 **Do NOT re-ask him about:** the anonymous photo upload (**he answered 2026-11-14: *"Yes, build it
 properly"*** — a bucket the public can write but not read, limits, metadata stripped); the adopter-portal
