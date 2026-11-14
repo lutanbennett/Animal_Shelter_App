@@ -1,229 +1,198 @@
-# Planner handover — edition `746`, 2026-11-14
+# Planner handover — edition `747`, 2026-11-14
 
-**This is a DELTA against `745`.** It says what changed, corrects its predecessor, and reports what each
-of `745`'s owed items did. Figures, batch composition and ports live in `.plan-day.md`.
+**This is a DELTA against `746`.** It says what changed, corrects its predecessor, and reports what each of
+`746`'s owed items did. Figures, batch composition and ports live in `.plan-day.md`.
 
 **It outranks nothing.** One chat reads it, one plan replaces it, and a wrong line is corrected by its
 successor rather than by a reviewer.
 
-**WHICH PLAN'S FIGURES THIS REPORTS: THE SECOND 2026-11-13 PLAN'S** — eleven streams, seven measured,
-read on 2026-11-13 and recorded in `.plan-day.md`. **This edition's own plan is the THIRD 2026-11-13 one,
-which ran to eight streams in three batches, and its seven figures ARE in here** — unusually, because its
-last batch was set up on 2026-11-14, a day after the rest, so a complete set was already readable at this
-edition's own setup. **Do not take that as the new pattern.** The normal case is a missing set, and a
-missing set is not a lost one.
+**WHICH PLAN'S FIGURES THIS REPORTS, AND IT IS TWO PLANS BECAUSE BOTH RAN TODAY.** `746` was written at the
+setup of the 2026-11-13 plan's last batch; **that batch then merged within the hour**, and a second plan —
+six streams in two batches — was planned from scratch and both its batches set up, all on 2026-11-14. **So
+this edition carries the three figures `746` could not have (its own plan's batch 3) and the three from the
+new plan's batch 1.** The new plan's batch 2 was set up at the same time as this was written and carries
+none, as always.
 
 ---
 
-## THE LEAD: THE DATE GUARD `745` ASKED FOR WORKED, AND THEN THE DAY TURNED OVER MID-PLAN
+## THE LEAD: `746` WAS ONE STREAM OUT OF DATE BEFORE ANYONE READ IT, AND THAT IS NOW A KNOWN COST
 
-**`745`'s lead was every brief dated a day into the future, and its fix was one line: read the date from
-the system and compare it with the date on the handover you just read.** It was done this plan, twice, and
-it mattered both times.
+**`746` names `tenancy-reown` as the only unmeasured stream of its plan.** By the time it merged, Lutan had
+added two more to that batch — `card-checks-report` and `thai-read-2` — so a planner following its "what is
+owed" list would have measured one stream of three and never known the other two existed.
 
-- At setup of batches 1 and 2 the system said **2026-11-13** and `745` was dated **2026-11-13**, so this
-  was the **third plan of the same day** — not a new one. Every date written was 2026-11-13, and
-  `decision-dates` stayed green on all seven streams.
-- At setup of batch 3 the system said **2026-11-14**. **So one plan now spans two dates**, and the batch-3
-  brief prescribes `docs/decisions/2026-11-14-tenancy-reown.md` while its six predecessors are `2026-11-13-`.
-  **That is correct, not an inconsistency to tidy.** `decision-dates` blocks on a file dated after today,
-  so a batch-3 stream obeying a 2026-11-13 instruction would have been fine and a batch-1 stream obeying a
-  2026-11-14 one would have gone red — which is why the check is asymmetric and why the date is re-read at
-  **every** batch's setup, not once per plan.
+**Lutan caught it himself**, asking *"Is the handover done and merged"*; the amendment was offered and not
+taken, because **this edition supersedes it rather than patching it.** All three figures are below.
 
-**THE GENERALISATION WORTH CARRYING: a plan is not a day.** `SKILL.md` ties measurement to the day and
-batches to the plan, and those two clocks come apart the moment a plan straddles midnight. **Re-read the
-system date at every setup, and write the date you read — not the date at the top of `.plan-day.md`.**
+**THE MECHANISM, because it will happen again: a handover is written at the setup of the plan's last batch,
+and he may add a stream AFTER that.** The rule *"write it at setup of the last batch"* exists so the context
+is still alive, and it is right. **So the guard is not to write it later — it is to say inside the edition
+that its owed list is a snapshot of the batch as set up, and that a stream added afterwards will not be in
+it.** This edition says so here, and its own owed list says the same.
 
 ---
 
-## WHAT IN `745` IS SUPERSEDED
+## WHAT IN `746` IS SUPERSEDED
 
-- **`745`'s owed item 2, "brief length may move the floor", is NOT SUPPORTED, and this is the first
-  evidence that actually tests it.** The previous plan wrote batch 1's three briefs within **134
-  characters** of each other on purpose, as a control. Their floors came out **86,893 / 86,672 /
-  89,214** — a spread of **2,542 tokens, about 70% of the entire 85,880–89,570 range across all six
-  sound figures.** Three near-identical briefs spread as widely as six different ones. **Brief length is
-  not what moves the floor. Stop pricing briefs by length, and stop treating a long brief as a cost.**
-  The monotonic reading from `744` now stands at three points for, one against (`report-animal`) and one
-  control against. **`745` called it "SUPPORTED and still not closed"; that was too strong, and the
-  control it set up is what disproves it.**
-- **`745`'s residue is CLOSED.** The two merged PR bodies citing non-existent `2026-11-14-` decision files
-  (#1557, #1560) were corrected by comment on 2026-11-13, after Lutan added `Bash(gh pr comment *)` to
-  user settings. **Nothing is owed on it.**
-- **`745`'s owed item 4 is spent:** `#m3kpq` was built as one stream, `merch-shop-deferred` (#1571,
-  migration `0373`), exactly as it said — one stream, not three.
-- **`745`'s owed item 5 is spent:** `src/lib/merch/shop.ts:81`'s dated rate constant is gone.
-  `shop-staff` did **not** build the screen its own comment promised; the planner read the PR rather than
-  assuming, filed `#r4ktv` from the tree, and `merch-exchange-rate` (#1575) built it with migration
-  `0374`.
-- **`745`'s owed item 6 held:** this plan was three batches, and it grew to eight streams only because he
-  added two mid-plan. **Plan three; let him add.**
+- **`746`'s owed item 1 is DONE, and it was bigger than the list it named.** All six figures are in this
+  edition: its own plan's batch 3 (#1578–#1580) and the new plan's batch 1 (#1582–#1584).
+- **`746`'s owed item 3 — "did `tenancy-reown` run the md5 regression proof?" — YES, and the hypothesis
+  fired exactly as written.** It ran the proof twice (rolled-back harness and real apply): **90 objects, 61
+  returning rows, 1,575 rows hashed, 0 differences.** It also caught one real object on the way —
+  `label_translations()` reads `auth.users` and is now allow-listed by name. **And the question the brief
+  could not settle is answered: `create role` WORKS on dev through the Management API**, so the ≈50-hour
+  tenancy approach stands and the spike's 2026-10-09 success was the true reading, not the lint stream's
+  `42501`.
+- **`746`'s owed item 2 held:** the floor has not moved. **And it is now measured much more sharply — see
+  the floor section below, which is the most useful single number in this edition.**
+- **`746`'s owed items 4, 5 and 6 are all spent:** `#p8fwd` is batch 2's `merch-currency`; `#v3qlt` is batch
+  2's `donations-read-level`, briefed as card work carrying its own migration exactly as `746` said; and
+  `#n2bkc` and `#d6xhs` were folded into one stream, `wording-small-two`, which merged as #1582.
+- **`746`'s owed item 7 is spent and the answer was "not yours".** `cut-release-0-46-0` had **two** merged
+  PRs — #1576 the cut and **#1581 the record** — so 0.46.0 finished and its own session cleared the folder.
+  Lutan had said *"Leave it"* and nothing in the planner's chain touched it. **A release worktree is still
+  not a leftover to clear on sight.**
 
 ---
 
-## BOTH OF `745`'s HYPOTHESES FIRED, AND THE BUTTON-RULE ONE IS THE IMPORTANT RESULT
+## THE FLOOR IS A CONSTANT OF THE HARNESS, NOT OF THE BRIEF — AND TWO STREAMS PROVED IT TO THE TOKEN
 
-`745` asked for two mitigations to be checked rather than assumed. **This is the check, and both went the
-right way:**
+| PR | slug | tokens | messages | floor | band | verdict |
+|---|---|---|---|---|---|---|
+| #1579 | `card-checks-report` | 152,076 | 62,571 | **89,505** | 130–175k | within |
+| #1580 | `tenancy-reown` | 175,428 | 85,923 | **89,505** | 220–280k | **UNDER by 44,572** |
+| #1583 | `card-boxes-triage` | 218,409 | 131,678 | **86,731** | 170–220k | within, near the top |
+| #1584 | `report-animal-photo` | 212,067 | 125,810 | *86,257* | 220–280k | `rescoped=yes` — kept out |
+| #1582 | `wording-small-two` | unmeasured | unmeasured | — | 120–165k | unmeasured |
+| #1578 | `thai-read-2` | **no usage comment** | — | — | 150–200k | unmeasured |
 
-- **The button rule as a NUMBERED DELIVERABLE, not a block.** `745` wrote it into `adopter-portal-app`'s
-  brief as deliverable 6 after `control-activity` went red on `shop-staff` for a Save button a read-only
-  login could see. **#1567 reported it in terms — *"Controls: Send and file chooser, drawn only for
-  animals in `adopter_residents()` scope; action asks `adopter_may_submit`. Nothing ungated found"* — and
-  `control-activity` stayed green.** #1568 did the same for its staff screen. **A block is read once; a
-  numbered deliverable is reported on. Keep writing the button rule as a deliverable on any page whose
-  read level is lower than its write level.**
-- **`report-animal`'s two open questions were both answered, with reasoning, not avoided.** One form, not
-  two; `/services/report-animal` under the existing prefix, so nothing in `PUBLIC_PAGE_PREFIXES`, the
-  Worker cache lists or the sitemap changed; and `neverHidden` on purpose, because a way to report an
-  injured animal should not be switchable off by accident. **Its own line is the shape to want from a
-  brief's open question: *"Not a question I think Lutan needs to answer now."***
-- **`adopter-portal-app` answered the fostered question and correctly did NOT act on it:**
-  `public_adoption_updates` **does** show an approved update on a fostered resident, because `0343` never
-  reads the placement type. **No migration, nothing built, and whether it SHOULD show is `#k2vrj`, which
-  is Lutan's.** That is the right division: the stream established the fact, the planner filed the
-  decision.
+**#1579 and #1580 returned the SAME floor to the token — 89,505 — from different briefs, different bands
+and different work.** `746` reported a control that disproved the brief-length hypothesis by showing three
+near-identical briefs spreading 2,542 tokens. **This is the other half of the same proof, and it is
+stronger: two very different briefs, one identical floor.** **The floor is set by the harness, not by what
+the planner writes. Stop pricing briefs by length, and do not re-test it a third time.**
 
----
+**THE BIG MISS IS MINE: `tenancy-reown` came in 44,572 UNDER a 220–280k band** — a sound figure, dials
+matching, no compaction, no rescope. **The brief handed over the exact `--reown` SQL (recoverable at
+`3761a29d`), the instrument (#1573's lint with a `--strict` mode built for it), and the proof method.** The
+banding note said those were discounts and then **priced it as if they were not.** **The rule to apply next
+time: a brief that hands over the cause, the decision AND the shape of the fix lands near the floor — and
+"near the floor" now means about 90k plus the work, not the bottom of a 250–320k instrument row.**
 
-## THE COST FINDING OF THIS PLAN: THE SHOP'S SCHEMA WORK IS UNDER-BANDED, THREE TIMES RUNNING
-
-| plan | stream | over its band by |
-|---|---|---|
-| second 2026-11-13 | `bills-chips` | 19,435 |
-| second 2026-11-13 | `shop-schema` | 10,698 |
-| third 2026-11-13 | `merch-shop-deferred` | **50,981** |
-
-**Three overruns in two plans, every one of them shop or shop-adjacent schema work, and almost nothing
-else has gone over at all.** The reading is not "those streams ran long" — it is that **this area is
-systematically priced too low.** `merch-shop-deferred` was banded 165–200k for three additive migrations
-on the same tables and came in at 250,981.
-
-**Band the next shop schema stream at 200–250k.** And the general form, which is the part to carry:
-**when the same AREA goes over repeatedly while everything else lands, revise the area's band, not the
-brief.** `SKILL.md` already forbids raising effort to fix an overrun; this is the other half of that rule.
-
-**One thing this plan's set did NOT have to discard, for the first time in three plans:** every one of the
-seven ran on the dials its band was measured at, so **nothing was thrown out as "band does not apply"**.
-One figure was excluded and only one — #1570, `compacted=yes`, whose `messages=46,172` is far below what
-an uncompacted session of its length would show. **That tell is reliable; use it.**
+**#1584 was kept out and the reason is mine too:** `rescoped=yes`, because I corrected that stream
+mid-flight over a migration number. Counted in, it would have read as 7,933 under its band and applied a
+false discount to the next upload stream.
 
 ---
 
-## THE INCIDENT OF THIS PLAN, AND IT IS A DELIVERY INCIDENT RATHER THAN A WORK ONE
+## THE INCIDENT: BOTH BATCH-1 STREAMS TOOK 0376, AND MY FIX WAS HALF WRONG
 
-**Lutan: *"Documents are no good for me, they are unformatted and too difficult to read. I need a guided
-stream to work through it together"*, and then *"Those documents were already reviewed"*.**
+**Lutan, twice: *"i have another conflict with migration numbers"*, then *"Migration number still failing on
+Car[d] boxes triage"*.**
 
-The planner had answered three of his four asks by putting **markdown files on his Desktop** — a 71 KB
-file of 417 Thai strings among them. **None of it was a delivery.** What he wanted was a session that puts
-the work in front of him a few items at a time and asks him about them.
+**Cause, and it is in the briefs:** `report-animal-photo`'s brief said **"you are the only migration carrier
+in this batch"** while `card-boxes-triage`'s allowed one as *"expected none, may need one"*. **Both were
+mine, written in the same hour, and they contradict each other.** `SKILL.md` rule 3 says *prefer one
+migration-carrying stream per batch*; two were allowed and one was told it was alone.
 
-**IT WORKED, AND THE FIGURES SAY SO.** `thai-read-guided` (#1572) read **all 417 strings in 76 minutes**,
-in chat, with a bilingual reader beside him, at a floor of 85,880 — the bottom of its band.
-`thai-read-finish` (#1574) then read the 34 `uploads` strings that no list would ever have served him and
-closed two items. **Two streams, both guided, both cheap, both finished.**
+**The check cannot settle it, and that is not a fault in the check.** `check-migration-numbers.mjs` is
+symmetric — run in either worktree it names the other PR and says only *"whichever merges second must
+renumber"*. **So the tiebreak has to come from outside the instrument, and it is the planner's to make.**
 
-**AND IT KILLED A STREAM THAT WAS ABOUT TO BE BRIEFED.** `waiting-on-lutan-report` was going to build a
-**generator** for his waiting-on-you list — a better document, produced weekly. He had already read that
-list and did not want it in that form at all. **The generator was the right answer to "how do we stop this
-going stale" and the wrong answer to "how does Lutan use it".**
+**MY FIX WAS HALF WRONG.** I told the stream keeping the number *"carry on and merge on green, do not
+wait"*. **`migration-numbers` reads OPEN PRs, so while the other PR still held 0376 that stream's CI could
+not go green whatever it did** — it was blocked on a neighbour's push, and "do not wait" sent it hunting for
+a fault of its own. **It resolved on its own terms:** the other stream renumbered and merged **first**,
+taking **0377**, so the free number moved and `card-boxes-triage` took **0378**. **Both streams cleared
+their own stale dev rows with `--forget`** and dev holds no orphan.
 
-**THE STANDING RULE, and it belongs in every future planner's first turn: a long reference document is not
-a delivery to this user.** For anything he must work **through** rather than read once — strings, jobs,
-decisions, a review — **brief a guided session, not a file.** Files are right only for something he
-forwards to somebody else.
-
----
-
-## MULTI-TENANCY HAS STARTED, WITHOUT THE PRODUCT NAME, AND A PLANNER NEEDS TO KNOW HOW
-
-**Lutan, 2026-11-13: *"If there is nothing more we should also start the work on multi tenant"*.**
-`#ykefa` says in terms *"Needs the product name first"*, and **that is still true of the BUILD.** What was
-started is the **hardening** the spike says must ship with it, which needs neither tenancy nor the name:
-
-- **`tenancy-catalogue-lint` (#1573, merged):** `scripts/check-tenancy-catalogue.mjs`, report-only, with a
-  `--strict` mode built for the next stream. **It cannot run in CI and that is deliberate** — ownership
-  lives in `pg_catalog`, CI holds no `SUPABASE_ACCESS_TOKEN`, and a job without it would check nothing.
-- **`tenancy-reown` (batch 3, briefed 2026-11-14):** create a role without `BYPASSRLS` and re-own the
-  objects, with the lint as its instrument.
-- **The permanent canary diff cannot start.** It plants a second shelter; there is no shelter concept to
-  plant one in.
-
-**TWO FACTS A FUTURE PLANNER MUST NOT RE-DERIVE:**
-
-1. **The spike's counts are wrong now.** Measured on dev 2026-11-13: **53** owner-run views (spike: 38)
-   and **92** `security definer` functions (spike: 58), 107 API-reachable objects flagged. **The re-owning
-   is about 40% bigger than the ≈50-hour estimate assumed.**
-2. **`create role` is in dispute on the same database.** The spike's harness created
-   `spike_definer nologin inherit nobypassrls` on 2026-10-09 (readable at
-   `3761a29d:scripts/spike-multi-tenancy.mjs:217`; that commit is still in the object store). The lint
-   stream was refused **42501** on 2026-11-13. **`tenancy-reown`'s step zero settles it, and if the answer
-   is no, the whole ≈50-hour approach turns on it.** Read its PR before briefing anything downstream.
-
-**And the risk its brief leads with, because it is counter-intuitive:** re-owning **alone** may blank the
-public website. The spike's fix is re-own **plus one permissive `using (true)` policy per table**; without
-those, a view owned by a role lacking `BYPASSRLS` is subject to RLS as that role, which has no policies,
-so it reads **0 rows**. **The md5 regression proof is not paperwork; it is the only thing standing between
-that change and a blank site.**
+**THE GUARD, BOTH HALVES, AND IT IS NOW IN `.plan-day.md`:** a batch's briefs may say *"expected none, may
+need one"* **or** *"you are the only migration carrier"*, **never both**. If two streams may take a number,
+**every brief in that batch names the tiebreak in advance — the lower PR number keeps it — AND says that the
+stream keeping the number stays red until the other pushes, and that its number may move again if the other
+merges first.** Batch 2's two carriers (`donations-read-level`, `merch-currency`) both carry that paragraph.
+**Check next round whether it fired.**
 
 ---
 
-## STANDING CHECKS — one new, two reaffirmed
+## WHAT THE MERGED PRs REPORTED THAT ONLY A PLANNER CAN FILE
 
-- **NEW: when a stream reports a finding and says *"for the planner to file"*, FILE IT THAT SETUP.** Four
-  were filed this plan (`#v3qlt`, `#p8fwd`, `#n2bkc`, `#d6xhs`), each from a PR body, each in its subject's
-  section. **A finding that lives only in a merged PR body is invisible to every future plan** — nothing
-  greps PR bodies. The streams were right not to file them; the planner is the only one who can.
-- **THE STALE TITLE HAS NOW BEEN CAUGHT NINE TIMES.** `#z1qn7` was ticked with its title still reading
-  *"(later; not started)"*. **Every batch, re-read the title of every item a stream touched, alone.**
-- **A STREAM'S REPORT IS A REPORT, NOT PROOF.** It paid again: reading #1565 rather than trusting its
-  comment is what produced `#r4ktv`, and reading #1567 and #1568 is what confirmed both of `745`'s
-  hypotheses. **Both checks were cheap.**
+**Six items were filed from PR bodies across the two plans, all from streams that correctly did not file
+them.** Two are now batch 2's streams. The four from this plan's batch 1 and the morning batch:
+
+- **`#t4wqp`** — `check-who-does-what` ran for the first time ever and exited red: **385 boxes, 316 obeyed,
+  3 wrong, 1 sticky, 61 inert, 9 probe faults.** Filed with the doctor `clinicRule` overlisting marked
+  **EXPECTED** (it is the doctor-cells test state Lutan drives himself), which is what stops it being filed
+  a fourth time. **`card-boxes-triage` then triaged it and ticked the item.**
+- **`#h8rvk`** — the two holes `0375` left: nothing asserts an RLS table **has** its `definer_all` policy,
+  and the strict lint is in neither CI nor the release procedure. **Batch 2's `tenancy-lint-holes`.**
+- **`#v3qlt`**, **`#p8fwd`**, **`#n2bkc`**, **`#d6xhs`** — all four filed and all four now closed or
+  briefed.
+
+**THE STANDING CHECK THIS CONFIRMS: when a stream says *"for the planner to file"*, file it that setup.** A
+finding that lives only in a merged PR body is invisible to every future plan, because nothing greps PR
+bodies.
+
+**AND ONE REPORTING GAP WORTH WATCHING: #1578 (`thai-read-2`) posted no usage comment and a three-line PR
+body** that accounted for none of its thirteen numbered deliverables. Its substance was real — **25 new
+strings read by a bilingual reader, none changed** — but a planner cannot tell from the PR whether the
+reconciliation across 27 test plans happened or was skipped. **If a guided stream reports that thinly
+again, the brief's "report every deliverable" block needs to be a numbered deliverable rather than a
+block** — which is exactly what worked for the first commit and for the usage comment.
 
 ---
 
 ## FOR YOUR FIRST TURN
 
-Read `.plan-day.md` first. **It stands at 8 of 8 and this edition resets the counter, so you are planning
+Read `.plan-day.md` first. **It stands at 6 of 6 and this edition resets the counter, so you are planning
 FROM SCRATCH.**
 
-**Read the system date and compare it with the date at the top of this file.** Same date means you are the
-next plan of the same day, which is normal; a later date means the clock has turned over. **Never derive
-today's date from a document.**
+**Read the system date and compare it with the date at the top of this file.** Two plans ran on 2026-11-14;
+a third on the same date is a normal thing to be. **Never derive today's date from a document.**
 
 **Tell him at the start that the sync plus the `worktree.mjs new` runs plus the briefs is about half an
-hour.** Four editions have recorded that as the fix for an interruption and it still holds.
+hour.** Five editions have recorded that as the fix for an interruption.
 
-**WHAT IS OWED:**
+**WHAT IS OWED. This list is a snapshot of batch 2 AS SET UP — if he added a stream after that, it is not
+here, and `.plan-day.md` is the authority, not this list.**
 
-1. **MEASURE THIS PLAN'S EIGHT.** Seven are already measured and recorded in `.plan-day.md` (#1569–#1575),
-   because batch 3 was set up a day later. **What is NOT measured is `tenancy-reown`** (batch 3), which was
-   in flight when this was written. **Read its `stream-usage:` comment, and read its PR body for the
-   `create role` answer**, which is the single most consequential fact the next plan can hold.
-2. **RE-DERIVE THE FLOOR AND NEVER CARRY IT FORWARD.** This plan: **85,880–89,570, mean 87,363 from six**.
-   Its predecessor: **84,842–88,574, mean 86,833 from seven**. The mean has moved 530 up. **And do not
-   re-test brief length** — the control above settled it.
-3. **CHECK BATCH 3's HYPOTHESIS.** `tenancy-reown`'s brief says re-owning without the per-table permissive
-   policies blanks the site, and makes the md5 regression proof a deliverable it may not merge without.
-   **Did it run that proof, and was the difference empty?** If it merged without it, that is a briefing
-   failure to write down, not a stream's.
-4. **`#r4ktv` IS CLOSED BUT `#p8fwd` IS ITS TAIL.** Staff can edit the five rates; adding a **sixth
-   currency** still needs a migration. Decide whether that matters before the shop opens to buyers outside
-   those five.
-5. **`#v3qlt` IS CARD WORK AND CANNOT BE SPLIT.** A levelled donations-read activity replacing the yes/no
-   `donation.receipt` means a changed activity, so it is one stream carrying its own migration —
-   `check-cards-count` asserts an exact count from `cards.ts`.
-6. **TWO SMALL ITEMS TO FOLD, NOT TO BRIEF:** `#n2bkc` (placeholder "one"/"7" text in
-   `list-thai-added.mjs`) and `#d6xhs` (one English refusal still says *"Your role cannot…"*). **Each is
-   minutes. Fold them into the next stream in their area; neither earns a floor of its own.**
-7. **NOTHING WAS CLEARED THIS PLAN, ON PURPOSE.** Batch 2's three folders are **HELD by their own
-   sessions** — clear them once those close. **`cut-release-0-46-0` (3001) is free with PR #1576 merged,
-   but 0.46.0 is a release this chat did not run**: the record PR and the production deploy may still be
-   ahead of it, and the deploy is Lutan's. **A release worktree is not a leftover to clear on sight. Ask.**
+1. **MEASURE BATCH 2's THREE** from their merged PRs: `donations-read-level`, `tenancy-lint-holes`,
+   `merch-currency`. **Re-derive the floor from the complete set and never carry it forward** — but note
+   that the two identical 89,505 readings above make the floor the best-measured number in this file.
+2. **CHECK BATCH 2's THREE HYPOTHESES.** (a) Did the pre-written migration tiebreak hold, or did the two
+   carriers still need a planner? (b) Did `donations-read-level` decide to level `donation.receipt`, add a
+   separate activity, or leave it — and did it add **probes**, since the activity has had none and
+   `check-who-does-what` now works? (c) Did `tenancy-lint-holes` find its policy rule could run in **CI**,
+   which would close its second hole far better than a line in a document?
+3. **`0375` IS NOT ON PRODUCTION.** The re-own applied to dev only and said so. **A production apply that
+   re-owns 90 objects is the release manager's, with the strict lint beside it** — which is what `#h8rvk`
+   asks to be written into the release procedure. **Do not brief a stream to do it.**
+4. **THE DICTIONARY OVERLAP IS A LIVE HYPOTHESIS.** Batch 1 had two streams touching `en.ts`/`th.ts` at
+   once, which by the skill's own test is a collision; I kept them together because `CLAUDE.md` calls
+   dictionary conflicts trivial, named the keys each owned and required a `sync` before the PR. **Both
+   merged without incident, so it held once.** Batch 2 may do it again. **Record which way it goes rather
+   than assuming it is settled.**
+5. **`#y1dqu` IS STILL OPEN AND ITS OPEN HALF IS A PERSON.** Round 2 read 25 strings with a bilingual
+   reader. **The item's own durable question — should new Thai queue somewhere a Thai reader sees it, rather
+   than being filed by hand — was deliberately put to him at the END of the reading.** Read #1578's PR for
+   his answer before briefing round 3; if the PR does not say, **ask him in one line rather than guessing.**
+6. **THE PRODUCT NAME IS DECIDED, AND `#ykefa`'s BUILD HALF IS UNBLOCKED. Lutan, 2026-11-14, while this
+   edition was being written: *"ok we will use cooperjaidee as the system name"*, then *"I will buy the domain
+   tonight"*.** Three planner editions carried the name as the thing with him; **it is no longer.** Full
+   reasoning in `docs/decisions/2026-11-14-product-name.md`, which ships in this same PR.
+   **What this means for your first plan, and the restraint matters:** `#ykefa` is **≈50 hours (40–65)** and
+   the re-own measured its object counts **40% larger** than the spike priced (53 owner-run views and 92
+   definer functions, against 38 and 58). **It is a programme to SEQUENCE across days, not a stream to
+   brief in one go**, and the first piece is a design: `shelter_id` across the tenant tables, the
+   restrictive per-shelter policies, `current_shelter_id()` and `is_trusted_caller()`. **The permanent
+   canary diff becomes possible for the first time**, because there is finally a shelter concept to plant a
+   second shelter into. **The hardening already shipped** (#1573, #1580) and is not revisited.
+   **Three things that are NOT unblocked and must not be assumed:** the domain **is registered** (`cooperjaidee.org`, 2026-11-14, confirmed by RDAP, expires 2028-11-14) **but points at nothing** — no DNS record, no Worker route, no Pages project — so **nothing deploys to it and no stream may assume it resolves**; **nothing in this repository is renamed**,
+   because a rename of code, infrastructure or branding has not been asked for; and `lannacareforanimals.org`
+   **remains production**, with `lannacare.org` still 301ing to it.
 
-**Do NOT re-ask him about:** the product name (it is with him, and asking again is a status question he has
-already been given); the adopter-portal exception (settled in writing, `745` has the scope); `test-plan`
-being advisory; merging a green PR; or anything on `745`'s and `744`'s do-not-re-ask lists, all of which
-still holds.
+**Do NOT re-ask him about:** the anonymous photo upload (**he answered 2026-11-14: *"Yes, build it
+properly"*** — a bucket the public can write but not read, limits, metadata stripped); the adopter-portal
+exception (settled in writing, `745` has the scope); `test-plan` being advisory; merging a green PR; the
+Thai read's cadence (weekly) or folding its three items (he said *"Leave them"*); or anything on `746`'s and
+`745`'s do-not-re-ask lists.
