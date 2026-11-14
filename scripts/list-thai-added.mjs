@@ -33,7 +33,10 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
 const DICT_DIR = "src/lib/i18n/dictionaries";
 
-const MARKS = ["\u0001one\u0001", 7, "\u0001two\u0001", 3, "\u0001three\u0001", 1];
+// Numeric stand-ins (for count/plural branches) still compare as numbers but PRINT as a sentinel,
+// so a count never appears as a bare "7" in the list (#n2bkc).
+const num = (n, mark) => Object.assign(Object(n), { toString: () => mark });
+const MARKS = ["\u0001one\u0001", num(7, "\u0001two\u0001"), "\u0001three\u0001", num(3, "\u0001one\u0001"), "\u0001two\u0001", num(1, "\u0001three\u0001")];
 const anyFields = new Proxy({}, { get: (_, key) => (key === Symbol.toPrimitive ? undefined : MARKS[0]) });
 
 function sample(fn) {
