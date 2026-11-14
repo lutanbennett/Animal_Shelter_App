@@ -216,10 +216,11 @@ begin
   -- share_publicly: text_review_queue() (text.approve's probe) lists only public text not yet reviewed, so it needs one such row
   insert into adoption_updates (resident_id, received_on, channel, share_publicly) select id, current_date, 'visit', true from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
   -- A non-Medical sub folder: set_resident_profile_photo refuses a Medical photo (P0001), which made Admin, the control, fail the photos.resident_manage edit probe.
-  insert into attachments (id, owner_type, owner_id, drive_file_id, file_name, sub_folder, approved_at) values
-    (${lit(F.ATT_IN)}, 'resident', ${lit(F.R_IN)}, 'harness-${F.R_IN}', 'x.jpg', 'Photos', now()),
-    (${lit(F.ATT_OUT)}, 'resident', ${lit(F.R_OUT)}, 'harness-${F.R_OUT}', 'x.jpg', 'Photos', now());
-  -- ...and approved for the public site: set_resident_profile_photo refuses an unreviewed photo (0318, photo.profile_not_approved).
+  insert into attachments (id, owner_type, owner_id, drive_file_id, file_name, sub_folder) values
+    (${lit(F.ATT_IN)}, 'resident', ${lit(F.R_IN)}, 'harness-${F.R_IN}', 'x.jpg', 'Photos'),
+    (${lit(F.ATT_OUT)}, 'resident', ${lit(F.R_OUT)}, 'harness-${F.R_OUT}', 'x.jpg', 'Photos');
+  -- Approved for the public site by an UPDATE, because the insert trigger (0346) always clears approval on a resident photo: set_resident_profile_photo refuses an unreviewed one (photo.profile_not_approved).
+  update attachments set approved_at = now() where id in (${lit(F.ATT_IN)}, ${lit(F.ATT_OUT)});
 end $setup$;
 create temp table harness_out (k text, res jsonb);
 grant all on harness_out to authenticated, service_role;

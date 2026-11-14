@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "Adding a shop link or a Shelter Friend no longer fails with \"You do not have permission to approve public text\" for someone who holds the card to manage the shop or Shelter Friends but not the one that approves public text.", cards: ["manage_shop_page", "publish_shelter_friends"] },
 ];
 
 /** Newest first. */
