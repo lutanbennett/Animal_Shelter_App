@@ -11,7 +11,7 @@
 | PR | pending: not yet opened at this commit |
 | Tested by / date | Claude / 2026-11-14 |
 | Carries a migration? | yes — `0376_shop_friends_text_approval_default_null.sql` |
-| Tested at SHA | `__SHA__` |
+| Tested at SHA | `d73ac4538` |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,11 @@
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — all four `0`, pasted as the run printed them:
 
 ```
-__GATES__
+=== gates: typecheck exited 0 after 114s
+=== gates: lint exited 0 after 441s
+=== gates: test exited 0 after 83s
+=== gates: build exited 0 after 244s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
