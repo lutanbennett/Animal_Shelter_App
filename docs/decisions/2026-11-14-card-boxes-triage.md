@@ -46,3 +46,12 @@ planner to file: give each of those probes the extra it needs so the yes directi
 
 Nothing new accepted except the three above. 61 inert is the one residue, named. `#t4wqp`'s done-when is met: wrong and sticky settled,
 faults run, doctor written down. Its title described the *open* state and is now ticked, so it reads correctly as done.
+
+## The lesson, and what would have caught it
+
+**A probe fault can hide a real defect.** The item says a probe fault is "indistinguishable from a box that passed". The `shop.manage` fault was
+worse: it was read as a broken fixture because Admin passed it, and it was an app defect (`0376`). It hid from the check and from the first
+triage alike. That is the argument for fixing a faulted probe promptly and proving *why* it faults, not assuming a fixture.
+It is also a card **not fully applying its access**: the grant row for `shop.manage` existed, so `check-card-grants.mjs` (which asks
+whether a card grants anything) could not see that the insert it unlocks was still refused by another guard. The check that could have
+caught it is this one, `check-who-does-what.mjs`, which is exactly what the faulted probe was. No new check is proposed.
