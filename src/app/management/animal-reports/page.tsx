@@ -32,7 +32,7 @@ export default async function AnimalReportsPage(props: PageProps<"/management/an
 
   let q = supabase
     .from("animal_reports")
-    .select("id, kind, species, description, location, reporter_name, reporter_phone, reporter_email, status, created_at")
+    .select("id, kind, species, description, location, reporter_name, reporter_phone, reporter_email, status, photo_path, created_at")
     .order("created_at", { ascending: false })
     .limit(200);
   if (filter) q = q.eq("status", filter);
@@ -69,6 +69,12 @@ export default async function AnimalReportsPage(props: PageProps<"/management/an
                 <span className="rounded bg-background px-2 py-0.5">{s.status[r.status]}</span>
               </div>
               <p className="whitespace-pre-wrap">{r.description}</p>
+              {r.photo_path && (
+                <a href={`/management/animal-reports/photo/${r.photo_path}`} target="_blank" rel="noreferrer">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/management/animal-reports/photo/${r.photo_path}`} alt={s.photoAlt} className="max-h-64 rounded border border-border" />
+                </a>
+              )}
               <p className="text-sm"><span className="font-semibold">{s.colWhere}:</span> <span className="whitespace-pre-wrap">{r.location}</span></p>
               <p className="text-sm">
                 <span className="font-semibold">{s.colContact}:</span>{" "}
