@@ -211,3 +211,27 @@ export async function saveRate(formData: FormData) {
   if (error || !data?.length) return done(RATES, "err", "failed");
   return done(RATES, "ok", "saved");
 }
+
+/** Add a currency. Asks merch.manage at edit (guard), as the table's insert policy does. A code must be a real ISO 4217 one. */
+export async function addCurrency(formData: FormData) {
+  const g = await guard();
+  if (!g) return done(RATES, "err", "notAllowed");
+  const currency = (str(formData, "currency") ?? "").toUpperCase();
+  const rate = num(formData, "rate");
+  if (!/^[A-Z]{3}$/.test(currency) || currency === "THB" || !(Intl.supportedValuesOf("currency") as string[]).includes(currency) || rate === null || rate <= 0 || rate >= 100000000)
+    return done(RATES, "err", "invalid");
+  const { error } = await g.supabase.from("merch_exchange_rates").insert({ currency, thb_per_unit: rate });
+  if (error) return done(RATES, "err", error.code === "23505" ? "currencyExists" : "failed");
+  return done(RATES, "ok", "saved");
+}
+
+/** Remove a currency. Asks merch.manage at edit (guard), as the table's delete policy does. Past orders keep theirs. */
+export async function removeCurrency(formData: FormData) {
+  const g = await guard();
+  if (!g) return done(RATES, "err", "notAllowed");
+  const currency = str(formData, "currency");
+  if (!currency) return done(RATES, "err", "invalid");
+  const { data, error } = await g.supabase.from("merch_exchange_rates").delete().eq("currency", currency).select("currency");
+  if (error || !data?.length) return done(RATES, "err", "failed");
+  return done(RATES, "ok", "saved");
+}

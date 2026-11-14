@@ -4,7 +4,7 @@ import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
 import { loadAppUsersById, appUserName } from "@/lib/auth/app-users";
 import { unsentParts } from "@/lib/merch/supplier-email";
-import { saveProduct, saveVariant, saveRate, setProductState } from "./actions";
+import { saveProduct, saveVariant, saveRate, addCurrency, removeCurrency, setProductState } from "./actions";
 
 /**
  * The merchandise shop, staff side (docs/merch-shop.md). Gated on merch.manage, the activity its card (run_merch_shop)
@@ -135,9 +135,28 @@ async function RatesTab({ supabase, canEdit }: { supabase: Db; canEdit: boolean 
             <span className="text-xs text-muted">
               {m.ratesSetOn(new Date(r.set_at).toLocaleDateString(locale === "th" ? "th-TH" : "en-GB"), (people.has(r.set_by ?? "") ? appUserName(people.get(r.set_by ?? "")) : m.ratesUnknown))}
             </span>
+            {canEdit && (
+              <form action={removeCurrency} className="ml-auto">
+                <input type="hidden" name="currency" value={r.currency} />
+                <button className={buttonClass}>{m.ratesRemove}</button>
+              </form>
+            )}
           </li>
         ))}
       </ul>
+      {canEdit && (
+        <form action={addCurrency} className="flex flex-wrap items-end gap-2 rounded border border-border bg-surface p-3">
+          <label className="flex flex-col text-sm">
+            {m.ratesNewCode}
+            <input name="currency" required maxLength={3} pattern="[A-Za-z]{3}" placeholder="CAD" className={inputClass + " w-24 uppercase"} />
+          </label>
+          <label className="flex flex-col text-sm">
+            {m.ratesColRate}
+            <input name="rate" type="number" step="0.0001" min="0.0001" required className={inputClass + " w-28"} />
+          </label>
+          <button className={primaryClass}>{m.ratesAdd}</button>
+        </form>
+      )}
     </section>
   );
 }
