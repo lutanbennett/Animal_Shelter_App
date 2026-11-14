@@ -13,7 +13,7 @@
 | PR | see the PR for this branch |
 | Tested by / date | Claude, 2026-11-14 |
 | Carries a migration? | yes: 0379 |
-| Tested at SHA | TESTSHA |
+| Tested at SHA | 25b9d3559 |
 
 ## 1. Scope and risk
 
@@ -43,13 +43,13 @@ indistinguishable from one that passed.
 
 ```
 === gates: typecheck — npm run typecheck
-=== gates: typecheck exited 0 after 158s
+=== gates: typecheck exited 0 after 148s
 === gates: lint — npm run lint
-=== gates: lint exited 0 after 285s
+=== gates: lint exited 0 after 489s
 === gates: test — npm test
-=== gates: test exited 0 after 40s
+=== gates: test exited 0 after 63s
 === gates: build — npm run build
-=== gates: build exited 0 after 147s
+=== gates: build exited 0 after 260s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 - [ ] CI green on the PR (runs the same four gates, among its other checks). **This one cannot be true in the commit that creates the PR**, so write it `n/a: not yet — the PR does not exist at this commit` and **leave it there.** Changed 2026-10-20: ticking it in a follow-up commit used to be the rule, and that commit **invalidated its own evidence** — a new HEAD means a new run, so every PR in this repository paid two full CI cycles to transcribe a result GitHub already records permanently against the commit. A tick here attests to nothing a reader can check better by looking at the PR. **What must still happen, and is a merge step rather than a checklist line: before merging, read the run for your current HEAD (`gh run view <id> --json status,conclusion,headSha`) and confirm its `headSha` matches.** Merging on an older run's strength merges a commit whose CI never finished. **Do not pre-tick this line either** — a green you have not seen is the exact failure this checklist exists to prevent — n/a: not yet — the PR does not exist at this commit
