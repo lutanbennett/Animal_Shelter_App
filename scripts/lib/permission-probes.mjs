@@ -116,8 +116,9 @@ export const PROBES = [
 
   // --- Donations
   // 0168: donations, its lines and the receipt register share the one cell; receipts are made only by issue_donation_receipt(), which asks it too.
-  // A read probe needs a fixture row, and there is none yet
+  // The read runs against $DONATION, a fixture donation of check-who-does-what.mjs.
   { activity: "donation.receipt", level: "edit", sql: `insert into donations (received_on, donor_name, method) values (current_date, 'Probe donor', 'cash')` },
+  { activity: "donation.receipt", level: "read", sql: `select 1 from donations where id = $DONATION` },
   // 0210: appeals and their photos share the one cell. Admin only until it is delegated, so every other role is refused.
   { activity: "appeal.run", level: "edit", sql: `insert into appeals (resident_id, title, target_amount) values ((select id from residents order by id limit 1), 'Probe appeal', 1)` },
 
