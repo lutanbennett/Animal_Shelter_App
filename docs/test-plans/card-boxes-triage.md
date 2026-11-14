@@ -152,6 +152,6 @@ Automated checks by: Claude  Date: 2026-11-14
 
 ### Manual verification
 
-pending: row 1 above needs a person to press Add on /admin/shop under a shop-card-only login
+Manual verification by: pending: row 1 above needs a person to press Add on /admin/shop under a shop-card-only login
 
 Result: pass with accepted defects
