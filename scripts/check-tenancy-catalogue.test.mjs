@@ -35,3 +35,17 @@ test("security_invoker=false is not an invoker view", () => {
   assert.equal(isInvoker("{security_invoker=false}"), false);
   assert.equal(isInvoker("{security_invoker=on}"), true);
 });
+
+const t = (name, o = {}) => ({ schema: "public", name, owner: "postgres", rls: true, hasDefinerAll: true, ...o });
+
+test("rule 3: an RLS table without definer_all is flagged; with it, or without RLS, it is not", () => {
+  const r = lintCatalogue({ views: [], functions: [], tables: [t("bad", { hasDefinerAll: false }), t("ok"), t("norls", { rls: false, hasDefinerAll: false })] });
+  assert.deepEqual(r.findings.map((x) => [x.rule, x.object]), [[3, "table:public.bad"]]);
+});
+
+test("rule 3: allow-list by name works and a vanished table entry is stale", () => {
+  const allowed = { "table:public.exc": { reason: "r" }, "table:public.gone": { reason: "r" } };
+  const r = lintCatalogue({ views: [], functions: [], tables: [t("exc", { hasDefinerAll: false })] }, { allowed });
+  assert.equal(r.findings.length, 0);
+  assert.deepEqual(r.stale, ["table:public.gone"]);
+});

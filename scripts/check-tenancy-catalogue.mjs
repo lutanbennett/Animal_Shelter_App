@@ -3,12 +3,12 @@
 //
 //   node scripts/check-tenancy-catalogue.mjs [--env test|uat|production] [--tenant-role <role>] [--strict]
 //
-// Needs SUPABASE_ACCESS_TOKEN (the Management API). CI has only the test project's URL and keys, which cannot read
+// Run in every release: docs/release-procedure.md section 5. Needs SUPABASE_ACCESS_TOKEN (the Management API). CI has only the test project's URL and keys, which cannot read
 // pg_catalog, so this is a script someone runs and is NOT wired into CI (docs/decisions/2026-11-13-tenancy-catalogue-lint.md).
 // --strict exits 1 on any finding; for the re-own stream, once a tenant role exists.
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 import { exitWith } from "./lib/exit.mjs";
-import { lintCatalogue, VIEWS_SQL, FUNCTIONS_SQL, DEFAULT_TENANT_ROLE } from "./lib/tenancy-catalogue.mjs";
+import { lintCatalogue, VIEWS_SQL, FUNCTIONS_SQL, TABLES_SQL, DEFAULT_TENANT_ROLE } from "./lib/tenancy-catalogue.mjs";
 
 const argv = process.argv.slice(2);
 const { name: envName } = parseEnvArg(argv);
@@ -34,16 +34,18 @@ if (!env.SUPABASE_ACCESS_TOKEN) {
   try {
     const views = await run(VIEWS_SQL);
     const functions = await run(FUNCTIONS_SQL);
-    const { findings, allowedHit, stale } = lintCatalogue({ views, functions }, { tenantRole });
+    const tables = await run(TABLES_SQL);
+    const { findings, allowedHit, stale } = lintCatalogue({ views, functions, tables }, { tenantRole });
     const apiViews = views.filter((v) => v.api);
     const apiDefiners = functions.filter((f) => f.api && f.secdef);
     console.log(`Project ${ref}; tenant role: ${tenantRole ?? "(none yet)"}`);
     console.log(`Read ${views.length} views (${apiViews.length} API-readable), ${functions.length} functions (${apiDefiners.length} API-executable security definer).`);
+    console.log(`Rule 3 (wide): ${tables.filter((t) => t.rls).length} of ${tables.length} public tables have RLS on; each must carry a definer_all policy.`);
     for (const f of findings) console.log(`FLAG rule ${f.rule}  ${f.object}  owner=${f.owner}`);
     for (const a of allowedHit) console.log(`allowed  ${a.object}  — ${a.why}`);
     for (const s of stale) console.log(`STALE allow-list entry ${s}: no such API object any more; drop it`);
     const r1 = findings.filter((f) => f.rule === 1).length;
-    console.log(`\n${findings.length} flagged (${r1} views, ${findings.length - r1} functions), ${allowedHit.length} allowed by name, ${stale.length} stale.`);
+    console.log(`\n${findings.length} flagged (${r1} views, ${findings.filter((f) => f.rule === 2).length} functions, ${findings.filter((f) => f.rule === 3).length} tables missing definer_all), ${allowedHit.length} allowed by name, ${stale.length} stale.`);
     console.log(strict ? "STRICT: exiting 1 on any finding." : "REPORT-ONLY: this does not fail the build.");
     await exitWith(strict && (findings.length || stale.length) ? 1 : 0);
   } catch (e) {
