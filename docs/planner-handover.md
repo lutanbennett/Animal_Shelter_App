@@ -7,13 +7,13 @@
 successor rather than by a reviewer.
 
 **WHICH PLAN'S FIGURES THIS EDITION REPORTS, because `748` asked for this to be said explicitly.** It
-reports **`748`'s plan's complete set of six**, measured this morning in one slot. **It carries NO
+reports **`748`'s plan's complete set of six**, measured this morning in one slot, and **carries NO
 figures from its own five streams** — those are read at the next plan's first batch and reported by this
 edition's successor. **That is the delta model working as designed, not a gap.**
 
-**WHY THIS EDITION EXISTS.** `748`'s plan was complete at 6 of 6; this plan was then built from scratch,
-agreed in one answer (*"All five, as listed"*), and **both its batches were set up and batch 1 merged
-inside one chat.** Second edition in a row written from the same chat that planned it.
+**WHY IT EXISTS.** `748`'s plan was complete at 6 of 6; this plan was built from scratch, agreed in one
+answer (*"All five, as listed"*), and **both its batches were set up and batch 1 merged inside one
+chat** — the second edition in a row written from the same chat that planned it.
 
 ---
 
@@ -79,14 +79,12 @@ on what the product is to its customers.** It read the facts, found the choice w
   **It agrees with the item's understanding**, so `lanna.cooperjaidee.org` is covered and a deeper name
   is not. **One residual unknown is marked rather than glossed: wildcard-on-Workers on the free plan is
   `not verified`.**
-- **(c) EMAIL is answered from the code:** sends go through `send_email` bindings from
-  `releases@lannacare.org` / `releases@lannacareforanimals.org`; **nothing sends as `cooperjaidee.org`**,
-  and nothing was set up.
+- **(c) EMAIL, from the code:** sends go through `send_email` bindings from `releases@lannacare.org` /
+  `releases@lannacareforanimals.org`; **nothing sends as `cooperjaidee.org`**, and nothing was set up.
 - **Its recommendation:** the apex as the platform's front door, **shelters keeping their own domains**,
-  and a one-level subdomain offered to shelters that have none. **One technical consequence holds
-  whichever shape he picks: build the host-to-shelter mapping table-driven.**
-- **Nothing in Cloudflare was touched, nothing outside `docs/` was touched, and the item is correctly
-  LEFT OPEN** with its title rewritten by the stream itself to say that (a) is his.
+  a one-level subdomain for those with none — and, whichever shape he picks, **build the host-to-shelter
+  mapping table-driven.** Nothing in Cloudflare or outside `docs/` was touched, and the item is correctly
+  **LEFT OPEN**, its title rewritten by the stream itself to say that (a) is his.
 
 **SO PUT (a) TO HIM: what does a hostname mean to a shelter?** It is the first question of `#ykefa`'s
 build and everything else hangs on it.
@@ -96,15 +94,14 @@ build and everything else hangs on it.
 ## WHAT THIS PLAN SHIPPED, IN ONE LINE EACH
 
 - **#1590 `domain-tenancy-hostnames`** — the hostname paper above: **a recommendation, not a ruling.**
-- **#1591 `merch-photo-upload`** — `#qtnob`: a real photo chooser on the merch add-product form,
-  uploading through `/api/merch/photos`, **a route rather than a Server Action** (the 1 MB
-  `serverActions.bodySizeLimit` trap, proved with a 4.3 MB PNG). **`merch.manage` at edit for both the
-  route and the control, so no second activity and no migration.** Current photo shown, paste-an-id kept.
+- **#1591 `merch-photo-upload`** — `#qtnob`: a real photo chooser on the merch add-product form, uploading
+  through `/api/merch/photos`, **a route rather than a Server Action** (the 1 MB
+  `serverActions.bodySizeLimit` trap, proved with a 4.3 MB PNG). **`merch.manage` at edit for route and
+  control, so no second activity and no migration.** Current photo shown, paste-an-id kept.
 - **#1592 `receipt-probe-fixture`** — `#r9pzq`: a `$DONATION` fixture and a `read` probe, rolled back with
-  the rest of the harness like `$MERCH`/`$REPORT`. **And it corrected a figure two briefs had quoted.**
-
-**Batch 2 is set up and unmerged at the time of writing:** `admin-nav-reachability` (`#fc7te`, port 3005)
-and `report-photo-retention` (`#6rkux`, port 3006).
+  the harness like `$MERCH`/`$REPORT`. **And it corrected a figure two briefs had quoted.**
+- **Batch 2 is set up and unmerged at the time of writing:** `admin-nav-reachability` (`#fc7te`, 3005)
+  and `report-photo-retention` (`#6rkux`, 3006).
 
 ---
 
@@ -113,16 +110,14 @@ and `report-photo-retention` (`#6rkux`, port 3006).
 **`check-who-does-what` reports 392 boxes, 0 probe faults and 1,630 probes** (#1592, measured before and
 after its own change). **The figure `748` carried — "9 probe faults out of 385 boxes" — was true of the
 check's first-ever run and was cleared by #1583 hours later.** The planner pasted the stale figure into
-stream 3's brief as evidence, and **the stream caught it at step zero and said so plainly in its PR.**
+stream 3's brief as evidence, and **the stream caught it at step zero and said so in its PR** — the
+step-zero instrument catching the BRIEF rather than the item, **the second time in three days** (the
+first was four briefs naming a `th.ts` that does not exist). **Re-read a count before pasting it into a
+brief.** `#k7vnd` carries the corrected figures so the next planner inherits them rather than `748`'s.
 
-**That is the step-zero instrument catching the BRIEF rather than the item — the second time in three
-days** (the first was four briefs naming a `th.ts` that does not exist). **Re-read a count before pasting
-it into a brief.** `#k7vnd`, filed today, carries the corrected figures so the next planner inherits them
-rather than `748`'s.
-
-**AND THE CLASS OF FAULT IS WORTH RESTATING, because #1592 was careful about it:** a box with **no probe
-at all** is worse than a reported fault. A fault is visible in the output; **an unprobed box is
-indistinguishable from one that passed.** `#r9pzq` closed one; `#k7vnd` is the next.
+**AND THE CLASS OF FAULT IS WORTH RESTATING:** a box with **no probe at all** is worse than a reported
+fault, because a fault is visible in the output while **an unprobed box is indistinguishable from one
+that passed.** `#r9pzq` closed one; `#k7vnd` is the next.
 
 ---
 
@@ -133,31 +128,26 @@ would have been lost:
 
 - **`#8t3rk` (Security)** — the public report form and its photo upload have **no per-visitor rate
   limit**. It was recorded **only inside `#6rkux`**, so it would have died the moment that item was
-  ticked. Its first work is establishing what Cloudflare's **free** tier can do, against the
-  zero-ongoing-cost rule.
+  ticked. First work: what Cloudflare's **free** tier can do, against the zero-ongoing-cost rule.
 - **`#k7vnd` (Security)** — the **0169 places-list read box has no probe at all**
-  (`permission-probes.mjs` line 114). Same shape as `#r9pzq`. **One neighbouring comment is deliberate
+  (`permission-probes.mjs` line 114), same shape as `#r9pzq`. **One neighbouring comment is deliberate
   and must not be "fixed": `translations.manage` is read by hand in Appendix C on purpose.**
 - **`#w9xpq` (Fundraising)** — **`can_see_drive_file()` has no case for `merch_products`**, so staff
   cannot preview a not-yet-public product's photo. **Nothing is broken for a user: the stream made the
-  preview hide itself** rather than draw a broken image. Needs one migration gated on the same
-  `merch.manage`. It also carries #1591's outstanding press — product save and public display were never
-  clicked, after a transient Google Fonts 500 in the browser pane, and its plan says `pending`.
+  preview hide itself.** Needs one migration gated on the same `merch.manage`. It also carries #1591's
+  outstanding press — product save and public display were never clicked after a transient Google Fonts
+  500 in the pane, and its plan says `pending`.
 - **`#d6xhs` and `#n2bkc` TICKED** — both shipped in PR #1582 at 01:02Z and **the stream never ticked
-  them**, so both still read as open work at this plan's sync and both were still on his priorities
-  list. **The phantom-item fault, caught at the backlog read.**
+  them**, so both still read as open work at this plan's sync and were still on his priorities list.
+  **The phantom-item fault, caught at the backlog read.**
 
----
-
-## TWO MITIGATIONS FIRED AGAIN, AND BOTH HELD
-
-- **THE MIGRATION TIEBREAK, THIRD OUTING, TWO FOR AND NONE AGAINST.** #1584 renumbered `0376` to `0377`
-  on the pre-written rule — *the lower PR number keeps the number* — after #1583 took `0376`, and used
-  `--forget` on dev's old row rather than leaving drift. **No planner was needed.**
-- **THE BACKLOG MERGE CONFLICT RESOLVED ITEM BY ITEM FROM EACH SIDE'S NEWER TEXT.** `#x5tbv` from
-  `backlog` (his answer, filed after the morning sync) and `#r9pzq` from `main` (the stream had ticked
-  it). **The resolving script guarded that each side really was the newer text rather than trusting the
-  label**, and that nothing was lost. **Do not assume `main` is newer.**
+**TWO MITIGATIONS FIRED AGAIN AND BOTH HELD.** **The migration tiebreak, third outing, two for and none
+against:** #1584 renumbered `0376` to `0377` on the pre-written rule — *the lower PR number keeps the
+number* — after #1583 took `0376`, using `--forget` on dev's old row rather than leaving drift, and **no
+planner was needed.** **And the backlog merge conflict resolved item by item from each side's newer
+text:** `#x5tbv` from `backlog` (his answer, filed after the morning sync), `#r9pzq` from `main` (the
+stream had ticked it), with the script guarding that each side really was the newer text rather than
+trusting the label. **Do not assume `main` is newer.**
 
 ---
 
