@@ -10,7 +10,7 @@
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3006` |
 | PR | pending: not opened at this commit |
 | Tested by / date | Claude, 2026-11-14 |
-| Carries a migration? | yes: 0376 |
+| Carries a migration? | yes: 0377 |
 | Tested at SHA | df77791af |
 
 ## 1. Scope and risk
@@ -115,7 +115,7 @@ needs two cards together, put both on one row. Do not name `staff` (retired, `01
 - [x] Backlog item ticked in `docs/backlog.md` **on this branch** (follow-ups go on the `backlog` branch instead)
 - [x] Non-obvious design choices added as a new file in `docs/decisions/` (`<date>-<slug>.md`)
 - [ ] `README.md` still accurate — n/a: README does not describe public pages or cards
-- [x] **Release notes:** a line was added to `unreleased` in `src/lib/releases.ts`, written for a shelter user. Nothing outstanding beyond the normal release apply of 0376.
+- [x] **Release notes:** a line was added to `unreleased` in `src/lib/releases.ts`, written for a shelter user. Nothing outstanding beyond the normal release apply of 0377.
 - [x] Commit messages say why, not just what
 - [x] **Claims in commit messages and `docs/decisions/` checked against what was run:** every proof quoted was executed on dev this session.
 

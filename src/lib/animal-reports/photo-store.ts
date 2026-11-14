@@ -2,7 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
- * Where a public report's photo lives: the private bucket made by 0376. No storage policy exists for it, so only the
+ * Where a public report's photo lives: the private bucket made by 0377. No storage policy exists for it, so only the
  * service role reaches it: the report action writes, and the staff photo route (which asks animal_report.manage) reads.
  * The object name is "<report id>.jpg", the same name the row's check constraint demands.
  */

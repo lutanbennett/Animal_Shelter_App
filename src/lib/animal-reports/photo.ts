@@ -1,7 +1,7 @@
 import "server-only";
 
 /**
- * The photo on a public animal report (0376, docs/decisions/2026-11-14-report-animal-photo.md). The ONLY place the
+ * The photo on a public animal report (0377, docs/decisions/2026-11-14-report-animal-photo.md). The ONLY place the
  * public's file is read, checked and cleaned. Every limit here runs on the server: a stranger does not use our form.
  *
  * The type is read from the file's own first bytes (never its name or the browser's word), the picture is decoded and
