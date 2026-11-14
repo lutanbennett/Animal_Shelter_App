@@ -10,7 +10,7 @@
 | Backlog item | `docs/backlog.md` → `#j4m8w` (Architecture), now ticked |
 | Branch / worktree | `claude/cooperjaidee-hostname-decision` @ `C:\Development\Animal_Shelter_cooperjaidee-hostname-decision` |
 | Dev server | not started — n/a: documentation only, no runtime surface |
-| PR | __PR__ |
+| PR | #1594 |
 | Tested by / date | Claude (planner session) / 2026-11-15 |
 | Carries a migration? | no |
 | Tested at SHA | `0276cd4ae` |
