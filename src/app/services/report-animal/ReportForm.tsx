@@ -18,6 +18,7 @@ export function ReportForm() {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const write = useWriteCall();
+  const [photo, setPhoto] = useState<File | null>(null);
   const [fields, setFields] = useState<ReportFields>({
     kind: "",
     species: "unknown",
@@ -41,7 +42,11 @@ export function ReportForm() {
     e.preventDefault();
     setError(null);
     startTransition(async () => {
-      const result = await write((requestId) => reportAnAnimal(fields, requestId));
+      const result = await write((requestId) => {
+        const body = new FormData();
+        if (photo) body.set("photo", photo);
+        return reportAnAnimal(fields, requestId, body);
+      });
       if (!result.ok) return setError(result.error);
       setDone(true);
     });
@@ -76,6 +81,12 @@ export function ReportForm() {
         {f.location}
         <textarea className={`${inputClass} min-h-20`} value={fields.location} maxLength={500} required
           onChange={(e) => set("location", e.target.value)} />
+      </label>
+      <label className={labelClass}>
+        {f.photo}
+        <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" className={inputClass}
+          onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} />
+        <span className="text-sm font-normal text-site-ink-soft">{f.photoHint}</span>
       </label>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className={labelClass}>

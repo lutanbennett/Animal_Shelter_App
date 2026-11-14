@@ -7778,7 +7778,7 @@ const en = {
       noSuchReceipt: "No such receipt.",
       signInManual: "Sign in to view the manual.",
       signInResidentsList: "Sign in to download the residents list.",
-      cannotReadResidentsList: "Your role cannot read the residents list.",
+      cannotReadResidentsList: "You do not hold a card that lets you read the residents list.",
     },
     removeFile: "Remove",
     /** Accessible name of the icon shown in place of a thumbnail (FileTypeIcon.tsx). */
@@ -8540,6 +8540,8 @@ const en = {
       phone: "Phone",
       email: "Email",
       contactHint: "Give a phone number or an email, so the shelter can reach you.",
+      photo: "A photo (optional)",
+      photoHint: "A clear photo helps a great deal. JPEG, PNG or WebP, up to 8 MB. Location details stored inside the photo are removed before anyone sees it.",
       submit: "Send report",
       sending: "Sending…",
       thanks: "Thank you. The shelter has your report.",
@@ -8552,10 +8554,15 @@ const en = {
       contact: "Please give a phone number or an email so we can reach you.",
       email: "That email address does not look right.",
       tooLong: "One of the answers is too long. Please shorten it.",
+      photoType: "That file is not a JPEG, PNG or WebP photo. Please send one of those.",
+      photoTooBig: "That photo is larger than 8 MB. Please send a smaller one.",
+      photoUnreadable: "We could not read that photo. Please try another one.",
+      photoFailed: "The photo could not be saved. Please try again.",
     },
   },
   /** The staff list of animal reports (#z1qn7, /management/animal-reports). */
   animalStaff: {
+    photoAlt: "Photo sent with the report",
     title: "Animal reports",
     subtitle: "What the public has reported through the website: strays, injured animals, welfare concerns and lost pets.",
     none: "No reports yet.",
