@@ -7778,7 +7778,7 @@ const en = {
       noSuchReceipt: "No such receipt.",
       signInManual: "Sign in to view the manual.",
       signInResidentsList: "Sign in to download the residents list.",
-      cannotReadResidentsList: "Your role cannot read the residents list.",
+      cannotReadResidentsList: "You do not hold a card that lets you read the residents list.",
     },
     removeFile: "Remove",
     /** Accessible name of the icon shown in place of a thumbnail (FileTypeIcon.tsx). */
