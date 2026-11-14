@@ -51,6 +51,9 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
     // read the record), so every medical box reads None while the doctor really records visits,
     // procedures, prescriptions, weights and diets for their own clinic's residents. Meant to stay: the
     // parent item says the list ends as "the §6 rules and the doctor's clinic scope".
+    // EXPECTED RED, DO NOT FILE OR "FIX" (2026-11-14, #t4wqp): Doctor is the role Lutan tests cards on, one card at a time, so while he does
+    // check-who-does-what.mjs reports these boxes as OVERLISTED (obeyed, because the doctor now holds the cards). That red is the proof the
+    // Who-does-what card save works. Never restore doctor's cards, never edit the check to hide it. docs/decisions/2026-11-14-card-boxes-triage.md.
     id: "clinicRule",
     boxes: {
       doctor: [
@@ -91,9 +94,10 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
     // the app can tell. See docs/decisions/2026-10-11-perm-policy-cleanup.md.
     id: "databaseWider",
     boxes: {
+      bill_management: ["suppliers.directory"],
       head_of_medical: ["photos.resident_add"],
-      management: ["photos.resident_add"],
-      second_in_command: ["stock.delivery", "photos.resident_add"],
+      management: ["photos.resident_add", "suppliers.directory"],
+      second_in_command: ["stock.delivery", "photos.resident_add", "suppliers.directory"],
     },
     shown: false,
     stays: true,
