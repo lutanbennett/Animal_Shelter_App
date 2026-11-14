@@ -8268,6 +8268,7 @@ const th: Dictionary = {
   },
   /** The staff list of animal reports (#z1qn7, /management/animal-reports). */
   animalStaff: {
+    photoAlt: "รูปที่แนบมากับรายงาน",
     title: "รายงานสัตว์",
     subtitle: "สิ่งที่ประชาชนแจ้งผ่านเว็บไซต์ สัตว์จร สัตว์บาดเจ็บ ความห่วงใยด้านสวัสดิภาพ และสัตว์เลี้ยงหาย",
     none: "ยังไม่มีรายงาน",

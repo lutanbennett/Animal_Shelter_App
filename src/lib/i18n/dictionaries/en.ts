@@ -8562,6 +8562,7 @@ const en = {
   },
   /** The staff list of animal reports (#z1qn7, /management/animal-reports). */
   animalStaff: {
+    photoAlt: "Photo sent with the report",
     title: "Animal reports",
     subtitle: "What the public has reported through the website: strays, injured animals, welfare concerns and lost pets.",
     none: "No reports yet.",

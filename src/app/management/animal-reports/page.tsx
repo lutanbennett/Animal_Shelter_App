@@ -19,6 +19,7 @@ type Row = {
   reporter_phone: string | null;
   reporter_email: string | null;
   status: ReportStatus;
+  photo_path: string | null;
   created_at: string;
 };
 
