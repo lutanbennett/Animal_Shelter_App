@@ -12,9 +12,11 @@ import type { AddressMap } from "@/lib/contacts/contacts";
  * `AddressMap`, so they can't disagree — and on a phone the tap opens the
  * Maps app at the place, which beats panning a 200px frame anyway.
  *
- * The embed is fetched only once the box is about to scroll into view.
- * The browser's own `loading="lazy"` still pulled about 600 KB from
- * Google on a slow phone before anyone scrolled. The 200px box is
+ * The embed (about 600 KB from Google) is fetched only once the visitor
+ * has scrolled, touched or pressed a key AND the box is near the screen.
+ * The browser's own `loading="lazy"` already skips maps far down the
+ * page but still loaded the one in view at the top before anyone had done
+ * anything, ahead of the page's own content. The 200px box is
  * reserved from the start so nothing shifts, and the link over it is
  * always there, so a visitor who never scrolls (a keyboard or screen
  * reader user, or no script) still has the map one press away.
@@ -34,6 +36,15 @@ export function MapThumbnail({
 }) {
   const box = useRef<HTMLDivElement>(null);
   const [near, setNear] = useState(false);
+  const [acted, setActed] = useState(false);
+
+  useEffect(() => {
+    if (acted) return;
+    const go = () => setActed(true);
+    const events = ["scroll", "pointerdown", "touchstart", "keydown", "wheel"];
+    events.forEach((e) => window.addEventListener(e, go, { once: true, passive: true }));
+    return () => events.forEach((e) => window.removeEventListener(e, go));
+  }, [acted]);
 
   useEffect(() => {
     const el = box.current;
@@ -59,7 +70,7 @@ export function MapThumbnail({
     "h-full w-full rounded-lg border border-border bg-surface-hover";
   return (
     <div ref={box} className={`relative h-[200px] w-full ${className}`}>
-      {near ? (
+      {near && acted ? (
         <iframe
           src={map.src}
           title={title}
