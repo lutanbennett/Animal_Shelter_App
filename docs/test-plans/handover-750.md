@@ -11,7 +11,7 @@
 | PR | to be filled when the PR is opened |
 | Tested by / date | Claude (planner session) / 2026-11-15 |
 | Carries a migration? | no |
-| Tested at SHA | `718af0ea9` |
+| Tested at SHA | `718af0ea9` — where the four gates ran. The two commits after it are this plan and a one-line correction, both Markdown only; CI re-ran on the new head and that run is what the merge is read against |
 
 ## 1. Scope and risk
 
