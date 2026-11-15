@@ -6,6 +6,7 @@ import { PublicHeader } from "../../../adopt/PublicHeader";
 import { PublicFooter } from "../../../adopt/PublicFooter";
 import { localizedHref } from "@/lib/public-paths";
 import { loadRates } from "@/lib/merch/checkout";
+import { createClient } from "@/lib/supabase/server";
 import { CheckoutForm } from "./CheckoutForm";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -21,6 +22,13 @@ export default async function MerchCheckoutPage() {
   const s = t.merchShop;
   // A failed read leaves overseas currencies out rather than quoting a stale figure; Thailand still works.
   const currencies = await loadRates().then(Object.keys, () => [] as string[]);
+  // Which variants can be bought right now, so a stale cart is flagged before the form is filled in. null = could not read: no flag.
+  const supabase = await createClient();
+  const availableIds = await supabase
+    .from("public_merch_variants")
+    .select("id")
+    .eq("available", true)
+    .then(({ data, error }) => (error || !data ? null : data.map((r: { id: string }) => r.id)));
   return (
     <main className="flex flex-1 flex-col">
       <PublicHeader current="shop-merch" trail={[{ label: t.publicNav.getInvolved }, { label: s.navLabel, href: localizedHref("/shop/merch", locale) }, { label: s.checkoutTitle }]} />
@@ -32,9 +40,10 @@ export default async function MerchCheckoutPage() {
             currency: s.currency, wiseTransfer: s.wiseTransfer, wiseLink: s.wiseLink, subtotal: s.subtotal, postage: s.postage, total: s.total,
             approx: s.approx, yourDetails: s.yourDetails, name: s.name, email: s.email, phone: s.phone, country: s.country, address: s.address,
             note: s.note, placeOrder: s.placeOrder, placing: s.placing, errEmpty: s.errEmpty, errUnavailable: s.errUnavailable,
-            errCurrency: s.errCurrency, errFailed: s.errFailed, errFields: s.errFields,
+            errCurrency: s.errCurrency, errFailed: s.errFailed, errFields: s.errFields, soldOut: s.soldOut, soldOutInCart: s.soldOutInCart,
           }}
           currencies={currencies}
+          availableIds={availableIds}
           shopHref={localizedHref("/shop/merch", locale)}
         />
       </div>

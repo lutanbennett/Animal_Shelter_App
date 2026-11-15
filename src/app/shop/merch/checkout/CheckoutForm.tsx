@@ -9,7 +9,7 @@ type Text = Record<string, string>;
 const baht = (n: number) => `฿${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
 const input = "min-h-11 rounded border border-border bg-surface px-2 md:min-h-9";
 
-export function CheckoutForm({ text, currencies, shopHref }: { text: Text; currencies: string[]; shopHref: string }) {
+export function CheckoutForm({ text, currencies, shopHref, availableIds }: { text: Text; currencies: string[]; shopHref: string; availableIds: string[] | null }) {
   const [cart, setCart] = useState<CartItem[] | null>(null);
   const [region, setRegion] = useState<"thailand" | "overseas">("thailand");
   const [state, action, pending] = useActionState<OrderFormState, FormData>(submitOrder, { error: null });
@@ -30,6 +30,8 @@ export function CheckoutForm({ text, currencies, shopHref }: { text: Text; curre
     );
   }
 
+  const gone = (c: CartItem) => availableIds !== null && !availableIds.includes(c.variantId);
+  const anyGone = cart.some(gone);
   const subtotal = cart.reduce((n, c) => n + c.quantity * c.priceThb, 0);
   const postage = cart.reduce((n, c) => n + c.quantity * (region === "thailand" ? c.postageThailandThb : c.postageOverseasThb), 0);
   const update = (next: CartItem[]) => {
@@ -44,9 +46,10 @@ export function CheckoutForm({ text, currencies, shopHref }: { text: Text; curre
       <ul className="flex flex-col divide-y divide-border rounded border border-border bg-surface">
         {cart.map((c) => (
           <li key={c.variantId} className="flex items-center justify-between gap-3 p-3 text-sm">
-            <span>
+            <span className={gone(c) ? "text-muted line-through" : ""}>
               {c.name}
               {c.label ? ` (${c.label})` : ""} × {c.quantity}
+              {gone(c) && <strong className="ml-2 rounded bg-foreground px-2 py-0.5 text-xs font-semibold uppercase text-surface no-underline">{text.soldOut}</strong>}
             </span>
             <span className="flex items-center gap-3">
               {baht(c.quantity * c.priceThb)}
@@ -57,6 +60,12 @@ export function CheckoutForm({ text, currencies, shopHref }: { text: Text; curre
           </li>
         ))}
       </ul>
+
+      {anyGone && (
+        <p className="text-sm text-danger" role="alert">
+          {text.soldOutInCart}
+        </p>
+      )}
 
       <fieldset className="flex flex-col gap-2 text-sm">
         <legend className="mb-1 font-semibold">{text.where}</legend>
@@ -128,7 +137,7 @@ export function CheckoutForm({ text, currencies, shopHref }: { text: Text; curre
           {text[errorKey]}
         </p>
       )}
-      <button type="submit" disabled={pending} className="min-h-11 self-start rounded bg-primary px-5 font-medium text-white disabled:opacity-60 md:min-h-9">
+      <button type="submit" disabled={pending || anyGone} className="min-h-11 self-start rounded bg-primary px-5 font-medium text-white disabled:opacity-60 md:min-h-9">
         {pending ? text.placing : text.placeOrder}
       </button>
     </form>

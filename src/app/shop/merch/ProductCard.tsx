@@ -30,7 +30,11 @@ export function ProductCard({
   const [added, setAdded] = useState(false);
   const chosen = variants.find((v) => v.id === variantId);
   if (variants.every((v) => !v.available)) {
-    return <p className="text-sm font-medium text-muted">{text.soldOut}</p>;
+    return (
+      <p className="self-start rounded bg-foreground px-3 py-1 text-sm font-semibold uppercase tracking-wide text-surface" data-sold-out>
+        {text.soldOut}
+      </p>
+    );
   }
   return (
     <form

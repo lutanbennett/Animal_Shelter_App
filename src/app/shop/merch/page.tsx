@@ -84,15 +84,22 @@ export default async function MerchShopPage() {
         <ul className="grid grid-cols-1 items-start gap-5 md:grid-cols-2 lg:grid-cols-3">
           {products.map((p) => {
             const text = merchText(p, locale);
+            // Same test as ProductCard: every size or colour unavailable. A product with a supplier is never unavailable (0369).
+            const soldOut = p.variants.every((v) => !v.available);
             return (
               <li key={p.id} className="flex flex-col gap-3 rounded border border-border bg-surface p-5">
                 {p.photo_drive_file_id && (
-                  <img src={driveImageUrl(p.photo_drive_file_id, 400)} alt={text.name} width={320} height={240} className="h-48 w-full rounded object-contain" />
+                  <div className="relative">
+                    <img src={driveImageUrl(p.photo_drive_file_id, 400)} alt={text.name} width={320} height={240} className={`h-48 w-full rounded object-contain ${soldOut ? "opacity-50 grayscale" : ""}`} />
+                    {soldOut && (
+                      <span className="absolute left-2 top-2 rounded bg-foreground px-3 py-1 text-sm font-semibold uppercase tracking-wide text-surface">{s.soldOut}</span>
+                    )}
+                  </div>
                 )}
                 <div className="flex flex-col gap-1">
                   <h2 className="text-lg font-semibold text-foreground">{text.name}</h2>
                   {text.description && <p className="text-sm text-foreground">{text.description}</p>}
-                  <p className="text-base font-semibold text-foreground">{baht(p.price_thb)}</p>
+                  <p className={`text-base font-semibold ${soldOut ? "text-muted line-through" : "text-foreground"}`}>{baht(p.price_thb)}</p>
                   <p className="text-xs text-muted">{s.postageThailand(baht(p.postage_thailand_thb))}</p>
                   <p className="text-xs text-muted">{s.postageOverseas(baht(p.postage_overseas_thb))}</p>
                 </div>
