@@ -328,6 +328,16 @@
       "guard": "Called from the facility-map editor actions, which ask can()."
     },
     {
+      "file": "src/app/api/animal-reports/photo-retention/route.ts",
+      "for": "The daily clean-up of the report-an-animal photo bucket, run by the Worker cron.",
+      "guard": "A shared secret in the request, not a session."
+    },
+    {
+      "file": "src/lib/animal-reports/photo-retention.ts",
+      "for": "Removes expired and orphaned report photos from the private bucket (no storage policy) and clears photo_path.",
+      "guard": "Called only from the secret-guarded route above."
+    },
+    {
       "file": "src/lib/animal-reports/photo-store.ts",
       "for": "Stores and reads the photo on a public animal report (private bucket, no storage policy).",
       "guard": "Written only by the public report action after type, size and metadata checks; read only by the staff photo route, which asks animal_report.manage."

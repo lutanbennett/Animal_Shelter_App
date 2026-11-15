@@ -197,6 +197,8 @@ const worker = {
     stages.push(await runCalendarSweep(env, ctx));
     // The merchandise shop's supplier email: once a day, on the first tick after 09:00 in Thailand (02:00 UTC).
     stages.push(await runMerchSupplierEmails(env, ctx, controller));
+    // The report-an-animal photo bucket clean-up (#6rkux): once a day, on the 20:00 UTC tick (03:00 in Thailand).
+    stages.push(await runReportPhotoRetention(env, ctx, controller));
     // Machine-drafted translations (worker/translations.mjs) share the trigger.
     // After the alerts so they can never delay one; runTranslations does not throw.
     await runTranslations(env);
@@ -244,6 +246,26 @@ async function runMerchSupplierEmails(env, ctx, controller) {
   } catch (err) {
     console.error(`merch-supplier-emails: ${err?.message ?? err}`);
     return `merch-supplier-emails: failed, ${err?.message ?? err}`;
+  }
+}
+
+async function runReportPhotoRetention(env, ctx, controller) {
+  const at = new Date(controller.scheduledTime ?? Date.now());
+  // The cron fires every 15 minutes; the clean-up lists a bucket, so only the 20:00-20:14 UTC tick runs it.
+  if (at.getUTCHours() !== 20 || at.getUTCMinutes() >= 15) return "report-photo-retention: not due";
+  if (!env.STATUS_ALERT_SITE) return "report-photo-retention: skipped, not set: STATUS_ALERT_SITE";
+  try {
+    const request = new Request(`${env.STATUS_ALERT_SITE}/api/animal-reports/photo-retention`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY ?? ""}` },
+    });
+    const response = await openNext.fetch(request, env, ctx);
+    const log = response.ok ? console.log : console.error;
+    log(`report-photo-retention: ${response.status} ${await response.text()}`);
+    return `report-photo-retention: ${response.status}`;
+  } catch (err) {
+    console.error(`report-photo-retention: ${err?.message ?? err}`);
+    return `report-photo-retention: failed, ${err?.message ?? err}`;
   }
 }
 

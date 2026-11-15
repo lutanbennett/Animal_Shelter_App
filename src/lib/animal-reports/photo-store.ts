@@ -23,3 +23,24 @@ export async function readReportPhoto(name: string): Promise<ArrayBuffer | null>
   if (error || !data) return null;
   return data.arrayBuffer();
 }
+
+export type StoredReportPhoto = { name: string; createdAt: string | null };
+
+/** One page of the bucket's objects, oldest name first. Only names of the right shape are returned (REPORT_PHOTO_NAME). */
+export async function listReportPhotos(offset: number, limit: number): Promise<StoredReportPhoto[] | null> {
+  const { data, error } = await createAdminClient()
+    .storage.from(REPORT_PHOTO_BUCKET)
+    .list("", { limit, offset, sortBy: { column: "name", order: "asc" } });
+  if (error || !data) return null;
+  return data
+    .filter((o) => REPORT_PHOTO_NAME.test(o.name))
+    .map((o) => ({ name: o.name, createdAt: o.created_at ?? null }));
+}
+
+/** Removes objects by name; names of the wrong shape are dropped, never sent. Returns how many it asked to remove, or null on failure. */
+export async function removeReportPhotos(names: string[]): Promise<number | null> {
+  const valid = names.filter((n) => REPORT_PHOTO_NAME.test(n));
+  if (!valid.length) return 0;
+  const { error } = await createAdminClient().storage.from(REPORT_PHOTO_BUCKET).remove(valid);
+  return error ? null : valid.length;
+}
