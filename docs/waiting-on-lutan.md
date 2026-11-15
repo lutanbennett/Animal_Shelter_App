@@ -1,51 +1,54 @@
-# Waiting on you: what the backlog still needs from Lutan
+# Waiting on you: the jobs only your hands (or someone at the shelter) can do
 
-**Snapshot, rewritten 2026-11-13 after Lutan corrected the first version and after a live check. It is not a tracker and it will go stale.** The backlog item is always the truth. Where a status could not be read live, it says *not established* and what would settle it.
+**A dated snapshot, rewritten 2026-11-15 (replaces the 2026-11-13 version; it is the same list, not a second one).** It is not a tracker and it goes stale. The backlog item is always the truth. Each row says how and when it was checked, and where something could not be read it says *not established* and what would settle it. Reasons and history are in the decision files named, not here.
 
-Where a step is a command or a deploy, **no command is written here on purpose.** Ask for it in chat when you reach the step.
+**The one job that unblocks the most: `#pl7aq`, the public launch date.** It is a decision of yours, not work. Four other jobs wait on it (`#uao7r`, `#z7d6h`, and the visibility of `#kxksr` and `#8dfud`). Nothing else here unblocks more than one thing.
 
-## What changed since the first version (2026-11-13)
+**Rule kept from the first version: no runnable command is written for a step you have not reached.** Steps below are screens and sentences. Ask in chat for the exact command when you reach one.
 
-Removed because they were wrong or are now answered:
-- `#eh2dt` (Thai page texts): done, on your word.
-- `#dxjz2` (production Worker deploy): shipped in 0.45.0.
-- `#t1zyc` part A (accountant card): already given; only the accountant's login is left.
-- `#d6wxo` (foster carer and adopter gate): answered. They sign in on the website page and see only the residents they adopted.
-- `#y1dqu` (Thai read cadence): answered, weekly.
-- The Director questions (`#99zuk`, `#hj1c5`, `#00e3u`, the shop's scope, `#5j6kj`): answered in chat; written up in `docs/decisions/2026-11-13-answers-receipts-shop-payments.md` for the planner. Products, prices, margin, supplier, who answers order questions and logo files are still open, but they are entered through the screens later and do not block the build.
+## 1. Your own hands, ready now (shortest first)
 
-## 1. Things only you can do
+| Job | Ready? | Blocked by | About | First step | Verified |
+|---|---|---|---|---|---|
+| `#8t3rk` Stop a script flooding the public "report an animal" form: **one Cloudflare setting** | **Ready** | nothing | 5 min | Follow the numbered steps in `docs/decisions/2026-11-15-report-form-rate-limit.md` ("What to do"). Free plan, no cost. | Read that file and the item, 2026-11-15. The steps are specific enough (see note A). |
+| `#mzu7v` Home Assistant monitoring: book the guided walkthrough (Uptime Kuma, Glances, dashboard) | **Ready** | nothing; you asked for it to be booked | a session | Name a day in chat and the planner books it. | Item tail read 2026-11-15: last confirmed unmoved 2026-11-10. Not re-asked. |
+| `#gvnrr` Buy the Pi's battery so a power cut does not take the app down | **Ready, timed on price** | waiting for a Lazada sale (your choice) | one purchase | Buy when the sale comes. Which unit was chosen is **not recorded** in the item. | Item tail read 2026-11-15. Nothing left to decide. |
 
-- **`#kxksr`: set up PromptPay** under Management, then Website, then the **Donate** tab. **Confirmed open 2026-11-13 on the live screen:** only DonorBox and PayPal exist. Add PromptPay with its id and account name and save; the QR upload only appears on the card once it exists. You need the shelter's PromptPay id and QR image, which you do not have yet. The shop's Thai checkout will also use it.
-- **`#8dfud`: the shelter's LINE id**, if it has one (Management, then Website, then the **Contact** tab). **Confirmed 2026-11-13: none exists yet.** A LINE QR on the website waits for it.
-- **`#t1zyc`: the accountant's login**, once you have their details: Settings, then Security, put it in the Accountant group.
-- **`#aaqtl`: the machine login for Thai label proposals**, its card and its password secret. **Confirmed 2026-11-13 on the live Security screen: the login does not exist** (only two people's logins). Step 1 and the Worker deploy are done by 0.45.0. Ask the release session for the remaining steps when you are ready.
-- **`#gvnrr`: buy the Pi battery** when the sale comes.
-- **`#mzu7v`: book the Home Assistant walkthrough.**
-- **`#rqv5c` and `#civwx`: the Drive move to the shelter's own Google account, then the backups' own identity.** You are working towards it; `#civwx` is guided, with you, after it. Do not chase before the end of November.
-- **`#z04wr`: the self-hosted model runbook, steps 5 to 9**, once the model machine exists (**confirmed 2026-11-13: it does not exist yet**).
+## 2. Your own hands, blocked
 
-## 2. A decision of yours, with no date
+| Job | Blocked by | About | First step when unblocked | Verified |
+|---|---|---|---|---|
+| `#kxksr` PromptPay on production | You do not have the shelter's PromptPay id and QR image yet (Director has them) | 10 min | Management, Website, **Donate** tab: add PromptPay with its id and account name, save, then upload the QR on that card. The shop's Thai checkout uses it. | Item read 2026-11-15. Last read on the live screen 2026-11-13 (only DonorBox and PayPal). **Not re-read live since.** |
+| `#aaqtl` Thai label proposals: the machine login, its card and its password secret | Nobody needs it urgently; it is a release-time job | with the release session | Ask the release session for the remaining steps. Step 1 (apply `0296`) and the Worker deploy are done (0.45.0). | Read live with you 2026-11-13: no machine login on production. **Not re-read since.** |
+| `#w2knt` Production is behind on migrations (one re-owns 90 database objects) | The `0.47.0` deploy, which is yours and the release manager's | the deploy | At the deploy: run the check named in `docs/release-procedure.md` after the apply. | **Not established live.** The status script needs production credentials that only the main checkout holds, and it refused from this worktree. By the repo: the figure of four is **probably stale, there are now five** (`0380` was added after it) and `0.47.0` is cut with **no release record yet, so the deploy has not been recorded**. A production read settles it. |
+| `#rqv5c` Move production's Drive to the shelter's own Google account | **In hand, your own timetable** (you said 2026-11-09, next week or two) | your time | Nothing to ask. Do not chase before the end of November. | Item read 2026-11-15. UAT's half is done. |
+| `#civwx` Backups get their own Google identity | Comes **after** `#rqv5c` | guided, with you | Guided walkthrough once `#rqv5c` is done. Steps in `docs/pi-hosting.md` "Backups on this Pi". | Item read 2026-11-15. |
+| `#pl7aq` **Decide the public launch** | Your decision; no date set | a decision | Name a date, or a list of what must be true first. | `wrangler.jsonc` read 2026-11-15: production `PUBLIC_SITE` is still `"locked"` (lines 110 and 144). Last seen live 2026-11-13. |
+| `#z7d6h` At go-live: verify the domain in Search Console, submit the sitemap | `#pl7aq` | 30 min | At launch. Also check the four live page types (`/adopt/<id>`, `/our-work/<id>`, `/events/<id>`, `/campaigns/<id>`) on real rows. | Item read 2026-11-15. |
+| `#z04wr` Self-hosted assistant model, runbook steps 5 to 9 | The model machine does not exist | an evening | `docs/self-hosted-model-runbook.md`, "Step 5" onward, once the machine exists. | Last confirmed 2026-11-13 (you, asked directly). **Not re-asked, by design.** |
+| `#s0jgi` Review the manual against real use | You arranging a day with a shelter worker and a volunteer | a day | Pick the day and the two people. The Thai manual (`#1o5tk`) waits on this. | Item read 2026-11-15. |
+| `#y1dqu` The weekly Thai read of new strings | A Thai speaker for the first read | weekly | Find the reader. Routine is in `docs/thai-read-routine.md`. Cadence settled, do not re-ask. | Item read 2026-11-15. |
 
-- **`#pl7aq`: the public launch.** On 2026-11-13 `lannacareforanimals.org` still showed "under construction" to the public: `PUBLIC_SITE` is `locked` on production, and removing it is the launch, set aside on 2026-11-05 as a separate decision. Nothing to answer today. It is listed so it stops being implied. These wait on it: `#uao7r` (the Director adds the website to the shelter's Google Business Profile) and `#z7d6h` (Search Console: verify the domain, submit the sitemap, re-request indexing; also check the four dynamic page types on real rows). The earlier backlog read those as due on 6 November, which was the app cutover, not the launch.
+## 3. Someone else's hands at the shelter (you can only ask)
 
-## 3. People and conversations
+| Job | Whose | Blocked by | First step | Verified |
+|---|---|---|---|---|
+| `#8dfud` A LINE QR code on the public site | the Director | she has not given a LINE id, and none exists; the QR is invisible until `#pl7aq` anyway | Nothing. **Do not chase her** (the item says so). | Item read 2026-11-15; last confirmed 2026-11-13. |
+| `#uao7r` Add the website to the shelter's Google Business Profile | the Director | `#pl7aq` (go-live day) | On launch day ask her to sign in to the profile and add the site. Separate and doable now: paste the Maps link into Management, Website, **Map link** (the item holds the link). | Item read 2026-11-15. |
+| `#u2bo6` Compare two machine-translation models on 20 real bios and 20 real vet notes | the two bilingual managers | arranging them | Ask both managers for the time. | Item read 2026-11-15. **Production not read** for the translation state; dev only. |
 
-- **`#s0jgi`: the phone day for the manual.** Two roles are being looked at (volunteer and bills management), one role at a time. The Thai manual (`#1o5tk`) waits on it.
-- **`#u2bo6`: the two bilingual managers compare two models** on twenty real bios and twenty real vet notes.
-- **`#hzmxi` / `#c7zjk` / `#y1dqu`: a Thai speaker reads the new strings**, weekly (cadence settled). A stream later flips the check to blocking.
-- **The shop (`#cjxq0`)**: needs the Director for products, prices, margin, a supplier and print-quality logo files. None of it blocks building the shop.
+## 4. Found: no longer yours (the planner to file)
 
-## 4. Optional, and for a quiet machine
-
-- **`#7bd5u`: four optional speed improvements.** One session with nothing else building. Nothing is broken.
-- **`#9b0vq`: cash-flow forecast against actuals.** Waits on months of real data.
+- **`#99zuk` (donation receipts and the Thai tax path) is answered, and no longer waits on the Director.** `docs/decisions/2026-11-13-answers-receipts-shop-payments.md` records: the foundation **is** a public charitable organisation, the app prepares the list for the accountant, donor IDs are kept 7 years. The item's own title still says *"with the Director in Chiang Mai"*. It is now **buildable** (schema first). Caveat for whoever builds it: those answers are your account of hers, not from her in writing, and what the accountant needs from shop income was **not captured**.
+- **`#t1zyc` is closed** (2026-11-13, your word: the accountant's login is an operational task). If it is still undone it is one Settings, Security step, not a backlog item.
 
 ## 5. Always yours
 
-- **Major versus minor on every release.** A major release mails the admin list (currently one person) and cannot be undone.
-- **The production Worker deploy.** Yours by your instruction of 2026-10-02, every release.
+- **Major versus minor on every release** (a major release mails the admin list; it cannot be undone).
+- **The production Worker deploy** (yours since 2026-10-02).
 
-## Not established in this snapshot
+## Notes
 
-- Why the Pi rebooted on 2026-11-11 and 2026-11-12: at least one matches a deliberate power-pull drill. The rest were not matched to a drill and are not a finding.
+- **A. `#8t3rk`'s steps are specific enough to follow unaided.** Three things the file itself admits are not established and would be worth a line: whether the zone's free rate-limit rule is already used (then it stops and tells the planner), whether Free offers "contains" on the path (fallback given), and whether zone rules apply to a Worker on a custom domain. Test after applying: 25 quick requests should start returning 429. It also says three other open strangers' forms were **not examined** (shop checkout, password reset); that is the planner's to file.
+- **Not on this list, by design:** `#7bd5u`, `#dqgy8`, `#lkxwu`, `#00e3u`, `#ykefa`, `#el9zw`, `#9b0vq`, `#1o5tk`, `#vkswg` (held on their own conditions, live streams, or yours to raise).
+- **Not established:** why the Pi rebooted on 2026-11-11 and 2026-11-12 (one matches a deliberate power-pull drill).
