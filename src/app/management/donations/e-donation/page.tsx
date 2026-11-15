@@ -37,6 +37,8 @@ export default async function EDonationPage() {
         <>
           <p className="rounded border border-border bg-surface px-4 py-3 text-sm text-foreground">{x.reminder}</p>
           <div>
+            {/* A file download from a route handler: a plain link, not client routing. */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a href="/management/donations/e-donation/export" className="inline-flex min-h-11 items-center rounded border border-border px-4 text-sm text-foreground hover:bg-surface">
               {x.download}
             </a>
