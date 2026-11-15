@@ -10,7 +10,7 @@
 
 | Job | Ready? | Blocked by | About | First step | Verified |
 |---|---|---|---|---|---|
-| `#8t3rk` Stop a script flooding the public "report an animal" form: **one Cloudflare setting** | **Ready** | nothing | 5 min | Follow the numbered steps in `docs/decisions/2026-11-15-report-form-rate-limit.md` ("What to do"). Free plan, no cost. | Read that file and the item, 2026-11-15. The steps are specific enough (see note A). |
+| `#8t3rk` Stop a script flooding the public "report an animal" form | **Not yours: closed, answered not built** | nothing | none | None. The zone's one free rate rule is already spent on sign-in; see `docs/decisions/2026-11-15-worker-rate-limit-binding.md`. | Decision file, 2026-11-15. |
 | `#mzu7v` Home Assistant monitoring: book the guided walkthrough (Uptime Kuma, Glances, dashboard) | **Ready** | nothing; you asked for it to be booked | a session | Name a day in chat and the planner books it. | Item tail read 2026-11-15: last confirmed unmoved 2026-11-10. Not re-asked. |
 | `#gvnrr` Buy the Pi's battery so a power cut does not take the app down | **Ready, timed on price** | waiting for a Lazada sale (your choice) | one purchase | Buy when the sale comes. Which unit was chosen is **not recorded** in the item. | Item tail read 2026-11-15. Nothing left to decide. |
 
@@ -49,6 +49,6 @@
 
 ## Notes
 
-- **A. `#8t3rk`'s steps are specific enough to follow unaided.** Three things the file itself admits are not established and would be worth a line: whether the zone's free rate-limit rule is already used (then it stops and tells the planner), whether Free offers "contains" on the path (fallback given), and whether zone rules apply to a Worker on a custom domain. Test after applying: 25 quick requests should start returning 429. It also says three other open strangers' forms were **not examined** (shop checkout, password reset); that is the planner's to file.
+- **A. `#8t3rk` is no longer a job for you.** The free zone rule is already used (`Sign-in attempts`, 1/1), so its steps cannot be followed. The Workers binding's plan is not established, so nothing was built; the risk stays accepted. Shop checkout (`submitOrder`) has no volume bound either: for the planner to file.
 - **Not on this list, by design:** `#7bd5u`, `#dqgy8`, `#lkxwu`, `#00e3u`, `#ykefa`, `#el9zw`, `#9b0vq`, `#1o5tk`, `#vkswg` (held on their own conditions, live streams, or yours to raise).
 - **Not established:** why the Pi rebooted on 2026-11-11 and 2026-11-12 (one matches a deliberate power-pull drill).
