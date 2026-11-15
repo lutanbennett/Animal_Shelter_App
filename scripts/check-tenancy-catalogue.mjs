@@ -3,8 +3,8 @@
 //
 //   node scripts/check-tenancy-catalogue.mjs [--env test|uat|production] [--tenant-role <role>] [--strict]
 //
-// Run in every release: docs/release-procedure.md section 5. Needs SUPABASE_ACCESS_TOKEN (the Management API). CI has only the test project's URL and keys, which cannot read
-// pg_catalog, so this is a script someone runs and is NOT wired into CI (docs/decisions/2026-11-13-tenancy-catalogue-lint.md).
+// Run in every release (docs/release-procedure.md section 5) AND nightly against dev by .github/workflows/tenancy-catalogue.yml (strict, --tenant-role rls_definer; docs/decisions/2026-11-15-tenancy-lint-scheduled.md).
+// Needs SUPABASE_ACCESS_TOKEN (the Management API). It is still NOT on the pull-request path: a PR run would hand a token to every run of a public repo, so the nightly run uses a Database: Read token scoped to dev only.
 // --strict exits 1 on any finding; for the re-own stream, once a tenant role exists.
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 import { exitWith } from "./lib/exit.mjs";

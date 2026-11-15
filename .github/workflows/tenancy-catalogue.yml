@@ -16,7 +16,6 @@ on:
   schedule:
     - cron: "43 5 * * *" # 05:43 UTC; off the hour, clear of advisories.yml at 06:17
   workflow_dispatch: {}
-  push: {branches: [claude/tenancy-lint-schedule], paths: [".github/workflows/tenancy-catalogue.yml"]} # TEMP
 
 permissions:
   contents: read
