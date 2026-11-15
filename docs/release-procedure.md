@@ -577,7 +577,7 @@ read `--status` and carry on. If that job is red on the release commit, the rele
 is not ready; that is a stop like any red check. Do not empty `WRAPPED_WRITE_PATHS`
 to clear a failure: `scripts/check-worker-origin.mjs` asserts it is non-empty.
 
-**The tenancy catalogue lint, strict, on every database you applied to (before the deploy).** Added 2026-11-14 (`docs/decisions/2026-11-14-tenancy-lint-holes.md`). It is here, in the release, and not in CI, because it reads `pg_catalog` through the Management API and CI holds no `SUPABASE_ACCESS_TOKEN` (decided in #1573; not reopened). Run it right after the apply, so a new migration is judged against the schema it actually changed:
+**The tenancy catalogue lint, strict, on every database you applied to (before the deploy).** Added 2026-11-14 (`docs/decisions/2026-11-14-tenancy-lint-holes.md`). It is here, in the release, and not in CI, because it reads `pg_catalog` through the Management API, which a per-PR run would hand to every run of a public repo (#1573). A nightly run against dev with a Read-only token was added 2026-11-15 (`docs/decisions/2026-11-15-tenancy-lint-scheduled.md`); this step stays, because it judges the release's own commit. Run it right after the apply, so a new migration is judged against the schema it actually changed:
 
 ```bash
 node scripts/check-tenancy-catalogue.mjs --env production --strict --tenant-role rls_definer

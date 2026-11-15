@@ -1,0 +1,37 @@
+# Nightly tenancy catalogue lint against the DEV project (backlog #x5tbv; docs/decisions/2026-11-15-tenancy-lint-scheduled.md).
+#
+# Proves no API-readable view or security definer function has slipped back to a BYPASSRLS owner, and that every
+# RLS table carries its definer_all policy. It needs pg_catalog, which only the Management API can read, so it uses
+# the SUPABASE_ACCESS_TOKEN repository secret: scoped to the dev project, Database: Read, nothing else. It cannot
+# change anything and cannot see production.
+#
+# Scheduled, not per PR (Lutan, 2026-11-14). Like advisories.yml it is allowed to FAIL: a scheduled run with no PR
+# to stand on is emailed to whoever last edited the cron line, and cannot turn any PR red. STRICT, because the
+# measurement on 2026-11-15 was clean. This does not replace docs/release-procedure.md section 5, which judges the
+# release's own commit; this judges dev.
+
+name: Tenancy catalogue
+
+on:
+  schedule:
+    - cron: "43 5 * * *" # 05:43 UTC; off the hour, clear of advisories.yml at 06:17
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/check-tenancy-catalogue.mjs --strict --tenant-role rls_definer
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
