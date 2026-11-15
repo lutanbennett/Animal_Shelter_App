@@ -409,6 +409,14 @@ async function Catalogue({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-base font-semibold text-foreground">
               {p.name}{" "}
+              {/* Same rule as public_merch_variants (0369): a product with a supplier is never sold out. */}
+              {!p.supplier_id &&
+                p.shown &&
+                !p.archived_at &&
+                p.variants.some((v) => v.shown) &&
+                p.variants.filter((v) => v.shown).every((v) => v.shelter_stock <= 0) && (
+                  <span className="mr-1 rounded bg-foreground px-2 py-0.5 text-xs font-semibold uppercase text-surface">{m.soldOutPublic}</span>
+                )}
               <span className="text-xs font-normal text-muted">
                 {p.archived_at
                   ? m.archived
