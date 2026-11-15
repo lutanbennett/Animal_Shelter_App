@@ -229,10 +229,15 @@ hour.** Eight editions have now recorded that as the fix for an interruption.
 6. **RESTATE THE COUNT RULE AS AN INSTRUMENT, NOT A SENTENCE.** See the lead: it has now been written into
    two consecutive handovers and broken on both days. **The one count that mattered most is now
    machine-checked (`check-section-hubs.mjs`).** Prefer doing that to writing it a third time.
-7. **CLEAR THE LEFTOVERS, AFTER YOUR LIST.** At this edition's writing, batch 1's four merged folders were
-   being cleared: `admin-nav-reachability`, `places-probe-fixture`, `report-photo-retention`,
-   `tenancy-lint-schedule`, plus `handover-750` once this merges. **Read the `state` column before
-   believing `ahead`** — a squash-merged branch stays ahead for ever.
+7. **CLEAR THE LEFTOVERS, AFTER YOUR LIST — AND THEY WERE NOT CLEARED TODAY, FOR THE SAME REASON AS
+   YESTERDAY.** All four of batch 1's merged folders (`admin-nav-reachability`, `places-probe-fixture`,
+   `report-photo-retention`, `tenancy-lint-schedule`) were still **`HELD` by their own Claude sessions**
+   when this was written, and `CLAUDE.md` is explicit that `HELD` means ask rather than tear down. **So it
+   was raised with him instead**, exactly as `749` did. **`done` them once those four sessions are
+   closed**, plus `handover-750` once this merges. **Read the `state` column before believing `ahead`** —
+   a squash-merged branch stays ahead for ever. **This is now the second consecutive edition to hand its
+   successor the same four-folder clean-up: the sessions outlive the merge, so the leftover is normal
+   rather than a fault, and it is cheap to leave.**
 8. **`#7bd5u` STILL CANNOT BE MEASURED WHILE STREAMS BUILD.** Lighthouse moves 12–17 points with machine
    load on this machine. It needs a quiet window, which means it is never a parallel stream.
 
