@@ -3678,6 +3678,13 @@ const en = {
           "How much of each medicine and food to buy for a week, two weeks or a month, with the working shown and a list for the supplier.",
         suppliers:
           "The businesses the shelter buys from: add one, change its details, archive it, or make it a Shelter Friend.",
+        merchShop: "Run the merchandise shop: products, photos and prices.",
+        animalReports: "Reports of animals sent in through the public form, waiting for someone to review.",
+        expenses: "What the shelter has spent, by category.",
+        shopLinks: "The links on the Shelter Friends shop page.",
+        foundationPapers: "The foundation's own papers.",
+        boardIds: "Board member ID copies, kept apart from the other papers.",
+        textApproval: "Public text waiting for someone to read it before it goes live.",
         shelterFriends:
           "The businesses thanked on the public website — their order, and which are live.",
         donations:

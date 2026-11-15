@@ -369,6 +369,7 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.foundationPapers.idTitle,
     device: "any",
     menu: false,
+    section: "management",
   },
   {
     // Public text waiting for a reader (0345): the approve_text card. Asks text.approve, the activity the database checks.
@@ -378,6 +379,7 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.textApproval.title,
     device: "any",
     menu: false,
+    section: "management",
   },
   {
     path: "/medical/diets",
