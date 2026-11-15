@@ -281,6 +281,8 @@ jobs:
         with:
           node-version: 22
       - run: node scripts/check-hard-coded-security.mjs
+      # Every sectioned registry route is a tile on its hub page, so Admin (who holds no cards) can reach it (#fc7te).
+      - run: node scripts/check-section-hubs.mjs
 
   # A link must ask the activity its DESTINATION asks (backlog #79sqf, sweeps 6-11): a login that holds the page's card but not the
   # destination's is offered a link that ends at /no-access. Static (TypeScript AST), a few seconds, cards only. Blocks on any finding not in
