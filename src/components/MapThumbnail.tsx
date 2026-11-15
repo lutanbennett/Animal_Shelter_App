@@ -35,7 +35,8 @@ export function MapThumbnail({
   className?: string;
 }) {
   const box = useRef<HTMLDivElement>(null);
-  const [near, setNear] = useState(false);
+  // Without IntersectionObserver there is no way to tell, so count as near.
+  const [near, setNear] = useState(() => typeof IntersectionObserver === "undefined");
   const [acted, setActed] = useState(false);
 
   useEffect(() => {
@@ -49,10 +50,6 @@ export function MapThumbnail({
   useEffect(() => {
     const el = box.current;
     if (!el || near) return;
-    if (typeof IntersectionObserver === "undefined") {
-      setNear(true);
-      return;
-    }
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
