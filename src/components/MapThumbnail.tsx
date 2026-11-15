@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import type { AddressMap } from "@/lib/contacts/contacts";
 
 /**
@@ -8,6 +11,13 @@ import type { AddressMap } from "@/lib/contacts/contacts";
  * looked fine. Covered, the picture and the tap come from the same
  * `AddressMap`, so they can't disagree — and on a phone the tap opens the
  * Maps app at the place, which beats panning a 200px frame anyway.
+ *
+ * The embed is fetched only once the box is about to scroll into view.
+ * The browser's own `loading="lazy"` still pulled about 600 KB from
+ * Google on a slow phone before anyone scrolled. The 200px box is
+ * reserved from the start so nothing shifts, and the link over it is
+ * always there, so a visitor who never scrolls (a keyboard or screen
+ * reader user, or no script) still has the map one press away.
  */
 export function MapThumbnail({
   map,
@@ -22,16 +32,44 @@ export function MapThumbnail({
   openLabel: string;
   className?: string;
 }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [near, setNear] = useState(false);
+
+  useEffect(() => {
+    const el = box.current;
+    if (!el || near) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setNear(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setNear(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "150px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [near]);
+
+  const frame =
+    "h-full w-full rounded-lg border border-border bg-surface-hover";
   return (
-    <div className={`relative h-[200px] w-full ${className}`}>
-      <iframe
-        src={map.src}
-        title={title}
-        loading="lazy"
-        referrerPolicy="no-referrer-when-downgrade"
-        tabIndex={-1}
-        className="pointer-events-none h-full w-full rounded-lg border border-border bg-surface-hover"
-      />
+    <div ref={box} className={`relative h-[200px] w-full ${className}`}>
+      {near ? (
+        <iframe
+          src={map.src}
+          title={title}
+          referrerPolicy="no-referrer-when-downgrade"
+          tabIndex={-1}
+          className={`pointer-events-none ${frame}`}
+        />
+      ) : (
+        <div aria-hidden="true" className={frame} />
+      )}
       <a
         href={map.href}
         target="_blank"
