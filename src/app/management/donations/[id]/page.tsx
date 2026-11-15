@@ -8,6 +8,7 @@ import { requirePermission } from "@/lib/permissions/require";
 import type { DonationReceiptRow, DonationRow } from "@/lib/donations/donations";
 import { receiptFileName } from "@/lib/donations/receipt";
 import { RECEIPT_COLUMNS } from "@/lib/donations/receipts-server";
+import { maskTaxId } from "@/lib/donations/tax-id";
 import { ReceiptCard, IssueReceipt } from "./ReceiptActions";
 
 type Detail = DonationRow & {
@@ -32,18 +33,22 @@ export default async function DonationPage(props: PageProps<"/management/donatio
   const sp = await props.searchParams;
 
   const supabase = await createClient();
-  const [donationResult, receiptsResult] = await Promise.all([
+  const [donationResult, receiptsResult, taxResult] = await Promise.all([
     supabase
       .from("donations")
       .select("*, donation_lines(description, amount, position), contacts(name), residents:designation_resident_id(name), appeals:designation_appeal_id(id, title)")
       .eq("id", id)
       .maybeSingle<Detail>(),
     supabase.from("donation_receipts").select(RECEIPT_COLUMNS).eq("donation_id", id).order("issued_at", { ascending: false }).returns<DonationReceiptRow[]>(),
+    // The donor's tax ID (0381). RLS asks donation.receipt, which this page already needs. Shown masked, read at display time only.
+    supabase.from("donation_tax_ids").select("tax_id, recorded_on").eq("donation_id", id).maybeSingle<{ tax_id: string; recorded_on: string | null }>(),
   ]);
   // A failed read must not pass for "not found" or "no receipts yet" — the
   // latter offers to issue a receipt that may already exist.
   if (donationResult.error) throw new Error(donationResult.error.message);
   if (receiptsResult.error) throw new Error(receiptsResult.error.message);
+  if (taxResult.error) throw new Error(taxResult.error.code ?? "tax id read failed");
+  const tax = taxResult.data;
   const donation = donationResult.data;
   if (!donation) notFound();
   const receipts = receiptsResult.data ?? [];
@@ -99,7 +104,16 @@ export default async function DonationPage(props: PageProps<"/management/donatio
         {row(d.detail.contact, donation.contacts?.name)}
         {row(d.detail.reach, reach)}
         {row(d.detail.note, donation.note)}
+        {tax && row(d.taxId.onGift, maskTaxId(tax.tax_id))}
       </dl>
+      {tax && (
+        <p className="max-w-2xl rounded border border-border bg-surface px-4 py-3 text-sm text-foreground">
+          {tax.recorded_on ? d.taxId.recordedOn(formatDate(tax.recorded_on, locale)) : d.taxId.reminder}{" "}
+          {!tax.recorded_on && (
+            <Link href="/management/donations/e-donation" className="underline">{d.taxId.listLink}</Link>
+          )}
+        </p>
+      )}
 
       <section className="flex max-w-2xl flex-col gap-3">
         <h2 className="text-lg font-semibold text-foreground">{d.detail.receipts}</h2>

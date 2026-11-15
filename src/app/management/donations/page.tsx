@@ -69,6 +69,9 @@ export default async function DonationsPage(props: PageProps<"/management/donati
             <Link href="/management/donations/donors" className="rounded border border-border px-4 py-2 text-sm text-foreground hover:bg-surface">
               {d.donorsLink}
             </Link>
+            <Link href="/management/donations/e-donation" className="rounded border border-border px-4 py-2 text-sm text-foreground hover:bg-surface">
+              {d.taxId.listLink}
+            </Link>
             <Link href="/management/donations/new" className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover">
               {d.record}
             </Link>

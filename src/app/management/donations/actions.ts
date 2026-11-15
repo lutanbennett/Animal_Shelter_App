@@ -12,6 +12,7 @@ import { checkDonation, receiptContentFor, type DonationFields, type DonationPro
 import { isReceiptCountry, receiptIssuer, type ReceiptCountry } from "@/lib/donations/issuer";
 import { fileReceiptOnDrive, loadReceipt, RECEIPT_COLUMNS } from "@/lib/donations/receipts-server";
 import type { DonationReceiptRow } from "@/lib/donations/donations";
+import { checkTaxId, taxIdDigits, type TaxIdFields } from "@/lib/donations/tax-id";
 
 /**
  * Donations and their receipts (0168). Every action asks donation.receipt
@@ -99,7 +100,7 @@ async function issue(
 }
 
 /** The form: records the gift and issues its receipt in one go. */
-export async function recordDonation(fields: DonationFields, requestId: string): Promise<ActionResult<IssuedReceipt>> {
+export async function recordDonation(fields: DonationFields, requestId: string, tax?: TaxIdFields): Promise<ActionResult<IssuedReceipt>> {
   const { t } = await getT();
   const supabase = await createClient();
   return runWriteAction("donations.recordDonation", write(t), { id: requestId, action: "donations.recordDonation", db: supabase }, async () => {
@@ -108,6 +109,11 @@ export async function recordDonation(fields: DonationFields, requestId: string):
     const checked = checkDonation(fields, todayIso());
     if (!checked.ok) return refuse(problemText(t, checked.problem, checked.line));
     const { lines, country, ...donation } = checked.donation;
+    // The donor's tax ID (0381), checked before anything is written. The database checks it again.
+    if (tax?.wanted) {
+      const problem = checkTaxId(tax.taxId, tax.holderKind);
+      if (problem) return refuse(problem === "length" ? t.donations.taxId.errLength : t.donations.taxId.errChecksum);
+    }
 
     if (donation.designation_appeal_id) {
       // RLS lets only a login that runs appeals read one, so "not found" also covers "not yours to use".
@@ -133,7 +139,38 @@ export async function recordDonation(fields: DonationFields, requestId: string):
       return databaseFailure("donations.recordDonation.lines", lErr, t.common);
     }
 
+    if (tax?.wanted) {
+      // Never log the value: databaseFailure() logs only the error, and this refusal names no digits.
+      const { error: tErr } = await supabase
+        .from("donation_tax_ids")
+        .insert({ donation_id: created.id, tax_id: taxIdDigits(tax.taxId), holder_kind: tax.holderKind });
+      if (tErr) {
+        // No gift that promises a deduction it cannot record: take the whole gift back.
+        await supabase.from("donations").delete().eq("id", created.id);
+        console.error("donations.recordDonation.taxId", tErr.code);
+        return refuse(tErr.code === "23514" ? t.donations.taxId.errSaved : t.donations.taxId.errGift);
+      }
+    }
+
     return issue(supabase, t, created.id, country);
+  });
+}
+
+/** The accountant has entered this gift in e-Donation: sets the date and who, together (0381). */
+export async function markRecordedInEDonation(donationId: string, requestId: string): Promise<ActionResult> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction("donations.markRecordedInEDonation", write(t), { id: requestId, action: "donations.markRecordedInEDonation", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "donation.receipt")) return refuse(t.common.notAllowed);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from("donation_tax_ids")
+      .update({ recorded_on: todayIso(), recorded_by: user?.id ?? null })
+      .eq("donation_id", donationId)
+      .is("recorded_on", null);
+    if (error) return databaseFailure("donations.markRecordedInEDonation", error, t.common);
+    revalidatePath("/management/donations/e-donation");
+    return { ok: true };
   });
 }
 

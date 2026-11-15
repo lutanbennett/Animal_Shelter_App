@@ -14,6 +14,7 @@ import {
   type DonationFields,
 } from "@/lib/donations/donations";
 import { RECEIPT_COUNTRIES } from "@/lib/donations/issuer";
+import { checkTaxId, NO_TAX_ID, TAX_HOLDER_KINDS, type TaxHolderKind, type TaxIdFields } from "@/lib/donations/tax-id";
 import { recordDonation } from "../actions";
 import { giftsReceivedOn, type GiftOnDay } from "../reads";
 import { createSupporter } from "../donors/actions";
@@ -71,6 +72,7 @@ export function DonationForm({
   const createDonorCall = useWriteCall();
   const recordCall = useWriteCall();
   const startOn = presetReceivedOn || today;
+  const [tax, setTax] = useState<TaxIdFields>(NO_TAX_ID);
   const [fields, setFields] = useState<DonationFields>({
     receivedOn: startOn,
     donorName: "",
@@ -164,9 +166,13 @@ export function DonationForm({
 
   function save() {
     setError(null);
+    if (tax.wanted) {
+      const problem = checkTaxId(tax.taxId, tax.holderKind);
+      if (problem) return setError(problem === "length" ? t.donations.taxId.errLength : t.donations.taxId.errChecksum);
+    }
     const sent = inKind ? { ...fields, lines: fields.lines.map((l) => ({ ...l, amount: "" })) } : fields;
     startTransition(async () => {
-      const result = await recordCall((requestId) => recordDonation(sent, requestId));
+      const result = await recordCall((requestId) => recordDonation(sent, requestId, tax));
       if (!result.ok) {
         setError(result.error);
         return;
@@ -381,6 +387,32 @@ export function DonationForm({
           <p className="text-right text-base font-semibold text-foreground">
             {f.total}: {formatBahtExact(total, locale)}
           </p>
+        )}
+      </fieldset>
+
+      {/* The whole form is behind donation.receipt (the page and recordDonation ask it), so this block is too. */}
+      <fieldset className="flex flex-col gap-3 rounded border border-border bg-surface p-4">
+        <label className="flex min-h-11 items-center gap-2 text-sm font-medium text-foreground">
+          <input type="checkbox" checked={tax.wanted} onChange={(e) => setTax((p) => ({ ...p, wanted: e.target.checked }))} />
+          {t.donations.taxId.tick}
+        </label>
+        <span className="text-xs text-muted">{t.donations.taxId.tickHint}</span>
+        {tax.wanted && (
+          <>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="dn-tax-kind" className={labelClass}>{t.donations.taxId.holderKind}</label>
+              <select id="dn-tax-kind" value={tax.holderKind} onChange={(e) => setTax((p) => ({ ...p, holderKind: e.target.value as TaxHolderKind }))} className={inputClass}>
+                {TAX_HOLDER_KINDS.map((k) => (
+                  <option key={k} value={k}>{t.donations.taxId[k]}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="dn-tax-id" className={labelClass}>{t.donations.taxId.field}</label>
+              <input id="dn-tax-id" inputMode="numeric" autoComplete="off" value={tax.taxId} onChange={(e) => setTax((p) => ({ ...p, taxId: e.target.value }))} className={inputClass} />
+              <span className="text-xs text-muted">{t.donations.taxId.fieldHint}</span>
+            </div>
+          </>
         )}
       </fieldset>
 

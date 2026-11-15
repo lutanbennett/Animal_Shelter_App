@@ -240,6 +240,7 @@ const PINNED = {
   "/outreach/new": { guards: ['requirePermission("community.outings", "edit")'], decides: [] },
   "/outreach/[id]/edit": { guards: ['requirePermission("community.outings", "edit")'], decides: ["social.library"] },
   "/management/donations/new": { guards: ['requirePermission("donation.receipt")'], decides: [] },
+  "/management/donations/e-donation": { guards: ['requirePermission("donation.receipt")'], decides: [] },
   "/management/contacts/new": { guards: ['requirePermission("contacts.directory", "edit")'], decides: [] },
   // Suppliers (0338): the add form asks the edit level; a supplier's page opens at read and draws Archive / Restore only at edit and the Shelter Friend card's controls only with friends.manage.
   "/management/merch-shop/order/[id]": { guards: ['requirePermission("merch.manage", "read")'], decides: ["merch.manage"] },
