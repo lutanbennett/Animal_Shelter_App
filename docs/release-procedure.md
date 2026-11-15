@@ -809,6 +809,42 @@ ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App_test && ./scripts/pi/deploy-pi
 ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App_uat && ./scripts/pi/deploy-pi.sh --env uat'
 ```
 
+### `lanna-pi.local` ONLY WORKS FROM THE HOME NETWORK. THE MESH IS THE OTHER ROUTE, AND IT IS NOT A LAST RESORT
+
+**Promoted here 2026-11-15 after `0.47.0`, where this cost Lutan the third touch on a release whose
+target is two.** The name above is not resolved by mDNS: `~/.ssh/config` rewrites it to the Pi's
+address behind the FR205, which exists **only on the home network**. Run it from a machine on any
+other network — a different Wi-Fi, a tethered phone — and `ping` gets nothing and SSH times out.
+
+**Read the served headers before you conclude anything about the Pi**, because a timed-out SSH and a
+dead Pi look identical from here and are not the same thing at all:
+
+```bash
+for h in lannacareforanimals.org test.lannacare.org uat.lannacare.org; do curl -sI "https://$h/login" | grep -i x-lanna-served-by; done
+```
+
+**Three `pi` answers mean the Pi is healthy and it is your path that is broken.** On `0.47.0` that
+was exactly the case: all three sites were being served by the Pi throughout while this machine
+could not reach it, and the first conclusion drawn from the timeout was almost that the box was down.
+
+**Then go over the mesh.** NordVPN Meshnet has been installed and signed in on the Pi since
+2026-11-06 and *Management SSH, anywhere* is recorded **IN PLACE**
+(`docs/decisions/2026-11-07-network-review-closed.md`, `docs/as-built-2026-11-13.md`). Substitute the
+Pi's **mesh host name** for `lanna-pi.local` in every command in this section and they work
+unchanged, including `setsid nohup` and `check-assets.mjs` — all three Pi builds on `0.47.0` ran that
+way with no other difference. Three things to know:
+
+- **The mesh host name is in the private network notes on Lutan's Desktop**, not in this repo, per
+  `CLAUDE.md`'s rule that the value lives in the Desktop notes and the meaning lives here. Look there
+  rather than asking him.
+- **Use the NAME, not the mesh address.** One attempt by the bare mesh number was refused
+  (recorded 2026-11-07) and the name has always worked.
+- The mesh reaches SSH on the **default port**, not the forwarded one the home route uses, so drop
+  any `-p` you were passing.
+
+**Do not put this to him as a question.** The route is already recorded as in place; asking is what
+cost the third touch.
+
 **Three clones now, one per environment** — `~/Animal_Shelter_App`,
 `~/Animal_Shelter_App_test`, `~/Animal_Shelter_App_uat` — serving
 `lanna-care`, `lanna-care-test` and `lanna-care-uat` on ports 3000, 3001 and 3002.
