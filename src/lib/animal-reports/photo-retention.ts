@@ -9,6 +9,8 @@ import { listReportPhotos, removeReportPhotos } from "@/lib/animal-reports/photo
 export const REPORT_PHOTO_RETENTION_DAYS = 90;
 /** An object this young may belong to a report whose row is still being inserted (the action uploads first), so it is never an orphan yet. */
 const ORPHAN_GRACE_MS = 60 * 60 * 1000;
+/** A caller may only SHORTEN the grace (the dev proof needs an orphan to be removable at once); never lengthen past the default. */
+const graceFor = (minutes?: number) => (minutes !== undefined && Number.isFinite(minutes) && minutes >= 0 ? Math.min(minutes * 60_000, ORPHAN_GRACE_MS) : ORPHAN_GRACE_MS);
 const PAGE = 100;
 const MAX_PAGES = 20;
 
@@ -19,7 +21,7 @@ export type RetentionResult = { expiredRemoved: number; orphansRemoved: number; 
  * Removes the FILE only: the report row stays, with photo_path cleared so nothing points at a missing file.
  * Service role, as the upload is (registered in docs/hard-coded-security-registry.json); no storage policy, no card.
  */
-export async function runReportPhotoRetention(now: Date = new Date()): Promise<RetentionResult> {
+export async function runReportPhotoRetention(now: Date = new Date(), graceMinutes?: number): Promise<RetentionResult> {
   const db = createAdminClient();
   const result: RetentionResult = { expiredRemoved: 0, orphansRemoved: 0, scanned: 0, errors: [] };
 
@@ -54,7 +56,7 @@ export async function runReportPhotoRetention(now: Date = new Date()): Promise<R
     }
     if (!objects.length) break;
     result.scanned += objects.length;
-    const old = objects.filter((o) => !o.createdAt || now.getTime() - new Date(o.createdAt).getTime() > ORPHAN_GRACE_MS);
+    const old = objects.filter((o) => !o.createdAt || now.getTime() - new Date(o.createdAt).getTime() > graceFor(graceMinutes));
     if (old.length) {
       const ids = old.map((o) => o.name.replace(/\.jpg$/, ""));
       const { data: rows, error } = await db.from("animal_reports").select("id").in("id", ids);

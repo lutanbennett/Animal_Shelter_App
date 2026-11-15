@@ -24,7 +24,8 @@ export async function POST(request: Request) {
     return Response.json({ error: "Not authorised." }, { status: 401, headers: { "cache-control": "no-store" } });
   }
   try {
-    const result = await runReportPhotoRetention();
+    const grace = new URL(request.url).searchParams.get("orphan_grace_minutes");
+    const result = await runReportPhotoRetention(new Date(), grace === null ? undefined : Number(grace));
     return Response.json(result, { status: result.errors.length ? 207 : 200, headers: { "cache-control": "no-store" } });
   } catch (err) {
     console.error(`report-photo-retention: ${(err as Error)?.message ?? err}`);
