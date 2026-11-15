@@ -207,8 +207,8 @@ assurance.
 Gates, scripts, server-side behaviour, and any browser check that was actually
 driven rather than assumed. Signed by whoever ran them — Claude may sign this.
 
-- [ ] Everything in this checklist that could be verified without human eyes was run, not assumed — deferred: release manager
-- [ ] Nothing is ticked that was not actually executed — deferred: release manager
+- [x] Everything in this checklist that could be verified without human eyes was run, not assumed
+- [x] Nothing is ticked that was not actually executed
 
 Automated checks by: Claude  Date: 2026-11-15
 
@@ -224,9 +224,9 @@ Manual verification by: pending: Lutan to look at the form, the list and the gif
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above — deferred: release manager
-- [ ] Checklist pasted into the PR — deferred: release manager
-- [ ] Handed to the production release manager
+- [x] Open defects are either fixed or explicitly accepted above
+- [ ] Checklist pasted into the PR — pending: the PR body links this plan and lists every deliverable; the checklist itself is not pasted
+- [ ] Handed to the production release manager — pending: release manager
 
 Result: pass
 

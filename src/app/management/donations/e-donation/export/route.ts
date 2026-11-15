@@ -15,14 +15,15 @@ export const dynamic = "force-dynamic";
 const cell = (v: string) => `"${(/^[=+\-@\t\r]/.test(v) ? `'${v}` : v).replace(/"/g, '""')}"`;
 
 export async function GET() {
+  const { t } = await getT();
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return new NextResponse((await getT()).t.uploads.errors.signInReceipts, { status: 401 });
+  if (!user) return new NextResponse(t.uploads.errors.signInReceipts, { status: 401 });
   if (!can(await loadPermissions(), "donation.receipt")) return new NextResponse("Not allowed.", { status: 403 });
   const { rows, error } = await loadTaxIdList(supabase, false);
-  if (error) return new NextResponse("Could not load the list.", { status: 500 });
+  if (error) return new NextResponse(t.donations.taxId.couldntLoad, { status: 500 });
   const lines = [["Gift date", "Donor", "Tax ID", "Kind", "Amount (THB)"].map(cell).join(",")];
   for (const r of rows) {
     lines.push([r.receivedOn, r.donorName, r.taxId, r.holderKind, r.amount == null ? "in kind" : r.amount.toFixed(2)].map(cell).join(","));
