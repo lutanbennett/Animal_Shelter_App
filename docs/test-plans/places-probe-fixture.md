@@ -14,7 +14,7 @@
 | PR | see PR |
 | Tested by / date | Claude, 2026-11-15 |
 | Carries a migration? | no |
-| Tested at SHA | TBD |
+| Tested at SHA | 265efdaa7 |
 
 ## 1. Scope and risk
 
