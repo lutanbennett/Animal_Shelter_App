@@ -1744,6 +1744,10 @@ const manual: Manual = {
             },
             {
               kind: "note",
+              text: "If a donor wants a tax deduction, tick Donor wants a tax deduction on the Record a donation form, say whether the number is a person's ID card or a company's tax number, and type the 13 digits. Then open Management → Donations → Gifts to record in e-Donation: it lists each gift with the full ID so it can be entered in the Revenue Department's e-Donation system. Press Recorded in e-Donation when it is done and the gift leaves the list. The ID is kept for 7 years and then deleted, shows only as the last four digits on the gift's own page, and is never printed on the receipt.",
+            },
+            {
+              kind: "note",
               text: "These receipts are a thank-you and the foundation's own record. They do not make a gift tax-deductible: in Thailand that needs the gift recorded in the Revenue Department's e-Donation system, and US tax status is still being sought.",
             },
           ],
