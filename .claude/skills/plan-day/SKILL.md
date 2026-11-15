@@ -344,7 +344,7 @@ never a figure.
 
 | scale | band |
 |---|---|
-| Floor, before any work | **~107–111k on 2026-11-08** — re-measure, never carry forward |
+| Floor, before any work | **~86–89k, measured 2026-11-15 across two complete sets (nine streams)** — re-measure, never carry forward |
 | **Ordinary well-briefed stream — the default** | **146–175k** |
 | Quick win (1–3 files, answer already on the item) | 110–170k |
 | Routing into surfaces that already exist | 120–165k |
@@ -365,6 +365,8 @@ never a figure.
 | Large (rebuilt pages, whole-system read) | 340–460k |
 | Harness triage | ~floor + 20k per harness diagnosed · ~7k per restate-or-retire · ~3.6k per guard read |
 | A driven card walkthrough | floor + ~6.3k per step; **11k per step only if it must ADJUDICATE disputed rows** |
+
+**THE FLOOR ROW MOVED ON 2026-11-15 AND THE SCALE ROWS BELOW IT DELIBERATELY DID NOT. DO NOT "FINISH THE JOB" BY SHIFTING THEM.** The floor fell about 21k, and three handovers carried the inference that *"every band is therefore carrying about 21k of fat"*. **Nine measured streams disprove it:** of the six read on 2026-11-15, four landed **inside** their bands, one under and one over — **had the table been shifted down by 21k, five of the six would have overrun.** The reason is that **the scale rows were never derived from the floor by arithmetic; they were measured from actuals**, stream by stream, and each actual already contains whatever the floor was on its day. **The floor row and the scale rows are two independent measurements, and correcting one does not imply correcting the other.**
 
 **The questions that move a band, in order:** must it **build an instrument** to measure with (dear)?
 how many **live interactions** must it drive (dearest, and it scales with the row count)? must it merely

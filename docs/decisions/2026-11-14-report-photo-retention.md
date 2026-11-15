@@ -17,6 +17,13 @@ inside `.open-next`), which is why it goes through the route, as the other stage
   90 days is the decision file's figure and is **kept**. `handled_at` is the right clock: a trigger sets it when the status
   changes (measured on dev: changing status resets it), so it is "closed since". A report with no `handled_at` falls back
   to `created_at`. A report still `new` or `in_progress` never expires, however old.
+  **CAVEAT ADDED 2026-11-15, so nobody has to find the trigger themselves: because that trigger fires on EVERY status
+  change, the 90 days is measured from the LAST time the status changed, not from the first time the report was closed.**
+  A report that is closed, reopened and closed again **restarts the clock and keeps its photo longer**. **This is judged
+  CORRECT rather than a fault** — a reopened report is active again, and its photo is the thing being worked from — and it
+  is recorded here instead of as a backlog item precisely because there is no work to do. **What it changes is the WORDING
+  anyone may safely use:** the promise is *"90 days after it was last closed"*, never *"90 days after it was closed"*.
+  (Found by #1597, which judged it nothing to file; that judgement was upheld by the planner on 2026-11-15.)
 - **(b)** Any object in the bucket whose report row no longer exists is removed (a staff delete, or a failed insert after a
   successful upload). An object less than **one hour** old is never treated as an orphan, because the report action uploads
   before it inserts and the row may not exist yet.
