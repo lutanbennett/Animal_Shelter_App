@@ -111,8 +111,10 @@ export const PROBES = [
   { activity: "projects.folders", level: "read", sql: `select 1 from project_folders where id = $PROJECT` },
   { activity: "projects.photos", level: "edit", sql: `insert into project_photos (project_folder_id, drive_file_id) values ($PROJECT, 'harness-probe-file')` },
   { activity: "projects.publish", level: "edit", sql: `update project_folders set is_public = true where id = $PROJECT` },
-  // 0169: the places list is written under the same cell as the notes; a read probe needs a fixture row, and there is none yet
+  // 0169: the places list is written under the same cell as the notes.
+  // The read runs against $PLACE, a fixture place of check-who-does-what.mjs.
   { activity: "community.outings", level: "edit", sql: `insert into community_places (name, kind) values ('Probe temple', 'temple')` },
+  { activity: "community.outings", level: "read", sql: `select 1 from community_places where id = $PLACE` },
 
   // --- Donations
   // 0168: donations, its lines and the receipt register share the one cell; receipts are made only by issue_donation_receipt(), which asks it too.
