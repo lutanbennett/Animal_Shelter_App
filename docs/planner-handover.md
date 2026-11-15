@@ -1,197 +1,250 @@
-# Planner handover — edition `749`, 2026-11-14
+# Planner handover — edition `750`, 2026-11-15
 
-**This is a DELTA against `748`.** It says what changed, corrects its predecessor, and reports what each of
-`748`'s owed items did. Figures, batch composition and ports live in `.plan-day.md`.
+**This is a DELTA against `749`.** It says what changed, corrects its predecessor, and reports what each of
+`749`'s owed items did. Figures, batch composition and ports live in `.plan-day.md`.
 
 **It outranks nothing.** One chat reads it, one plan replaces it, and a wrong line is corrected by its
 successor rather than by a reviewer.
 
-**WHICH PLAN'S FIGURES THIS EDITION REPORTS, because `748` asked for this to be said explicitly.** It
-reports **`748`'s plan's complete set of six**, measured this morning in one slot, and **carries NO
-figures from its own five streams** — those are read at the next plan's first batch and reported by this
-edition's successor. **That is the delta model working as designed, not a gap.**
+**WHICH PLAN'S FIGURES THIS EDITION REPORTS.** It reports **`749`'s plan's three measured streams**, read
+this morning in one slot, and **carries NO figures from its own six** — those are read at the next plan's
+first batch and reported by this edition's successor. **That is the delta model working as designed, not a gap.**
+`749`'s plan had five streams but **only three ever ran** — its batch 2 was set up and never opened and
+**became THIS plan's batch 1** — so **three rows is the complete set, not a short one.**
 
-**WHY IT EXISTS.** `748`'s plan was complete at 6 of 6; this plan was built from scratch, agreed in one
-answer (*"All five, as listed"*), and **both its batches were set up and batch 1 merged inside one
-chat** — the second edition in a row written from the same chat that planned it.
-
----
-
-## THE LEAD: `748`'s BEST PIECE OF EVIDENCE DOES NOT REPLICATE, AND THE FLOOR IS A RANGE RATHER THAN A FIGURE
-
-`747` said the floor was *"a constant of the harness"*. **`748` correctly narrowed that** to *a property
-of WHEN a session starts — streams started together share it*, and its strongest support was two streams
-starting the same minute returning **89,505 to the token**.
-
-**This morning's set has its own same-minute pair, and they do not agree.**
-
-| slug | started | floor (`tokens − messages`) |
-|---|---|---|
-| `card-boxes-triage` | 2026-11-14T00:32Z | **86,731** |
-| `report-animal-photo` | 2026-11-14T00:32Z | **86,257** |
-
-**474 apart, same minute.** Across the whole set the floor ran **86,037 to 89,659**.
-
-**THE CORRECTION, AND IT IS NARROW: "started together" buys the same BAND of floor, roughly ±500, not the
-same figure.** `748`'s to-the-token pair reads as coincidence rather than mechanism. **What survives
-intact is the half that matters: the brief does not move the floor.** **So re-derive it per plan, quote a
-range, and do not repeat `748`'s "share it" without this correction.**
+**WHY IT EXISTS.** `749`'s plan was complete at 5 of 5; this plan was built from scratch, agreed in one
+answer (*"All five, as listed"*), **ran six streams rather than five**, and **both its batches plus an
+unplanned fourth stream were set up inside one chat** — the third edition in a row written from the chat
+that planned it.
 
 ---
 
-## WHAT IN `748` IS SUPERSEDED, AND WHAT ITS OWED ITEMS DID
+## THE LEAD: THE PLANNER PASTED A STALE COUNT INTO A BRIEF FOR THE SECOND DAY RUNNING, AND STEP ZERO CAUGHT IT AGAIN
 
-- **`748`'s owed item 1 (production four migrations behind) IS UNCHANGED AND STILL THE MOST CONSEQUENTIAL
-  LINE.** `0375`, `0377`, `0378`, `0379` all still pending. **`0375` re-owns 90 objects and re-owning
-  wrongly makes views read 0 rows — a blank public website, not a leak.** **And it now blocks something
-  concrete:** `0377` creates the report-photo bucket, so this plan's `report-photo-retention` job has
-  nothing to clean on production until it is applied. **Still `#w2knt`; still Lutan's and the release
-  manager's (2026-10-02); never brief a feature stream to do it.**
-- **`748`'s owed item 2 (measure nothing at the first batch) WAS OBEYED AND THE SLOT WORKED.** The set of
-  six was read once, after batch 1's list went out; batch 2's setup was a resume and skipped it.
-- **`748`'s owed item 3 IS SPENT: `#x5tbv` IS ANSWERED AFTER THREE DEFERRALS.** Put to him once with the
-  middle option as the recommendation, exactly as `748` instructed, and he chose **a scheduled run
-  against the dev project** — not per PR, not left as a by-hand release step. **Filed the same hour**:
-  title rewritten, old `DECIDE:` heading marked superseded in place, done-when narrowed to three
-  non-decisions — record it in `docs/decisions/`, **he** adds `SUPABASE_ACCESS_TOKEN` as a repository
-  secret, one session wires the workflow. **Do not put it to him again, and do not wire it per PR.**
-- **`748`'s owed item 4 (`#r9pzq`) IS DONE, BUT NOT BY FOLDING.** `748` said fold it into the next
-  card-check pass; **there was no such pass to fold it into**, so it got a stream, priced as a quick win
-  with the answer and the `$MERCH`/`$REPORT` pattern pasted into the brief. **It shipped (#1592).**
-- **`748`'s owed item 5 (say which outcome a band prices) WAS APPLIED TO ALL FIVE BRIEFS, and there is
-  one early sign it works.** `merch-photo-upload` reported, unprompted: *"Branch taken: `merch.manage`
-  only. No migration, so the 170-215k band applies."* **The brief made its own band legible to the
-  stream.** **One reading is not a trend — check the next round.**
-- **`748`'s owed item 6 (`#j4m8w` before any tenancy hostname work) IS DONE AND HAS HANDED HIM A
-  DECISION.** See below.
+`749` recorded this as a one-off: a *"9 probe faults out of 385 boxes"* figure pasted into
+`receipt-probe-fixture`'s brief hours after #1583 had cleared it. **It is not a one-off. It happened again
+today, in a different brief, on a different kind of figure.**
+
+`admin-nav-reachability`'s brief asserted **nine pages unreachable for Admin**. PR #1596's step zero
+re-measured and found:
+
+- **Seven of the nine really were unreachable.**
+- **Two were not** — `/appointments` is in the nav pane, and `/suppliers`'s list is already a hub tile.
+- **Two MORE existed that the brief never named** — `/memes` and `/reels`.
+
+**The count was wrong in both directions.** Nine was right only by coincidence.
+
+**What this says, and it is not "the planner is careless":** both defects are the same shape — **a count
+read once, written into prose, and then pasted into a brief later as though it were a fact.**
+`CLAUDE.md`'s rule already covers it (*"a count, a conclusion or a prior pass has a CLOCK on it"*), and
+`749`'s owed item 7 restated it. **Restating it did not work. It was broken the next day.**
+
+**The mitigation that DID work, both times, is step zero** — and in both cases the stream re-measured,
+corrected the brief and carried on without asking anybody. **So the instrument is sound and the practice
+is not.** The practical rule for your plan: **when a brief needs a count, re-run the thing that produces
+it in the same turn you write the brief, or write "the planner has not re-measured this — establish it at
+step zero" and say so plainly.** A figure with no timestamp beside it is the fault.
+
+**AND THE STREAM BUILT THE INSTRUMENT THAT WOULD HAVE CAUGHT IT.** #1596 added
+`scripts/check-section-hubs.mjs` — **10 missing before, 0 after** — and wired it into the blocking
+`hard-coded-security` CI job. **Deliberately NOT a change to `check-menu-coverage.mjs`**, whose subject is
+one card. **So this particular count is now machine-checked and must never be pasted from prose again.**
 
 ---
 
-## `#j4m8w` IS DONE AS A PAPER, AND THE ONE DECISION IT COULD NOT MAKE IS NOW WITH HIM
+## THE FLOOR MOVED AGAIN, AND THE SKILL'S BAND TABLE IS NOW ~21k STALE
 
-**The stream did exactly what its brief allowed and the distinction is the point.** Its brief said: decide
-(a) where the answer follows from the technical facts; **write it as a recommendation if the choice rests
-on what the product is to its customers.** It read the facts, found the choice was the latter, and
-**recommended rather than ruled** (`docs/decisions/2026-11-14-cooperjaidee-hostnames.md`, PR #1590).
+`749` corrected `747`'s *"the floor is a constant of the harness"* down to *"starting together buys the
+same BAND of floor, roughly ±500, not the same figure"*. **That correction holds. What has changed is the
+figure itself.**
 
-- **The certificate limit is VERIFIED, not assumed** — against Cloudflare's own Universal SSL
-  Limitations page, read 2026-11-14: **full-setup zones cover the root and first-level subdomains only.**
-  **It agrees with the item's understanding**, so `lanna.cooperjaidee.org` is covered and a deeper name
-  is not. **One residual unknown is marked rather than glossed: wildcard-on-Workers on the free plan is
-  `not verified`.**
-- **(c) EMAIL, from the code:** sends go through `send_email` bindings from `releases@lannacare.org` /
-  `releases@lannacareforanimals.org`; **nothing sends as `cooperjaidee.org`**, and nothing was set up.
-- **Its recommendation:** the apex as the platform's front door, **shelters keeping their own domains**,
-  a one-level subdomain for those with none — and, whichever shape he picks, **build the host-to-shelter
-  mapping table-driven.** Nothing in Cloudflare or outside `docs/` was touched, and the item is correctly
-  **LEFT OPEN**, its title rewritten by the stream itself to say that (a) is his.
+| slug | model / effort | band | tokens | messages | floor | verdict |
+|---|---|---|---|---|---|---|
+| `domain-tenancy-hostnames` | sonnet-5-5 / low | 140-180k | 145,297 | 58,312 | **86,985** | inside, low end |
+| `merch-photo-upload` | sonnet-5-5 / low | 170-215k | 183,854 | 97,528 | **86,326** | inside |
+| `receipt-probe-fixture` | sonnet-5-5 / low | 110-150k | 145,264 | 59,226 | **86,038** | inside, near the top |
 
-**SO PUT (a) TO HIM: what does a hostname mean to a shelter?** It is the first question of `#ykefa`'s
-build and everything else hangs on it.
+**All three are valid readings** — `compacted=no rescoped=no finished=yes`, and each one's `model=`/`effort=`
+matches the `@dials` on its own `band=`. **Three for three inside band.**
+
+**The floor is 86.0–87.0k, and the three readings span 947 tokens** — tight enough to be a real floor
+rather than noise, and consistent with `749`'s ±500-per-cohort correction (these three started within a
+minute of each other).
+
+**`SKILL.md`'s band table still says *"~107–111k on 2026-11-08"*. That is ~21k above what was measured
+today, and EVERY band in that table was built on it.** So every band is carrying about 21k of fat.
+
+**Do NOT re-band off one day's reading** — one cohort is one cohort. **Re-derive the floor from your own
+plan's complete set first; if it lands near 86–87k again, that is two sets agreeing and `SKILL.md` should
+be edited** rather than noted in a tenth handover. **Recorded, not yet applied.**
+
+---
+
+## WHAT IN `749` IS SUPERSEDED, AND WHAT ITS OWED ITEMS DID
+
+- **Owed 1 — production four migrations behind: UNCHANGED, and it got MORE consequential.** `0375`,
+  `0377`, `0378`, `0379` are on dev and not on production. **`0377` creates the bucket that this plan's
+  retention job needs**, so #1597's daily clean-up **cannot run on production at all** until it is applied
+  and the Worker is deployed. **Still his and the release manager's. Never brief a feature stream to do
+  it.** See the owed list below — it is still the most consequential line in this file.
+- **Owed 2 — measure `749`'s streams: DONE**, and the three rows are above. Two of its five never ran and
+  became this plan's batch 1, as explained at the top.
+- **Owed 3 — put `#j4m8w`'s (a) to him: DONE, AND ANSWERED. SUPERSEDED.** He chose *"2 & 3 combined with 1
+  available"*. `docs/decisions/2026-11-14-cooperjaidee-hostnames.md` was rewritten from RECOMMENDATION to
+  DECIDED with its "why this is his" section marked superseded in place, `#j4m8w` is ticked and retitled,
+  and **a note was added to `#ykefa`** so the tenancy build starts from the answer instead of rediscovering
+  the question. PR #1594. **Do not put any part of (a) to him again.**
+- **Owed 4 — `#x5tbv` waits on his secret: DONE, SHIPPED, AND THE ITEM IS CLOSED.** He added
+  `SUPABASE_ACCESS_TOKEN` on 2026-11-15 and the stream shipped the same afternoon (PR #1598).
+- **Owed 5 — three fresh items with evidence written in:** `#k7vnd` and (via this plan's batch 2)
+  `#w9xpq` and `#8t3rk` are all now streams. `#k7vnd` is ticked.
+- **Owed 6 — clear the leftovers: DONE**, including one by hand. `worktree.mjs done` refused
+  `merch-photo-upload` with *"5 commit(s) that no branch on origin has"* and offered to push the branch
+  back. **That remedy was not taken** — pushing would have re-created a branch GitHub had squash-merged
+  and deleted. Instead: `git diff origin/main <branch> -- src worker supabase scripts` showed the only
+  differences were two `scripts/` files where **`main` has MORE**, and `src/app/api/merch/photos/route.ts`
+  is present on `origin/main`. Nothing unique was on the branch, so it went by hand. **Verify the same way
+  before repeating this; the guard is right by default.**
+- **Owed 7 — re-read any count before pasting it: BROKEN AGAIN.** See the lead.
+
+---
+
+## A MITIGATION WRITTEN AS A NUMBERED DELIVERABLE FIRED, AND THE ANSWER WAS "NOT NEEDED"
+
+`749` left the rule that **a mitigation in a brief is a HYPOTHESIS, to be checked next round.** Two were
+written into this plan's briefs as numbered deliverables rather than prose. **Both outcomes, because an
+untested mitigation recorded as a success is the fault that rule exists for:**
+
+1. **`tenancy-lint-schedule`'s `read_only` caveat — FIRED, AND DISPROVED THE RISK.** The brief warned that
+   `check-tenancy-catalogue.mjs` POSTs its `select`s **without `read_only: true`**, that Supabase documents
+   the endpoint as taking `database_read` **or** `database_write`, and that a Read-only token might
+   therefore be refused — with the remedy (send the flag) and an explicit ban on asking Lutan to widen the
+   token. **#1598 reports: `read_only` was NOT needed.** The run succeeded with the dev-only
+   `Database: Read` token. **So record this as measured: a plain `select` through
+   `/v1/projects/<ref>/database/query` is accepted by a `database_read`-scoped token with no flag.** Nobody
+   needs to widen a token for the catalogue lint, and nobody needs to re-derive this.
+2. **`places-probe-fixture`'s dated-figures warning — NOT EXERCISED.** #1595's step zero found the gap
+   exactly as the brief described, so the warning had nothing to catch. **Not evidence it works: still a
+   hypothesis.**
 
 ---
 
 ## WHAT THIS PLAN SHIPPED, IN ONE LINE EACH
 
-- **#1590 `domain-tenancy-hostnames`** — the hostname paper above: **a recommendation, not a ruling.**
-- **#1591 `merch-photo-upload`** — `#qtnob`: a real photo chooser on the merch add-product form, uploading
-  through `/api/merch/photos`, **a route rather than a Server Action** (the 1 MB
-  `serverActions.bodySizeLimit` trap, proved with a 4.3 MB PNG). **`merch.manage` at edit for route and
-  control, so no second activity and no migration.** Current photo shown, paste-an-id kept.
-- **#1592 `receipt-probe-fixture`** — `#r9pzq`: a `$DONATION` fixture and a `read` probe, rolled back with
-  the harness like `$MERCH`/`$REPORT`. **And it corrected a figure two briefs had quoted.**
-- **Batch 2 is set up and unmerged at the time of writing:** `admin-nav-reachability` (`#fc7te`, 3005)
-  and `report-photo-retention` (`#6rkux`, 3006).
+Read the PR bodies for the detail; these are the lines a planner needs.
+
+- **#1594** — his hostname decision recorded; `#j4m8w` closed.
+- **#1595** (`#k7vnd`) — a `community_places` fixture row and a `community.outings` read probe. **392 boxes, 0 FAULT, probes 1630 → 1645.**
+- **#1596** (`#fc7te`) — nine hub tiles, each gated `canOpen(perms, routeFor(path))`, **Admin given no cards**, plus the new `check-section-hubs.mjs` in the blocking CI job. **One-card login NOT driven — `pending` in its plan.**
+- **#1597** (`#6rkux`) — a daily Worker job removing report photos expired (closed over 90 days, by `handled_at`) or orphaned, with a **one-hour grace**, bounded at 500 rows and 2,000 objects. Proved on dev. **No card, no policy, no new secret.** It rejected GitHub Actions (a production service-role key in a public repo) and `pg_cron` (migration plus Storage credentials) — **both judgements worth keeping.**
+- **#1598** (`#x5tbv`) — `.github/workflows/tenancy-catalogue.yml`, daily **05:43 UTC**, strict, `--tenant-role rls_definer`. **0 flagged with the tenant role; 105 flagged and exit 1 without one**, which is how we know it can go red.
 
 ---
 
-## A COUNT HAS A CLOCK ON IT, AND THE PLANNER BROKE THAT RULE THIS MORNING
+## FINDINGS FROM THE PR BODIES THAT NO ITEM OWNS — read these before you plan
 
-**`check-who-does-what` reports 392 boxes, 0 probe faults and 1,630 probes** (#1592, measured before and
-after its own change). **The figure `748` carried — "9 probe faults out of 385 boxes" — was true of the
-check's first-ever run and was cleared by #1583 hours later.** The planner pasted the stale figure into
-stream 3's brief as evidence, and **the stream caught it at step zero and said so in its PR** — the
-step-zero instrument catching the BRIEF rather than the item, **the second time in three days** (the
-first was four briefs naming a `th.ts` that does not exist). **Re-read a count before pasting it into a
-brief.** `#k7vnd` carries the corrected figures so the next planner inherits them rather than `748`'s.
+**A stream can report; only the planner can file.** Three things came out of this plan's PRs and are
+recorded here rather than filed, each with the reason:
 
-**AND THE CLASS OF FAULT IS WORTH RESTATING:** a box with **no probe at all** is worse than a reported
-fault, because a fault is visible in the output while **an unprobed box is indistinguishable from one
-that passed.** `#r9pzq` closed one; `#k7vnd` is the next.
+1. **`handled_at` is reset by a database trigger on every status change** (#1597). So *"closed for 90
+   days"* is measured from the **last change of status**, not from first closure — a report reopened and
+   re-closed restarts the clock, and its photo is kept longer. The stream judged this *"nothing to file"*
+   and that is defensible: it is arguably the correct behaviour. **It is written here because it is a
+   semantic caveat on a retention promise, and the next person to reason about the 90 days should not have
+   to find the trigger themselves.** **Decide whether it earns an item; do not assume the stream was
+   wrong.**
+2. **Two pre-existing non-clean probe results, identical before and after #1595**: one `WRONG` and one
+   `STICKY`. **The PR names them by role, and that is not a finding in this project's terms** — all
+   analysis is by CARD, because roles are a transient grouping that will be rebuilt. **Before filing
+   anything, restate them as the CARD that carries the behaviour** (`suppliers.directory` and
+   `recurring.do_own` are the activities). **A count per role measures nothing durable.**
+3. **#1598's release-procedure overlap was left to you.** It kept `docs/release-procedure.md` §5's by-hand
+   lint run and updated one clause, and says explicitly that whether the nightly makes the release step
+   redundant is the planner's judgement. **The nightly proves dev; a release is deployed from a known
+   commit. They are not the same proof.** My reading is that both stay — but it is yours to settle.
+
+**AND ONE THING TO WATCH RATHER THAN FILE:** #1598's real run was proved with a **temporary push
+trigger**, removed afterwards, because `workflow_dispatch` needs the file on `main`. **So the nightly's
+first genuinely scheduled run is 05:43 UTC on 2026-11-16 and has not happened yet.** Check it ran.
 
 ---
 
-## FOUR ITEMS WERE FILED FROM STREAMS' OWN REPORTS, AND NONE WOULD HAVE SURVIVED OTHERWISE
+## HIS DECISIONS TODAY, AND WHAT THEY ARE NOT
 
-**A stream reports; only the planner files.** Three of these were reported *for the planner to file* and
-would have been lost:
-
-- **`#8t3rk` (Security)** — the public report form and its photo upload have **no per-visitor rate
-  limit**. It was recorded **only inside `#6rkux`**, so it would have died the moment that item was
-  ticked. First work: what Cloudflare's **free** tier can do, against the zero-ongoing-cost rule.
-- **`#k7vnd` (Security)** — the **0169 places-list read box has no probe at all**
-  (`permission-probes.mjs` line 114), same shape as `#r9pzq`. **One neighbouring comment is deliberate
-  and must not be "fixed": `translations.manage` is read by hand in Appendix C on purpose.**
-- **`#w9xpq` (Fundraising)** — **`can_see_drive_file()` has no case for `merch_products`**, so staff
-  cannot preview a not-yet-public product's photo. **Nothing is broken for a user: the stream made the
-  preview hide itself.** Needs one migration gated on the same `merch.manage`. It also carries #1591's
-  outstanding press — product save and public display were never clicked after a transient Google Fonts
-  500 in the pane, and its plan says `pending`.
-- **`#d6xhs` and `#n2bkc` TICKED** — both shipped in PR #1582 at 01:02Z and **the stream never ticked
-  them**, so both still read as open work at this plan's sync and were still on his priorities list.
-  **The phantom-item fault, caught at the backlog read.**
-
-**TWO MITIGATIONS FIRED AGAIN AND BOTH HELD.** **The migration tiebreak, third outing, two for and none
-against:** #1584 renumbered `0376` to `0377` on the pre-written rule — *the lower PR number keeps the
-number* — after #1583 took `0376`, using `--forget` on dev's old row rather than leaving drift, and **no
-planner was needed.** **And the backlog merge conflict resolved item by item from each side's newer
-text:** `#x5tbv` from `backlog` (his answer, filed after the morning sync), `#r9pzq` from `main` (the
-stream had ticked it), with the script guarding that each side really was the newer text rather than
-trusting the label. **Do not assume `main` is newer.**
+- **`#j4m8w` (a):** *"I'll go with your recommendation of 2 & 3 combined with 1 available"*. Recorded in
+  three places.
+- **`#k2vrj`:** *"Yes, show them"* — fostered residents' approved updates appear on the public website.
+  **Today's behaviour is now the ruling**, `0343` stays as it is, and the item's view-change sketch is
+  marked `SUPERSEDED` in place. **DO NOT ADD A PLACEMENT-TYPE CONDITION.**
+- **`SUPABASE_ACCESS_TOKEN`:** added, and **scoped deliberately narrowly** — the one dev project
+  (`qxkmhwybjggxvsfxsxbd`), `Database: Read`, all ten other database permissions at No access, and
+  **organisation scope declined so it cannot see production.** **Never widen it, and never ask him to.**
+  #1598 proved the narrow scope is sufficient.
+- **A fourth live stream, mid-day:** asked whether `tenancy-lint-schedule` should go in now as a fourth or
+  wait for batch 2, he said *"Set it up now"*. **Four at once is one more than `CLAUDE.md`'s two-or-three,
+  and it was his call, not a drift.** All four merged the same day, so nothing was lost to it — **but the
+  reason for the limit is unchanged: merging is the bottleneck.**
 
 ---
 
 ## FOR YOUR FIRST TURN
 
-Read `.plan-day.md` first. **It stands at 5 of 5 and this edition resets the counter, so you are planning
+Read `.plan-day.md` first. **It stands at 6 of 6 and this edition resets the counter, so you are planning
 FROM SCRATCH.**
 
-**Read the system date and compare it with the date at the top of this file.** **Three plans ran on
-2026-11-14**; a fourth on the same date is a normal thing to be. **Never derive today's date from a
+**Read the system date and compare it with the date at the top of this file.** Plans have run two and three
+to a date before; another on 2026-11-15 is a normal thing to be. **Never derive today's date from a
 document.**
 
 **Tell him at the start that the sync plus the `worktree.mjs new` runs plus the briefs is about half an
-hour.** Seven editions have recorded that as the fix for an interruption.
+hour.** Eight editions have now recorded that as the fix for an interruption.
 
 **WHAT IS OWED:**
 
-1. **PRODUCTION IS FOUR MIGRATIONS BEHIND** — `#w2knt`, unchanged and still the most consequential line
-   here. `0375` re-owns 90 objects and the failure mode is a **blank public website**. `0377` creates the
-   report-photo bucket, so batch 2's retention job cannot run on production until it is applied.
-   **His and the release manager's. Never brief a feature stream to do it.**
-2. **MEASURE THIS PLAN'S FIVE AT YOUR FIRST BATCH, and they are not in this edition on purpose.** Read
-   `stream-usage:` from **#1590, #1591, #1592** and batch 2's two PRs. **They cannot expire** —
-   `gh pr view <n> --json comments` reads them from a merged PR whose worktree is long gone.
-3. **PUT `#j4m8w`'s (a) TO HIM: what does a hostname mean to a shelter?** The recommendation is written
-   and the certificate limit is verified. **This is the gate on `#ykefa`'s build** — and `#ykefa` is
-   still ≈50 hours with object counts **40% larger** than the spike priced, so it is a programme to
-   sequence across days, not a stream to brief in one go.
-4. **`#x5tbv` IS DECIDED AND WAITS ONLY ON HIS SECRET.** A scheduled run against dev. **Do not re-ask.**
-   It is the obvious first candidate once `SUPABASE_ACCESS_TOKEN` exists, and it cannot start before.
-5. **THREE FRESH ITEMS WITH THEIR EVIDENCE ALREADY WRITTEN IN:** `#w9xpq` (one migration, gated on
-   `merch.manage`), `#k7vnd` (one fixture, the shape `#r9pzq` just proved), `#8t3rk` (read Cloudflare's
-   free tier first, against the zero-ongoing-cost rule).
-6. **CLEAR THE LEFTOVERS, AFTER YOUR LIST.** At this edition's writing, batch 1's three folders were all
-   `HELD` by their own sessions, so they were left alone and raised with him instead — the same way
-   `merch-currency` was cleared earlier today on his *"Yes, clear it"*. **`done` them once those sessions
-   are closed:** `domain-tenancy-hostnames`, `merch-photo-upload`, `receipt-probe-fixture`, plus
-   `handover-749`.
-7. **RE-READ ANY COUNT BEFORE YOU PASTE IT INTO A BRIEF**, and say where and when you read it. The
-   planner broke this today and a stream caught it.
+1. **PRODUCTION IS FOUR MIGRATIONS BEHIND** — `#w2knt`, and it is still the most consequential line here.
+   `0375` re-owns 90 objects and the failure mode is a **blank public website**. `0377` creates the
+   report-photo bucket, **so this plan's daily retention job does not run on production at all** until it
+   is applied and the Worker is deployed. **His and the release manager's. Never brief a feature stream to
+   do it.**
+2. **MEASURE THIS PLAN'S SIX AT YOUR FIRST BATCH, and they are not in this edition on purpose.** Read
+   `stream-usage:` from **#1595, #1596, #1597, #1598** and batch 2's two PRs. **They cannot expire** —
+   `gh pr view <n> --json comments` reads them from a merged PR whose worktree is long gone. **Then
+   re-derive the floor, and see the band-table section above: if it lands near 86–87k again, revise
+   `SKILL.md`.**
+3. **BATCH 2 IS LIVE AS THIS IS WRITTEN:** `merch-photo-visibility` (3002, `#w9xpq`, carries one migration,
+   gated on `merch.manage`) and `report-form-rate-limit` (3003, `#8t3rk`, mostly reading; its deliverable
+   may legitimately be a recommendation for his own Cloudflare account). **Check whether they merged before
+   you plan anything.**
+4. **`#ykefa` IS HELD ON ITS OWN CONDITION, AND THAT IS THE NEW REASONING TO KEEP.** The item defers the
+   tenancy programme *"until Lanna is live"*, and `#pl7aq` records that `lannacareforanimals.org` still
+   shows "under construction" to the public. **The condition is unmet.** The hostnames piece shipped and
+   closed. **Do not slice another piece off it without putting it to him:** ≈50 hours, with object counts
+   **40% larger** than the spike priced.
+5. **`#00e3u` IS HELD FOR THE ITEM'S OWN REASON, not the planner's.** It says what the accountant needs
+   for Thai tax is **not established** and instructs *"Ask the Director and the accountant; do not infer it
+   from the screens we happen to have."* `#99zuk` is that conversation and he is carrying it to Chiang Mai
+   in person. **The receipt list is the part that looks buildable and is exactly the part the e-Donation
+   question lands on.** It was 4th on his priorities list and still held — **say so when you present,
+   rather than leaving it off.**
+6. **RESTATE THE COUNT RULE AS AN INSTRUMENT, NOT A SENTENCE.** See the lead: it has now been written into
+   two consecutive handovers and broken on both days. **The one count that mattered most is now
+   machine-checked (`check-section-hubs.mjs`).** Prefer doing that to writing it a third time.
+7. **CLEAR THE LEFTOVERS, AFTER YOUR LIST — AND THEY WERE NOT CLEARED TODAY, FOR THE SAME REASON AS
+   YESTERDAY.** All four of batch 1's merged folders (`admin-nav-reachability`, `places-probe-fixture`,
+   `report-photo-retention`, `tenancy-lint-schedule`) were still **`HELD` by their own Claude sessions**
+   when this was written, and `CLAUDE.md` is explicit that `HELD` means ask rather than tear down. **So it
+   was raised with him instead**, exactly as `749` did. **`done` them once those four sessions are
+   closed**, plus `handover-750` once this merges. **Read the `state` column before believing `ahead`** —
+   a squash-merged branch stays ahead for ever. **This is now the second consecutive edition to hand its
+   successor the same four-folder clean-up: the sessions outlive the merge, so the leftover is normal
+   rather than a fault, and it is cheap to leave.**
+8. **`#7bd5u` STILL CANNOT BE MEASURED WHILE STREAMS BUILD.** Lighthouse moves 12–17 points with machine
+   load on this machine. It needs a quiet window, which means it is never a parallel stream.
 
-**Do NOT re-ask him about:** `#x5tbv` (answered today — a scheduled run against dev); the product name or
-which TLD; the anonymous photo upload (*"Yes, build it properly"*); whether staff may add a currency;
-`donation.receipt`'s shape (yes/no, #1585); the adopter-portal exception; `test-plan` being advisory;
-merging a green PR; the Thai read's cadence; **the 90-day retention figure** (it is the decision file's
-own starting point, and a stream may change it with a reason); or anything on `748`'s, `747`'s and
-`746`'s do-not-re-ask lists.
+**Do NOT re-ask him about:** `#j4m8w`'s hostname meaning (answered today); `#k2vrj`'s fostered updates
+(*"Yes, show them"*); the `SUPABASE_ACCESS_TOKEN` scope (set deliberately narrow, and proved sufficient);
+`#x5tbv` (shipped); the product name or which TLD; the anonymous photo upload (*"Yes, build it
+properly"*); whether staff may add a currency; `donation.receipt`'s shape (yes/no, #1585); the
+adopter-portal exception; `test-plan` being advisory; merging a green PR; the Thai read's cadence; **the
+90-day retention figure** (it is the decision file's own starting point, and a stream may change it with a
+reason); or anything on `749`'s, `748`'s and `747`'s do-not-re-ask lists.
