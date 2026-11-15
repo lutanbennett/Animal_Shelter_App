@@ -70,16 +70,25 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  { text: "In Management → Merchandise shop → Catalogue, the photo you add to a product now shows as a preview straight away, even while the product is still hidden from the public shop.", cards: ["run_merch_shop"] },
-  { text: "Management now lists nine pages that could only be reached by a tile on someone's home: Merchandise shop, Shop for the shelter, Animal reports, Expenses, Foundation papers, Board ID copies, Approve public text, the Meme library and Reels. Each shows only for a login whose cards open it, and Admin sees them all.", cards: ["run_merch_shop", "manage_shop_page", "review_animal_reports"] },
-  { text: "Adding or changing a product in Management → Merchandise shop → Catalogue now has an Add a photo button: pick a picture from your phone or computer and it is uploaded for you, with the current photo shown beside it. You no longer have to find a file id in Google Drive (the id box is still there if you already have one). A photo for a product that is not yet shown on the shop may not preview until the product is shown.", cards: ["run_merch_shop"] },
-  { text: "On Management → Merchandise shop → Exchange rates you can now add a new currency (for example CAD) with its baht rate, and remove one. A currency you add is offered to overseas buyers straight away; orders already placed keep the currency and rate they were quoted.", cards: ["run_merch_shop"] },
-  { text: "Adding a shop link or a Shelter Friend no longer fails with \"You do not have permission to approve public text\" for someone who holds the card to manage the shop or Shelter Friends but not the one that approves public text.", cards: ["manage_shop_page", "publish_shelter_friends"] },
-  { text: "The Report an animal page now lets the person reporting attach a photo (JPEG, PNG or WebP, up to 8 MB). Any location or phone details hidden inside the photo are removed before it is saved, and only staff can see it: it appears under the report on Animal reports.", cards: ["review_animal_reports"] },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.47.0",
+    date: "2026-11-15",
+    title: "Report an animal takes a photo, the merchandise shop gains currencies and photo previews, and Management lists nine hidden pages",
+    major: true,
+    notes: [
+      { text: "In Management → Merchandise shop → Catalogue, the photo you add to a product now shows as a preview straight away, even while the product is still hidden from the public shop.", cards: ["run_merch_shop"] },
+      { text: "Management now lists nine pages that could only be reached by a tile on someone's home: Merchandise shop, Shop for the shelter, Animal reports, Expenses, Foundation papers, Board ID copies, Approve public text, the Meme library and Reels. Each shows only for a login whose cards open it, and Admin sees them all.", cards: ["run_merch_shop", "manage_shop_page", "review_animal_reports"] },
+      { text: "Adding or changing a product in Management → Merchandise shop → Catalogue now has an Add a photo button: pick a picture from your phone or computer and it is uploaded for you, with the current photo shown beside it. You no longer have to find a file id in Google Drive (the id box is still there if you already have one). A photo for a product that is not yet shown on the shop may not preview until the product is shown.", cards: ["run_merch_shop"] },
+      { text: "On Management → Merchandise shop → Exchange rates you can now add a new currency (for example CAD) with its baht rate, and remove one. A currency you add is offered to overseas buyers straight away; orders already placed keep the currency and rate they were quoted.", cards: ["run_merch_shop"] },
+      { text: "Adding a shop link or a Shelter Friend no longer fails with \"You do not have permission to approve public text\" for someone who holds the card to manage the shop or Shelter Friends but not the one that approves public text.", cards: ["manage_shop_page", "publish_shelter_friends"] },
+      { text: "The Report an animal page now lets the person reporting attach a photo (JPEG, PNG or WebP, up to 8 MB). Any location or phone details hidden inside the photo are removed before it is saved, and only staff can see it: it appears under the report on Animal reports.", cards: ["review_animal_reports"] },
+      { text: "A photo sent with a Report an animal report is now removed 90 days after you mark the report Resolved or Dismissed. The report itself, and everything typed in it, is kept — only the picture goes. A report still New or In progress keeps its photo however old it is.", cards: ["review_animal_reports"] },
+    ],
+  },
   {
     version: "0.46.0",
     date: "2026-11-14",
