@@ -47,3 +47,9 @@ Free plan only. **Turnstile and a Workers binding are not recommended now**: Tur
 
 ## Is a card involved? No.
 This path is uncarded on purpose (a stranger has no login; `2026-11-14-report-animal-photo.md`). **Bounding how many times a stranger may submit is not a grant of ability**, so Lutan's card rule (*"The only thing that can give permissions to do something in the system has to be a card"*) does not govern it. No card, role or role name appears anywhere.
+
+## Correction, 2026-11-15 (later the same day)
+The open question *"whether Lutan's zone already uses its single free rate-limiting rule"* is **answered: it does** (`1/1 rules`,
+`Sign-in attempts`). The "What to do" steps therefore **cannot be followed**. The answer went to
+`docs/decisions/2026-11-15-worker-rate-limit-binding.md`: the Workers binding's plan is not established, so nothing was built and
+the burst risk stays accepted.
