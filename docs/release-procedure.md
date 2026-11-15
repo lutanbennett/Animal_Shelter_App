@@ -827,20 +827,28 @@ for h in lannacareforanimals.org test.lannacare.org uat.lannacare.org; do curl -
 was exactly the case: all three sites were being served by the Pi throughout while this machine
 could not reach it, and the first conclusion drawn from the timeout was almost that the box was down.
 
-**Then go over the mesh.** NordVPN Meshnet has been installed and signed in on the Pi since
-2026-11-06 and *Management SSH, anywhere* is recorded **IN PLACE**
-(`docs/decisions/2026-11-07-network-review-closed.md`, `docs/as-built-2026-11-13.md`). Substitute the
-Pi's **mesh host name** for `lanna-pi.local` in every command in this section and they work
-unchanged, including `setsid nohup` and `check-assets.mjs` — all three Pi builds on `0.47.0` ran that
-way with no other difference. Three things to know:
+**Then go over the mesh: use `lanna-pi-mesh`.** NordVPN Meshnet is up on the Pi **and** the laptop
+permanently (installed and signed in on the Pi 2026-11-06; *Management SSH, anywhere* recorded
+**IN PLACE** in `docs/decisions/2026-11-07-network-review-closed.md` and
+`docs/as-built-2026-11-13.md`). **Lutan added an `~/.ssh/config` alias for it on 2026-11-15**, so
+there is nothing to look up: write `lanna-pi-mesh` in place of `lutan@lanna-pi.local` in every
+command in this section and they work unchanged — `setsid nohup`, the detached logs and
+`check-assets.mjs` included. All three Pi builds on `0.47.0` ran that way with no other difference.
 
-- **The mesh host name is in the private network notes on Lutan's Desktop**, not in this repo, per
-  `CLAUDE.md`'s rule that the value lives in the Desktop notes and the meaning lives here. Look there
-  rather than asking him.
-- **Use the NAME, not the mesh address.** One attempt by the bare mesh number was refused
-  (recorded 2026-11-07) and the name has always worked.
-- The mesh reaches SSH on the **default port**, not the forwarded one the home route uses, so drop
-  any `-p` you were passing.
+```bash
+ssh lanna-pi-mesh 'cd ~/Animal_Shelter_App && ./scripts/pi/deploy-pi.sh --ref <release sha>'
+```
+
+- **It works from the home network too**, so when in doubt just use it. The home block is
+  IP-restricted to this PC's two home addresses, which is why it fails from anywhere else — and why
+  it will also fail from this PC on a different Wi-Fi.
+- **`ssh -G lanna-pi-mesh` is the one-line check** that the alias is in place; it should print the
+  mesh host name, `port 22` and `user lutan`. **Port 22, not 2222** — the mesh reaches the Pi's own
+  sshd with no FR205 forward in the path, so drop any `-p` you were passing.
+- **If the alias is missing** (a rebuilt machine, a fresh profile), the mesh host name is in the
+  private network notes on Lutan's Desktop, per `CLAUDE.md`'s rule that the value lives in the
+  Desktop notes and the meaning lives here. **Use the name, not the mesh number** — one attempt by
+  the bare number was refused on 2026-11-07 and the name has always worked.
 
 **Do not put this to him as a question.** The route is already recorded as in place; asking is what
 cost the third touch.
