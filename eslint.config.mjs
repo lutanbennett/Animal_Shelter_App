@@ -53,6 +53,7 @@ const eslintConfig = defineConfig([
       "src/lib/auth/held-roles.ts",
       "src/lib/facility-map/plan-store.ts",
       "src/lib/animal-reports/photo-store.ts",
+      "src/lib/animal-reports/photo-retention.ts",
       "src/lib/status/access-requests.ts",
       "src/lib/clinics/calendar-sync.ts",
       "src/lib/clinics/calendar-poll.ts",
