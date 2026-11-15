@@ -1,7 +1,21 @@
-# 2026-11-14 — What a hostname MEANS on `cooperjaidee.org` (`#j4m8w`): a recommendation, and the choice is Lutan's
+# 2026-11-14 — What a hostname MEANS on `cooperjaidee.org` (`#j4m8w`): DECIDED 2026-11-15
 
-**Status: RECOMMENDATION. The product choice in (a) is Lutan's and the Director's; the item stays open.**
-Nothing is deployed, no DNS record, route or Pages project exists, and nothing in this repository is renamed.
+**Status: DECIDED. Lutan chose the recommendation below on 2026-11-15, asked directly and given the three shapes in plain English:**
+*"I'll go with your recommendation of 2 & 3 combined with 1 available"*. **The item is closed; (a) is no longer an open question and must not be put to him again.**
+
+**What was decided, in one place:**
+
+- **`cooperjaidee.org` (and `www.`) is the platform's own front door and sign-in, and maps to NO shelter** (shape 3).
+- **Each shelter's public site stays on its own domain** (shape 2). Lanna remains `lannacareforanimals.org`; nothing of Lanna's moves.
+- **A FIRST-LEVEL subdomain `<shelter>.cooperjaidee.org` is offered to a shelter that has no domain of its own** (shape 1). **Never a second level** — the free certificate does not cover one (verified below).
+- **The host-to-shelter mapping is table-driven — one `host → shelter` table — whichever of the three a given shelter is on.** A computed label rule is not enough, because it would not cover Lanna.
+
+**Still nothing deployed, and the decision does not change that:** no DNS record, Worker route, Pages project, certificate or Email Routing
+change exists on `cooperjaidee.org`, and nothing in this repository is renamed. Creating those records belongs to the tenancy build (`#ykefa`),
+and on Lutan's own Cloudflare account it needs his say-so, exactly as (d) says. **What this settles is what that build resolves against.**
+
+The reasoning that was put to him, the verified certificate limit and the email position are kept below unchanged, as the record of what he was
+choosing between.
 
 ## Step zero
 
@@ -54,7 +68,7 @@ staying on its own domain (shape 2); a first-level subdomain (shape 1) is offere
 Reasons: it is the smallest change; Lanna's public identity does not move; the one-table mapping serves all three; the only certificate
 rule it imposes is "never a second level", which costs nothing.
 
-**Hostnames the tenancy build resolves against, under this recommendation:**
+**Hostnames the tenancy build resolves against (DECIDED 2026-11-15 — this is now the list, not a proposal):**
 
 - `cooperjaidee.org` (and `www.`): platform front door, no shelter.
 - `<shelter>.cooperjaidee.org`: one level only, for shelters without their own domain.
@@ -62,12 +76,17 @@ rule it imposes is "never a second level", which costs nothing.
 - `uat.lannacare.org`, `test.lannacare.org`: Lanna's UAT and test, unchanged.
 - Anything else: no shelter, no rows.
 
-## Why this is his, not settled here
+## Why it was his to settle — ANSWERED 2026-11-15
 
-(a) turns on what Cooper Jaidee is to its customers: a brand each shelter wears (shapes 2/3) or a place they live (shape 1).
+**SUPERSEDED 2026-11-15: this section records why the question was put to him rather than decided here. It is answered; nothing below is open.**
+
+(a) turned on what Cooper Jaidee is to its customers: a brand each shelter wears (shapes 2/3) or a place they live (shape 1).
 (e) says a shelter's domain is its public identity and moving it is his and the Director's call. The mapping does not force either.
+**His answer keeps every shelter's own identity and makes Cooper Jaidee the name on the platform rather than on the shelter**, with shape 1
+available for a shelter that arrives without a domain. **(e) is therefore settled the same way: nothing of Lanna's moves.**
 
 ## Explicitly NOT changing
 
 Lanna's domains; every repository, project, Pi service and branch name; production; no DNS record, route, Pages project, certificate
-or Email Routing change; nothing deployed. `#j4m8w` stays open: (a) is recommended, not decided.
+or Email Routing change; nothing deployed. **(a) is now DECIDED (2026-11-15, above) and `#j4m8w` is ticked; what remains is the tenancy build's
+own work under `#ykefa`, which creates the records — not this file.**
