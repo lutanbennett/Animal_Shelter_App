@@ -13,7 +13,7 @@
 | PR | opened after this commit |
 | Tested by / date | Claude Opus 5 (production release manager session) / 2026-11-15 |
 | Carries a migration? | no |
-| Tested at SHA | filled in at the commit that opens the PR |
+| Tested at SHA | `2b0126657` — the commit this plan was committed in |
 
 ## 1. Scope and risk
 
