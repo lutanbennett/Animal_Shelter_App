@@ -1,0 +1,37 @@
+# Nightly tenancy canary against the DEV project (backlog #qtid6; docs/decisions/2026-11-16-tenancy-canary-diff.md).
+#
+# Plants a second shelter's rows inside one transaction, reads every object the anon role can reach, and fails if any output
+# changed. The transaction always rolls back, so nothing is left in dev. It must WRITE to plant, so it needs a Management API
+# token that can write to the DEV project only: the secret SUPABASE_CANARY_TOKEN (not the read-only SUPABASE_ACCESS_TOKEN the
+# catalogue lint uses; a read token is refused at the planting step and the run exits 2, NOT CHECKED).
+#
+# Scheduled, never on the pull-request path: this repository is public on purpose and a PR run would hand a write-capable token
+# to every run. Like tenancy-catalogue.yml it is allowed to FAIL and cannot turn a PR red.
+# Limits (also printed by the script): it cannot see service-role calls (Part 7), and until Part 5 there are no per-shelter
+# policies for it to check.
+
+name: Tenancy canary
+
+on:
+  schedule:
+    - cron: "11 6 * * *" # 06:11 UTC; clear of tenancy-catalogue at 05:43 and advisories at 06:17
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/check-tenancy-canary.mjs --strict
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_CANARY_TOKEN }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
