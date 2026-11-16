@@ -1,3 +1,4 @@
+import { shelterHeaders } from "./shelter-header";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 /**
@@ -5,10 +6,10 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
  * the files allow-listed in eslint.config.mjs (no-restricted-imports), each
  * of which guards its own callers; add a file there only with that guard.
  */
-export function createAdminClient() {
+export function createAdminClient(opts: { shelterId?: string | null } = {}) {
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } },
+    { auth: { autoRefreshToken: false, persistSession: false }, global: { headers: shelterHeaders(opts.shelterId) } },
   );
 }

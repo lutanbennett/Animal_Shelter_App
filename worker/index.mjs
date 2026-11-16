@@ -65,6 +65,7 @@
 import openNext from "../.open-next/worker.js";
 import { handleReleaseRequest } from "./release-mail.mjs";
 import { originOrLocal } from "./origin.mjs";
+import { withShelter } from "./shelter.mjs";
 import { handleCspReport } from "./csp-report.mjs";
 import { withSecurityHeaders } from "./security-headers.mjs";
 import { runLabelDrafts, runTranslations } from "./translations.mjs";
@@ -134,6 +135,9 @@ async function route(request, env, ctx) {
 
   const report = await handleCspReport(request);
   if (report) return withHeaders(report, { "x-lanna-served-by": "worker", "x-lanna-cache": "BYPASS" });
+
+  // Which shelter this host belongs to, as x-shelter-id (worker/shelter.mjs). Edge-cache keys are per URL, so per host.
+  request = await withShelter(request, env);
 
   const url = new URL(request.url);
   const cacheable = isCacheable(request, url);
