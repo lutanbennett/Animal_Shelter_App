@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { createClient } from "@/lib/supabase/client";
 import { THEMES, THEME_METADATA_KEY, THEME_PREVIEW, themeAttribute, parseTheme, type Theme } from "@/lib/theme/themes";
 
 /** The theme the page is showing now: the attribute the layout (or a pick) set on <html>. */
@@ -67,8 +66,9 @@ export function ThemePicker() {
     startTransition(async () => {
       // Saving the default stores null, which removes the key rather than
       // recording "dark" -- as the server action did.
-      const supabase = createClient();
-      const { error: failed } = await supabase.auth
+      // Loaded on the pick, not with the page (the client is ~260 KB of script).
+      const { createClient } = await import("@/lib/supabase/client");
+      const { error: failed } = await createClient().auth
         .updateUser({ data: { [THEME_METADATA_KEY]: next === "dark" ? null : next } })
         .catch(() => ({ error: new Error("theme") }));
       if (failed) {
