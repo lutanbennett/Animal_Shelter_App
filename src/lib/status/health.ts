@@ -344,7 +344,7 @@ export async function checkOrigin(): Promise<CheckOutcome<OriginFacts>> {
 }
 
 /** Every pg_cron job this system relies on. Add the next one here and it is watched by construction. */
-export const EXPECTED_CRON_JOBS = ["purge-assistant-actions"] as const;
+export const EXPECTED_CRON_JOBS = ["purge-assistant-actions", "purge-donation-tax-ids"] as const;
 
 /** One missed night is not an incident; two is. */
 const CRON_STALE_HOURS = 48;
