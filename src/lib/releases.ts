@@ -70,14 +70,22 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  "Recording a donation now has a Donor wants a tax deduction tick. Tick it, give the donor's 13-digit ID and say if it is a person or a company, and the gift appears under Management → Donations → Gifts to record in e-Donation, where you can mark it Recorded in e-Donation once it is entered with the Revenue Department. The ID is kept for 7 years, is only visible to logins that issue receipts, and is not printed on the receipt.",
-  "On the public Shelter Friends page, the little maps now load only as you scroll down to them, so the page opens quicker on a phone. The Open in Google Maps link under each one is there straight away.",
-  "On the merchandise shop, a sold-out product now shows a clear Sold out badge over a dimmed photo and a struck-through price, instead of one line of small grey text. In the cart, a line that has sold out is marked Sold out as soon as the page opens, and Place order waits until you remove it, so nobody fills in their address first only to be told afterwards.",
-  { text: "In Management → Merchandise shop → Catalogue, a product that is sold out on the public shop now shows a Sold out on the shop marker beside its name. A product with a supplier is never sold out, however low the shelf stock, because the supplier fulfils it.", cards: ["run_merch_shop"] },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.47.1",
+    date: "2026-11-16",
+    title: "Tax-deductible donations, clearer sold-out merchandise, and quicker Shelter Friends maps",
+    major: false,
+    notes: [
+      "Recording a donation now has a Donor wants a tax deduction tick. Tick it, give the donor's 13-digit ID and say if it is a person or a company, and the gift appears under Management → Donations → Gifts to record in e-Donation, where you can mark it Recorded in e-Donation once it is entered with the Revenue Department. The ID is kept for 7 years, is only visible to logins that issue receipts, and is not printed on the receipt.",
+      "On the public Shelter Friends page, the little maps now load only as you scroll down to them, so the page opens quicker on a phone. The Open in Google Maps link under each one is there straight away.",
+      "On the merchandise shop, a sold-out product now shows a clear Sold out badge over a dimmed photo and a struck-through price, instead of one line of small grey text. In the cart, a line that has sold out is marked Sold out as soon as the page opens, and Place order waits until you remove it, so nobody fills in their address first only to be told afterwards.",
+      { text: "In Management → Merchandise shop → Catalogue, a product that is sold out on the public shop now shows a Sold out on the shop marker beside its name. A product with a supplier is never sold out, however low the shelf stock, because the supplier fulfils it.", cards: ["run_merch_shop"] },
+    ],
+  },
   {
     version: "0.47.0",
     date: "2026-11-15",
