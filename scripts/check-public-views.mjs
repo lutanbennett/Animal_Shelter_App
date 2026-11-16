@@ -120,6 +120,7 @@ const PUBLIC_FUNCTIONS = {
   shelter_date: { p_at: new Date().toISOString() },
   shelter_time_zone: {},
   shelter_today: {},
+  current_shelter_id: {},
 };
 
 for (const name of PUBLIC) {
