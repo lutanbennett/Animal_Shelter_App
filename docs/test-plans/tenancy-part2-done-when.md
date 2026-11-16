@@ -81,7 +81,7 @@ it. Everything outside those comments is judged.
 |---|---|
 | Feature | #s50n8 duplicate-microchip wording |
 | Backlog item | `docs/backlog.md` → #s50n8 |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/tenancy-part2-done-when` @ `C:\Development\Animal_Shelter_tenancy-part2-done-when` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | #1625 |
 | Tested by / date | Claude / 2026-11-16 |
@@ -183,7 +183,7 @@ needs two cards together, put both on one row. Do not name `staff` (retired, `01
 - [ ] Backlog item ticked in `docs/backlog.md` **on this bra — n/a: item deliberately left open, clauses outstanding
 - [x] Non-obvious design choices added as a new file in `docs/decisions/` (`<date>-<slug>.md`)
 - [ ] `README.md` still accurate — n/a: not applicable to a wording change
-- [x] **Release notes.** Would a shelter user notice this change? If so, `unreleased` in `src/lib/releases.ts` has a line for it, **in this PR**, written for a shelter user and not as a commit message. If not, `n/a: <why nobody would notice>`: a refactor, a script, a fix to something no user reached. The checker holds this line to the diff. A tick fails if `unreleased` gained no line. A PR touching `src/app/`, `src/components/`, `src/lib/manual/`, `src/lib/i18n/` or `worker/` fails if this line is missing, and its `n/a` reason is printed for the reviewer. An empty `unreleased` looks exactly like "nothing visible shipped", so this line is the only place that difference gets written down. **Do not tick while this PR's own decision file, README or backlog note records a step still outstanding before a user could see it (a deploy, a hand-edited file on the Pi, a setting).** A note promises the user it works now; a tick that only means "the code is in" sent #518's false note to every admin (decisions, 2026-10-11). Write `n/a: <the outstanding step>` and put the note in the PR that closes the step A PR that touches nothing but `docs/test-plans/` (a sign-off recorded after merge) has a tick checked against the merge that introduced the plan instead, so leave the feature's tick as it was. **And who is it for?** If the note is about a page only some roles can open (anything under Settings, an admin page), write it as `{ text: "…", cards: [...] }` naming the card (a `CardKey` from `src/lib/permissions/cards.ts`) that opens it, because a plain string is shown to every live role, including ones who cannot open the page. A card-tagged note is shown to whoever holds one of its cards and always to Admin; a tag whose cards nobody recognises shows to everyone rather than hiding. **Do not tag a new note with `roles`**: that older form is in Lanna's own role keys, which a shelter may rename, so it is closed to new notes (history keeps the tags it has: `docs/decisions/2026-10-26-release-notes-by-card.md`). You know the audience; the release manager can only guess from the wording. The checker warns, and never fails, on an untagged note that names an admin-only place and on a new note tagged `roles` (a wrong tag hides a note from the people it is for, which is worse). The checker finds this line by its bold **Release notes.** label, so keep the label as it is
+- [ ] **Release notes.** — n/a: one error message reworded, nobody would look for a note
 - [x] Commit messages say why, not just what
 - [ ] **Claims in commit messages and `docs/decisions.md` we — n/a: not applicable to a wording change
 
@@ -279,8 +279,8 @@ assurance.
 Gates, scripts, server-side behaviour, and any browser check that was actually
 driven rather than assumed. Signed by whoever ran them — Claude may sign this.
 
-- [ ] Everything in this checklist that could be verified without human eyes was run, not assumed — deferred: release manager
-- [ ] Nothing is ticked that was not actually executed — deferred: release manager
+- [ ] Everything in this checklist that could be verified without human eyes was run, not assumed — n/a: unfinished PR
+- [ ] Nothing is ticked that was not actually executed — n/a: unfinished PR
 
 Automated checks by: n/a: CI ran the gates; none run locally
 
@@ -322,9 +322,9 @@ Manual verification by: n/a: wording-only change
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above — deferred: release manager
-- [ ] Checklist pasted into the PR — deferred: release manager
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Open defects are either fixed or explicitly accepted above — n/a: unfinished PR
+- [ ] Checklist pasted into the PR — n/a: unfinished PR
+- [ ] Handed to the production release manager — n/a: unfinished PR
 
 Result: pass with accepted defects
 
