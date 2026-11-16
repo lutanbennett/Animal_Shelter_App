@@ -30,6 +30,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
+import { scriptShelterHeaders } from "./lib/shelter-env.mjs";
 import { createHash } from "node:crypto";
 import { giveRole } from "./lib/user-role.mjs";
 import { loadCards } from "./lib/load-cards.mjs";
@@ -203,6 +204,7 @@ if (giveErr) throw giveErr;
 
 const jar = new Map();
 const ssr = createServerClient(url, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+  global: { headers: scriptShelterHeaders(env) },
   cookies: {
     getAll: () => [...jar].map(([name, value]) => ({ name, value })),
     setAll: (list) => list.forEach(({ name, value }) => (value ? jar.set(name, value) : jar.delete(name))),

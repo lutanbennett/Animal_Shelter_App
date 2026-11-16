@@ -30,6 +30,7 @@
 import { loadEnv, parseEnvArg } from "./lib/env.mjs";
 import { classifyUnlistedView } from "./lib/public-view-owner.mjs";
 import { exitWith } from "./lib/exit.mjs";
+import { scriptShelterHeaders } from "./lib/shelter-env.mjs";
 
 const { name: envName } = parseEnvArg(process.argv.slice(2));
 const env = loadEnv(envName);
@@ -43,7 +44,10 @@ if (!url || !key || !serviceKey) {
   process.exit(2);
 }
 
-const headers = { apikey: key, Authorization: `Bearer ${key}` };
+// The shelter header the Worker would send, from DEV_SHELTER_ID (CI: repository variable TEST_SHELTER_ID); scripts/lib/shelter-env.mjs.
+const shelterHeader = scriptShelterHeaders(env, envName);
+if (!Object.keys(shelterHeader).length) console.log("note: no shelter id in the environment, so no x-shelter-id is sent (fine until per-shelter policies are on).");
+const headers = { apikey: key, Authorization: `Bearer ${key}`, ...shelterHeader };
 // A filter that can never match, so a permitted write still changes nothing.
 const noRow = "id=eq.00000000-0000-0000-0000-000000000000";
 // Every FAIL line, repeated at the end: one failure among ~200 ok lines is

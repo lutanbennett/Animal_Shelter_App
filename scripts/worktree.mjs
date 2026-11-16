@@ -58,6 +58,8 @@ const ENV_FILES = [".env.local", ".dev.vars"];
 const ENV_KEEP = new Set([
   // next dev, dev-signin, apply-migrations, gates, check-planner-preflight
   "NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_ACCESS_TOKEN",
+  // the shelter `next dev` and the anon scripts send as x-shelter-id (src/lib/supabase/shelter-header.ts, scripts/lib/shelter-env.mjs)
+  "DEV_SHELTER_ID",
   // the running server: Drive uploads (src/lib/google/drive.ts) and the form key built into next build
   "GOOGLE_DRIVE_ROOT_FOLDER_ID", "GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_OAUTH_REFRESH_TOKEN",
   "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY",
