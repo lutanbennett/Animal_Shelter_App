@@ -872,6 +872,16 @@
         "migration": "0372_animal_reports.sql",
         "item": "grant to anon",
         "reason": "INSERT on named columns of animal_reports (id, kind, species, description, location, reporter_name, reporter_phone, reporter_email) and nothing else; no SELECT, so a report is never readable by the public. scripts/check-public-views.mjs proves anon cannot read, change or delete a row and cannot set status."
+      },
+      {
+        "migration": "0383_shelter_id_animals.sql",
+        "item": "function reset_diet_rounds reads a role",
+        "reason": "Not a role read. The match is rounds.key = any(default_diet_round_keys(...)), the Morning/Evening MEAL-ROUND names of the medication-rounds table, which has nothing to do with roles. Re-declared only to copy the parent resident_diets row's shelter_id onto the rows it inserts (docs/decisions/2026-11-16-tenancy-shelter-id-animals.md). No rule added."
+      },
+      {
+        "migration": "0383_shelter_id_animals.sql",
+        "item": "function reset_diet_rounds definer",
+        "reason": "A trigger helper (diet_rounds_default_trigger calls it after a resident_diets insert), security definer as in 0137 so a staff insert is not left roundless for lack of a write policy. It writes only default round rows for the one diet it is given, decides nobody's access and is executable by authenticated/service_role as before. Body unchanged from 0137 except for copying shelter_id."
       }
     ],
     "stubs": [
