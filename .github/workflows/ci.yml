@@ -420,6 +420,8 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+      # The shelter the test project stands for; the check sends it as x-shelter-id (scripts/lib/shelter-env.mjs, #ujqr5).
+      DEV_SHELTER_ID: ${{ vars.TEST_SHELTER_ID }}
     steps:
       # Full history so every origin/* branch is present: a public view created
       # by another unmerged branch is told apart from an unlisted one of ours by
