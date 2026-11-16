@@ -887,6 +887,11 @@
         "migration": "0383_shelter_id_animals.sql",
         "item": "function reset_diet_rounds definer",
         "reason": "A trigger helper (diet_rounds_default_trigger calls it after a resident_diets insert), security definer as in 0137 so a staff insert is not left roundless for lack of a write policy. It writes only default round rows for the one diet it is given, decides nobody's access and is executable by authenticated/service_role as before. Body unchanged from 0137 except for copying shelter_id."
+      },
+      {
+        "migration": "0385_donation_tax_id_retention.sql",
+        "item": "function purge_donation_tax_ids definer",
+        "reason": "A retention job run only by pg_cron, as 0227 purge_assistant_actions is. Execute is revoked from public, anon and authenticated, so no login can call it; it takes no input and decides no one's access. It deletes donation_tax_ids rows past retain_until (#q7x4m)."
       }
     ],
     "stubs": [
