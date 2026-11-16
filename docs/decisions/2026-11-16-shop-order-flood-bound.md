@@ -1,6 +1,6 @@
 # Shop checkout: stock leak fixed, open orders capped per email (`#py2b1`)
 
-Date: 2026-11-16. Outcome: **built** (migration 0384 plus a small `src/` change). It builds what
+Date: 2026-11-16. Outcome: **built** (migration 0386 plus a small `src/` change). It builds what
 `2026-11-15-shop-order-flood.md` recommended; that file holds the reading and is not repeated here.
 
 ## Re-read of the path (deliverable 1)
@@ -9,7 +9,7 @@ Unchanged since yesterday: `submitOrder` (`src/app/shop/merch/checkout/actions.t
 
 ## What was wrong, and what changed
 1. **Leak.** In 0373 the shelf decrement ran inside the line loop while the refusal paths `return` (not raise), so a later
-   unavailable line committed the earlier lines' decrements with no order. 0384 moves every decrement to after all lines have
+   unavailable line committed the earlier lines' decrements with no order. 0386 moves every decrement to after all lines have
    passed and the order row exists. A refusal now changes nothing.
 2. **Cap.** An email (case-insensitive) may hold at most **3 unpaid (`awaiting`) orders**; the next gets `too_many`, shown as a
    new message ("pay or contact us before placing another", English and Thai). 3 is a judgement: a real buyer rarely has more.

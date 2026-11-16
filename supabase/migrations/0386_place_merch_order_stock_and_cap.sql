@@ -1,5 +1,5 @@
 -- consumer: src/lib/merch/checkout.ts, src/app/shop/merch/checkout/actions.ts
--- 0384: place_merch_order() stops leaking shelf stock and caps open orders per email (#py2b1; docs/decisions/2026-11-16-shop-order-flood-bound.md).
+-- 0386: place_merch_order() stops leaking shelf stock and caps open orders per email (#py2b1; docs/decisions/2026-11-16-shop-order-flood-bound.md).
 --   1. THE LEAK: in 0373 the stock decrement ran inside the line loop, but a later unavailable line RETURNS (does not raise), so the
 --      transaction committed earlier lines decrements with no order row. Now nothing is decremented until every line has passed.
 --   2. THE CAP: one email may hold at most 3 unpaid (awaiting) orders; the next returns {"ok": false, "error": "too_many"}.
