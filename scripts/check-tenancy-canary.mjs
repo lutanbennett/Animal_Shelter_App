@@ -44,8 +44,7 @@ const SABOTAGE = {
 // can pass on today's schema and still go red on any NEW one. Each is printed every run as "known". An entry that stops leaking is
 // STALE and fails --strict, so Part 5 must delete it in the same change that closes the leak. Nothing here is a permission.
 const KNOWN_TODAY = {
-  public_resident_cards: "the kennel card answers for every resident, not only this shelter's (0350: \"always answers\"); Part 5 scopes it",
-  public_shelter_stats: "counts residents across every shelter; Part 5 scopes it",
+  // empty on purpose: public_resident_cards and public_shelter_stats were scoped by 0391 (#vleak) and left it.
 };
 
 if (proveRed && !SABOTAGE[proveRed]) {
@@ -68,9 +67,13 @@ declare
   o record; fn record; h text; n bigint; res jsonb := '{}'::jsonb; base1 jsonb := '{}'::jsonb; base2 jsonb := '{}'::jsonb;
   after jsonb := '{}'::jsonb; calls_a jsonb := '{}'::jsonb; calls_b jsonb := '{}'::jsonb; args_a text; args_b text; out_a text; out_b text;
   planted jsonb := '[]'::jsonb; objs jsonb := '[]'::jsonb; fns jsonb := '[]'::jsonb; src record;
-  cols text;
+  cols text; lanna uuid;
 begin
   ${pre}
+  -- the caller is a visitor to Lanna, as the Worker would send it: with no header every shelter-scoped view reads empty before and after, and the diff proves nothing
+  select id into lanna from shelters where key = 'lanna';
+  if lanna is null then raise exception 'CANARY_NOT_CHECKED: no shelter with key lanna to send as the header'; end if;
+  perform set_config('request.headers', json_build_object('x-shelter-id', lanna)::text, true);
   for o in
     select c.relname, c.relkind from pg_class c join pg_namespace n on n.oid = c.relnamespace
      where n.nspname = 'public' and c.relkind in ('r','v','m','p') and has_any_column_privilege('anon', c.oid, 'select')
@@ -91,6 +94,8 @@ begin
       end;
     end loop;
   end loop;
+
+  if coalesce(split_part(base2->>'public_resident_cards', '/', 2), '0')::bigint = 0 then raise exception 'CANARY_NOT_CHECKED: public_resident_cards reads empty as Lanna, so the diff would be hollow'; end if;
 
   -- baseline for the id-taking anon functions: an id that does not exist
   for fn in
