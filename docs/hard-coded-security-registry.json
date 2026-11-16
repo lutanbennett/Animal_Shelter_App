@@ -388,6 +388,11 @@
       "guard": "Worker only."
     },
     {
+      "file": "worker/shelter.mjs",
+      "for": "Asks resolve_shelter_host(p_host) (0382, executable by service_role only) which shelter a request host belongs to, and sends the answer as x-shelter-id (#v0302).",
+      "guard": "Worker only. Reads one function and writes nothing; strips any x-shelter-id the visitor sent; a failed lookup sends no header, so the database returns no rows. Grants no access to anyone."
+    },
+    {
       "file": "worker/heartbeat.mjs",
       "for": "Writes one 'the trigger fired' row to status_alert_runs each time the 15-minute cron runs, so a dead cron can be told from a skipped stage.",
       "guard": "Worker only. Writes and patches only status_alert_runs; grants no access to anyone."
