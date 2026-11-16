@@ -29,8 +29,10 @@ language sql stable security invoker set search_path = public, pg_temp as $$
   select coalesce(nullif(current_setting('request.jwt.claims', true), '')::json ->> 'role', '') not in ('anon', 'authenticated')
 $$;
 
-revoke all on function current_shelter_id(), is_trusted_caller() from public;
-grant execute on function current_shelter_id(), is_trusted_caller() to anon, authenticated, service_role;
+-- anon is deliberately NOT granted: no policy calls these yet, and anon may only hold the public-site functions (check-migration-grants.mjs).
+-- Part 5 grants it, with the allow-list change, in the same file as the policy that needs it.
+revoke all on function current_shelter_id(), is_trusted_caller() from public, anon;
+grant execute on function current_shelter_id(), is_trusted_caller() to authenticated, service_role;
 
 do $$
 declare t text;
