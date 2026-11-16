@@ -8634,6 +8634,7 @@ const en = {
     errCurrency: "That currency can't be used for this order.",
     errFailed: "We couldn't place the order. Nothing was charged. Please try again.",
     errFields: "Please fill in your name, email, country and address.",
+    errTooMany: "You already have several orders waiting for payment. Please pay or contact us before placing another.",
     orderTitle: "Your order",
     orderNo: "Order number",
     keepLink: "Keep this page's address: it is how you check on your order.",

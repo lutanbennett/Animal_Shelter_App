@@ -38,7 +38,7 @@ export function CheckoutForm({ text, currencies, shopHref, availableIds }: { tex
     writeCart(next);
     setCart(next);
   };
-  const errorKey = state.error ? ({ empty: "errEmpty", unavailable: "errUnavailable", currency: "errCurrency", failed: "errFailed", fields: "errFields" } as const)[state.error] : null;
+  const errorKey = state.error ? ({ empty: "errEmpty", unavailable: "errUnavailable", currency: "errCurrency", failed: "errFailed", fields: "errFields", too_many: "errTooMany" } as const)[state.error] : null;
 
   return (
     <form action={action} className="flex max-w-2xl flex-col gap-5">

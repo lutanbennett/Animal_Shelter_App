@@ -6,7 +6,7 @@ import { localizedHref } from "@/lib/public-paths";
 import { placeOrder } from "@/lib/merch/checkout";
 import { MAX_QTY } from "@/lib/merch/shop";
 
-export type OrderFormState = { error: "empty" | "unavailable" | "currency" | "failed" | "fields" | null };
+export type OrderFormState = { error: "empty" | "unavailable" | "currency" | "failed" | "fields" | "too_many" | null };
 
 const clean = (v: FormDataEntryValue | null, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 

@@ -40,7 +40,7 @@ export default async function MerchCheckoutPage() {
             currency: s.currency, wiseTransfer: s.wiseTransfer, wiseLink: s.wiseLink, subtotal: s.subtotal, postage: s.postage, total: s.total,
             approx: s.approx, yourDetails: s.yourDetails, name: s.name, email: s.email, phone: s.phone, country: s.country, address: s.address,
             note: s.note, placeOrder: s.placeOrder, placing: s.placing, errEmpty: s.errEmpty, errUnavailable: s.errUnavailable,
-            errCurrency: s.errCurrency, errFailed: s.errFailed, errFields: s.errFields, soldOut: s.soldOut, soldOutInCart: s.soldOutInCart,
+            errCurrency: s.errCurrency, errFailed: s.errFailed, errFields: s.errFields, errTooMany: s.errTooMany, soldOut: s.soldOut, soldOutInCart: s.soldOutInCart,
           }}
           currencies={currencies}
           availableIds={availableIds}
