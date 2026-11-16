@@ -11,7 +11,7 @@
 | PR | pending: number assigned on creation |
 | Tested by / date | Claude, 2026-11-16 |
 | Carries a migration? | yes, 0388 |
-| Tested at SHA | SHA_PLACEHOLDER |
+| Tested at SHA | 32321731b |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,11 @@
 - [x] `node scripts/gates.mjs` closing lines:
 
 ```
-GATES_PLACEHOLDER
+=== gates: typecheck exited 0 after 11s
+=== gates: lint exited 0 after 229s
+=== gates: test exited 0 after 75s
+=== gates: build exited 0 after 162s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
