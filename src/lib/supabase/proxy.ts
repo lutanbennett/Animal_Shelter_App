@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { authCookieOptions } from "./cookie-options";
+import { SHELTER_HEADER, shelterHeaders } from "./shelter-header";
 import { NextResponse, type NextRequest } from "next/server";
 import {
   PASSWORD_CHANGE_PATH,
@@ -32,6 +33,7 @@ export async function updateSession(request: NextRequest, rewriteTo?: URL) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookieOptions: authCookieOptions,
+      global: { headers: shelterHeaders(request.headers.get(SHELTER_HEADER)) },
       cookies: {
         getAll() {
           return request.cookies.getAll();

@@ -1,6 +1,7 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { authCookieOptions } from "./cookie-options";
+import { SHELTER_HEADER, shelterHeaders } from "./shelter-header";
 
 /**
  * Supabase client for use in Server Components, Route Handlers, and Server
@@ -9,12 +10,15 @@ import { authCookieOptions } from "./cookie-options";
  */
 export async function createClient() {
   const cookieStore = await cookies();
+  // The shelter the Worker mapped this host to (worker/shelter.mjs); none means the database returns no rows.
+  const shelter = shelterHeaders((await headers()).get(SHELTER_HEADER));
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookieOptions: authCookieOptions,
+      global: { headers: shelter },
       cookies: {
         getAll() {
           return cookieStore.getAll();

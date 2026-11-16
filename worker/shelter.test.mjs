@@ -1,0 +1,36 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { withShelter, clearShelterCache } from "./shelter.mjs";
+
+const env = { SUPABASE_URL: "https://x.supabase.co", SUPABASE_SERVICE_ROLE_KEY: "k" };
+const ID = "11111111-2222-3333-4444-555555555555";
+
+test("sends the resolved shelter, replacing one the visitor supplied", async () => {
+  clearShelterCache();
+  let body;
+  const f = async (_u, init) => ((body = init.body), new Response(JSON.stringify(ID)));
+  const r = await withShelter(new Request("https://site.example/adopt", { headers: { "x-shelter-id": "evil" } }), env, f);
+  assert.equal(r.headers.get("x-shelter-id"), ID);
+  assert.equal(body, JSON.stringify({ p_host: "site.example" }));
+});
+
+test("unknown host or failed lookup sends no header, and a failure is not remembered", async () => {
+  clearShelterCache();
+  const none = await withShelter(new Request("https://a.example/", { headers: { "x-shelter-id": "evil" } }), env, async () => new Response("null"));
+  assert.equal(none.headers.get("x-shelter-id"), null);
+  clearShelterCache();
+  let calls = 0;
+  const bad = async () => (calls++, new Response("no", { status: 500 }));
+  await withShelter(new Request("https://b.example/"), env, bad);
+  await withShelter(new Request("https://b.example/"), env, bad);
+  assert.equal(calls, 2);
+});
+
+test("a hit is remembered", async () => {
+  clearShelterCache();
+  let calls = 0;
+  const f = async () => (calls++, new Response(JSON.stringify(ID)));
+  await withShelter(new Request("https://c.example/"), env, f);
+  await withShelter(new Request("https://c.example/x"), env, f);
+  assert.equal(calls, 1);
+});
