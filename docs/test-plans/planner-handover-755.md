@@ -10,7 +10,7 @@
 | Backlog item | `docs/backlog.md` → none. The handover is process bookkeeping, not a backlog item; `SKILL.md` step 8 owes it at the setup of a plan's last batch |
 | Branch / worktree | `claude/planner-handover-755` @ `C:\Development\Animal_Shelter_planner-handover-755` |
 | Dev server | not started — no code, no route and no rendered surface in this PR |
-| PR | filled in at `gh pr create` |
+| PR | https://github.com/lutanbennett/Animal_Shelter_App/pull/1643 |
 | Tested by / date | Claude (planner) / handover written 2026-11-16, gates run 2026-11-17 |
 | Carries a migration? | no |
 | Tested at SHA | `dd77b97fe3ee09acb0bfcf843106cd20fce60bd1` — the only commit after it edits this plan file, so no code differs |
@@ -31,7 +31,7 @@
 === gates: build exited 0 after 44s
 
 gates: typecheck=0 lint=0 test=0 build=0
-```
+- [ ] CI green on the PR (runs the same four gates, among its other checks) — `pending: CI running on PR #1643. The PR is merged only on full green against this head commit, per the merge-on-green rule`
 
 - [ ] CI green on the PR (runs the same four gates, among its other checks) — `n/a: not yet — the PR does not exist at this commit`
 
