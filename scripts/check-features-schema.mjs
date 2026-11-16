@@ -1,4 +1,4 @@
-// features (0255): the 13 features, one feature per card, Not-yet-sorted behaviour and who may write.
+// features (0255): the features (count asserted in the code below), one feature per card, Not-yet-sorted behaviour and who may write.
 // Against DEV only. Reads the live rows, then one transaction that always rolls back.
 //
 //   node scripts/check-features-schema.mjs
