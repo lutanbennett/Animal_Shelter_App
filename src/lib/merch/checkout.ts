@@ -15,7 +15,7 @@ export type PlaceOrderInput = {
   buyerNote: string | null;
 };
 
-export type PlaceOrderResult = { ok: true; orderId: string } | { ok: false; error: "empty" | "unavailable" | "currency" | "failed" };
+export type PlaceOrderResult = { ok: true; orderId: string } | { ok: false; error: "empty" | "unavailable" | "currency" | "failed" | "too_many" };
 
 /**
  * The checkout (docs/merch-shop.md, "Checkout"). Service role: no base table is open to anon, and the buyer is
@@ -76,9 +76,9 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       p_buyer_note: input.buyerNote,
     });
     if (error || !data) return { ok: false, error: "failed" };
-    const res = data as { ok: boolean; order_id?: string; error?: "empty" | "unavailable" };
+    const res = data as { ok: boolean; order_id?: string; error?: "empty" | "unavailable" | "too_many" };
     if (res.ok && res.order_id) return { ok: true, orderId: res.order_id };
-    return { ok: false, error: res.error === "empty" || res.error === "unavailable" ? res.error : "failed" };
+    return { ok: false, error: res.error === "empty" || res.error === "unavailable" || res.error === "too_many" ? res.error : "failed" };
   } catch {
     return { ok: false, error: "failed" };
   }
