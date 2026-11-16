@@ -19,3 +19,7 @@
 ## Deliverables, one line each
 
 1 step zero: done (above). 2 first commit: this file. 3 dev question: settled (above). 4 wait for other PRs: moot, none open when checked. 5 migration, 6 views, 7 §5 line, 8 header confirm per environment, 9 after readings, 10 backlog tick: **not done**, blocked on the stamping work. 11 plan and merge: PR opened `[unfinished]`, not merged.
+
+## Update: 0390 built and applied to dev (#stmp5 steps 1 and 2)
+
+`0390_stamp_shelter_id.sql` stamps every existing row with Lanna and defaults every `shelter_id` to `current_shelter_id()`; `anon` is granted execute on that function (a default runs as the inserting role), declared in the registry and in both allow-lists. Applied to dev after dry-run: 95 of 95 columns carry the default, 0 null rows in any of them, `check-migration-grants` ok, canary still 0 new / 2 known, `check-public-views` exit 0. **Not done and still blocking `#ujqr5`:** `NOT NULL` (waits for Part 7, or every no-header write errors), the null-count check, and a way for `localhost` to send a shelter. Production gets 0390 in an ordinary release; the stamp is an `update` of every tenant row, so read the dry-run first.

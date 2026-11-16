@@ -759,6 +759,11 @@
     "note": "The check reads migration files from this number on; everything before it was inventoried from the LIVE database on 2026-10-25 (see the decision file). A new policy that does not call has_permission() or is_admin(), a new security definer function that does not call has_permission(), is_admin() or role_can(), a read of a retired role column, or a grant to anon/public must be declared here with a reason, or become a card.",
     "declared": [
       {
+        "migration": "0390_stamp_shelter_id.sql",
+        "item": "grant to anon",
+        "reason": "EXECUTE on current_shelter_id() so a shelter_id column default can run when the public forms insert as anon (a default runs with the inserting role rights). The function is security invoker and returns only the x-shelter-id request header the Worker set, or null; it reads no table and decides nothing, so it lets anon do nothing it could not do. Same reason 0383 named. docs/decisions/2026-11-16-tenancy-part5-policies.md."
+      },
+      {
         "migration": "0272_remove_role_archiving.sql",
         "item": "function public.holds_app_role reads a role",
         "reason": "Re-declared only to drop the roles.archived_at filter (docs/decisions/2026-10-27-role-archiving-removed.md); the one role-key read is the Admin short-circuit r.key = 'admin', which sits OUTSIDE the card system (CLAUDE.md, 2026-10-25). Every other access is derived from role_permissions, i.e. from cards. No rule added. Answers whether a login is in the app at all."

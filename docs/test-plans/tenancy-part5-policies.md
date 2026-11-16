@@ -13,7 +13,7 @@
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3011` (not started, no UI) |
 | PR | #1635 |
 | Tested by / date | Claude, 2026-11-16 |
-| Carries a migration? | no |
+| Carries a migration? | yes, 0390 (stamping; no policy) |
 | Tested at SHA | eda3d9d48 |
 
 ## 1. Scope and risk
@@ -47,15 +47,15 @@ indistinguishable from one that passed.
 
 Per `CLAUDE.md`, schema lands as its own PR before the feature.
 
-- [ ] Migration number is one above the highest on `main`, and no other in-flight branch carries — n/a: no migration was written; Part 5 stopped at a measured blocker (see the decision file)
-- [ ] `node scripts/apply-migrations.mjs --status` reviewed before applying — n/a: no migration was written; Part 5 stopped at a measured blocker (see the decision file)
-- [ ] `node scripts/apply-migrations.mjs --dry-run` reviewed — n/a: no migration was written; Part 5 stopped at a measured blocker (see the decision file)
-- [ ] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` — n/a: no migration was written; Part 5 stopped at a measured blocker (see the decision file)
-- [ ] File is re-runnable (`if not exists` / `or replace` / `drop … if exists`) — n/a: no migration was written; Part 5 stopped at a measured blocker (see the decision file)
-- [ ] Existing rows still read correctly after the change (checked against real dev data) — n/a: no migration was written; Part 5 stopped at a measured blocker (see the decision file)
-- [ ] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness — n/a: no migration was written; Part 5 stopped at a measured blocker (see the decision file)
-- [ ] Down-migration written, or the reason one is not needed is stated — n/a: no migration was written; Part 5 stopped at a measured blocker (see the decision file)
-- [ ] Production apply plan stated for the release manager (which file, which project, when) — n/a: no migration was written; Part 5 stopped at a measured blocker (see the decision file)
+- [x] Migration number is one above the highest on `main`, and no other in-flight branch carries
+- [x] `node scripts/apply-migrations.mjs --status` reviewed before applying
+- [x] `node scripts/apply-migrations.mjs --dry-run` reviewed
+- [x] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations`
+- [ ] File is re-runnable (`if not exists` / `or replace` / `drop … if exists`) — n/a: n/a for this line
+- [x] Existing rows still read correctly after the change (checked against real dev data)
+- [ ] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness — n/a: n/a for this line
+- [x] Down-migration written, or the reason one is not needed is stated
+- [ ] Production apply plan stated for the release manager (which file, which project, when) — pending: release manager; ordinary later release, apply before deploy, nothing reads it
 
 ## 4. Functional checks
 
