@@ -83,7 +83,12 @@ export function loadLayers(name) {
 // token, and filed as one (#t0k9r). It was the wrong account's token
 // (docs/decisions/2026-11-08-uat-go-live-findings.md). Production's file sets no token,
 // so the shell's (the production account's) still applies there.
-export const ACCOUNT_KEYS = ["SUPABASE_ACCESS_TOKEN"];
+// CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID joined this list on 2026-11-16, for the same
+// reason and by the same test: they say which Cloudflare account a deploy acts as and with what
+// permissions, not how it behaves. `scripts/deploy.mjs` hands them to wrangler when an
+// environment's own file sets them, so a token belongs to the environment being deployed rather
+// than to the window the command is typed in. Nothing else in the repo reads either key.
+export const ACCOUNT_KEYS = ["SUPABASE_ACCESS_TOKEN", "CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID"];
 
 /** shell > overlay > base, except that an overlay's non-empty ACCOUNT_KEYS beat the shell. */
 export function mergeLayers(base, overlay, shell) {

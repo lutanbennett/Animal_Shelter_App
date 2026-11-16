@@ -26,6 +26,35 @@
 // environment's build must wear its own badge (src/lib/app-env.ts), so a
 // wrong env file can't put Production's look on a UAT database or the reverse.
 //
+// HOW WRANGLER AUTHENTICATES, AND WHY THERE IS A CHOICE (added 2026-11-16)
+//
+//   CLOUDFLARE_API_TOKEN   optional, per environment, read from that environment's own values file
+//                          (`.env.deploy.production`, `.env.deploy.uat`; test's layer is
+//                          `.env.local`). When present it is handed to wrangler and nothing else,
+//                          and it BEATS any token in the shell.
+//   CLOUDFLARE_ACCOUNT_ID  optional, alongside it, for a token that can reach more than one account.
+//
+// With neither set, wrangler uses its own interactive OAuth login exactly as before — this is
+// opt-in and no environment is required to have a token.
+//
+// Why bother: that OAuth login holds a SHORT-LIVED access token, and a deploy here is a ten-minute
+// build followed by an upload. On `0.47.1` the production deploy died at the upload with
+// `A request to the Cloudflare API (/accounts/.../workers/scripts/lanna-animal-care/versions)
+// failed. Authentication error [code: 10000]` after 138 s, and wrangler rewrote its own credentials
+// file at the same second — i.e. the access token expired mid-deploy and refreshed on the way out.
+// Nothing was half-deployed and the plain retry worked, but it cost the one person whose only job
+// in a release is this command a second ten-minute run. An API token does not expire mid-build.
+// Recorded as defect 1 of docs/releases/2026-11-16-0-47-1.md.
+//
+// The token to create, and nothing wider (Cloudflare → My Profile → API Tokens → Create Token →
+// Custom token), is in docs/decisions/2026-11-16-deploy-cloudflare-api-token.md: Account →
+// Workers Scripts → Edit, Account → Account Settings → Read, and Zone → Workers Routes → Edit on
+// the one zone that environment serves. **Not** a Global API Key, which can do everything to
+// everything and cannot be scoped.
+//
+// Whichever path is in use is PRINTED on every deploy and by --plan, so a future `code: 10000` is
+// one line away from being explained instead of being guessed at.
+//
 // Every deploy is also a release (src/lib/releases.ts): package.json must
 // name the newest entry, UAT and production refuse unreleased notes, the
 // Worker version is tagged with it, and a major release that is new to the
@@ -116,10 +145,79 @@ const WRANGLER = join(
   "wrangler.js",
 );
 
+/**
+ * The Cloudflare credentials handed to wrangler, and only to wrangler.
+ *
+ * Deliberately NOT part of `buildEnv`: this is a deploy-time credential, so it has no business in
+ * `next build`'s environment, and keeping it out means it cannot be inlined or baked into the
+ * bundle however the adapter changes. (`strip-baked-env.mjs` empties the baked snapshot anyway;
+ * belt and braces, because that snapshot is written from `.env*`, not from `.env.deploy.*`, and
+ * only one of those two facts is guaranteed to stay true.)
+ *
+ * The environment's own file WINS over the shell, which is the opposite way round from the trap
+ * the Supabase access token set (named here without backticks on purpose: check-runtime-config
+ * forbids this file from spelling a manifest name inside quotes or backticks, comments included,
+ * so that names are derived from the manifest rather than copied): there the shell's token for
+ * another Supabase account beat the file's
+ * and every UAT read failed until `scripts/lib/env.mjs` was changed (2026-11-08). A token is a
+ * property of the environment being deployed, not of the window the command is typed in.
+ */
+/**
+ * Which layer each Cloudflare credential comes from, in `mergeLayers`' own order.
+ *
+ * Read from the LAYERS, not from the merged `env`: the merged view cannot tell a value in the
+ * environment's file from one exported in the shell, and the first draft of this that read `env`
+ * reported a shell-only token as *"API token from .env.local"* — a line that would have sent the
+ * next reader to the wrong file. Both keys are in `ACCOUNT_KEYS`, so a non-empty value in the
+ * environment's own file beats the shell; below that it is shell, then `.env.local`.
+ */
+function cfSource(key) {
+  const { base, overlay, shell } = loadLayers(envName);
+  const file = envFile(envName);
+  const o = (overlay[key] ?? "").trim();
+  if (o) return { value: o, from: file };
+  const s = (shell[key] ?? "").trim();
+  if (s) return { value: s, from: "the shell" };
+  const b = (base[key] ?? "").trim();
+  if (b) return { value: b, from: ".env.local" };
+  return null;
+}
+
+/** The credentials handed to wrangler. Empty means wrangler falls back to its own OAuth login. */
+function cfAuth() {
+  const token = cfSource("CLOUDFLARE_API_TOKEN");
+  if (!token) return {};
+  const account = cfSource("CLOUDFLARE_ACCOUNT_ID");
+  return {
+    CLOUDFLARE_API_TOKEN: token.value,
+    ...(account ? { CLOUDFLARE_ACCOUNT_ID: account.value } : {}),
+  };
+}
+
+/** One line naming which credential wrangler will use, so a `code: 10000` is never a mystery. */
+function cfAuthNote() {
+  const token = cfSource("CLOUDFLARE_API_TOKEN");
+  if (token) {
+    const account = cfSource("CLOUDFLARE_ACCOUNT_ID");
+    return (
+      `API token from ${token.from}` +
+      (account ? `, account id from ${account.from}` : ", no account id set (wrangler infers it)")
+    );
+  }
+  // Deduped: for `test` there is no overlay file, so envFile() IS `.env.local` and naming both
+  // would read "in .env.local, the shell or .env.local".
+  const looked = [...new Set([envFile(envName), "the shell", ".env.local"])];
+  return (
+    `wrangler's own OAuth login — no CLOUDFLARE_API_TOKEN in ${looked.slice(0, -1).join(", ")} or ${looked.at(-1)}. ` +
+    "Its access token can expire part-way through the build (0.47.1); see the header"
+  );
+}
+
 function wrangler(args, opts = {}) {
   const r = spawnSync(process.execPath, [WRANGLER, ...args], {
     stdio: opts.input ? ["pipe", "inherit", "inherit"] : "inherit",
     ...opts,
+    env: { ...process.env, ...cfAuth(), ...(opts.env ?? {}) },
   });
   if (r.status !== 0) {
     console.error(`\ndeploy: \`wrangler ${args.join(" ")}\` exited with ${r.status}`);
@@ -258,6 +356,7 @@ const previous = await liveVersion();
 console.log(`deploy: release ${latestRelease.version} "${latestRelease.title}" (live now: ${previous ?? "unknown"})`);
 if (noPi) console.log(`deploy: --no-pi: ORIGIN_HOST will be EMPTY on ${envName}; the Worker serves everything and the Pi is bypassed. Deploy again without --no-pi to put it back.`);
 console.log(`deploy: ${envName} → Supabase project ${projectRef(env)} (${git("rev-parse --short HEAD")})`);
+console.log(`deploy: wrangler auth: ${cfAuthNote()}`);
 
 // The tag and message land in the Worker's version history (dashboard →
 // Workers → Deployments). The strip keeps the message readable in that list.
