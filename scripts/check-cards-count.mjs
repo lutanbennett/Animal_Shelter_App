@@ -1,4 +1,4 @@
-// The code half of the cards check, with no database: cards.ts has exactly the twenty-eight agreed cards (the 26th, My tasks, asked for by Lutan 2026-10-20), every
+// The code half of the cards check, with no database: cards.ts has exactly the agreed set of cards (the count is asserted below, and nowhere else is it written; a number in a comment goes stale), every
 // card's bundle names an activity the catalogue has, and every card it includes is a card. It reads only cards.ts and catalogue.ts, so CI can run it.
 // Its database half, check-cards-schema.mjs, was retired with 0257 (docs/decisions/2026-10-24-cards-grants-app.md): check-card-grants.mjs now proves
 // the database against cards.ts (docs/decisions/2026-10-16-cards-count-in-ci.md).
