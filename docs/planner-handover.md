@@ -35,77 +35,69 @@ five streams merged past it.** Filed as **`#w4t9k`** (*Security*).
 
 1. **The guard worked; the REPORTING failed.** By design a scheduled run *"cannot turn any PR red"* and is
    emailed to whoever last edited the cron line
-   (`docs/decisions/2026-11-15-tenancy-lint-scheduled.md`). That decision is sound and is not being
-   reopened — but **in practice the first failure of the project's newest standing guard reached nobody.**
-   The item carries that as a second, separable finding, with `#cea66`'s `cronJobs` watcher as the
-   precedent for making a job report itself.
-2. **It is NOT an open door, and saying so precisely matters.** `0381:80-83` turns RLS **on** and creates
-   `donation_tax_ids_perm` for `authenticated`. What is missing is the **`definer_all`** policy that rule 3
-   requires of every RLS table since the re-own (`0375`). **So the risk runs the other way** — a
+   (`docs/decisions/2026-11-15-tenancy-lint-scheduled.md`) — a sound decision, not being reopened. **But
+   the first failure of the project's newest standing guard reached nobody.** The item carries that as a
+   second, separable finding, with `#cea66`'s `cronJobs` watcher as the precedent.
+2. **It is NOT an open door, and saying so precisely matters.** `0381:80-83` turns RLS **on** with a
+   card-gated policy for `authenticated`; what is missing is the **`definer_all`** policy rule 3 has
+   required of every RLS table since the re-own (`0375`). **So the risk runs the other way** — a
    definer-owned function reading that table would read **nothing**, which looks like a working page with
-   no rows. **The item says to establish which it is before writing the fix**, rather than assuming either.
+   no rows. **Establish which it is before writing the fix.**
 3. **IT IS TIME-BOUND, AND ONLY BECAUSE PRODUCTION IS BEHIND.** Production measured clean this morning
    (120 tables, all RLS on, 0 flagged, 0 stale) **only because `0381` is not there yet.** It ships at the
-   next release **carrying the gap.** So this wants fixing **before** that release, and the table holds
-   thirteen-digit Thai national ID numbers — the worst field in which to carry an unexplained exception.
+   next release **carrying the gap** — and the table holds thirteen-digit Thai national ID numbers.
 
-**THE PART TO CARRY FORWARD: the owed-items list is what found this, not a person noticing.** A one-line
-*"check it ran"* in a handover nine streams ago is the whole reason it was read. **When you write an owed
-item about something that will have happened by the next edition, you are building the only instrument
-that watches the instruments.**
+**THE PART TO CARRY FORWARD: the owed-items list found this, not a person noticing.** A one-line *"check it
+ran"* written nine streams ago is the whole reason it was read. **An owed item about something that will
+have happened by the next edition is the only instrument that watches the instruments.**
 
-**AND ONE PRACTICAL CONSEQUENCE, ACTED ON RATHER THAN NOTED.** Stream 7 of batch 3 (`tenancy-unique-keys`)
-has *run the strict lint, 0 flagged / 0 stale is the pass* as a deliverable, so it would have met this red
-and reasonably suspected itself. **Its `.brief.md` was amended after being written** to name the flag, its
-table, its run id and its date, and to say: expect `1 flagged`, confirm the table is `donation_tax_ids` and
-nothing else, **and if a SECOND table is flagged that one may well be yours.** **Read the names, never the
-count.**
+**ACTED ON RATHER THAN NOTED:** stream 7 runs that lint as a deliverable with *0 flagged* as the pass, so
+it would have met this red and suspected itself. **Its `.brief.md` was amended after being written** to
+name the flag, its table, its run id and its date: expect `1 flagged`, confirm the table is
+`donation_tax_ids` and nothing else, **and a SECOND flagged table may well be yours.** **Read the names,
+never the count.**
 
 ---
 
-## THE INTERRUPTION, AND THE FIX FOR IT WAS IN THE FILE I HAD JUST READ
+## THE INTERRUPTION, AND THE FIX WAS IN THE FILE THE PLANNER HAD JUST READ
 
 **He asked *"Where are my batch 2 streams"*** while the briefs were being written. The worktrees existed
 and two of three briefs were done; nothing was wrong with the work. **What was missing was one sentence at
-the start.**
+the start** — `752`'s own *"tell him at the start that it is about half an hour"*, which **ten editions**
+had recorded as the fix. **It was said for batch 1 and not for batches 2 and 3. Eleven editions now.**
 
-`752`'s own *For your first turn* says: *"Tell him at the start that the sync plus the `worktree.mjs new`
-runs plus the briefs is about half an hour. Ten editions have now recorded that as the fix for an
-interruption."* **It was done for batch 1 and not for batches 2 and 3.** **Eleven editions now.**
-
-**Count it as a cost of the BRIEFING, not of the stream** — `SKILL.md` step 7 — and note the shape: **the
-rule was read, agreed with, applied once, and then dropped as soon as the day felt like it was going well.**
-A batch that merges perfectly and still costs an interruption is a briefing defect.
+**Count it as a cost of the BRIEFING, not the stream.** The shape is the point: **the rule was read, agreed
+with, applied once, and dropped as soon as the day felt like it was going well.** A batch that merges
+perfectly and still costs an interruption is a briefing defect.
 
 ---
 
-## THE BANDING METHOD THAT WORKED TWICE IN ONE DAY, AND THE ONE PLACE IT WAS DELIBERATELY NOT USED
+## THE BANDING METHOD THAT WORKED TWICE, AND THE ONE PLACE IT WAS DELIBERATELY NOT USED
 
-**The method: before banding a stream, read what its predecessor's migration actually left behind.** Not
-the PR body — the file.
+**Before banding a stream, read what its predecessor's migration actually left behind — the file, not the
+PR body.** Twice this paid:
 
-- `0383_shelter_id_animals.sql` turned out to be **a quotable specification**, not just a column: the
-  column loop, the `nulls not distinct` reasoning in a comment, and a classification of all six triggers.
-  Stream 4 was cut **175-215k → 150-185k** on the strength of it and landed at **161,139**.
-- `#cea66` had already shipped **`EXPECTED_CRON_JOBS`** (`src/lib/status/health.ts:347`) *"so the second
-  pg_cron job ever added is watched by construction"*. Stream 5 **was** that second job. Cut
-  **140-175k → 130-165k**; landed at **159,928**.
+- `0383_shelter_id_animals.sql` was **a quotable specification**, not just a column: the loop, the
+  `nulls not distinct` reasoning in a comment, a classification of all six triggers. Stream 4 cut
+  **175-215k → 150-185k**; landed **161,139**.
+- `#cea66` had shipped **`EXPECTED_CRON_JOBS`** (`src/lib/status/health.ts:347`) *"so the second pg_cron
+  job ever added is watched by construction"*. Stream 5 **was** that job. Cut **140-175k → 130-165k**;
+  landed **159,928**.
 
-**AND THE NON-REVISION, WHICH IS THE PART A SUCCESSOR WILL GET WRONG.** Stream 7 (`#s50n8` group (C2)) was
-**left at 170-210k** although its two predecessors on the same item both came in comfortable. **Banding it
-down would have been banding on its predecessor's SIZE rather than its own SHAPE:** stream 4 added columns
-to many tables with almost nothing to decide; (C2) changes **two constraints** with **the two hardest
-decisions in the programme** attached, which is precisely why the item split it off and put it last.
+**THE NON-REVISION IS WHAT A SUCCESSOR WILL GET WRONG.** Stream 7 (`#s50n8` (C2)) was **left at 170-210k**
+though both its predecessors on that item came in comfortable. **Cutting it would have banded its
+predecessor's SIZE rather than its own SHAPE:** stream 4 added columns to many tables with almost nothing
+to decide; (C2) changes **two constraints** with **the programme's two hardest decisions** attached — which
+is why the item split it off and put it last.
 
-**One figure is marked OUT of every revision, per the rule.** `shop-order-flood-bound` reports
-`rescoped=yes`: briefed as *"mostly reading"* with *answered, not built* offered as a legitimate outcome,
-it **built**, carrying `0386`. **169,848 against 130-165k is not a 4.8k overrun, it is a figure for
-different work.** The lesson is a briefing one: **a brief offering two outcomes of very different size must
-band the larger one, or say which one it is banding.**
+**One figure is OUT of every revision, per the rule.** `shop-order-flood-bound` reports `rescoped=yes`:
+briefed as *"mostly reading"* with *answered, not built* offered as legitimate, it **built**, carrying
+`0386`. **169,848 against 130-165k is not an overrun, it is a figure for different work.** Briefing lesson:
+**a brief offering two outcomes of very different size must band the larger one, or say which it bands.**
 
-**Floors today: 86,261 / 87,274 / 90,374.** The 90.4k reading is the highest yet and sits **above**
-`SKILL.md`'s 86-89k. **One reading is not a revision** — that is what the next morning's complete-set
-measurement is for. **And the scale rows were not shifted.** `752`'s paragraph forbidding it held again.
+**Floors today: 86,261 / 87,274 / 90,374** — the 90.4k is the highest yet and sits **above** `SKILL.md`'s
+86-89k. **One reading is not a revision**; that is what the complete-set measurement is for. **And the
+scale rows were not shifted.** `752`'s paragraph forbidding it held again.
 
 ---
 
@@ -149,44 +141,37 @@ measurement is for. **And the scale rows were not shifted.** `752`'s paragraph f
   platform-level identity reaching every shelter and it is him.** Filed on `#s50n8` and `#ujqr5`, with the
   dead branch marked `SUPERSEDED` in place. **His answer names ONE PERSON, NOT A ROLE** — that is the
   consequence the item says will be got wrong, and batch 3's brief repeats it.
-- **He agreed the day's nine in one single-select answer** (*"All three, go"*) and triggered each later
-  batch himself by re-running the plan.
-- **He asked for the handover to be written in this chat** rather than deferring it.
+- **He agreed the day's nine in one single-select answer** (*"All three, go"*), triggered each later batch
+  by re-running the plan, and asked for this handover to be written in the chat that planned it.
 - **Nothing here reopens anything settled.** Admin outside the card system, the adopter-portal exception,
   `test-plan` advisory, merge-on-green — all untouched, and none is a decision he owes.
 
 ---
 
-## TWO BRIEFS THAT SAY WHAT THE PLANNER HAD NOT ESTABLISHED, WHICH IS THE SHAPE TO COPY
+## TWO ITEMS WHOSE OWN "DONE WHEN" A STREAM CANNOT MEET, FOUND BY READING THEM AGAINST THE REPOSITORY
 
-Both were found by reading, not reasoning, and **both would have cost a stream real time:**
+Both are written into batch 3's briefs as stated problems rather than left to be discovered:
 
-- **The canary (`#qtid6`) cannot run its own proof-of-failure test.** Its *"Done when"* says *"remove one
-  restrictive policy and it must go red, which is the only evidence it works"* — **Part 5 has not landed,
-  so there are no such policies to remove.** The brief states it, **refuses to let it excuse an unproved
-  instrument**, lists three substitute mechanisms **without prescribing one**, and requires the decision
-  file to record that the item's own test is owed at Part 5.
-- **The e-Donation item's own cheapest source is beyond a stream.** *"Ask the accountant"* is Lutan's.
-  The brief has it try the Revenue Department's documentation first, warns that those sources are likely
-  **Thai** and that **nobody here reads Thai with authority** (so a machine translation is not a
-  specification), asks for **one** plain-English question forwardable as written, and **forbids ticking
-  the item on *"I searched and could not find it"***, which is neither of its two done-branches.
+- **The canary (`#qtid6`) cannot run its own proof-of-failure test** — it says *"remove one restrictive
+  policy and it must go red"*, and **Part 5 has not landed**, so there are none. The brief refuses to let
+  that excuse an unproved instrument, offers three substitutes without prescribing one, and requires the
+  item's own test to be recorded as owed at Part 5.
+- **The e-Donation item's own cheapest source is beyond a stream** — *"ask the accountant"* is Lutan's. The
+  brief tries the Revenue Department first, warns the sources are likely **Thai** and that **nobody here
+  reads Thai with authority**, asks for one forwardable plain-English question, and **forbids ticking on
+  *"I searched and could not find it"***, which is neither done-branch.
 
 ---
 
-## A CORRECTION TO TAKE, AND IT IS THE THIRD VARIANT OF ONE FAULT
+## A CORRECTION TO TAKE: THE THIRD SHAPE OF ONE FAULT IN THREE DAYS
 
-The planner told him two backlog items *"reached `main` after your page was generated"*. **The Backlog
-manager checked and they had not:** one commit was an **ancestor** of the other, which
-`git merge-base --is-ancestor` settles in one command. **The planner had inferred a sequence from the order
-it had done things in.**
-
-`752`'s lead was *"the finder read the REPOSITORY, the proposer reasoned from their own model"*. **This is
-that fault's third shape in three days:** not prose trusted over an executable line, not a composed string
-searched for, but **an ordering assumed when one command would settle it.** Alongside it, the Backlog
-manager's own near-miss — a `grep` for lowercase `one person` against an item that spells it
-`ONE PERSON, NOT A ROLE`. **The merged rule, worth more than either: read the line that runs, and compose
-nothing you intend to search for.**
+The planner said two backlog items *"reached `main` after your page was generated"*. **They had not** — one
+commit was an **ancestor** of the other, which `git merge-base --is-ancestor` settles in one command. **A
+sequence was inferred from the order the planner had done things in.** Not prose trusted over an executable
+line, not a composed string searched for, but **an ordering assumed when one command would settle it.**
+Alongside it, the Backlog manager's near-miss: a `grep` for lowercase `one person` against an item spelling
+it `ONE PERSON, NOT A ROLE`. **Merged rule: read the line that runs, and compose nothing you intend to
+search for.**
 
 ---
 
@@ -228,21 +213,19 @@ hour** — see the interruption section. **Eleven editions. Say it on EVERY batc
    clause of `#s50n8`'s *"Done when"* against what the four PRs actually did, **and to leave the item open
    if any clause is outstanding** (the duplicate-microchip wording and the Thai string above all). **A
    false tick there would hide the foundation of a thirteen-part programme.**
-6. **THE 21 AMBIGUOUS TABLES ARE DECISIONS NOBODY HAS TAKEN**, and stream 4 was told to name the ones it
-   met. **Read its PR body and file them.** Wrongly tenant hides data a shelter needs; wrongly shared
-   leaks data between shelters.
-7. **A GAP IN THE PROGRAMME'S OWN CUT, RAISED AS A QUESTION IN STREAM 4's BRIEF: the three table groups
-   may not cover all 93 tenant tables.** `medication` is on the TENANT list and its name is one of the 19
-   keys, **yet it sits in none of (A), (B) or (C).** Stream 4 was asked to name every such table **without
-   adopting any of them.** Read its PR body and file what it found.
-8. **`#7bd5u` IS HIS #4 AND WAS NOT IN THE NINE, DELIBERATELY.** Its remaining piece needs a machine with
+6. **READ STREAM 4's PR BODY AND FILE TWO THINGS FROM IT, BOTH ASKED AS QUESTIONS IN ITS BRIEF.** (a) **The
+   21 ambiguous tables it met and stepped around** — decisions nobody has taken: wrongly tenant hides data
+   a shelter needs, wrongly shared leaks data between shelters. (b) **Any TENANT table falling in none of
+   the groups (A), (B) or (C)** — `medication` is on the TENANT list and its name is one of the 19 keys,
+   **yet it sits in no group**, so **the programme's own cut may not cover all 93.** It was told to name
+   them without adopting any.
+7. **`#7bd5u` IS HIS #4 AND WAS NOT IN THE NINE, DELIBERATELY.** Its remaining piece needs a machine with
    nothing else building — load moves the score 12-17 points — **so it cannot share a batch with
    anything.** He was offered a solo quiet run and chose the batch. **The offer stands; do not quietly drop
    it and do not slip it into a batch.**
-9. **ONE HUSK SURVIVES: `Animal_Shelter_tenancy-worker-shelter-header`**, held only by a stray dev server
-   on port 3002, its work merged as #1617. **Offered to him; he had not answered at the time of writing.**
-   `worktree.mjs done --stop-servers` clears it. **It costs nothing by existing** — do not spend his wait
-   on it.
+8. **ONE HUSK SURVIVES:** `Animal_Shelter_tenancy-worker-shelter-header`, held only by a stray dev server
+   on 3002, merged as #1617; `done --stop-servers` clears it. **Offered, unanswered. It costs nothing by
+   existing** — do not spend his wait on it.
 
 **Do NOT re-ask him about:** the **cross-shelter operator** (*"Yes, me"*, 2026-11-15 — and its remaining
 question is a DESIGN question for a stream, not a second question for him); the **microchip key**
