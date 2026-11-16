@@ -847,7 +847,10 @@ function cmdDone(args) {
     }
     // Deterministic and unrecoverable if wrong, so no flag gets past it: push
     // the commits (or delete the branch by hand, knowingly) first.
-    const n = unpushed(branch);
+    // A squash-merged branch has no origin ref by design (GitHub deletes it), but
+    // mergeProof showed the PR head IS the branch tip and its merge commit is in
+    // origin/main, so those commits are not unpushed work.
+    const n = proof.kind === "squashed" ? 0 : unpushed(branch);
     if (n) {
       fail(
         `${branch} has ${n} commit(s) that no branch on origin has — deleting it would lose them.\n` +

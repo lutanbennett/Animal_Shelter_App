@@ -703,6 +703,20 @@ policy on this machine (`npm : File C:\Program Files\nodejs\npm.ps1 cannot be
 loaded`). `npm.cmd run deploy:prod` works, but the bare `node` form has no
 wrapper to go wrong and is what should be handed over.
 
+**`Authentication error [code: 10000]` after a few minutes is the OAuth token expiring MID-UPLOAD,
+and the remedy is the same command again — NOT `wrangler login`.** Met on `0.47.1`. The deploy's own
+output now names the credential in use (`deploy: wrangler auth: …`), so read that line first. If it
+says *wrangler's own OAuth login*, this is the failure you are looking at: nothing was
+half-deployed, because the request that failed is the one that creates a version, and a plain retry
+works. **Wrangler suggests `wrangler login` and it is wrong** — the scopes it names (`k2.*`) are
+nothing this app uses, and it has usually already refreshed the token on its way out, which the
+mtime of `…/.wrangler/config/default.toml` will show against the error's own timestamp. **The
+durable fix is a scoped `CLOUDFLARE_API_TOKEN` in `.env.deploy.production`**, which does not expire
+mid-build; `docs/decisions/2026-11-16-deploy-cloudflare-api-token.md` names the three permissions
+and says why it must not go in `.env.local`. And **do not offer `--skip-build` to make the retry
+quicker** unless the leftover `.open-next` can be shown to belong to *this* environment: a test
+deploy in the same checkout leaves one that would point production at the dev database.
+
 Hand it over **with a `tee`**, because the lines worth reading print before a
 three-minute build and scroll out of the terminal buffer:
 
