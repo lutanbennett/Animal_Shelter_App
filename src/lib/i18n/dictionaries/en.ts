@@ -6473,7 +6473,7 @@ const en = {
         weightPositive: "Weight must be more than 0 kg.",
         bloodTestIntervalInvalid: "Blood test interval must be a whole number of months.",
         microchipInvalid: "A microchip number is exactly 15 digits (spaces and dashes are ignored).",
-        microchipDuplicate: "Another resident already has that microchip number.",
+        microchipDuplicate: "That microchip number is already recorded. Check the number.",
       },
     },
     list: {
@@ -6614,7 +6614,7 @@ const en = {
         errors: {
           invalid: "A microchip number is exactly 15 digits (spaces and dashes are ignored).",
           implantedInFuture: "The implant date can't be in the future.",
-          duplicate: "Another resident already has that microchip number. Check the number, or correct the other resident's record first.",
+          duplicate: "That microchip number is already recorded. Check the number.",
           deceased: "This resident has died, so their record is closed and the chip can no longer be changed.",
           notInScope: "You can only record a chip for a resident your clinic treats.",
           notFound: "This resident no longer exists.",
