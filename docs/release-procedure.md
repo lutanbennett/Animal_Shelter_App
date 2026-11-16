@@ -138,10 +138,13 @@ was already on the new release; that is precisely why nobody noticed quickly.
 This document already warns *"Two builds in one worktree collide"* under Traps.
 That was written about `gates.mjs`, and the deploys are the same hazard in a
 place nobody thought to look. **So: the Worker deploys are strictly
-sequential.** Deploy test, see it finish, then hand the production command over —
-or hand his over first and wait — **then UAT last, after his has finished.**
+sequential.** Deploy test, see it finish; **deploy UAT, see it finish; then hand the production
+command over and run nothing else in this checkout until it lands.**
 Adding UAT made the queue three long, so the discipline matters more, not less:
-**his is the one that must not be killed**, which is why UAT goes at the back.
+**his is the one that must not be killed**, which is why **his goes at the back** — then nothing
+of ours can start under it, however long he takes to run it. (**Reversed 2026-11-16 on `0.47.1`**;
+until then UAT went last and this paragraph said so. §6 *Deploy* has the reasoning and the two
+releases behind it.)
 **What parallelises with a WORKER deploy is a Pi build**, which runs on the Pi and touches nothing in
 the main checkout — one Pi build alongside one Worker deploy is the shape to use. **The three Pi
 builds do NOT parallelise with each other**: the Pi has 4 GiB and the OOM killer takes one. See
@@ -670,10 +673,24 @@ curl -s https://test.lannacare.org/api/version
 curl -s https://uat.lannacare.org/api/version
 ```
 
-**The order is test, then production, then UAT**, with the three Worker builds
+**The order is test, then UAT, then production**, with the three Worker builds
 strictly one after another (see *never run two WORKER deploys at once* above).
-UAT goes last on purpose: it is the one environment nobody is waiting on, and
-putting it behind Lutan's command means it can never kill his build.
+
+**CHANGED 2026-11-16 ON `0.47.1`: UAT NOW GOES BEFORE LUTAN'S COMMAND, NOT AFTER IT.** This read
+*"test, then production, then UAT"* for the same reason it now reads the other way round — **his is
+the one that must not be killed** — and putting him last serves that reason strictly better,
+because then **nothing of ours runs after his at all.** With UAT at the back the release manager
+holds a ten-minute build that must not start until his has finished, so if he steps away it either
+waits indefinitely or races him. On `0.47.1` his deploy failed once on an expired Cloudflare token
+and had to be re-run, which left UAT queued behind a command that might restart at any moment; put
+to him, he chose UAT first, and it was clean. `#uatwk` had already named this as option (c),
+*"the cheapest option, which needs no decision from anyone"*.
+
+**The second reason, and it is the one `#uatwk` exists for:** `deploy.mjs --env uat` refuses
+anything but a written-down release, and feature PRs merging behind a release refill `unreleased`.
+Deploying UAT **while the tree is still the released tree** removes that race entirely. On `0.47.0`,
+with UAT last, three feature PRs merged during the production build and UAT's Worker was shut out
+for a whole release.
 
 ### Worker, production — Lutan runs this
 
@@ -752,7 +769,7 @@ never read. Both facts were recoverable from the bindings printout and
 `/api/version`, which is luck rather than method. `tee` passes the status through
 and keeps the whole log; `tail` costs a ten-minute rerun to recover one line.
 
-### Worker, UAT — Claude runs this, last of the three
+### Worker, UAT — Claude runs this, second of the three, before Lutan's
 
 ```bash
 mkdir -p .local && node scripts/deploy.mjs --env uat --no-mail | tee .local/deploy-uat-<version>.log
