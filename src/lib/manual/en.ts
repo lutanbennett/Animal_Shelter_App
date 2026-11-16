@@ -533,7 +533,7 @@ const manual: Manual = {
             },
             {
               kind: "note",
-              text: "A chip already recorded on another resident is refused, since one of the two numbers must be wrong: check the number, or correct the other resident's record first. A resident who has died cannot have their chip changed, since their record is closed.",
+              text: "A chip number that is already recorded is refused, since one of the two records must be wrong: check the number you typed. A resident who has died cannot have their chip changed, since their record is closed.",
             },
             {
               kind: "tip",
