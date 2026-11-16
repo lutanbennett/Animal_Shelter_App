@@ -1,233 +1,238 @@
-# Planner handover — edition `752`, 2026-11-15
+# Planner handover — edition `753`, 2026-11-16
 
-**This is a DELTA against `751`.** It says what changed, corrects its predecessor, and reports what each of
-`751`'s owed items did. Figures, batch composition and ports live in `.plan-day.md`.
+**This is a DELTA against `752`.** It says what changed, corrects its predecessor, and reports what each of
+`752`'s owed items did. Figures, batch composition and ports live in `.plan-day.md`.
 
 **It outranks nothing.** One chat reads it, one plan replaces it, and a wrong line is corrected by its
 successor rather than by a reviewer.
 
-**WHICH PLAN'S FIGURES THIS EDITION REPORTS.** It reports **`751`'s plan's five streams — four measured,
-one not yet readable** — read in one slot this morning, and **carries NO figures from its own four**. Those
-are read at the next plan's first batch and reported by this edition's successor. **That is the delta model
-working as designed, not a gap.**
+**WHICH PLAN'S FIGURES THIS EDITION REPORTS, AND IT IS AN UNUSUAL ANSWER.** The daily measurement read
+**`752`'s plan's complete set of five**, in one slot after batch 1 was set up, exactly as the rule intends.
+But **six of this plan's own nine were also read**, at batches 2 and 3's setup, because each successor's
+band depended on its predecessor's figure — which `SKILL.md` expressly permits (*name that one PR and read
+only it*). **They are recorded in `.plan-day.md` under their own headings, marked as NOT the daily
+measurement.** **Batch 3's three are not readable yet** and belong to this edition's successor.
 
-**WHY IT EXISTS.** This is **the third plan of 2026-11-15** — `750` and `751` were both written and merged
-earlier the same day. The plan ran **four streams across two batches**, both batches set up inside the chat
-that planned them, and **one of the four was added by Lutan mid-presentation** rather than coming from the
-backlog. It also started the multi-tenancy programme, which is now the largest thing in flight.
-
----
-
-## THE LEAD: FIVE FALSE-ASSURANCE FAULTS IN ONE AFTERNOON, AND NOT ONE WAS CAUGHT BY WHOEVER MADE IT
-
-Every one of these would have failed by **reporting success**, which is the only failure mode that gets
-past CI, a test plan and a PR body all at once:
-
-1. **A backlog item showing a question as open two days after he answered it** (`#00e3u`, below).
-2. **A public website that would serve blank pages rather than errors** — the shop-order stream's finding.
-3. **A safety net that would have run, passed and proved nothing** — the tenancy canary placed at position
-   2, ahead of the part that adds `shelter_id`, so its first act (planting a second shelter's rows) would
-   have had no column to plant them in.
-4. **A warning that reassures its reader in the next breath** — `consumerReport()` prints *"That is the
-   safe direction - nothing is blocked"*, which is backwards for a migration whose reader ships first.
-5. **A rule written to fix fault 4 that would have written a second false assurance** — the planner
-   proposed keying a release-procedure rule on *a migration whose `-- consumer:` names a file in
-   `worker/`*. Of **255** consumer-declaring migrations exactly **one** does (`0236`), and it is in the
-   ordinary safe direction, so the rule would have held it back for no reason while contradicting correct
-   advice for it.
-
-**WHAT ACTUALLY CAUGHT THEM, AND IT IS THE TRANSFERABLE PART: in every case the finder read the
-REPOSITORY, and the proposer had reasoned from their own model.** The branch instead of a report. The
-release procedure instead of an assumption about deploy order. `consumerReport()`'s *output* instead of
-confirming the function exists. A `grep` for a proposed rule's existing members instead of its plausibility.
-**Faults 4 and 5 were the planner's own, and both were found by the Backlog manager.**
-
-**THE PLANNER'S HALF OF FAULT 4, STATED PLAINLY BECAUSE IT IS THE COMMONEST SHAPE:** it verified that the
-mechanism *existed* and stopped there. **Verifying the part you were thinking about is not verifying the
-thing** — which is Lutan's own standing instruction in `~/.claude/CLAUDE.md`, almost word for word.
-
-**WHY THIS MATTERS MORE FROM HERE THAN IT DID TODAY.** Twelve of the thirteen tenancy parts remain, and
-they all share the property: **a tenancy leak looks like a working page with one extra row on it.** Nothing
-goes red. So brief every part to **prove rather than assert**, and have a second party check a cut against
-the repository rather than against its author's reasoning. It worked five times in one afternoon.
+**WHY IT EXISTS.** The plan ran **nine streams across three batches in one day**, every batch set up inside
+the chat that planned it. **Batches 1 and 2 merged on green with no red check anywhere** (PRs #1615-#1620);
+batch 3 was set up and handed back at the time of writing. **Five of the nine were parts of the
+multi-tenancy programme**, which is now the largest thing in flight and supplies most of the buildable
+backlog.
 
 ---
 
-## THE MULTI-TENANCY PROGRAMME IS LIVE WORK, ON HIS OVERRIDE, AND IT IS NOW THIRTEEN ITEMS
+## THE LEAD: THE FIRST STANDING TENANCY GUARD WENT RED, AND NOTHING TOLD ANYBODY FOR A DAY
 
-**`#ykefa` was deferred *"until Lanna is live and the product has a name"*. The name half is met; the live
-half is not.** He asked *"What about the multi tennant work, can we add this in"*, **was told in one line
-that the condition was unmet and that proceeding was his call**, and confirmed. In the same turn he
-declined to set a launch date (*"Not deciding yet"*). **So the deferral text is void by his instruction —
-do not park a part because the item still says to**, and his override is recorded in `#ykefa`'s own title.
+**`752`'s owed item 8 said *"check it ran"*. It had run. It had failed.**
 
-**It is cut into thirteen items in a FIXED order**, agreed with the Backlog manager and filed on the items:
+`.github/workflows/tenancy-catalogue.yml`'s **first genuinely scheduled run** — 2026-11-15T12:57:54Z,
+`gh run view 43716500145` — exited 1 with
+`1 flagged (0 views, 0 functions, 1 tables missing definer_all), 2 allowed by name, 0 stale`, naming
+`FLAG rule 3  table:public.donation_tax_ids  owner=postgres`. **It sat unread for about 24 hours while
+five streams merged past it.** Filed as **`#w4t9k`** (*Security*).
 
-`1 #mz75e -> 2 #s50n8 -> 3 #qtid6 -> 4 #v0302 -> 5 #ujqr5 -> 6 #bncd0 -> 7 #ps6ms -> 8 #b4cmn -> 9 #o2iyh -> 10 #omt6u -> 11 #sxyw3 -> 12 #egq18 -> 13 #34a30`
+**Three things about it, and the third is the transferable one.**
 
-**Part 1 is this plan's stream 4 and is set up.** Three things about the ordering that cost something to
-establish and must not be re-derived:
+1. **The guard worked; the REPORTING failed.** By design a scheduled run *"cannot turn any PR red"* and is
+   emailed to whoever last edited the cron line
+   (`docs/decisions/2026-11-15-tenancy-lint-scheduled.md`) — a sound decision, not being reopened. **But
+   the first failure of the project's newest standing guard reached nobody.** The item carries that as a
+   second, separable finding, with `#cea66`'s `cronJobs` watcher as the precedent.
+2. **It is NOT an open door, and saying so precisely matters.** `0381:80-83` turns RLS **on** with a
+   card-gated policy for `authenticated`; what is missing is the **`definer_all`** policy rule 3 has
+   required of every RLS table since the re-own (`0375`). **So the risk runs the other way** — a
+   definer-owned function reading that table would read **nothing**, which looks like a working page with
+   no rows. **Establish which it is before writing the fix.**
+3. **IT IS TIME-BOUND, AND ONLY BECAUSE PRODUCTION IS BEHIND.** Production measured clean this morning
+   (120 tables, all RLS on, 0 flagged, 0 stale) **only because `0381` is not there yet.** It ships at the
+   next release **carrying the gap** — and the table holds thirteen-digit Thai national ID numbers.
 
-- **The canary (`#qtid6`) sits at 3, AFTER the columns and BEFORE the policies, and both bounds matter.**
-  The planner first wrote only *"canary before the policies"*, and the Backlog manager correctly placed it
-  at 2 on that wording. At 2 it would have run, reported success and proved nothing. **A one-sided
-  constraint is how a correct instruction produces a wrong plan.**
-- **Part 1 carries the tenant-table triage**, because it is reading the schema anyway and it is the
-  cheapest place in the programme to produce it. **Nothing can cut Part 2 honestly without that list** —
-  the spike's figure of 63 tenant tables is one of four counts now known to be low.
-- **No cut was offered for `#s50n8` or `#ps6ms` without measuring.** `#ps6ms` is 82 sites across 35 files
-  and must be cut **by what the call site does**, not by file count. Both wait on real readings.
+**THE PART TO CARRY FORWARD: the owed-items list found this, not a person noticing.** A one-line *"check it
+ran"* written nine streams ago is the whole reason it was read. **An owed item about something that will
+have happened by the next edition is the only instrument that watches the instruments.**
 
-**WHAT IS OWED TO HIM BEFORE PART 2 CAN BE BRIEFED — ONE QUESTION, AND IT IS GENUINELY HIS:** is a
-**microchip number unique across all shelters, or only within one?** It decides a constraint in Part 2's
-migration, so it gates the **brief**, not the build. Useful context he should get with it, and which
-narrows the answer: microchipping is **not routine in Thailand**, animals do not leave microchipped, and
-the app **records** chips rather than fitting them — so the global version's value is narrow.
-**It was put to him at the close of this plan.** If he has answered, send his words to the Backlog manager
-to file on `#s50n8`; if not, **ask once before briefing it and do not brief around it.**
-
-**AND NOTHING TOUCHES `cooperjaidee.org`.** It points at nothing on purpose, its DNS is in his own
-Cloudflare account, nothing in the repository is renamed, and the production Worker deploy is his by
-standing instruction of 2026-10-02. The three access shapes are **DECIDED** —
-`docs/decisions/2026-11-14-cooperjaidee-hostnames.md`, in his words *"I'll go with your recommendation of
-2 & 3 combined with 1 available"*. **Never put shape (a) to him again.**
+**ACTED ON RATHER THAN NOTED:** stream 7 runs that lint as a deliverable with *0 flagged* as the pass, so
+it would have met this red and suspected itself. **Its `.brief.md` was amended after being written** to
+name the flag, its table, its run id and its date: expect `1 flagged`, confirm the table is
+`donation_tax_ids` and nothing else, **and a SECOND flagged table may well be yours.** **Read the names,
+never the count.**
 
 ---
 
-## THE ONE FILING THIS PLAN MADE, AND WHY IT WAS THE MOST VALUABLE THING IN IT
+## THE INTERRUPTION, AND THE FIX WAS IN THE FILE THE PLANNER HAD JUST READ
 
-**`#00e3u` had been parked by HIS OWN ANSWER of 2026-11-13, and that answer had never reached the item.**
-It lived only in `docs/decisions/2026-11-13-answers-receipts-shop-payments.md`: *"Nothing else tax-shaped
-is waiting. The item stays parked."* The item's title still said the question was out with **the Director
-and the accountant**. So every planner since read a question apparently waiting on two people who had
-already answered it, **and nobody re-asks a question they believe is already with the user, which is how a
-false block stays silent.** It was **2nd on his priorities list**.
+**He asked *"Where are my batch 2 streams"*** while the briefs were being written. The worktrees existed
+and two of three briefs were done; nothing was wrong with the work. **What was missing was one sentence at
+the start** — `752`'s own *"tell him at the start that it is about half an hour"*, which **ten editions**
+had recorded as the fix. **It was said for batch 1 and not for batches 2 and 3. Eleven editions now.**
 
-Filed on `backlog` as `5815a4be1`: the title now opens with **PARKED BY LUTAN'S OWN ANSWER OF 2026-11-13 —
-NOTHING ELSE TAX-SHAPED IS WAITING, AND IT IS NOT BLOCKED ON THE DIRECTOR OR THE ACCOUNTANT**, plus one
-consolidated note (not a sixth dated paragraph) marking the superseded passage in place.
-
-**This is the third edition running whose lead is a stale statement reaching someone who had no way to
-test it** — `750`'s was a stale assertion in a brief, `751`'s a stale omission in his hands, `752`'s a
-stale question on an item. **`CLAUDE.md`'s *"Answering a decision on a backlog item"* exists for exactly
-this and is not enough on its own.** The one check that keeps catching it: **when an item says it waits on
-a person, grep the decision files for the SUBJECT before believing it.**
+**Count it as a cost of the BRIEFING, not the stream.** The shape is the point: **the rule was read, agreed
+with, applied once, and dropped as soon as the day felt like it was going well.** A batch that merges
+perfectly and still costs an interruption is a briefing defect.
 
 ---
 
-## WHAT `751`'s NINE OWED ITEMS DID
+## THE BANDING METHOD THAT WORKED TWICE, AND THE ONE PLACE IT WAS DELIBERATELY NOT USED
 
-1. **Measure the five — DONE, four of five.** #1603 146,591 (band 150-200k, **under by 3.4k**); #1604
-   172,084 (inside); #1605 176,042 (inside); #1607 148,130 (**under by 1.9k, BY DESIGN** — its deliverable
-   came back "not free", exactly as `751` predicted in writing, and it was **not** fed into a revision).
-   All four report `compacted=no rescoped=no finished=yes` and all four `model=`/`effort=` match their
-   `band=` dials. **#1609 was still OPEN**, so its comment did not exist yet — **not lost, unwritten.**
-2. **Did the speed stream's mitigation fire? IT FIRED AND IT WORKED.** Its deliverable 1 established the
-   machine was quiet before any figure: **CPU 1-5% over five samples**, recorded before every run. Where
-   later passes were noisy (**11-97%**, his own Chrome) it **said so and read them as such.** So holding
-   the batch would not have been necessary. **The honest-noise reporting is the part to copy.**
-3. **Re-derive the floor — DONE, and `SKILL.md` LEFT ALONE.** Four floors span **86,037-87,179** (1,142
-   tokens). With the previous two sets that is **thirteen streams across three readings, all inside
-   86-89k.** `751` said: if it lands there a third time, leave the file alone. **It did. No edit was made
-   and none is owed.** **And the scale rows were not shifted** — `751`'s paragraph forbidding it held.
-4. **The backlog is thin — CONFIRMED, seventh plan running.** Two of 25 open items Claude-buildable and
-   unblocked. **Said plainly rather than padded**, and he added the third and fourth streams himself.
-5. **`#pl7aq` put to him — ASKED AND DECLINED TODAY** (*"Not deciding yet"*). **Do not re-ask.**
-6. **`#ykefa` not sliced without asking — HE ASKED FOR IT** (above), and was told its condition was unmet
-   before he confirmed.
-7. **Re-read `#00e3u`'s hold — DONE, and it was a false block** (above). This was the plan's one filing.
-8. **Clear the leftovers — NOT CLEARED, AND NONE WAS MINE TO CLEAR** (below).
-9. **`#7bd5u` could not be measured while streams build — it was measured correctly, before they did.**
+**Before banding a stream, read what its predecessor's migration actually left behind — the file, not the
+PR body.** Twice this paid:
+
+- `0383_shelter_id_animals.sql` was **a quotable specification**, not just a column: the loop, the
+  `nulls not distinct` reasoning in a comment, a classification of all six triggers. Stream 4 cut
+  **175-215k → 150-185k**; landed **161,139**.
+- `#cea66` had shipped **`EXPECTED_CRON_JOBS`** (`src/lib/status/health.ts:347`) *"so the second pg_cron
+  job ever added is watched by construction"*. Stream 5 **was** that job. Cut **140-175k → 130-165k**;
+  landed **159,928**.
+
+**THE NON-REVISION IS WHAT A SUCCESSOR WILL GET WRONG.** Stream 7 (`#s50n8` (C2)) was **left at 170-210k**
+though both its predecessors on that item came in comfortable. **Cutting it would have banded its
+predecessor's SIZE rather than its own SHAPE:** stream 4 added columns to many tables with almost nothing
+to decide; (C2) changes **two constraints** with **the programme's two hardest decisions** attached — which
+is why the item split it off and put it last.
+
+**One figure is OUT of every revision, per the rule.** `shop-order-flood-bound` reports `rescoped=yes`:
+briefed as *"mostly reading"* with *answered, not built* offered as legitimate, it **built**, carrying
+`0386`. **169,848 against 130-165k is not an overrun, it is a figure for different work.** Briefing lesson:
+**a brief offering two outcomes of very different size must band the larger one, or say which it bands.**
+
+**Floors today: 86,261 / 87,274 / 90,374** — the 90.4k is the highest yet and sits **above** `SKILL.md`'s
+86-89k. **One reading is not a revision**; that is what the complete-set measurement is for. **And the
+scale rows were not shifted.** `752`'s paragraph forbidding it held again.
 
 ---
 
-## THE FOUR LEFTOVERS: ALL MERGED, ALL HELD BY THEIR OWN SESSIONS, SECOND PLAN RUNNING
+## WHAT `752`'s NINE OWED ITEMS DID
 
-`Animal_Shelter_donation-tax-id-schema` (3003), `Animal_Shelter_shop-order-flood` (3005),
-`Animal_Shelter_public-site-speed-quiet` (3002, squash-merged PR #1609) and
-`Animal_Shelter_worker-rate-limit-binding` (3001). All `nothing beyond main` or squash-merged. **All four
-read `HELD — <session name>`, and `HELD` means ask, not tear down**; `worktree.mjs done` refuses a folder a
-process has open anyway.
-
-**This is not a planner's omission and it should stop being carried as one.** The fix is one press of his:
-**close those four sessions, then any planner clears all four in about a minute.** It was raised once,
-unanswered, and not raised again mid-work. **`#1609`'s folder must not be cleared before its
-`stream-usage:` comment is read** — the comment survives the folder, but the folder is the reminder.
+1. **Measure the five — DONE, all five.** `shop-order-flood` 151,411; `donation-tax-id-schema` 158,886;
+   `tenancy-host-map-schema` 152,375 (**13k under**); `donation-tax-id-app` 221,621;
+   `public-site-speed-quiet` 207,983. **Four inside, one under, none over.** **#1609's figure was read
+   from a merged PR whose worktree had been deleted** — the durability claim the whole once-a-day ordering
+   rests on, **proved rather than assumed.**
+2. **The microchip question — ANSWERED and the gate is gone.** *"Across all shelters"*; filed on `#s50n8`,
+   which also records that **the index he chose already exists and is already global** (`0113`), so it is
+   the **named exception** to the 19 keys. **Never re-ask.**
+3. **Brief tenancy parts from their items, one or two at a time — FOUR were briefed in one day**
+   (Part 2 groups (A), (B)+(C1), (C2), and Part 4), with Part 3 as the fifth. **Say plainly that this
+   exceeded `752`'s own guidance**; it was safe because the items carry the design and the planner added
+   none. **The four programme rules went into every brief.**
+4. **Part 1's triage list — DONE and filed.** 123 dev tables: 9 not tenant, 21 ambiguous, 93 tenant, on
+   `#s50n8`. **The 21 ambiguous remain decisions**; stream 4 was told to step around them and name which
+   it met, rather than guess.
+5. **Backlog thin — still true, eighth plan running**, but the tenancy programme supplied five of nine.
+   37 open items after today's filing.
+6. **The leftovers — HE CLEARED THEM.** He closed the sessions (*"I'll close them"*); four folders and
+   their branches went this morning, and the planner read **#1609's usage comment off the PR before
+   deleting its folder.** **The pattern now recurs by construction:** every merged batch leaves three held
+   folders, so **offer once per batch and never carry it as an owed planner item.** One husk survives — see
+   below.
+7. **`#99zuk` — CLOSED, and its title reads correctly.** Ticked, with both loose ends named inside it
+   (the import format and the seven-year clean-up) rather than left as implied blockers. **Both became
+   items of their own and both were built or briefed today.**
+8. **The tenancy nightly — SEE THE LEAD.** It ran earlier than `752` predicted (2026-11-15T12:57Z, not
+   05:43Z on the 16th) **and it failed.** `752` was right to ask and wrong about the time; **the time was
+   a guess and the check was not.**
+9. **The release-procedure rule keying on direction — nothing arose to test it this plan.** Unchanged.
 
 ---
 
 ## HIS DECISIONS THIS PLAN, AND WHAT THEY ARE NOT
 
-- **He added the tenancy work mid-presentation** (*"What about the multi tennant work, can we add this
-  in"*), which made the day four streams across two batches instead of two in one. **His call.**
-- **He declined the launch date** (*"Not deciding yet"*) **and asked for the tenancy work in the same
-  turn**, overriding `#ykefa`'s own condition knowingly.
-- **He authorised recording the override** (*"Yes, record it"*), which is why it is in the item's title
-  rather than only in a chat.
-- **He was given the risk analysis before deciding**, and it is worth not re-deriving: doing tenancy before
-  go-live is **technically safer** (production is `PUBLIC_SITE: "locked"`, so a mistake is private, and the
-  canary's planted shelter is harmless now), and the real costs are **not technical** — about 50 hours
-  serving a shelter that does not exist, and a permanent tax on every later stream once the per-shelter
-  rules land.
+- **He confirmed the cross-shelter operator: *"Yes, me"***, asked as a straight question. **There IS a
+  platform-level identity reaching every shelter and it is him.** Filed on `#s50n8` and `#ujqr5`, with the
+  dead branch marked `SUPERSEDED` in place. **His answer names ONE PERSON, NOT A ROLE** — that is the
+  consequence the item says will be got wrong, and batch 3's brief repeats it.
+- **He agreed the day's nine in one single-select answer** (*"All three, go"*), triggered each later batch
+  by re-running the plan, and asked for this handover to be written in the chat that planned it.
 - **Nothing here reopens anything settled.** Admin outside the card system, the adopter-portal exception,
   `test-plan` advisory, merge-on-green — all untouched, and none is a decision he owes.
 
 ---
 
+## TWO ITEMS WHOSE OWN "DONE WHEN" A STREAM CANNOT MEET, FOUND BY READING THEM AGAINST THE REPOSITORY
+
+Both are written into batch 3's briefs as stated problems rather than left to be discovered:
+
+- **The canary (`#qtid6`) cannot run its own proof-of-failure test** — it says *"remove one restrictive
+  policy and it must go red"*, and **Part 5 has not landed**, so there are none. The brief refuses to let
+  that excuse an unproved instrument, offers three substitutes without prescribing one, and requires the
+  item's own test to be recorded as owed at Part 5.
+- **The e-Donation item's own cheapest source is beyond a stream** — *"ask the accountant"* is Lutan's. The
+  brief tries the Revenue Department first, warns the sources are likely **Thai** and that **nobody here
+  reads Thai with authority**, asks for one forwardable plain-English question, and **forbids ticking on
+  *"I searched and could not find it"***, which is neither done-branch.
+
+---
+
+## A CORRECTION TO TAKE: THE THIRD SHAPE OF ONE FAULT IN THREE DAYS
+
+The planner said two backlog items *"reached `main` after your page was generated"*. **They had not** — one
+commit was an **ancestor** of the other, which `git merge-base --is-ancestor` settles in one command. **A
+sequence was inferred from the order the planner had done things in.** Not prose trusted over an executable
+line, not a composed string searched for, but **an ordering assumed when one command would settle it.**
+Alongside it, the Backlog manager's near-miss: a `grep` for lowercase `one person` against an item spelling
+it `ONE PERSON, NOT A ROLE`. **Merged rule: read the line that runs, and compose nothing you intend to
+search for.**
+
+---
+
 ## FOR YOUR FIRST TURN
 
-Read `.plan-day.md` first. **It stands at 4 of 4 and this edition resets the counter, so you are planning
-FROM SCRATCH.**
+Read `.plan-day.md` first. **It stands at `9 of 9` with batch 3 `set up 2026-11-16` and NOT merged at the
+time of writing.**
 
-**Read the system date and compare it with the date at the top of this file.** **Three** plans ran on
-2026-11-15; a fourth on the same date is a normal thing to be. **Never derive today's date from a
-document.**
+**SO DO NOT RE-PLAN ON SIGHT, AND DO NOT ASSUME IT IS FINISHED EITHER.** Check whether batch 3's three
+merged (`gh pr list --state all --head claude/<slug>` per slug). **All three merged → every saved item is
+closed → plan from scratch.** **Any still open → name them and ask**; six live worktrees is the thing the
+one-batch-at-a-time rule exists to prevent.
+
+**Read the system date and compare it with the date at the top of this file.** **Four** plans ran on
+2026-11-15 and this is the first of 2026-11-16; another on the same date is a normal thing to be.
+**Never derive today's date from a document.**
 
 **Tell him at the start that the sync plus the `worktree.mjs new` runs plus the briefs is about half an
-hour.** Ten editions have now recorded that as the fix for an interruption.
+hour** — see the interruption section. **Eleven editions. Say it on EVERY batch, not just the first.**
 
 **WHAT IS OWED:**
 
-1. **MEASURE THIS PLAN'S FOUR AT YOUR FIRST BATCH, PLUS #1609, and none of them is in this edition on
-   purpose.** Read `stream-usage:` from **#1610** (`shop-order-flood`, band 135-175k), **#1611**
-   (`donation-tax-id-schema`, 155-190k), and the two batch-2 PRs (`donation-tax-id-app` 200-240k,
-   `tenancy-host-map-schema` 165-200k). **#1609 (`public-site-speed-quiet`, 200-260k) is the one figure
-   this plan could not take** — it was unmerged at measurement time and its comment is written immediately
-   before `gh pr merge`. **It cannot expire.**
-2. **THE MICROCHIP QUESTION GATES PART 2'S BRIEF** (above). Global or per-shelter unique. If he answered at
-   the close of this plan, **send his words to the Backlog manager to file on `#s50n8`**. If not, ask once
-   before briefing it.
-3. **BRIEF TENANCY PARTS FROM THEIR ITEMS, IN THE FIXED ORDER, ONE OR TWO AT A TIME.** The items are the
-   authority on scope; the planner holds no design of its own. **Carry the four programme rules into every
-   brief** (his override, nothing renamed, nothing touches `cooperjaidee.org`, the shipped hardening is not
-   revisited) and **brief each part to PROVE rather than assert** — see the lead.
-4. **PART 1'S TRIAGE LIST IS WHAT UNLOCKS THE REST.** When `tenancy-host-map-schema`'s PR lands, read its
-   body for the tenant / not-tenant / **ambiguous** groups and **send the list to the Backlog manager to
-   file.** An **ambiguous** row is a decision to be taken, never a guess to be made — wrongly tenant hides
-   data a shelter needs, wrongly shared leaks data between shelters.
-5. **THE BACKLOG IS THIN FOR CLAUDE-BUILDABLE WORK, SEVENTH PLAN RUNNING.** The tenancy programme now
-   supplies twelve items of real work, so this is less binding than it was — **but it is still no reason to
-   pad with his own hands.** `SKILL.md` step 7 allows planning fewer.
-6. **THE LEFTOVERS NEED HIM, NOT YOU** (above). Four folders, all HELD. Offer once; do not carry it as an
-   owed planner item for a third edition.
-7. **`#99zuk` SHOULD CLOSE THIS PLAN.** Batch 2's `donation-tax-id-app` is the half that ticks it. **Check
-   the title it leaves behind** — the shop-income question is a separate item's business and must not read
-   as this item's blocker.
-8. **THE TENANCY-CATALOGUE NIGHTLY'S FIRST GENUINELY SCHEDULED RUN WAS 05:43 UTC ON 2026-11-16.** `751`
-   flagged it as not yet happened. **Check it ran**, and that the strict run is still 0 flagged / 0 stale.
-9. **THE RELEASE-PROCEDURE RULE EXISTS BECAUSE OF FAULT 5 IN THE LEAD, AND IT KEYS ON DIRECTION.** A
-   migration whose **declared dependency direction** puts the reader ahead of the schema is the one that
-   needs holding back. **It does NOT key on a path** — not `worker/`, not any folder. If you find yourself
-   writing a rule keyed on a path, **grep for its existing members first**: there was exactly one, and it
-   did not want the rule.
+1. **MEASURE BATCH 3's THREE AT YOUR FIRST BATCH, AND THEY ARE THE ONLY ONES MISSING.** To be read from
+   their PRs: `tenancy-unique-keys` (band 170-210k), `tenancy-canary-diff` (230-280k),
+   `edonation-format-establish` (120-160k). **The other six of this plan's nine are already in
+   `.plan-day.md`** under their own headings — **do not re-read them and do not count them twice.**
+2. **`#w4t9k` WANTS TO LAND BEFORE THE NEXT PRODUCTION RELEASE** (the lead). It is a small migration or a
+   recorded allowed-by-name exception, **plus a decision about whether the nightly's failure reaches a
+   person.** **Do not simply make the workflow stop failing.**
+3. **CHECK THE NIGHTLY AGAIN, AND CHECK WHAT IT SAYS, NOT JUST THAT IT RAN.** The next scheduled run is
+   due about 12:57 UTC. **`1 flagged` naming `donation_tax_ids` is the expected state until `#w4t9k` is
+   done; any other table is new and is a finding.**
+4. **BRIEF PART 5 (`#ujqr5`) ONLY AFTER PART 4 IS DEPLOYED, NOT MERELY MERGED.** PR #1617 shipped the
+   Worker's shelter header; **the production Worker deploy is Lutan's** and is still outstanding. The
+   hazard is two-sided and recorded on the item: **if Part 5's restrictive policies land while the Worker
+   sends no header, anon carries no shelter, reads no rows, and the public website serves blank pages
+   rather than an error** — a failure that looks like success to every check there is.
+5. **PART 2 IS CLOSED BY STREAM 7, OR IT IS NOT — READ ITS TICK.** Its brief requires it to check every
+   clause of `#s50n8`'s *"Done when"* against what the four PRs actually did, **and to leave the item open
+   if any clause is outstanding** (the duplicate-microchip wording and the Thai string above all). **A
+   false tick there would hide the foundation of a thirteen-part programme.**
+6. **READ STREAM 4's PR BODY AND FILE TWO THINGS FROM IT, BOTH ASKED AS QUESTIONS IN ITS BRIEF.** (a) **The
+   21 ambiguous tables it met and stepped around** — decisions nobody has taken: wrongly tenant hides data
+   a shelter needs, wrongly shared leaks data between shelters. (b) **Any TENANT table falling in none of
+   the groups (A), (B) or (C)** — `medication` is on the TENANT list and its name is one of the 19 keys,
+   **yet it sits in no group**, so **the programme's own cut may not cover all 93.** It was told to name
+   them without adopting any.
+7. **`#7bd5u` IS HIS #4 AND WAS NOT IN THE NINE, DELIBERATELY.** Its remaining piece needs a machine with
+   nothing else building — load moves the score 12-17 points — **so it cannot share a batch with
+   anything.** He was offered a solo quiet run and chose the batch. **The offer stands; do not quietly drop
+   it and do not slip it into a batch.**
+8. **ONE HUSK SURVIVES:** `Animal_Shelter_tenancy-worker-shelter-header`, held only by a stray dev server
+   on 3002, merged as #1617; `done --stop-servers` clears it. **Offered, unanswered. It costs nothing by
+   existing** — do not spend his wait on it.
 
-**Do NOT re-ask him about:** `#pl7aq`'s launch date (**asked and declined 2026-11-15**); `#j4m8w`'s
-hostname meaning and the **three access shapes** (DECIDED, ticked — never put shape (a) again);
-`#8t3rk`'s Cloudflare setting (impossible on the free plan, not pending); **`#00e3u`** (parked by his own
-answer; not blocked on the Director or the accountant); whether to start the tenancy programme with its
-condition unmet (**he overrode it and authorised the record**); `#k2vrj`'s fostered updates; the
-`SUPABASE_ACCESS_TOKEN` scope; `#x5tbv`; the product name or which TLD; the anonymous photo upload;
-whether staff may add a currency; `donation.receipt`'s shape (yes/no, #1585); the adopter-portal
-exception; `test-plan` being advisory; merging a green PR; the Thai read's cadence; the 90-day retention
-figure; **`#rqv5c`, the production Drive move** (in hand — not before the end of November); or anything on
-`751`'s, `750`'s, `749`'s, `748`'s and `747`'s do-not-re-ask lists.
+**Do NOT re-ask him about:** the **cross-shelter operator** (*"Yes, me"*, 2026-11-15 — and its remaining
+question is a DESIGN question for a stream, not a second question for him); the **microchip key**
+(*"Across all shelters"*); `#pl7aq`'s launch date (**asked and declined 2026-11-15**); whether to start the
+tenancy programme with its condition unmet (**he overrode it and authorised the record**); `#dqgy8`'s five
+answers; `#uatwk`'s release-merge decision; `#7bd5u`'s quiet run (**offered — he chose the batch**);
+`#j4m8w`, `#8t3rk`, `#00e3u`, `#k2vrj`; the `SUPABASE_ACCESS_TOKEN` scope; `#x5tbv`; the product name or
+which TLD; `#rqv5c`, the production Drive move; the adopter-portal exception; `test-plan` being advisory;
+merging a green PR; **or anything on `752`'s, `751`'s, `750`'s, `749`'s, `748`'s and `747`'s
+do-not-re-ask lists.**
