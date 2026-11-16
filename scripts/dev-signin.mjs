@@ -166,7 +166,14 @@ if (cardsArg) {
   const { error: upErr } = await service.from("roles").upsert(
     { key: role, name: `Dev sign-in: ${cardKeys.join(", ")}`.slice(0, 120), kind: "custom", home_path: "/home" },
     // No ignoreDuplicates: a throwaway role made by an older run (who_and_where) is corrected on the next run.
-    { onConflict: "key" },
+    // TWO COLUMNS, AND DO NOT "TIDY" IT BACK TO "key". 0387 replaced roles' `unique (key)` with
+    // `roles_shelter_key_key unique nulls not distinct (shelter_id, key)`, so a conflict target of
+    // `key` alone matches no constraint and Postgres answers 42P10 ("there is no unique or exclusion
+    // constraint matching the ON CONFLICT specification") — which is what broke every stream's
+    // `--cards` login between 0387 landing and this fix (#dvsgn). The payload sets no shelter_id, so
+    // it is null and NULLS NOT DISTINCT matches the existing row exactly as `key` used to; when part 5
+    // of the tenancy programme starts filling shelter_id in, this target keeps working unchanged.
+    { onConflict: "shelter_id,key" },
   );
   if (upErr) throw upErr;
   const { data: made, error: madeErr } = await service.from("roles").select("id").eq("key", role).single();
