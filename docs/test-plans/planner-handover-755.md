@@ -11,9 +11,9 @@
 | Branch / worktree | `claude/planner-handover-755` @ `C:\Development\Animal_Shelter_planner-handover-755` |
 | Dev server | not started — no code, no route and no rendered surface in this PR |
 | PR | filled in at `gh pr create` |
-| Tested by / date | Claude (planner) / 2026-11-16 |
+| Tested by / date | Claude (planner) / handover written 2026-11-16, gates run 2026-11-17 |
 | Carries a migration? | no |
-| Tested at SHA | `<filled in from the gates run>` |
+| Tested at SHA | `dd77b97fe3ee09acb0bfcf843106cd20fce60bd1` — the only commit after it edits this plan file, so no code differs |
 
 ## 1. Scope and risk
 
@@ -28,7 +28,9 @@
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`
 
 ```
-<filled in from the gates run>
+=== gates: build exited 0 after 44s
+
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR (runs the same four gates, among its other checks) — `n/a: not yet — the PR does not exist at this commit`
@@ -155,7 +157,7 @@ Empty. There is no surface a person needs to look at: the deliverable is a Markd
 - [x] Everything in this checklist that could be verified without human eyes was run, not assumed
 - [x] Nothing is ticked that was not actually executed
 
-Automated checks by: Claude (planner)  Date: 2026-11-16
+Automated checks by: Claude (planner)  Date: 2026-11-17
 
 ### Manual verification
 
