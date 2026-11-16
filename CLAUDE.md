@@ -25,7 +25,7 @@ card — no exceptions."* And, the rule in full:
   role's access is **derived from its cards**; Admin's is derived from nothing and Admin is not a
   participant, so *"zero exceptions"* stays literally true **within** the card system. The bypass is
   the `perms.isAdmin` short-circuit in `src/lib/permissions/can.ts` and, in the database,
-  `has_permission()`'s `r.key = 'admin'` (`0196_multi_role_logins.sql`). **Four things follow, each
+  `has_permission()`'s `r.is_admin` (`0277_admin_by_flag_and_profile_photo_medical.sql`, which moved `has_permission()`, `is_admin()`, `my_permissions()`, `holds_app_role()` and `reassign_recurring_job()` off the name `'admin'` onto the `roles.is_admin` column that `0275` added; since `0387` `roles_one_admin_idx` is `(shelter_id) nulls not distinct where is_admin`, so one Admin per shelter, and `roles.key` is unique per shelter, so a shelter may name a role `admin`). **Four things follow, each
   closing off a wrong turn:** **(1) Admin is never given cards** — not to satisfy the rule, not to
   make a check pass, not as tidying. **(2) Admin is not debt** — no entry in `mechanisms[]`, no
   baseline, never ratcheted down. **(3) It is not a precedent** — Admin only, all-or-nothing (one further, narrower exception was recorded 2026-11-13: the adopter website account, below);
@@ -59,7 +59,7 @@ card — no exceptions."* And, the rule in full:
   admin access = all to be hard coded."* and, deciding its shape: *"It should sit outside the card system."* The rule governs how a
   role's access is derived from its cards. Admin's access is derived from nothing and Admin is not a participant in that system, so
   "zero exceptions" stays literally true *within* it. The invariant, in his words: *"Admin always has access to everything. No
-  matter what cards exist or don't exist."* `src/lib/permissions/can.ts` (`if (perms.isAdmin) return true;`, line 69 on 2026-10-28; re-check with `grep -n "isAdmin) return true" src/lib/permissions/can.ts`, answered from `my_permissions()`'s `isAdmin`; the `roles.is_admin` column exists since `0275`, but the SQL still decides Admin by `key = 'admin'`) satisfies that because it answers before looking at a single cell or card. Admin holds no cards (production,
+  matter what cards exist or don't exist."* `src/lib/permissions/can.ts` (`if (perms.isAdmin) return true;`, line 69 on 2026-10-28; re-check with `grep -n "isAdmin) return true" src/lib/permissions/can.ts`, answered from `my_permissions()`'s `isAdmin`; the SQL decides Admin by `roles.is_admin`, not the name, since `0277`; confirm with `grep -n "r.is_admin" supabase/migrations/0277_admin_by_flag_and_profile_photo_medical.sql`) satisfies that because it answers before looking at a single cell or card. Admin holds no cards (production,
   2026-10-25), so removing it would lock the only administrator out of Settings → Who does what, the screen needed to give Admin
   cards again: a one-way door. Three things follow, and they close off the three wrong turns:
   - **Admin is never given cards**, not to satisfy the rule, not to make a check pass, not as tidying. Giving Admin every card would
@@ -67,7 +67,7 @@ card — no exceptions."* And, the rule in full:
     bypass is superseded and must not be revived.
   - **Admin is not debt.** It is not a mechanism, carries no baseline, and is never counted down. It is recorded as
     `outsideTheCardSystem` in `docs/hard-coded-security-registry.json`, which the check ignores on purpose.
-  - **It is not a precedent.** It is that `perms.isAdmin` line in `can.ts` (the SQL decides Admin by `key = 'admin'`; the `roles.is_admin` flag exists since `0275` and moving the SQL onto it is a separate item), Admin only, all-or-nothing. Nothing else gets to sit
+  - **It is not a precedent.** It is that `perms.isAdmin` line in `can.ts` (the SQL decides Admin by the `roles.is_admin` flag, moved there by `0277`), Admin only, all-or-nothing. Nothing else gets to sit
     outside the card system by citing it.
   Settled. Do not re-open it and never put it to him again.
 - **ONE SECOND EXCEPTION, RECORDED 2026-11-13: the adopter/foster-carer website account.** Lutan was offered three shapes
@@ -126,7 +126,7 @@ catch this, which is exactly why the rule has to be read rather than enforced.**
   than becoming another role); a label lookup that **falls through to the role's own name**; and
   anything about the public website's Volunteer **page**, which is a page about volunteering and has
   nothing to do with roles.
-- **Admin is unaffected.** It sits outside the card system and is decided in SQL by `key = 'admin'` (the `roles.is_admin` column exists since `0275` but is not yet what the SQL reads), not on
+- **Admin is unaffected.** It sits outside the card system and is decided in SQL by the `roles.is_admin` flag (`0275`, read by the functions since `0277`), not on
   a role name.
 
 ## All analysis is by CARD, never by role — a third role rule, and the one about CONCLUSIONS
