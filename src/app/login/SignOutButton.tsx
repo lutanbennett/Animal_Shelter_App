@@ -1,6 +1,5 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -16,7 +15,6 @@ export function SignOutButton({
   iconOnPhone?: boolean;
 }) {
   const router = useRouter();
-  const supabase = createClient();
   const { t } = useI18n();
 
   // whitespace-nowrap: the header gained the assistant button, and at
@@ -25,7 +23,10 @@ export function SignOutButton({
     <button
       type="button"
       onClick={async () => {
-        await supabase.auth.signOut();
+        // Loaded on the press, not with the page: the Supabase browser client is
+        // ~260 KB of script this button only needs when someone signs out.
+        const { createClient } = await import("@/lib/supabase/client");
+        await createClient().auth.signOut();
         router.push("/login");
         router.refresh();
       }}
