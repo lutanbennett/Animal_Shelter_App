@@ -1,271 +1,224 @@
-# Planner handover — edition `754`, 2026-11-16
+# Planner handover — edition `755`, 2026-11-16
 
-**This is a DELTA against `753`.** It says what changed, corrects its predecessor, and reports what each of
-`753`'s owed items did. Figures, batch composition and ports live in `.plan-day.md`.
+**This is a DELTA against `754`.** It says what changed, corrects its predecessor, and reports what each of
+`754`'s owed items did. Figures, batch composition and ports live in `.plan-day.md`.
 
 **It outranks nothing.** One chat reads it, one plan replaces it, and a wrong line is corrected by its
 successor rather than by a reviewer.
 
-**WHICH PLAN'S FIGURES THIS EDITION REPORTS.** The daily measurement read **`753`'s plan's complete set
-of nine**, in one slot after batch 1 was set up, exactly as the rule intends. **Two of this plan's own
-six were also read**, at batch 3's setup, because the (e) step requires reading every merged PR body for
-findings and the usage comments came with them. **Batch 1's three and batch 3's one are not readable in
-this edition's slot** and belong to its successor. **The delta model working as intended, not a gap.**
+**WHICH PLAN'S FIGURES THIS EDITION REPORTS.** The daily measurement read **the second plan of
+2026-11-16's complete set of six**, in one slot after batch 1 was set up, exactly as the rule intends:
+**four readings and two unmeasurable.** **Three of this plan's own six are ALSO given below**, because they
+merged before this edition was written and `gh pr view` does not care that the slot has passed. **Its
+remaining streams belong to the successor.**
 
-**WHY IT EXISTS.** This is the **second plan of 2026-11-16** — `753`'s plan ran nine streams the same
-morning and all nine merged. This one ran **six streams across three batches** (3, 2, 1), and it is
-smaller than nine **for one structural reason, not because the backlog is thin**: see below.
-
----
-
-## THE LEAD: THE PLANNER ASSERTED FOUR THINGS IT HAD NOT MEASURED, AND NOT ONE WAS CAUGHT BY THE PLANNER
-
-Every one of these was written down as fact, in a brief or on a backlog item, and every one was wrong:
-
-1. **A list of 19 tables handed to a stream as the work.** The real number was **46**.
-2. **"Any page whose data is fetched client-side would come back empty under Part 5."** There are **no
-   browser-side data reads at all**; `client.ts` is imported twice and both are auth calls.
-3. **`#vleak` filed as *"Gated on nothing — it can be settled before Part 5 and should be."*** It is
-   **hard-gated**: `anon` has no execute grant on `current_shelter_id()`, and `0383` says Part 5 grants
-   it in the same file as the policy that needs it.
-4. **`#vleak` then deferred on a collision with `public_stat_switches`.** **There is no such
-   dependency** — the canary's own `KNOWN_TODAY` says both leaks are about `residents`, which has had
-   `shelter_id` since `0383`.
-
-**WHAT CAUGHT THEM — FOUR DIFFERENT INSTRUMENTS, NONE OF THEM THE PLANNER RE-READING ITS OWN WORK:**
-
-- **a brief that made VERIFYING the list deliverable 1** rather than working through it — the only
-  reason the missing 27 tables were found;
-- **a stream that measured its own brief's premise** instead of obeying it;
-- **Lutan, in one line** — *"There is no stream setup for tenancy-anon-view-leaks"* — which forced the
-  re-reading that disproved (4) and found (3);
-- **a git hook** (the next section).
-
-**THE SHAPE, STATED PLAINLY BECAUSE IT IS THE PLANNER'S COMMONEST FAILURE AND THIS IS THE THIRD EDITION
-RUNNING TO REPORT ONE: each wrong claim was built on something TRUE.** PR #1619 really did name 19
-tables. PR #1617 really did say the browser client *"needs a decision"*. A view really does select from
-`public_stat_switches`. **The planner then widened a true narrow statement into a false general one and
-wrote it down as evidence.** `752`'s lead was verifying the mechanism rather than the thing; `753`'s was
-a stale document reaching someone who could not test it. **This one is wider than both: a true premise
-is not a measured conclusion.**
-
-**THE RULE THAT WOULD HAVE CAUGHT ALL FOUR, AND IT COSTS ONE COMMAND:** before writing a count, a
-dependency or a consequence into a brief or an item, **run the thing that knows.** The canary names each
-leak in a constant. The schema answers how many tables lack a column. `grep` answers where `client.ts`
-is imported. **All four were one command away, and all four were asserted instead.**
+**WHY IT EXISTS.** This is the **third plan of 2026-11-16**. It ran **six streams across three batches**
+(2, 3, 1) and **five of them merged**.
 
 ---
 
-## THE FIFTH, AND IT IS THE PROCESS LESSON: A CORRECTION WAS WRITTEN INTO THE WRONG ITEM
+## THE LEAD: `754`'s CENTRAL CLAIM WAS WRONG WITHIN HOURS, AND THE THING THAT REPLACED IT HAD NEVER BEEN MEASURED BY ANY PLANNER
 
-Correcting `#vleak`, the planner anchored a `split/join` on the phrase *"Gated on nothing — it can be
-settled before Part 5 and should be"* — **which appears in `#bcl1t`, not `#vleak`**, because the planner
-had written that same phrase into **both** items that morning. **A long correction about one item landed
-inside another.**
+`754` said Parts 5–13 were parked because Lutan had declined a release — *"Not yet"* — and that the block
+therefore stood by his choice. **Both halves were out of date before this plan started.**
 
-**The `commit-msg` hook refused the commit**, naming `#bcl1t` as an item the message did not mention. The
-edit was reverted (`git reset HEAD` **then** `git checkout --`, because it was already staged) and redone.
+- **He took a release.** `0.47.1` was cut, deployed and recorded the same day (PRs #1631, #1632): 27 PRs,
+  nine migrations, and it carried Part 4's Worker header.
+- **His production Worker deploy failed on a Cloudflare `401` and he ran it again.** It went through.
+  **Measured, not read from the record:** `https://lannacareforanimals.org/api/releases/current` answers
+  **`0.47.1`**. **The release record still says the deploy was *"NOT DONE at the time of writing"* — so the
+  record and the live state disagree, and the live state is the one that counts.**
 
-**THE GUARD THE PLANNER WROTE DID NOT FIRE, AND THAT IS THE TRANSFERABLE PART.** `SKILL.md` requires *"a
-guard that exits non-zero when an anchor is missing"*, and the guard did exactly that — **the anchor was
-present, just not where it was meant to be.** **Assert the anchor is UNIQUE, not merely present:**
+**SO PART 5 WAS BRIEFED, AND IT STOPPED ON SOMETHING NOBODY HAD LOOKED AT IN FIVE EDITIONS.** Every one of
+the 95 `shelter_id` columns was **empty** — nullable, no default, no backfill, by Parts 2/2b/2c's deliberate
+design. The stream's probe (rolled back) put a restrictive policy on `residents` and read it as
+`authenticated`: **0 rows with no header, and 0 rows WITH a valid header**, against 17 as the owner, because
+`null = <uuid>` is never true.
 
-```js
-const n = s.split(from).length - 1;
-if (n !== 1) { console.error(`ANCHOR NOT UNIQUE: ${n} hits`); process.exit(1); }
-```
+**Part 5 as briefed would have hidden every row from everybody — in production too, deploy or no deploy.**
 
-Every later edit this plan made used that form, and one refused on a count other than one. **The hook
-saved the file; the uniqueness check is what stops it happening again.**
-
----
-
-## WHY THIS PLAN WAS SIX STREAMS AND NOT NINE, AND IT IS A BLOCKER OF HIS
-
-**The multi-tenancy programme is blocked on Lutan, structurally.** `#ujqr5` (Part 5) is gated on **Part
-4's Worker header being DEPLOYED**, not merely merged, and the item requires the two to ship in
-**different releases** — policies and header between the same two release cuts means the release manager
-follows `docs/release-procedure.md` §5 then §6 and **the public website serves blank pages for the
-length of a Worker deploy.** That deploy is his by standing instruction of 2026-10-02. **The thirteen
-parts run in a fixed order, so Parts 5 to 13 all sit behind it.**
-
-**HE WAS ASKED AND HE DECLINED A RELEASE: *"Not yet"* (2026-11-16).** The block stands **by his choice**.
-**Do not re-ask it; raise it only if he asks what is blocking the programme.**
-
-**AND THE BEST NEWS IN THIS EDITION: PART 5 IS LESS DANGEROUS THAN BOTH PREVIOUS EDITIONS BELIEVED.**
-PR #1628 established that **no browser-side data read exists**, so Part 5 has nothing to blank on that
-path — and **guarded it rather than promising it**: `src/lib/supabase/browser-client-no-data.test.mjs`
-is a planted-violation test, so a future client-side table read **fails the build**. **The public-site
-blanking hazard is still real; the signed-in-browser one is now closed by construction.**
-
-**`#egq18` (Part 12) is still the one part the fixed order does not bind** (*"worth taking on its own"*),
-**but it needs a Worker deploy to render inside**, so it waits on the same thing.
+**THE SHAPE, AND IT IS THE FOURTH EDITION RUNNING TO REPORT ONE:** `754`'s lead was *a true premise is not a
+measured conclusion*. **This one is narrower and worse: THE GATE EVERYONE WAS WATCHING WAS NOT THE THING IN
+THE WAY.** Five editions tracked one prerequisite (the deploy) in detail and **never asked whether any row
+carried a value to filter on.** The brief's one saving grace is that it made the dev question **deliverable
+3, before the migration** — so the measurement happened before the damage, and the stream built the
+stamping (`0390`) instead.
 
 ---
 
-## WHAT `753`'s EIGHT OWED ITEMS DID
+## THE THREE INSTRUMENTS THAT FIRED THIS PLAN, BECAUSE A MITIGATION IS A HYPOTHESIS UNTIL IT DOES
 
-1. **Measure batch 3's three — DONE, and only two were usable readings.** `tenancy-canary-diff`
-   **188,921** (230-280k, **41k UNDER**); `edonation-format-establish` **146,943** (120-160k, inside);
-   **`tenancy-unique-keys` reported `tokens=unmeasured messages=unmeasured`** — the comment is otherwise
-   complete, so **a tool reading failed, not a stream forgetting.** Recorded as `unmeasured`, never a
-   guess. **Its band (170-210k) is therefore untested, which matters because `753` deliberately did not
-   cut it.** **If a second stream reports `unmeasured`, file it as a harness finding.**
-2. **`#w4t9k` before the next release — DONE** (PR #1626, `0388`). **And it was TWO tables, not one:**
-   PR #1622 had found `retention_runs` flagged beside `donation_tax_ids` and said so *"for the
-   planner"*; `753` did not know. **Both took the policy.**
-3. **Check the nightly, and what it says — DONE, AND IT HAD NOT RUN AGAIN.** `gh run list --workflow
-   tenancy-catalogue.yml` shows exactly **two runs ever**: a `push` success 2026-11-15T01:44Z and the
-   `schedule` **failure** at 12:57Z. **Nothing on 2026-11-16.** **AND THE CRON SAYS `43 5 * * *`
-   (05:43 UTC), which does not match the only scheduled run there has been.** Briefed to the `#w4t9k`
-   stream as an open question; **read PR #1626 for the answer.**
-4. **Part 5 only after Part 4 is deployed — HELD, and it is why this plan is six streams.** Nothing from
-   Part 5 on was briefed.
-5. **Part 2's tick — CHECKED TWICE AND CLOSED HONESTLY ON THE SECOND PASS.** PR #1625 returned *"cannot
-   verify here"* on clauses 1, 3 and 6 and **left `#s50n8` open**, which was right. PR #1629 then
-   measured them and ticked it. **Clause 6 is met at schema level only, with no browser pass — that is
-   on the item, not glossed.**
-6. **Stream 4's two filings — DONE, and the second was far bigger than reported.** The ambiguous tables
-   and the tenant-tables-in-no-group list are on `#s50n8`; **the latter turned out to be 46, not 19**
-   (the lead). `medication` was indeed one of them.
-7. **`#7bd5u` is his #4 and was not in the nine — IT IS THIS PLAN'S BATCH 3**, alone, which is the only
-   shape that fits it. **Only (a) remains**: PR #1609 did (c) and measured (d) and (e) as not wanted.
-8. **The husk — STILL THERE, and now diagnosed.** Below.
+1. **"Settle this question BEFORE you apply" caught Part 5.** Deliverable 3 asked what applying would do to
+   dev and to CI's public-tier check. The stream measured instead of assuming, and stopped.
+2. **"Is your proof REAL?" rewrote an instrument.** `#vleak`'s brief asked whether the canary could tell
+   *correctly scoped* from *nothing visible at all*. **It could not** — it reads as anon with no header, so
+   after scoping both its readings would be empty and the diff would vanish by itself. **The stream fixed
+   the canary** (PR #1640): it now sends Lanna's header on every read, **refuses to run if the cards view
+   reads empty**, then plants shelter B and requires Lanna's view unchanged. **Its stated limit, which is
+   the honest part: it proves B is hidden from Lanna, not Lanna from B.**
+3. **The feared CI blocker was measured FALSE, and that is worth as much as a finding.** The planner's
+   question — would scoping the public views turn `public-views` red on every PR? — was answered by reading
+   the script: **it tests `read.ok` (HTTP status), not row count.** Anon sends no header, reads empty, gets
+   200. **No open PR goes red.** Two streams were held back a batch for a hazard that did not exist, which
+   is the cheap direction to be wrong in.
 
 ---
 
-## A SMALL TOOL DEFECT, FOUND BY USING IT, AND IT WILL OUTLIVE EVERY PLAN THAT MEETS IT
+## WHAT `754`'s EIGHT OWED ITEMS DID
 
-`worktree.mjs list` prints `planner-handover-753 … squash-merged (PR #1624) - 'done' clears it`, and
-`worktree.mjs done planner-handover-753` **refuses**: *"Push first … --force does not override this."*
-The branch reads as 4-unpushed **because origin's branch was deleted at the squash-merge**, so the
-unpushed guard fires on work that is demonstrably on `main`. **`list` and `done` disagree.**
-
-**It was NOT forced and NOT pushed:** a refused step is to be reported, and pushing a merged branch back
-to `origin` would recreate it for nothing. **It costs nothing by existing. File it if it recurs on the
-next squash-merged handover branch** — which is **this edition's own branch**.
-
-**A transient worth knowing because it looks exactly like a bug:** a clearing pass refused five folders
-with *"could not fetch origin — cannot tell what is merged or pushed; try again when online"*. A plain
-`git fetch origin` then succeeded and all five cleared. **The script was refusing correctly. Do not
-reach for `--force` on that message.**
-
----
-
-## THE FLOOR, AND THE ONE BAND FINDING WORTH ACTING ON
-
-**The floor is confirmed a fifth time.** Eight readings from `753`'s nine:
-**86,261 / 86,261 / 86,261 / 86,326 / 86,744 / 86,761 / 87,274 / 90,374**, and this plan's two agree to
-the token at **87,113**. Seven of eight sit inside **86-89k**; the 90,374 is the highest ever and remains
-an outlier. **`SKILL.md`'s floor row still describes the data, so NO EDIT IS OWED.**
-
-**AND THE SCALE ROWS WERE NOT SHIFTED.** `751`, `752` and `753` each record why, and the reason has not
-weakened: the scale rows were **measured from actuals**, never derived from the floor by arithmetic.
-**Two independent measurements; correcting one does not imply correcting the other.**
-
-**THE BAND FINDING: `tenancy-canary-diff` came in 41k UNDER a band already discounted for it.** Banded
-230-280k, **below** the 250-320k *builds an instrument* row, because `check-public-views.mjs` enumerated
-the anon surface and `tenancy-catalogue.yml` was a working nightly template. It landed **188,921**.
-
-**The reading is a correction to the DISCOUNT, not to the row: when both the enumerator and the
-transport already exist, what is left is not an instrument — it is an ordinary stream plus
-integration.** The discount was in the right direction and far too small. **Do not shift the instrument
-row.** When Part 7 (`#ps6ms`) ships its own check, **ask what it must BUILD rather than what it must
-assemble**, and band the assembly case near the ordinary stream.
-
-**One honest non-finding:** stream 4's band was raised at setup 175-220k → 185-230k and landed
-**203,797**, which is **inside both**. The raise was defensible; it is **not** evidence it was needed.
+1. **Measure the four unread streams — DONE.** Table below. Two were unmeasurable, for two different reasons.
+2. **`#7bd5u` closes with batch 3 — CLOSED, and by a stream nobody set up this plan.** The folder and brief
+   from the previous plan were still on disk; a session was opened on them and **PR #1638** shipped (a): the
+   public site loads the Supabase browser client **on press** rather than with the page. **Item ticked.**
+3. **Check the nightly — DONE, AND IT WORKS.** Three runs, not two: a `push` success, the `schedule`
+   **failure** of 2026-11-15T12:57Z, and a `schedule` **SUCCESS at 2026-11-16T14:01Z**. **The failure's
+   cause, read from the full log rather than guessed:** `1 flagged … 1 tables missing definer_all` — that
+   is `#w4t9k`, which `0388` fixed the same day. **The guard went red on a real finding and green when it
+   was fixed.** `gh run view <id> --log-failed` shows only checkout cleanup and is useless here.
+4. **Brief Part 5 only after Part 4 is deployed — SATISFIED, and see the lead for what that bought.**
+5. **The programme's cut re-measured — PARTLY.** 124 public tables, **95 carry `shelter_id`, 29 do not**,
+   which agrees with `754`. **The 21-ambiguous / 8-or-9-not-tenant difference is STILL unreconciled** and
+   now has three readings: Part 5's stream *"did not split ambiguous from not tenant"*. **Derive it from the
+   schema when a part needs it exactly.**
+6. **`#k2vd9` — untouched.** One question with the accountant.
+7. **`#admsq` — VERIFIED AND IT WAS NOT TICKED.** All four stale `CLAUDE.md` passages were already corrected
+   on `main` by PR #1627 (four greps, 0 hits each) with the `0387` consequence in place. **Only the tick had
+   been missed. Ticked by the planner; no stream spent.** `754` was right to say *verify rather than assume*.
+8. **The husks — GONE, and the fix is in the tool.** PR #1636 taught `done` the squash-merged case and
+   cleared **six** leftover folders, not the two. **Its own folder then became the test case and cleared.**
 
 ---
 
-## HIS DECISIONS THIS PLAN, AND WHAT THEY ARE NOT
+## MEASUREMENT
 
-- **He declined a release: *"Not yet"*.** That is what keeps Parts 5-13 parked. **His call, and not an
-  oversight.**
-- **He agreed batch 1 and asked, in the same answer, *"what else can go into batch 2"*.** The honest
-  answer needed nine PR bodies read, which is paperwork; **he was told in one line that the answer was
-  coming after the list, and it came.** **Tell him it is coming, or it reads as dropped.**
-- **He agreed batch 2 — *"Yes, as proposed"* — then accepted it being cut to two: *"ok no problems, we
-  will stay at 2 streams for batch 2"***, after being told the reason he had first been given was wrong.
-- **He closed batch 1's three sessions**, which is what let their folders be cleared.
-- **Nothing here reopens anything settled.** Admin outside the card system, the adopter-portal
-  exception, `test-plan` advisory, merge-on-green — all untouched, and none is a decision he owes.
+**The previous plan's complete set, read once at this plan's batch 1:**
+
+| slug | dials | band | tokens | floor | verdict |
+|---|---|---|---|---|---|
+| `tenancy-definer-all-policies` | sonnet-5-5 / low | 145–185k | 155,951 | 86,985 | inside |
+| `claude-md-admin-sql-stale` | sonnet-5-5 / low | 110–145k | 136,581 | 87,050 | inside |
+| `tenancy-tables-no-group` | sonnet-5-5 / low | 185–230k | 203,797 | 87,113 | inside |
+| `supabase-client-shelter` | sonnet-5-5 / low | 150–190k | 146,242 | 87,113 | 3,758 under |
+| `tenancy-part2-done-when` (#1625) | sonnet-5-5 / low | 150–190k | **unmeasured** | — | **no `stream-usage:` comment at all** |
+| `public-site-unused-js` (then) | — | 190–240k | **unmeasured** | — | **the stream never ran** |
+
+**This plan's own three that merged early, given rather than withheld:**
+
+| slug | dials | band | tokens | floor | verdict |
+|---|---|---|---|---|---|
+| `public-site-unused-js` | sonnet-5-5 / low | 190–240k | 164,831 | 86,165 | **25k UNDER** |
+| `tenancy-anon-view-leaks` | sonnet-5-5 / low | 170–210k | 181,924 | 87,113 | inside |
+| `tenancy-null-shelter-check` | sonnet-5-5 / low | 130–170k | 156,049 | 86,727 | inside |
+
+**THE FLOOR IS CONFIRMED A SEVENTH TIME: 86,165 / 86,727 / 86,985 / 87,050 / 87,113 / 87,113 / 87,113** —
+all inside **86–89k**, three of them to the token. **`SKILL.md`'s floor row still describes the data, so NO
+EDIT IS OWED**, and the scale rows are still **not** to be shifted with it: they were measured from actuals.
+
+**THE ONE BAND FINDING: `#7bd5u` (a) came in 25k UNDER a band set for bundle surgery.** It was banded
+190–240k because the item called it *"the biggest single win"* and *"bundle surgery"*. **What it actually
+was: one dynamic import plus a leftover static import deleted.** **The lesson is the same shape as `754`'s
+discount finding — when the surface is already small and the change is a known import boundary, band it
+near the quick-win row and not by the size of the saving it promises.** Do not shift the medium rows.
+
+**TWO UNMEASURED FIGURES, TWO MECHANISMS, STILL NEITHER A PATTERN.** `754` recorded a comment whose token
+fields read `unmeasured` — **a tool failing.** #1625 posted **no comment at all** while its body says the
+gates and merge-on-green were *"NOT done yet"* — **a stream stopping before the finishing sequence.**
+One of each across two plans. **Watch for the third.**
 
 ---
 
-## ONE THING TO WATCH, NOT YET A FINDING
+## THE BLOCKER CHAIN AS IT NOW STANDS, AND IT IS NO LONGER LUTAN
 
-**PR #1625's own body says *"Gates (typecheck/lint/test/build), test plan and merge-on-green are NOT
-done yet"* — and the PR is merged.** Either the body went stale before the merge or a PR merged with its
-gates unrun. **One occurrence is not a pattern.** **Read that PR's checks before trusting its test plan,
-and if a second stream does the same, it is a finding about the finishing sequence rather than about one
-stream.**
+- **`#ujqr5` (Part 5) is blocked on `#lhdr7`** — *a `localhost` session cannot send a shelter.*
+  `current_shelter_id()` reads only the `x-shelter-id` header, dev has no Worker, and the server clients
+  **forward** a header but never create one. **Its title was re-pointed** (it said *blocked until `#stmp5`
+  lands*, which stopped being true when `0390` merged).
+- **`#lhdr7` WAS SET UP AND NEVER STARTED.** Folder, port 3002 and a full brief are on disk; the session
+  closed with **0 commits and no PR**. **It is the programme's one blocker and it is ready to pick up.**
+- **`#stmp5` is three-quarters done** — `0390` stamped and defaulted all 95 columns and granted `anon`
+  execute on `current_shelter_id()`; PR #1641 added the null-count check. **Only `NOT NULL` is left and it
+  waits for Part 7**, because a trusted caller has no header and every service-role write would error.
+- **`#ps6ms` (Part 7) says *run it after Part 5*, and `#stmp5` step 3 says it waits for Part 7. That is an
+  inversion in the fixed order and nobody has resolved it.** Part 7's own reason — *"until the policies
+  exist there is nothing for these call sites to be checked against"* — holds for the **filters** and not
+  obviously for the **audit and the check**. **Worth testing against the hold's reason rather than its
+  membership; it was not briefed this plan.**
+
+---
+
+## PROCESS, AND THE PLANNER'S OWN FAULTS THIS PLAN
+
+- **A WORKTREE WAS CREATED AND FULLY BRIEFED FOR WORK ALREADY IN FLIGHT.** `#dvsgn` was being fixed in
+  **PR #1634** by another session; the planner found it only at `worktree.mjs streams`, after the folder and
+  a 200-line brief existed. **The skill names the check and it was not run: `gh pr list --state open` is one
+  of the three cheap facts and it is one command.** The folder was cleared and `#ft13c` folded elsewhere.
+- **AN OPTIONAL STREAM WAS PRESENTED AS THE DAY'S WORK, AND HE CAUGHT IT IN FIVE WORDS: *"it said nothing
+  was to be built"*.** He meant PR #1626's deliverable 7, which recorded the nightly's reporting half as
+  *"recorded, not built … **fix is a planner read of the last scheduled run**"*. **The recommended fix was
+  a planner read, and the planner had just done it** — so the stream that followed was a *nice to have*
+  briefed as a necessity. **It was not withdrawn (its session was already open and its deliverable 3
+  contains exactly #1626's remedy), but it should have been labelled optional when it was handed over.**
+  **THE RULE: when an item's own prior PR says the remedy is a READ rather than a BUILD, say so in the line
+  you hand him, and mark the stream optional.** He is quick to spot the difference and it costs his trust
+  in the rest of the list.
+- **SIX INTERRUPTIONS, most of them a variant of *where are you up to*.** Root cause: long stretches of
+  reading with nothing visible to him. **The half-hour warning was not given at the start.** `753` gave it
+  on all three batches and cost none.
+- **HE STOPPED THE SETUP TO ASK WHY IT WAS HAPPENING BEFORE AGREEMENT.** The hard sequence says set up
+  first, present second — **his own instruction of 2026-11-08 — and it is invisible from outside.** **Say
+  which order you are following, in one line, before the first `worktree.mjs new`.**
+- **TWO STREAMS WERE SET UP AND PRODUCED NOTHING ACROSS TWO PLANS** (`public-site-unused-js`, which later
+  ran and shipped; `tenancy-localhost-shelter`, which did not). **A set-up stream that never starts is
+  invisible unless someone checks `gh pr list --state all --head claude/<slug>`.** Check it; `free` and
+  `0 ahead` is a snapshot, not a verdict.
+
+---
+
+## HIS DECISIONS THIS PLAN
+
+- **Three batches with Part 5 in batch 1**, over four with Part 5 alone — single question, his pick.
+- ***"Keep all three"*** when told batch 2 had grown from the one stream he agreed to three, and why.
+- **He asked twice about batch size** (*"why only two batches ? we always plan 3 batches"*, *"batch two
+  should be quick"*). **Both answers were a real constraint, not a thin backlog, and he accepted both once
+  named. Name the constraint in the first line, not after the tables.**
+- **Nothing settled was reopened.** No release re-asked, no Worker deploy re-asked.
+
+**Do NOT re-ask him about:** the production Worker deploy (**done** 2026-11-16); a release (he took
+`0.47.1`); the cross-shelter operator (*"Yes, me"*); the microchip key; `#pl7aq`'s launch date; `#dqgy8`'s
+five answers; `#k2vd9`'s accountant question; the tenancy lint's schedule (`#x5tbv`, settled 2026-11-14);
+`#rqv5c`, `#aaqtl`, `#kxksr`, `#mzu7v`, `#z04wr`, `#civwx`, `#8dfud`, `#00e3u`; the product name or TLD; the
+adopter-portal exception; `test-plan` being advisory; merging a green PR; **or anything on `754`'s, `753`'s,
+`752`'s, `751`'s, `750`'s and `749`'s do-not-re-ask lists.**
 
 ---
 
 ## FOR YOUR FIRST TURN
 
-Read `.plan-day.md` first. **It stands at `6 of 6` — COMPLETE — with batch 3 `set up 2026-11-16` and NOT
-merged at the time of writing.**
+Read `.plan-day.md` first. **It stands at `6 of 6` — COMPLETE — with five of six merged.**
 
-**SO DO NOT RE-PLAN ON SIGHT, AND DO NOT ASSUME IT IS FINISHED EITHER.** Check whether batch 3's one
-stream merged (`gh pr list --state all --head claude/public-site-unused-js`). **Merged → every saved item
-is closed → plan from scratch. Still open → say so and ask.**
+**Read the system date and compare it with the date at the top of this file.** **Three** plans ran on
+2026-11-16; a fourth on the same date is a normal thing to be. **Never derive today's date from a document.**
 
-**Read the system date and compare it with the date at the top of this file.** **Two** plans ran on
-2026-11-16; a third on the same date is a normal thing to be. **Never derive today's date from a
-document.**
-
-**AND READ THE REPOSITORY AFTER THE PULL, NOT BEFORE IT.** This plan's own first act was to read
-`docs/planner-handover.md` with `main` **eleven commits behind** and report that edition `753` had never
-been written. **It had** (PR #1624). **A stale working copy produces a confident wrong finding exactly
-the way a stale document does.**
+**AND READ THE REPOSITORY AFTER THE PULL, NOT BEFORE IT.** Still true, still cheap to get wrong.
 
 **Tell him at the start that the sync plus the `worktree.mjs new` runs plus the briefs is about half an
-hour** — **twelve editions.** **Say it on EVERY batch, not just the first.** This plan said it on all
-three and cost **no** interruptions.
+hour** — **thirteen editions.** **Say it on EVERY batch.** This plan did not and cost five interruptions.
 
 **WHAT IS OWED:**
 
-1. **MEASURE THIS PLAN'S FOUR UNREAD STREAMS AT YOUR FIRST BATCH.** Batch 1's three —
-   `tenancy-definer-all-policies` (band 145-185k), `tenancy-part2-done-when` (150-190k),
-   `claude-md-admin-sql-stale` (110-145k) — and batch 3's `public-site-unused-js` (190-240k).
-   **Batch 2's two are already in `.plan-day.md`** (`tenancy-tables-no-group` 203,797;
-   `supabase-client-shelter` 146,242) — **do not re-read them and do not count them twice.**
-2. **`#7bd5u` CLOSES WITH BATCH 3, WHICHEVER WAY IT GOES.** (a) is the last of the five and the item says
-   ticking it never required doing any of them. **A measured *not wanted* closes it as honestly as a
-   change does** — but **read whether it measured before it judged**, because *"lowest priority"* is the
-   item's view of its worth, not permission to skip the reading.
-3. **CHECK THE NIGHTLY AGAIN, AND CHECK WHAT IT SAYS.** `0388` should have made it clean. **`0 flagged
-   0 stale` is now the expected state; ANY flagged table is new and is a finding.** The cron /
-   observed-run discrepancy from owed item 3 above may still be open — **read PR #1626 before
-   re-deriving it.**
-4. **BRIEF PART 5 (`#ujqr5`) ONLY AFTER PART 4 IS DEPLOYED, NOT MERELY MERGED** — and he declined a
-   release. **`#vleak` is behind the same gate** (`anon` has no grant on `current_shelter_id()`), so it
-   is in no batch; its item carries the full reasoning and the deleted *"gated on nothing"* line.
-5. **THE PROGRAMME'S CUT IS NOW MEASURED RATHER THAN ESTIMATED, WHICH IS NEW GROUND TO BUILD ON.** After
-   `0389`: **95 tables carry `shelter_id`, 29 do not (21 ambiguous + 8 not tenant)**, and the trigger
-   count is **five**, not six. **The 21 ambiguous are still decisions nobody has taken** — wrongly
-   tenant hides data a shelter needs, wrongly shared leaks data between shelters. **One unreconciled
-   difference is on the item rather than smoothed: the triage said 9 not-tenant, this reading says 8.**
-   Re-measure rather than trusting either if a later part needs it exactly.
-6. **`#k2vd9`'s QUESTION IS WITH HIM AND NOTHING IS TO BE BUILT OR RESEARCHED BEFORE HER ANSWER.** One
-   question to the accountant, drafted on the item verbatim. The public sources were searched and do not
-   carry the column layout; the Excel template is only downloadable from inside the Revenue Department's
-   logged-in system, and the manual is Thai.
-7. **WHEN YOU FILE AN ITEM FOR WORK ALREADY IN FLIGHT, NOTE WHO WILL TICK IT.** `#admsq` was filed on
-   `backlog` **after** its stream had branched, so the item was not on that branch and its brief forbade
-   adding it — **a merged PR with its item still open.** It was ticked afterwards. **Verify that rather
-   than assuming it**; the shape recurs whenever the planner files and briefs in the same batch.
-8. **THE HUSK AND THE HELD FOLDERS.** `planner-handover-753` cannot be cleared (above), and **this
-   edition's own branch will become the second one**. `tenancy-worker-shelter-header` is held by a stray
-   dev server on 3002; `done --stop-servers` clears it. **Offer once per batch; never carry it as an
-   owed planner item.**
-
-**Do NOT re-ask him about:** **a release (asked and declined 2026-11-16 — *"Not yet"*)**; the
-cross-shelter operator (*"Yes, me"*); the microchip key (*"Across all shelters"*); `#pl7aq`'s launch
-date; `#dqgy8`'s five answers; `#uatwk`'s release-merge decision; `#7bd5u`'s quiet run (**offered twice
-and now briefed**); `#rqv5c`, `#aaqtl`, `#kxksr`, `#mzu7v`, `#z04wr`, `#civwx`, `#8dfud`, `#j4m8w`,
-`#8t3rk`, `#00e3u`, `#k2vrj`, `#x5tbv`; the product name or which TLD; the adopter-portal exception;
-`test-plan` being advisory; merging a green PR; **or anything on `753`'s, `752`'s, `751`'s, `750`'s,
-`749`'s and `748`'s do-not-re-ask lists.**
+1. **MEASURE THIS PLAN'S REMAINING STREAMS.** Three are above with their figures. **`nightly-lint-reporting`
+   (band 130–170k) was set up and its session opened; `tenancy-localhost-shelter` (170–210k) produced
+   nothing and is `unmeasured`.** **Do not re-read the three given here and do not count them twice.**
+2. **`#lhdr7` IS THE WHOLE PROGRAMME'S BLOCKER AND ITS BRIEF IS ALREADY WRITTEN.** Folder
+   `Animal_Shelter_tenancy-localhost-shelter`, port 3002. **Re-read the brief rather than rewriting it**, and
+   check `gh pr list --state all --head claude/tenancy-localhost-shelter` before assuming it is still untouched.
+3. **THEN PART 5 AGAIN, AND READ PR #1635's DECISION FILE FIRST**
+   (`docs/decisions/2026-11-16-tenancy-part5-policies.md`). The stamping is done, the `anon` grant is done,
+   the two public views are scoped, the canary sends a real header. **What is left is the policies themselves
+   plus the `docs/release-procedure.md` §5 line, which was deliverable 7 and did not ship.**
+4. **RESOLVE THE PART 7 INVERSION** described above before briefing either side of it.
+5. **`#n4rpt` IS THE ONE STREAM IN FLIGHT** and its diagnosis half is in its brief. **`0 flagged 0 stale` is
+   the expected nightly state; ANY flagged table is new and is a finding.**
+6. **`gh pr list --state open` BEFORE ANY `worktree.mjs new`.** PR #1634 is why.
+7. **CHECK WHETHER `done` CLEARS THIS EDITION'S OWN BRANCH.** PR #1636 fixed the squash-merged husk and this
+   handover's branch is the next test of it. **If it refuses, that is the fix not firing and it is a finding.**
