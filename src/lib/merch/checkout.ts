@@ -1,5 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { MAX_QTY, type CartLine } from "./shop";
 
 export type PlaceOrderInput = {
@@ -32,7 +33,9 @@ export type PlaceOrderResult = { ok: true; orderId: string } | { ok: false; erro
  * figure is the fault this table exists to remove. Callers turn the throw into "overseas not available right now".
  */
 export async function loadRates(): Promise<Record<string, number>> {
-  const { data, error } = await createAdminClient().from("merch_exchange_rates").select("currency, thb_per_unit");
+  const shelterId = await actingShelterId();
+  if (!shelterId) return {};
+  const { data, error } = await createAdminClient().from("merch_exchange_rates").select("currency, thb_per_unit").eq("shelter_id", shelterId);
   if (error) throw new Error(`Merchandise: could not read the exchange rates: ${error.message}`);
   return Object.fromEntries((data ?? []).map((r) => [r.currency as string, Number(r.thb_per_unit)]));
 }
@@ -113,12 +116,15 @@ export type OrderView = {
  */
 export async function loadOrderView(id: string): Promise<OrderView | null> {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return null;
+  const shelterId = await actingShelterId();
+  if (!shelterId) return null;
   const db = createAdminClient();
   const { data, error } = await db
     .from("merch_orders")
     .select(
       "order_no, region, currency, exchange_rate, subtotal_thb, postage_thb, total_thb, total_charged, payment_method, payment_state, created_at, parts:merch_order_parts(id, fulfilment, status, carrier, tracking_number, items:merch_order_items(product_name, size, colour, quantity, unit_price_thb))",
     )
+    .eq("shelter_id", shelterId)
     .eq("id", id)
     .maybeSingle<OrderView>();
   if (error) throw new Error(`Merchandise: could not read the order: ${error.message}`);

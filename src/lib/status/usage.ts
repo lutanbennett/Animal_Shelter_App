@@ -1,5 +1,6 @@
 import { getAppEnv } from "@/lib/app-env";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { type Runtime, renderedBy } from "./runtime";
 import { type CheckOutcome, type CheckResult, cached, runCheck } from "./run";
 
@@ -20,7 +21,7 @@ export function parsePeriod(value: string | string[] | undefined): UsagePeriod {
 const sinceIso = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
 
 /** Rows in a table whose timestamp column falls in the period; head-only, no rows travel. */
-async function countSince(table: string, column: string, since: string, status?: string): Promise<number> {
+async function countSince(shelterId: string, table: string, column: string, since: string, status?: string): Promise<number> {
   let q = createAdminClient()
     .from(table)
     .select("id", { count: "exact", head: true })
@@ -40,7 +41,7 @@ export type SignInFacts = { signedIn: number; accounts: number };
  * isn't exposed to the API, so this is active people, not a count of
  * sign-ins.
  */
-export async function countSignIns(days: number): Promise<CheckOutcome<SignInFacts>> {
+export async function countSignIns(shelterId: string, days: number): Promise<CheckOutcome<SignInFacts>> {
   const since = Date.now() - days * 86_400_000;
   const admin = createAdminClient();
   let signedIn = 0;
@@ -59,13 +60,13 @@ export async function countSignIns(days: number): Promise<CheckOutcome<SignInFac
 
 export type RecordFacts = { residents: number; clinicVisits: number; weights: number; maintenanceJobs: number };
 
-export async function countRecords(days: number): Promise<CheckOutcome<RecordFacts>> {
+export async function countRecords(shelterId: string, days: number): Promise<CheckOutcome<RecordFacts>> {
   const since = sinceIso(days);
   const [residents, clinicVisits, weights, maintenanceJobs] = await Promise.all([
-    countSince("residents", "created_at", since),
-    countSince("clinic_visits", "created_at", since),
-    countSince("weight", "created_at", since),
-    countSince("maintenance", "created_at", since),
+    countSince(shelterId, "residents", "created_at", since),
+    countSince(shelterId, "clinic_visits", "created_at", since),
+    countSince(shelterId, "weight", "created_at", since),
+    countSince(shelterId, "maintenance", "created_at", since),
   ]);
   return { state: "ok", facts: { residents, clinicVisits, weights, maintenanceJobs } };
 }
@@ -77,13 +78,13 @@ export type UploadFacts = { total: number };
  * (attachments, which also holds blood-test and procedure files),
  * maintenance and project photos, and the website's gallery.
  */
-export async function countUploads(days: number): Promise<CheckOutcome<UploadFacts>> {
+export async function countUploads(shelterId: string, days: number): Promise<CheckOutcome<UploadFacts>> {
   const since = sinceIso(days);
   const counts = await Promise.all([
-    countSince("attachments", "uploaded_at", since),
-    countSince("maintenance_photos", "uploaded_at", since),
-    countSince("project_photos", "uploaded_at", since),
-    countSince("site_content_photos", "created_at", since),
+    countSince(shelterId, "attachments", "uploaded_at", since),
+    countSince(shelterId, "maintenance_photos", "uploaded_at", since),
+    countSince(shelterId, "project_photos", "uploaded_at", since),
+    countSince(shelterId, "site_content_photos", "created_at", since),
   ]);
   return { state: "ok", facts: { total: counts.reduce((a, b) => a + b, 0) } };
 }
@@ -91,12 +92,12 @@ export async function countUploads(days: number): Promise<CheckOutcome<UploadFac
 /** `unmatched` and `refused` are the could-not-help rows; Settings → Assistant log lists them. */
 export type AssistantFacts = { requests: number; unmatched: number; refused: number };
 
-export async function countAssistantRequests(days: number): Promise<CheckOutcome<AssistantFacts>> {
+export async function countAssistantRequests(shelterId: string, days: number): Promise<CheckOutcome<AssistantFacts>> {
   const since = sinceIso(days);
   const [requests, unmatched, refused] = await Promise.all([
-    countSince("assistant_actions", "created_at", since),
-    countSince("assistant_actions", "created_at", since, "unmatched"),
-    countSince("assistant_actions", "created_at", since, "refused"),
+    countSince(shelterId, "assistant_actions", "created_at", since),
+    countSince(shelterId, "assistant_actions", "created_at", since, "unmatched"),
+    countSince(shelterId, "assistant_actions", "created_at", since, "refused"),
   ]);
   return { state: "ok", facts: { requests, unmatched, refused } };
 }
@@ -203,11 +204,14 @@ export type UsageReport = {
 
 export function getUsageReport(days: UsagePeriod): Promise<UsageReport> {
   return cached(`usage:${days}`, async () => {
+    // Never cached across shelters: the key below carries the shelter, and no shelter means no counts.
+    const shelterId = await actingShelterId();
+    if (!shelterId) throw new Error("no shelter for this request");
     const [signIns, records, uploads, assistant, visitors] = await Promise.all([
-      runCheck(() => countSignIns(days)),
-      runCheck(() => countRecords(days)),
-      runCheck(() => countUploads(days)),
-      runCheck(() => countAssistantRequests(days)),
+      runCheck(() => countSignIns(shelterId, days)),
+      runCheck(() => countRecords(shelterId, days)),
+      runCheck(() => countUploads(shelterId, days)),
+      runCheck(() => countAssistantRequests(shelterId, days)),
       runCheck(() => countVisitors(days)),
     ]);
     return { days, signIns, records, uploads, assistant, visitors };

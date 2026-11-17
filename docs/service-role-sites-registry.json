@@ -18,38 +18,38 @@
     },
     {
       "id": "src/app/admin/security/actions.ts#givableRole",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads roles by key to decide whether a role may be given; role keys are unique per shelter only, so the read must carry the shelter."
+      "classification": "filtered",
+      "reason": "Roles read inside the acting shelter (.eq shelter_id from actingShelterId()); the role it returns carries that shelter and is stamped on every user_roles write."
     },
     {
       "id": "src/app/admin/security/actions.ts#createUser",
-      "classification": "needs-shelter-filter",
-      "reason": "Creates an auth user and its role row; the new login must be created inside the acting admin's shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#setUserName",
-      "classification": "needs-shelter-filter",
-      "reason": "Writes a name on an auth user id from the request; must refuse a user of another shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#approveAccessRequest",
-      "classification": "needs-shelter-filter",
-      "reason": "Approves an access request and creates the login; request and new user must both belong to the acting admin's shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#updateUserRole",
-      "classification": "needs-shelter-filter",
-      "reason": "Changes the main role of a user id from the request; target user and role must both be in the acting shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#addExtraRole",
-      "classification": "needs-shelter-filter",
-      "reason": "Adds a user_roles row for a user and role from the request; both must be in the acting shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#removeExtraRole",
-      "classification": "needs-shelter-filter",
-      "reason": "Deletes a user_roles row; must be limited to the acting shelter's users and roles."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#loadDoctorLogin",
@@ -58,43 +58,43 @@
     },
     {
       "id": "src/app/admin/security/actions.ts#unlinkDoctor",
-      "classification": "needs-shelter-filter",
-      "reason": "Clears doctors.user_id for a doctor id from the request; must refuse another shelter's doctor."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#issueTemporaryPassword",
-      "classification": "needs-shelter-filter",
-      "reason": "Sets a password on an auth user id from the request; must refuse a user of another shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#archiveUser",
-      "classification": "needs-shelter-filter",
-      "reason": "Archives a user's user_roles rows and bans the login; target must be in the acting shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#restoreUser",
-      "classification": "needs-shelter-filter",
-      "reason": "Restores a user's user_roles rows; target must be in the acting shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#deleteUser",
-      "classification": "needs-shelter-filter",
-      "reason": "Deletes an auth user; target must be in the acting shelter (the most destructive site in the file)."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#dismissAccessRequest",
-      "classification": "needs-shelter-filter",
-      "reason": "Dismisses an access request and archives its user_roles; request must be in the acting shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#resetTwoStep",
-      "classification": "needs-shelter-filter",
-      "reason": "Removes another login's two-step factors; target must be in the acting shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#allowTwoStepSetup",
-      "classification": "needs-shelter-filter",
-      "reason": "Marks another login as allowed to set up two-step; target must be in the acting shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/page.tsx#SecurityPage",
@@ -223,13 +223,13 @@
     },
     {
       "id": "src/lib/auth/held-roles.ts#loadHeldRoleKeys",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads user_roles with roles(key) for user ids the caller names; ids and roles must be limited to the acting shelter."
+      "classification": "filtered",
+      "reason": "Reads user_roles for the acting shelter only, .eq(\"shelter_id\", …) from actingShelterId(); no shelter means no rows."
     },
     {
       "id": "src/lib/auth/held-roles.ts#loadHeldRoles",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads user_roles with roles(key) for user ids the caller names; ids and roles must be limited to the acting shelter."
+      "classification": "filtered",
+      "reason": "Reads user_roles for the acting shelter only, .eq(\"shelter_id\", …) from actingShelterId(); no shelter means no rows."
     },
     {
       "id": "src/lib/clinics/calendar-import.ts#loadRefs",
@@ -308,23 +308,23 @@
     },
     {
       "id": "src/lib/home/roles.ts#loadRoleCards",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads roles, role_cards and role_groups by role key or group id for the person's own home; keys are unique per shelter only."
+      "classification": "filtered",
+      "reason": "roles and role_groups read inside the acting shelter (.eq shelter_id from actingShelterId()); no shelter returns nothing."
     },
     {
       "id": "src/lib/home/roles.ts#loadGroup",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads roles, role_cards and role_groups by role key or group id for the person's own home; keys are unique per shelter only."
+      "classification": "filtered",
+      "reason": "roles and role_groups read inside the acting shelter (.eq shelter_id from actingShelterId()); no shelter returns nothing."
     },
     {
       "id": "src/lib/menu/show-menu.ts#(module level)",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads roles.show_menu by role key; keys are unique per shelter only, so another shelter's role of the same name could answer."
+      "classification": "filtered",
+      "reason": "roles read for the acting shelter only (.eq shelter_id from actingShelterId()); no shelter keeps the menu."
     },
     {
       "id": "src/lib/merch/checkout.ts#loadRates",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads merch_exchange_rates, a staff-edited per-shelter table."
+      "classification": "filtered",
+      "reason": "Rates read for the acting shelter only (.eq shelter_id from actingShelterId())."
     },
     {
       "id": "src/lib/merch/checkout.ts#placeOrder",
@@ -333,8 +333,8 @@
     },
     {
       "id": "src/lib/merch/checkout.ts#loadOrderView",
-      "classification": "needs-shelter-filter",
-      "reason": "Public merchandise shop: places and reads orders (merch_orders, place_merch_order). Orders are shelter data and the shop is public, so the shelter must come from the request."
+      "classification": "filtered",
+      "reason": "Order read only inside the acting shelter (.eq shelter_id from actingShelterId())."
     },
     {
       "id": "src/lib/merch/supplier-email.ts#runSupplierEmails",
@@ -343,38 +343,38 @@
     },
     {
       "id": "src/lib/status/access-requests.ts#checkAccessRequests",
-      "classification": "needs-shelter-filter",
-      "reason": "Counts waiting access requests for the nav; requests are per-shelter."
+      "classification": "cross-shelter",
+      "reason": "Counts logins that hold no role yet. An auth account with no user_roles row belongs to no shelter, so there is no shelter to filter by; the page showing the count is gated by a card. Revisit when access requests carry a shelter."
     },
     {
       "id": "src/lib/status/alerts.ts#adminEmails",
-      "classification": "unclassified",
-      "reason": "Status alert mail and its run log. Whether checks, recipients and runs belong to one platform operator or to each shelter depends on whether Part 5 models a platform operator separately from a shelter admin; not decidable from the code."
+      "classification": "cross-shelter",
+      "reason": "Installation monitoring: checkAlerts reads Pi/Worker health and mails the admins; its run log and test requests are platform tables (status_alert_checks/runs/test_requests take no shelter_id, 0392). Deliberately cross-shelter, measured by reachability in docs/decisions/2026-11-17-tenancy-part5-policies.md question 2."
     },
     {
       "id": "src/lib/status/alerts.ts#recordRun",
-      "classification": "unclassified",
-      "reason": "Status alert mail and its run log. Whether checks, recipients and runs belong to one platform operator or to each shelter depends on whether Part 5 models a platform operator separately from a shelter admin; not decidable from the code."
+      "classification": "cross-shelter",
+      "reason": "Installation monitoring: checkAlerts reads Pi/Worker health and mails the admins; its run log and test requests are platform tables (status_alert_checks/runs/test_requests take no shelter_id, 0392). Deliberately cross-shelter, measured by reachability in docs/decisions/2026-11-17-tenancy-part5-policies.md question 2."
     },
     {
       "id": "src/lib/status/alerts.ts#runStatusAlerts",
-      "classification": "unclassified",
-      "reason": "Status alert mail and its run log. Whether checks, recipients and runs belong to one platform operator or to each shelter depends on whether Part 5 models a platform operator separately from a shelter admin; not decidable from the code."
+      "classification": "cross-shelter",
+      "reason": "Installation monitoring: checkAlerts reads Pi/Worker health and mails the admins; its run log and test requests are platform tables (status_alert_checks/runs/test_requests take no shelter_id, 0392). Deliberately cross-shelter, measured by reachability in docs/decisions/2026-11-17-tenancy-part5-policies.md question 2."
     },
     {
       "id": "src/lib/status/alerts.ts#requestTestAlert",
-      "classification": "unclassified",
-      "reason": "Status alert mail and its run log. Whether checks, recipients and runs belong to one platform operator or to each shelter depends on whether Part 5 models a platform operator separately from a shelter admin; not decidable from the code."
+      "classification": "cross-shelter",
+      "reason": "Installation monitoring: checkAlerts reads Pi/Worker health and mails the admins; its run log and test requests are platform tables (status_alert_checks/runs/test_requests take no shelter_id, 0392). Deliberately cross-shelter, measured by reachability in docs/decisions/2026-11-17-tenancy-part5-policies.md question 2."
     },
     {
       "id": "src/lib/status/alerts.ts#processTestRequests",
-      "classification": "unclassified",
-      "reason": "Status alert mail and its run log. Whether checks, recipients and runs belong to one platform operator or to each shelter depends on whether Part 5 models a platform operator separately from a shelter admin; not decidable from the code."
+      "classification": "cross-shelter",
+      "reason": "Installation monitoring: checkAlerts reads Pi/Worker health and mails the admins; its run log and test requests are platform tables (status_alert_checks/runs/test_requests take no shelter_id, 0392). Deliberately cross-shelter, measured by reachability in docs/decisions/2026-11-17-tenancy-part5-policies.md question 2."
     },
     {
       "id": "src/lib/status/alerts.ts#checkAlerts",
-      "classification": "unclassified",
-      "reason": "Status alert mail and its run log. Whether checks, recipients and runs belong to one platform operator or to each shelter depends on whether Part 5 models a platform operator separately from a shelter admin; not decidable from the code."
+      "classification": "cross-shelter",
+      "reason": "Installation monitoring: checkAlerts reads Pi/Worker health and mails the admins; its run log and test requests are platform tables (status_alert_checks/runs/test_requests take no shelter_id, 0392). Deliberately cross-shelter, measured by reachability in docs/decisions/2026-11-17-tenancy-part5-policies.md question 2."
     },
     {
       "id": "src/lib/status/health.ts#checkDatabase",
@@ -398,13 +398,18 @@
     },
     {
       "id": "src/lib/status/usage.ts#countSince",
-      "classification": "unclassified",
-      "reason": "Counts rows and sign-ins across the whole database for /admin/status. Platform monitoring if the page is for the platform operator, a tenant leak if for shelter admins; same open question as the alerts."
+      "classification": "filtered",
+      "reason": "Counts only the acting shelter: every count and the sign-in list carry .eq(\"shelter_id\", …) from actingShelterId(), and the report cache is keyed by shelter. Was a confirmed tenant leak behind the system.status card (#1645)."
     },
     {
       "id": "src/lib/status/usage.ts#countSignIns",
-      "classification": "unclassified",
-      "reason": "Counts rows and sign-ins across the whole database for /admin/status. Platform monitoring if the page is for the platform operator, a tenant leak if for shelter admins; same open question as the alerts."
+      "classification": "filtered",
+      "reason": "Counts only the acting shelter: every count and the sign-in list carry .eq(\"shelter_id\", …) from actingShelterId(), and the report cache is keyed by shelter. Was a confirmed tenant leak behind the system.status card (#1645)."
+    },
+    {
+      "id": "src/app/admin/security/actions.ts#userInActingShelter",
+      "classification": "filtered",
+      "reason": "Reads the target login's user_roles rows and compares their shelter_id with the acting shelter (actingShelterId()); no shelter refuses."
     }
   ]
 }

@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { loadPermissions } from "@/lib/permissions/load";
 
 /**
@@ -17,7 +18,9 @@ export const showMenuForLogin = cache(async (): Promise<boolean> => {
   const perms = await loadPermissions();
   if (!perms) return true;
   if (perms.isAdmin) return true;
-  const { data, error } = await createAdminClient().from("roles").select("show_menu").in("key", [...perms.roles]);
+  const shelterId = await actingShelterId();
+  if (!shelterId) return true; // no shelter, no rows: keep the menu, the safe state
+  const { data, error } = await createAdminClient().from("roles").select("show_menu").eq("shelter_id", shelterId).in("key", [...perms.roles]);
   if (error || !data || data.length === 0) return true;
   return data.some((r) => r.show_menu !== false);
 });
