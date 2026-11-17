@@ -344,7 +344,7 @@ never a figure.
 
 | scale | band |
 |---|---|
-| Floor, before any work | **~86–89k, measured 2026-11-15 across two complete sets (nine streams)** — re-measure, never carry forward |
+| Floor, before any work | **~86–90k, measured 2026-11-17 across two complete sets in one day (nine streams)** — re-measure, never carry forward |
 | **Ordinary well-briefed stream — the default** | **146–175k** |
 | Quick win (1–3 files, answer already on the item) | 110–170k |
 | Routing into surfaces that already exist | 120–165k |
