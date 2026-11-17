@@ -52,6 +52,10 @@
       "reason": "The authenticator issuer is stored inside every enrolled person's app; changing it does not migrate those entries, so it stays as is (decision 2026-11-17-per-shelter-naming)."
     },
     {
+      "file": "src/lib/clinics/calendar-notice.test.mjs",
+      "reason": "Test asserting Lanna's default short name reproduces the old calendar notice text."
+    },
+    {
       "file": "src/lib/donations/issuer.ts",
       "reason": "Receipt issuer details belong to shelters.receipt_issuers (0395, Part 7); out of the naming group."
     },
