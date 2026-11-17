@@ -1,3 +1,4 @@
+import { driveRootFolderId } from "@/lib/shelter-settings";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
@@ -69,7 +70,7 @@ async function handlePost(request: Request, { params }: { params: Promise<{ id: 
   const outing = outings?.[0];
   if (!outing) return NextResponse.json({ error: (await getT()).t.uploads.errors.visitNotFound }, { status: 404 });
 
-  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  const rootId = await driveRootFolderId();
   if (!rootId) throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured.");
   const drive = getDriveClient();
   const outreachId = await findOrCreateFolder(drive, rootId, OUTREACH_FOLDER);

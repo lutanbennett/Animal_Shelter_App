@@ -1,5 +1,6 @@
 "use server";
 
+import { driveRootFolderId } from "@/lib/shelter-settings";
 import { refresh, revalidatePath } from "next/cache";
 import { runWriteAction, type ActionRefusal, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
@@ -539,7 +540,7 @@ export async function uploadFriendLogo(
       return refuse(t.uploads.notReadable(file.name, formatNames(WEBSITE_IMAGE_MIME_TYPES)));
     }
 
-    const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+    const rootId = await driveRootFolderId();
     if (!rootId) return refuse(w.driveNotConfigured);
 
     const current = await friendContactId(supabase, id);

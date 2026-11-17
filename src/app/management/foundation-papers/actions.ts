@@ -1,5 +1,6 @@
 "use server";
 
+import { driveRootFolderId } from "@/lib/shelter-settings";
 import { revalidatePath } from "next/cache";
 import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
@@ -58,7 +59,7 @@ export async function fileFoundationPaper(formData: FormData): Promise<ActionRes
     const mimeType = await checkFileSignature(file, ACCEPTED);
     if (!mimeType) return { ok: false, error: e.unsupportedFileType };
 
-    const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+    const rootId = await driveRootFolderId();
     if (!rootId) return { ok: false, error: e.driveNotConfigured };
 
     let fileId: string;

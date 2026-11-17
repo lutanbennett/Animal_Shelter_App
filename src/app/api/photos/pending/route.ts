@@ -1,3 +1,4 @@
+import { driveRootFolderId } from "@/lib/shelter-settings";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
@@ -81,7 +82,7 @@ async function handlePost(request: Request) {
     folderName = enclosureName;
   }
 
-  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  const rootId = await driveRootFolderId();
   if (!rootId) throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured.");
   const drive = getDriveClient();
   const holdingId = await findOrCreateFolder(drive, rootId, HOLDING_FOLDER);

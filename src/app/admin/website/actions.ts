@@ -1,5 +1,6 @@
 "use server";
 
+import { driveRootFolderId } from "@/lib/shelter-settings";
 import { revalidatePath } from "next/cache";
 import {
   runWriteAction,
@@ -521,7 +522,7 @@ async function uploadToWebsiteFolder(file: File) {
     throw new Error(t.uploads.notReadable(file.name, formatNames(WEBSITE_IMAGE_MIME_TYPES)));
   }
 
-  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  const rootId = await driveRootFolderId();
   if (!rootId) throw new Error(t.admin.website.errors.driveNotConfigured);
 
   const drive = getDriveClient();

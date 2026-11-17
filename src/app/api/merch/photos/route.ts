@@ -1,3 +1,4 @@
+import { driveRootFolderId } from "@/lib/shelter-settings";
 import { NextResponse } from "next/server";
 import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
@@ -40,7 +41,7 @@ async function handlePost(request: Request) {
     return NextResponse.json({ error: t.uploads.notReadable(file.name, formatNames(ALLOWED_MIME_TYPES)) }, { status: 400 });
   }
 
-  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  const rootId = await driveRootFolderId();
   if (!rootId) throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured.");
   const drive = getDriveClient();
   const folderId = await findOrCreateFolder(drive, rootId, "Merch");

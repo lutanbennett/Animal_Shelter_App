@@ -59,6 +59,7 @@ const eslintConfig = defineConfig([
       "src/lib/clinics/calendar-poll.ts",
       "src/lib/clinics/calendar-import.ts",
       "src/lib/status/alerts.ts",
+      "src/lib/shelter-settings.ts",
       "src/lib/status/health.ts",
       "src/lib/status/usage.ts",
       "src/app/api/residents/*/videos/start/route.ts",
