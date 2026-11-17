@@ -91,4 +91,5 @@ check_migrations || exit 1
 check_backlog_branch || exit 1
 check_backlog || exit 1
 check_backlog_ids || exit 1
+check_backlog_titles || exit 1
 exit 0
