@@ -31,7 +31,7 @@ everything after them, and is lettered so it cannot be confused with this file's
   other tool call.**
 - **(d)** The list, first in your reply.
 - **(e)** **Only now**: the PR bodies, the backlog filing, the bands, `.plan-day.md`, **and clearing
-  the finished worktrees of the batch that just merged** — and, **on the day's FIRST batch only, the
+  the finished worktrees of the batch that just merged** (**first, one read per merged PR: does it carry a `stream-usage:` comment? A missing one means read that session's transcript with `search_session_transcripts`/`list_events` BEFORE its worktree is cleared, or record it as already gone; it is part of this step, never a reason to clear or measure earlier**, `docs/decisions/2026-11-17-usage-comment-check-before-clearing.md`) — and, **on the day's FIRST batch only, the
   measurement of the previous day's streams** (step 3).
 
 **BETWEEN THE SYNC AND (a), THE ONLY READS ALLOWED ARE THREE CHEAP FACTS:** has the current batch merged

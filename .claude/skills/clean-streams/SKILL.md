@@ -148,6 +148,7 @@ confused with folders `done` handled. Count app-cut worktrees with `git worktree
   ```
 
   - `MERGED` → safe leftover; propose it.
+    **Before proposing it, check the merged PR carries a `stream-usage:` comment** (`gh pr view <n> --json comments`). If not, read that session's transcript first (`search_session_transcripts`, `list_events`), because clearing may destroy it (`docs/decisions/2026-11-17-usage-comment-check-before-clearing.md`).
   - `OPEN` → not finished, whatever `ahead` says; leave it and say so.
     If a slug was reused, the list holds several PRs; any `OPEN` one wins.
   - `CLOSED` (not merged) or **no PR at all** → do not propose. With no
