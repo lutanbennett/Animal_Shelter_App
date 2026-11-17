@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { actingShelterId } from "@/lib/supabase/acting-shelter";
-import { FALLBACK_SHELTER_KEY, decideCredentials, type DriveCredentials, type DriveCredentialRow } from "./shelter-drive-decide";
+import { FALLBACK_SHELTER_KEY, decideCredentials, fromEnv, type DriveCredentials, type DriveCredentialRow } from "./shelter-drive-decide";
 export { FALLBACK_SHELTER_KEY, credentialsFromRow, decideCredentials, type DriveCredentials, type DriveCredentialRow } from "./shelter-drive-decide";
 
 /**

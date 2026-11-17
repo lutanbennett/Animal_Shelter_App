@@ -19,7 +19,7 @@ export type DriveCredentialRow = {
   refresh_token_enc: string | null;
 };
 
-function fromEnv(): DriveCredentials {
+export function fromEnv(): DriveCredentials {
   const need = (name: string) => {
     const v = process.env[name];
     if (!v) throw new DriveCredentialsError(`${name} is not configured.`);
