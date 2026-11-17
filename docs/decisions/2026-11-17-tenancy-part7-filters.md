@@ -1,6 +1,8 @@
 # Part 7 second half, first slice: shelter filters on service-role calls (#ps6ms)
 
-**Status: partly done. `#ps6ms` stays open: 57 of the 81 recorded calls are still `needs-shelter-filter`.**
+**Status: partly done. `#ps6ms` stays open: see the registry for the sites still `needs-shelter-filter` (the Security page, Who does what, the adopter portal, the reels and video routes, storage-bucket sites, calendar import and sync, `openSetupForNewAdmin`, `loadDoctorLogin`, recent changes).**
+
+Second commit set: menu, home roles, merch rates and order view filtered; the Security actions guard the target login with `userInActingShelter` and stamp `shelter_id` on every `user_roles` write; access requests recorded cross-shelter (a login with no role belongs to no shelter).
 
 ## Question 1: does passing `shelterId` to `createAdminClient()` filter anything?
 

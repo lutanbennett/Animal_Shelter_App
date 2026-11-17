@@ -121,7 +121,7 @@ needs two cards together, put both on one row. Do not name `staff` (retired, `01
 
 ## 7. Documentation
 
-- [ ] Backlog item ticked in `docs/backlog.md` **on this branch**  — pending: #ps6ms stays open, 57 sites still unfiltered
+- [ ] Backlog item ticked in `docs/backlog.md` **on this branch**  — pending: #ps6ms stays open, sites remain unfiltered (see the registry)
 - [x] Non-obvious design choices added as a new file in docs/decisions/
 - [x] `README.md` still accurate
 - [x] Non-obvious design choices added as a new file in docs/decisions/

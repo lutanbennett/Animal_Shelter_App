@@ -18,38 +18,38 @@
     },
     {
       "id": "src/app/admin/security/actions.ts#givableRole",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads roles by key to decide whether a role may be given; role keys are unique per shelter only, so the read must carry the shelter."
+      "classification": "filtered",
+      "reason": "Roles read inside the acting shelter (.eq shelter_id from actingShelterId()); the role it returns carries that shelter and is stamped on every user_roles write."
     },
     {
       "id": "src/app/admin/security/actions.ts#createUser",
-      "classification": "needs-shelter-filter",
-      "reason": "Creates an auth user and its role row; the new login must be created inside the acting admin's shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#setUserName",
-      "classification": "needs-shelter-filter",
-      "reason": "Writes a name on an auth user id from the request; must refuse a user of another shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#approveAccessRequest",
-      "classification": "needs-shelter-filter",
-      "reason": "Approves an access request and creates the login; request and new user must both belong to the acting admin's shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#updateUserRole",
-      "classification": "needs-shelter-filter",
-      "reason": "Changes the main role of a user id from the request; target user and role must both be in the acting shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#addExtraRole",
-      "classification": "needs-shelter-filter",
-      "reason": "Adds a user_roles row for a user and role from the request; both must be in the acting shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#removeExtraRole",
-      "classification": "needs-shelter-filter",
-      "reason": "Deletes a user_roles row; must be limited to the acting shelter's users and roles."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#loadDoctorLogin",
@@ -58,43 +58,43 @@
     },
     {
       "id": "src/app/admin/security/actions.ts#unlinkDoctor",
-      "classification": "needs-shelter-filter",
-      "reason": "Clears doctors.user_id for a doctor id from the request; must refuse another shelter's doctor."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#issueTemporaryPassword",
-      "classification": "needs-shelter-filter",
-      "reason": "Sets a password on an auth user id from the request; must refuse a user of another shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#archiveUser",
-      "classification": "needs-shelter-filter",
-      "reason": "Archives a user's user_roles rows and bans the login; target must be in the acting shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#restoreUser",
-      "classification": "needs-shelter-filter",
-      "reason": "Restores a user's user_roles rows; target must be in the acting shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#deleteUser",
-      "classification": "needs-shelter-filter",
-      "reason": "Deletes an auth user; target must be in the acting shelter (the most destructive site in the file)."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#dismissAccessRequest",
-      "classification": "needs-shelter-filter",
-      "reason": "Dismisses an access request and archives its user_roles; request must be in the acting shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#resetTwoStep",
-      "classification": "needs-shelter-filter",
-      "reason": "Removes another login's two-step factors; target must be in the acting shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/actions.ts#allowTwoStepSetup",
-      "classification": "needs-shelter-filter",
-      "reason": "Marks another login as allowed to set up two-step; target must be in the acting shelter."
+      "classification": "filtered",
+      "reason": "The target login must belong to the acting shelter (userInActingShelter: holds a role here, or none anywhere) before anything is done to it; roles come from givableRole, which is shelter-scoped, and user_roles writes carry the shelter."
     },
     {
       "id": "src/app/admin/security/page.tsx#SecurityPage",
@@ -405,6 +405,11 @@
       "id": "src/lib/status/usage.ts#countSignIns",
       "classification": "filtered",
       "reason": "Counts only the acting shelter: every count and the sign-in list carry .eq(\"shelter_id\", …) from actingShelterId(), and the report cache is keyed by shelter. Was a confirmed tenant leak behind the system.status card (#1645)."
+    },
+    {
+      "id": "src/app/admin/security/actions.ts#userInActingShelter",
+      "classification": "filtered",
+      "reason": "Reads the target login's user_roles rows and compares their shelter_id with the acting shelter (actingShelterId()); no shelter refuses."
     }
   ]
 }

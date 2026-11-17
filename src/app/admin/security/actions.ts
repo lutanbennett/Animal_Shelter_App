@@ -28,6 +28,7 @@ import { normaliseName, withName } from "@/lib/auth/user-name";
 import { generateTemporaryPassword } from "@/lib/auth/temp-password";
 import { forgetWaitingAccessRequests } from "@/lib/status/access-requests";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { createClient } from "@/lib/supabase/server";
 import { todayIso } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
@@ -98,6 +99,20 @@ async function refuseUnlessAdmin(t: T): Promise<ActionRefusal | null> {
   return null;
 }
 
+/**
+ * Whether a login may be acted on from this shelter: it holds a role here, or holds none anywhere (a new access
+ * request, which belongs to no shelter yet). A login whose roles are all in another shelter is refused as not found.
+ * The service role sees every shelter, so this is the filter (an explicit shelter_id), not RLS.
+ */
+async function userInActingShelter(userId: string): Promise<boolean> {
+  const shelterId = await actingShelterId();
+  if (!shelterId) return false;
+  const { data, error } = await createAdminClient().from("user_roles").select("shelter_id").eq("user_id", userId);
+  if (error) return false;
+  const rows = data ?? [];
+  return rows.length === 0 || rows.some((r) => r.shelter_id === shelterId);
+}
+
 async function isCurrentUser(userId: string) {
   const supabase = await createClient();
   const {
@@ -115,7 +130,7 @@ export type CreateUserState =
   | ActionResult<{ success: string; temporaryPassword: string; email: string }>
   | undefined;
 
-type GivableRole = { id: string; key: string; name: string; nameTh: string | null };
+type GivableRole = { id: string; key: string; name: string; nameTh: string | null; shelterId: string };
 
 /**
  * The role a picker named, if a login may be given it: a live row of `roles`. Read from the
@@ -124,10 +139,12 @@ type GivableRole = { id: string; key: string; name: string; nameTh: string | nul
  * the app (0085). A role that was deleted is simply not found.
  */
 async function givableRole(key: string | null): Promise<GivableRole | null> {
-  if (!key) return null;
+  const shelterId = await actingShelterId();
+  if (!key || !shelterId) return null;
   const { data } = await createAdminClient()
     .from("roles")
     .select("id, key, name, name_th")
+    .eq("shelter_id", shelterId)
     .eq("key", key)
     .maybeSingle();
   if (!data) return null;
@@ -136,6 +153,7 @@ async function givableRole(key: string | null): Promise<GivableRole | null> {
     key: data.key as string,
     name: data.name as string,
     nameTh: (data.name_th as string | null) ?? null,
+    shelterId,
   };
 }
 
@@ -143,7 +161,7 @@ async function givableRole(key: string | null): Promise<GivableRole | null> {
  * The user_roles columns for a role: role_id, which is the whole of it since perm-drop-enum (0181) removed the enum
  * column this once also wrote. docs/decisions/2026-10-11-security-role-picker.md.
  */
-const roleColumns = (role: GivableRole) => ({ role_id: role.id });
+const roleColumns = (role: GivableRole) => ({ role_id: role.id, shelter_id: role.shelterId });
 
 /**
  * Sets a login's MAIN role: changes the one is_main row, or adds it for a login that has none. user_roles is one row per
@@ -243,6 +261,7 @@ export async function setUserName(userId: string, rawName: string, requestId: st
   return runWriteAction("security.setUserName", write(t), await claim("security.setUserName", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
+    if (!(await userInActingShelter(userId))) return refuse(t.admin.security.errors.userNotFound);
 
     const admin = createAdminClient();
     const { data, error: lookupError } = await admin.auth.admin.getUserById(userId);
@@ -270,6 +289,7 @@ export async function approveAccessRequest(userId: string, roleKey: string, requ
   return runWriteAction("security.approveAccessRequest", write(t), await claim("security.approveAccessRequest", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
+    if (!(await userInActingShelter(userId))) return refuse(t.admin.security.errors.userNotFound);
     const role = await givableRole(roleKey);
     if (!role) return refuse(t.admin.security.errors.invalidRole);
 
@@ -289,6 +309,7 @@ export async function updateUserRole(userId: string, roleKey: string, requestId:
   return runWriteAction("security.updateUserRole", write(t), await claim("security.updateUserRole", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
+    if (!(await userInActingShelter(userId))) return refuse(t.admin.security.errors.userNotFound);
     const role = await givableRole(roleKey);
     if (!role) return refuse(t.admin.security.errors.invalidRole);
     if (await isCurrentUser(userId)) return refuse(t.admin.security.errors.cantChangeOwnRole);
@@ -327,6 +348,7 @@ export async function addExtraRole(userId: string, roleKey: string, endsOn: stri
   return runWriteAction("security.addExtraRole", write(t), await claim("security.addExtraRole", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
+    if (!(await userInActingShelter(userId))) return refuse(t.admin.security.errors.userNotFound);
     const role = await givableRole(roleKey);
     if (!role) return refuse(t.admin.security.errors.invalidRole);
     if (role.key === "admin" || role.key === "public_viewer") return refuse(t.admin.security.errors.extraRoleNotAdmin);
@@ -348,7 +370,7 @@ export async function addExtraRole(userId: string, roleKey: string, endsOn: stri
     const { data: { user: grantor } } = await supabase.auth.getUser();
     // upsert on (user_id, role_id): a role removed earlier is a deleted row, so this is normally a plain insert.
     const { error } = await admin.from("user_roles").upsert(
-      { user_id: userId, role_id: role.id, is_main: false, starts_on: null, ends_on: end.date, granted_by: grantor?.id ?? null, archived_at: null },
+      { user_id: userId, role_id: role.id, shelter_id: role.shelterId, is_main: false, starts_on: null, ends_on: end.date, granted_by: grantor?.id ?? null, archived_at: null },
       { onConflict: "user_id,role_id" },
     );
     if (error) return unexpectedFailure("security.addExtraRole", error, t.common.somethingWentWrong);
@@ -363,6 +385,7 @@ export async function removeExtraRole(userId: string, roleKey: string, requestId
   return runWriteAction("security.removeExtraRole", write(t), await claim("security.removeExtraRole", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
+    if (!(await userInActingShelter(userId))) return refuse(t.admin.security.errors.userNotFound);
     const role = await givableRole(roleKey).then((r) => r ?? null);
     const admin = createAdminClient();
     // A role retired since it was given can still be taken off, so look the id up without the live filter.
@@ -514,6 +537,7 @@ export async function unlinkDoctor(userId: string, requestId: string | null): Pr
   return runWriteAction("security.unlinkDoctor", write(t), await claim("security.unlinkDoctor", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
+    if (!(await userInActingShelter(userId))) return refuse(t.admin.security.errors.userNotFound);
 
     const admin = createAdminClient();
     const { error } = await admin.from("doctors").update({ user_id: null }).eq("user_id", userId);
@@ -539,6 +563,7 @@ export async function issueTemporaryPassword(
   return runWriteAction("security.issueTemporaryPassword", write(t), await claim("security.issueTemporaryPassword", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
+    if (!(await userInActingShelter(userId))) return refuse(t.admin.security.errors.userNotFound);
     if (await isCurrentUser(userId)) return refuse(e.cantResetOwnPassword);
 
     const temporaryPassword = generateTemporaryPassword();
@@ -573,6 +598,7 @@ export async function archiveUser(userId: string, requestId: string | null): Pro
   return runWriteAction("security.archiveUser", write(t), await claim("security.archiveUser", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
+    if (!(await userInActingShelter(userId))) return refuse(t.admin.security.errors.userNotFound);
     if (await isCurrentUser(userId)) return refuse(t.admin.security.errors.cantArchiveOwnAccount);
 
     const admin = createAdminClient();
@@ -593,6 +619,7 @@ export async function restoreUser(userId: string, requestId: string | null): Pro
   return runWriteAction("security.restoreUser", write(t), await claim("security.restoreUser", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
+    if (!(await userInActingShelter(userId))) return refuse(t.admin.security.errors.userNotFound);
 
     const admin = createAdminClient();
     const { error } = await admin
@@ -623,6 +650,7 @@ export async function deleteUser(userId: string, requestId: string | null): Prom
   return runWriteAction("security.deleteUser", write(t), await claim("security.deleteUser", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
+    if (!(await userInActingShelter(userId))) return refuse(t.admin.security.errors.userNotFound);
     if (await isCurrentUser(userId)) return refuse(e.cantDeleteOwnAccount);
 
     const admin = createAdminClient();
@@ -655,6 +683,7 @@ export async function dismissAccessRequest(userId: string, requestId: string | n
   return runWriteAction("security.dismissAccessRequest", write(t), await claim("security.dismissAccessRequest", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
+    if (!(await userInActingShelter(userId))) return refuse(t.admin.security.errors.userNotFound);
     if (await isCurrentUser(userId)) return refuse(e.cantDeleteOwnAccount);
 
     const admin = createAdminClient();
@@ -691,6 +720,7 @@ export async function resetTwoStep(userId: string, requestId: string | null): Pr
   return runWriteAction("security.resetTwoStep", write(t), await claim("security.resetTwoStep", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
+    if (!(await userInActingShelter(userId))) return refuse(t.admin.security.errors.userNotFound);
 
     const admin = createAdminClient();
     const { data, error } = await admin.auth.admin.mfa.listFactors({ userId });
@@ -733,6 +763,7 @@ export async function allowTwoStepSetup(userId: string, requestId: string | null
   return runWriteAction("security.allowTwoStepSetup", write(t), await claim("security.allowTwoStepSetup", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
+    if (!(await userInActingShelter(userId))) return refuse(t.admin.security.errors.userNotFound);
 
     const admin = createAdminClient();
     const { data, error } = await admin.auth.admin.getUserById(userId);

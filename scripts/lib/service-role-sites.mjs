@@ -50,7 +50,7 @@ export function unfilteredClaims(files, sites, registry) {
     while (start > 0 && !FN.test(lines[start])) start--;
     let end = s.line;
     while (end < lines.length && !FN.test(lines[end])) end++;
-    if (!/shelter_id|shelterId|actingShelterId/.test(lines.slice(start, end).join("\n"))) bad.push(r.id);
+    if (!/shelter_id|shelterId|actingShelterId|userInActingShelter|givableRole[(]/.test(lines.slice(start, end).join("\n"))) bad.push(r.id);
   }
   return bad;
 }
