@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 
 /**
@@ -23,8 +24,13 @@ export function roleName(role: Pick<Role, "key" | "name" | "nameTh">, t: Diction
 /** Names for the refusal: the login's email, else its id. Read with the service role; only an Admin reaches here. */
 export async function holderNames(ids: string[]): Promise<string[]> {
   const admin = createAdminClient();
+  // Only logins holding a role in the acting shelter are named (the service role sees every shelter).
+  const shelterId = await actingShelterId();
+  if (!shelterId) return [];
+  const { data: here } = await admin.from("user_roles").select("user_id").eq("shelter_id", shelterId).in("user_id", ids);
+  const inShelter = new Set((here ?? []).map((r) => r.user_id as string));
   const out: string[] = [];
-  for (const id of ids) {
+  for (const id of ids.filter((i) => inShelter.has(i))) {
     const { data } = await admin.auth.admin.getUserById(id);
     out.push(data.user?.email ?? id);
   }
@@ -32,9 +38,13 @@ export async function holderNames(ids: string[]): Promise<string[]> {
 }
 
 export async function loadRoles(): Promise<Role[]> {
+  // Roles are per-shelter rows: only the acting shelter's, and none when there is no shelter.
+  const shelterId = await actingShelterId();
+  if (!shelterId) return [];
   const { data, error } = await createAdminClient()
     .from("roles")
     .select("id, key, name, name_th, kind")
+    .eq("shelter_id", shelterId)
     .neq("kind", "fixed");
   if (error) throw new Error(`Who does what: ${error.message}`);
   return (data ?? [])

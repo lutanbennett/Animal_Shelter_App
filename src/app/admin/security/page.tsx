@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
-import { accessRequestsAmong, listAllUsers } from "@/lib/auth/access-requests";
+import { accessRequestsAmong, listUsersOfShelter } from "@/lib/auth/access-requests";
 import { requireAdminUser } from "@/lib/auth/require-admin";
 import { TWO_STEP_PATH, SETUP_OPEN_UNTIL, hasTwoStep, isSetupOpen, trustedTotpFactors } from "@/lib/auth/two-step";
 import { userNameOf } from "@/lib/auth/user-name";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { getT } from "@/lib/i18n/get-t";
 import { mustChangePassword } from "@/lib/auth/password-change";
 import { AccessRequests, type AccessRequest } from "./AccessRequests";
@@ -23,20 +24,25 @@ export default async function SecurityPage() {
   const { t } = await getT();
 
   const admin = createAdminClient();
+  // The service role sees every shelter: each read below names the acting shelter itself. No shelter, no rows.
+  const shelterId = await actingShelterId();
+  const noShelter = "00000000-0000-0000-0000-000000000000";
 
   const [authUsersResult, rolesResult, roleOptionsResult, clinicsResult, doctorsResult] = await Promise.all([
-    listAllUsers(admin),
+    listUsersOfShelter(admin, shelterId),
     // roles(key): the role row (0132), so a configured role shows as itself and not as the enum it borrows.
     // Every row, not just the main one: a login may also hold additional roles for a while (0196).
-    admin.from("user_roles").select("user_id, archived_at, is_main, starts_on, ends_on, roles(key)"),
+    admin.from("user_roles").select("user_id, archived_at, is_main, starts_on, ends_on, roles(key)")
+      .eq("shelter_id", shelterId ?? noShelter),
     // Every role, for the pickers: live ones to choose, retired ones to name on a login still holding one.
-    loadRoleOptions(admin),
-    admin.from("clinics").select("id, name").order("name"),
+    loadRoleOptions(admin, shelterId),
+    admin.from("clinics").select("id, name").eq("shelter_id", shelterId ?? noShelter).order("name"),
     // Doctors with the clinics they work at: a doctor login's clinics are its
     // linked doctor's (0125).
     admin
       .from("doctors")
       .select("id, name, user_id, doctor_clinics(clinic_id, active)")
+      .eq("shelter_id", shelterId ?? noShelter)
       .order("name"),
   ]);
 

@@ -33,6 +33,28 @@ export async function listAllUsers(
   }
 }
 
+/**
+ * The logins of ONE shelter: a login holding a role there, plus one holding no role anywhere (an access request, which
+ * belongs to no shelter yet). A login whose roles are all in another shelter is left out. The service role sees every
+ * shelter, so this is the filter (an explicit shelter_id on user_roles), not RLS. A null shelter lists nobody.
+ */
+export async function listUsersOfShelter(
+  admin: SupabaseClient,
+  shelterId: string | null,
+): Promise<{ users: User[]; error?: string }> {
+  if (!shelterId) return { users: [] };
+  const [all, roles] = await Promise.all([listAllUsers(admin), admin.from("user_roles").select("user_id, shelter_id")]);
+  if (all.error) return all;
+  if (roles.error) return { users: [], error: roles.error.message };
+  const anywhere = new Set<string>();
+  const here = new Set<string>();
+  for (const r of roles.data ?? []) {
+    anywhere.add(r.user_id as string);
+    if (r.shelter_id === shelterId) here.add(r.user_id as string);
+  }
+  return { users: all.users.filter((u) => here.has(u.id) || !anywhere.has(u.id)) };
+}
+
 export function accessRequestsAmong<U extends Pick<User, "id">>(
   authUsers: U[],
   roleUserIds: { has(id: string): boolean },

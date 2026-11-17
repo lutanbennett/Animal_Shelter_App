@@ -8,13 +8,13 @@
     },
     {
       "id": "src/app/admin/recent-changes/page.tsx#RecentChangesPage",
-      "classification": "needs-shelter-filter",
-      "reason": "listAllUsers() lists every auth account to name who made each change. With several shelters on one project a Lanna admin sees every shelter's users here (audit_log itself is read through the user's own client, so RLS governs that half). Spike-named site."
+      "classification": "filtered",
+      "reason": "Actor names come from listUsersOfShelter(acting shelter): logins holding a role in the shelter, plus role-less access requests; another shelter's logins are never listed."
     },
     {
       "id": "src/app/admin/security/actions.ts#openSetupForNewAdmin",
-      "classification": "needs-shelter-filter",
-      "reason": "Opens two-step setup for a user id taken from the request; must be limited to users of the acting admin's shelter."
+      "classification": "filtered",
+      "reason": "Refuses unless userInActingShelter(userId): the login holds a role in the acting shelter or none anywhere."
     },
     {
       "id": "src/app/admin/security/actions.ts#givableRole",
@@ -53,8 +53,8 @@
     },
     {
       "id": "src/app/admin/security/actions.ts#loadDoctorLogin",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads the doctor row linked to a login; doctors are shelter data."
+      "classification": "filtered",
+      "reason": "Refuses unless userInActingShelter(userId) before linking a doctor; the doctor reads that follow are by id of a doctor the caller picked from a shelter-filtered list."
     },
     {
       "id": "src/app/admin/security/actions.ts#unlinkDoctor",
@@ -98,8 +98,8 @@
     },
     {
       "id": "src/app/admin/security/page.tsx#SecurityPage",
-      "classification": "needs-shelter-filter",
-      "reason": "Lists every auth user, user_roles row, clinic and doctor to draw Security. The spike-named second site: a Lanna admin would see every shelter's users here."
+      "classification": "filtered",
+      "reason": "Users via listUsersOfShelter; user_roles, clinics, doctors and the role options each carry .eq shelter_id from actingShelterId(); no shelter reads nothing."
     },
     {
       "id": "src/app/admin/security/verify/actions.ts#startTwoStepSetup",
@@ -113,28 +113,28 @@
     },
     {
       "id": "src/app/admin/who-does-what/details/page.tsx#WhoDoesWhatPage",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads and edits roles, role_cards, role_permissions, role_groups and card features; roles are per-shelter rows, so each read must be filtered to the acting shelter."
+      "classification": "filtered",
+      "reason": "Roles, role_cards, role_permissions, role_groups and user_roles reads name the acting shelter (.eq shelter_id from actingShelterId(), or loadRoles(), which does). features and card_features are the shared card catalogue with no shelter_id column, so they are read unfiltered on purpose."
     },
     {
       "id": "src/app/admin/who-does-what/features/page.tsx#WhoDoesWhatFeaturesPage",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads and edits roles, role_cards, role_permissions, role_groups and card features; roles are per-shelter rows, so each read must be filtered to the acting shelter."
+      "classification": "cross-shelter",
+      "reason": "Reads only features and card_features, the shared card catalogue: neither table has a shelter_id column, so there is nothing to filter. Role rows are not read here."
     },
     {
       "id": "src/app/admin/who-does-what/page.tsx#WhoDoesWhatPage",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads and edits roles, role_cards, role_permissions, role_groups and card features; roles are per-shelter rows, so each read must be filtered to the acting shelter."
+      "classification": "filtered",
+      "reason": "Roles, role_cards, role_permissions, role_groups and user_roles reads name the acting shelter (.eq shelter_id from actingShelterId(), or loadRoles(), which does). features and card_features are the shared card catalogue with no shelter_id column, so they are read unfiltered on purpose."
     },
     {
       "id": "src/app/admin/who-does-what/roles.ts#holderNames",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads and edits roles, role_cards, role_permissions, role_groups and card features; roles are per-shelter rows, so each read must be filtered to the acting shelter."
+      "classification": "filtered",
+      "reason": "Roles, role_cards, role_permissions, role_groups and user_roles reads name the acting shelter (.eq shelter_id from actingShelterId(), or loadRoles(), which does). features and card_features are the shared card catalogue with no shelter_id column, so they are read unfiltered on purpose."
     },
     {
       "id": "src/app/admin/who-does-what/roles.ts#loadRoles",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads and edits roles, role_cards, role_permissions, role_groups and card features; roles are per-shelter rows, so each read must be filtered to the acting shelter."
+      "classification": "filtered",
+      "reason": "Roles, role_cards, role_permissions, role_groups and user_roles reads name the acting shelter (.eq shelter_id from actingShelterId(), or loadRoles(), which does). features and card_features are the shared card catalogue with no shelter_id column, so they are read unfiltered on purpose."
     },
     {
       "id": "src/app/adopter-update/actions.ts#sendAdopterUpdate",

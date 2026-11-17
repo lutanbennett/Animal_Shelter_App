@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { loadPermissions } from "@/lib/permissions/load";
 import { ACTIVITIES, type ActivityKey } from "@/lib/permissions/catalogue";
 import { APPROVE_ACTIVITY, approverNames, needsApprover } from "@/lib/permissions/approvers";
@@ -51,16 +52,18 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
   const names = new Map(roles.map((r) => [r.key, roleName(r, t, locale)]));
 
   const admin = createAdminClient();
+  // Role rows are per-shelter: every role read names the acting shelter. features / card_features are the shared card catalogue (no shelter_id).
+  const shelterId = (await actingShelterId()) ?? "00000000-0000-0000-0000-000000000000";
   const [grants, { data: cardRows, error: cardsError }, { data: roleRow }, { data: cellRows }, { data: groupRows, error: groupsError }, { data: featureRows, error: featuresError }, { data: cardFeatureRows, error: cardFeaturesError }] = await Promise.all([
     loadCardGrants(admin),
-    admin.from("role_cards").select("card, position, group_id").eq("role_id", role?.id ?? "").order("position"),
-    admin.from("roles").select("key, name, kind, home_path, show_menu").eq("id", role?.id ?? "").maybeSingle(),
-    admin.from("role_permissions").select("activity, level").eq("role_id", role?.id ?? ""),
-    admin.from("role_groups").select("id, name, name_th, icon").eq("role_id", role?.id ?? "").order("position").order("name"),
+    admin.from("role_cards").select("card, position, group_id").eq("shelter_id", shelterId).eq("role_id", role?.id ?? "").order("position"),
+    admin.from("roles").select("key, name, kind, home_path, show_menu").eq("shelter_id", shelterId).eq("id", role?.id ?? "").maybeSingle(),
+    admin.from("role_permissions").select("activity, level").eq("shelter_id", shelterId).eq("role_id", role?.id ?? ""),
+    admin.from("role_groups").select("id, name, name_th, icon").eq("shelter_id", shelterId).eq("role_id", role?.id ?? "").order("position").order("name"),
     admin.from("features").select("id, name, name_th, position").order("position").order("name"),
     admin.from("card_features").select("card, feature_id"),
   ]);
-  const { count: endedLinks } = await admin.from("user_roles").select("user_id", { count: "exact", head: true }).eq("role_id", role?.id ?? "").not("archived_at", "is", null);
+  const { count: endedLinks } = await admin.from("user_roles").select("user_id", { count: "exact", head: true }).eq("shelter_id", shelterId).eq("role_id", role?.id ?? "").not("archived_at", "is", null);
   const loadError = cardsError ?? groupsError ?? featuresError ?? cardFeaturesError;
   if (loadError) throw new Error(`Who does what: ${loadError.message}`);
   // Features (0255): sections of the Available column. A card with no row, a null feature, or a feature that is gone is Not yet sorted.
@@ -75,6 +78,7 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
   const { data: approverRows, error: approverError } = await admin
     .from("role_permissions")
     .select("activity, level, roles!inner(key, name, name_th)")
+    .eq("shelter_id", shelterId)
     .eq("activity", APPROVE_ACTIVITY)
     .gte("level", 1)
     .returns<{ activity: string; level: number; roles: { key: string; name: string; name_th: string | null } }[]>();
