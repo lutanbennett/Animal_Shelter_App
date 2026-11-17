@@ -20,5 +20,26 @@
     "frequency": "Shared-for-now lookup list. Same gap as bill_kinds.",
     "units": "Shared-for-now lookup list. Same gap as bill_kinds.",
     "group_origins": "Shared-for-now lookup list. Same gap as bill_kinds."
+  },
+  "exportTreatment": {
+    "shelters": "own-row",
+    "status_alert_checks": "none",
+    "status_alert_runs": "none",
+    "status_alert_test_requests": "none",
+    "permission_activities": "all",
+    "card_features": "all",
+    "card_grants": "all",
+    "card_includes": "all",
+    "features": "all",
+    "translatable_fields": "all",
+    "translatable_labels": "all",
+    "bill_kinds": "all",
+    "blood_test_types": "all",
+    "immunization_types": "all",
+    "procedure_types": "all",
+    "frequency": "all",
+    "units": "all",
+    "group_origins": "all",
+    "schema_migrations": "all"
   }
 }
