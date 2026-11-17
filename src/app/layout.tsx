@@ -78,7 +78,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <script dangerouslySetInnerHTML={{ __html: EARLY_SUBMIT_GUARD }} />
         <HydrationMark />
-        <I18nProvider locale={locale} units={units}>
+        <I18nProvider locale={locale} units={units} shelterNames={names}>
           <ConfirmProvider>
           <OfflineBanner />
           <MobileNavProvider>

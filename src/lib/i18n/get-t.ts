@@ -3,6 +3,8 @@ import { getLocale } from "./get-locale";
 import { getDictionary } from "./get-dictionary";
 import { loadUnitList } from "@/lib/unit-list-server";
 import { unitNameMap } from "@/lib/unit-list";
+import { shelterNames } from "@/lib/shelter-settings";
+import { fillShelterNames } from "./shelter-prose";
 
 /**
  * Convenience for server components and server actions: current locale + its dictionary.
@@ -11,7 +13,7 @@ import { unitNameMap } from "@/lib/unit-list";
  */
 export async function getT() {
   const locale = await getLocale();
-  const t = getDictionary(locale);
+  const t = fillShelterNames(getDictionary(locale), await shelterNames());
   const unitNames = unitNameMap(await loadUnitList(), locale);
   return { t: { ...t, enums: { ...t.enums, unitNames } }, locale };
 }

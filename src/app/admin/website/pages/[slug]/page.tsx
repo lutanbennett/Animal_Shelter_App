@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { fillShelterNames } from "@/lib/i18n/shelter-prose";
+import { shelterNames } from "@/lib/shelter-settings";
 import { loadSiteContent } from "@/lib/site/content";
 import { SITE_PAGE_PATHS, isPagePhotoSlug, isSitePageSlug } from "@/lib/site/pages";
 import en from "@/lib/i18n/dictionaries/en";
@@ -117,7 +119,7 @@ export default async function SitePageEditPage(props: PageProps<"/admin/website/
             canPropose={can(perms, "website.propose")}
             // In English whatever language the admin reads the app in: pages are written in
             // English and translated through the queue.
-            starterBody={sitePageStarter(en, page.slug)?.body}
+            starterBody={sitePageStarter(fillShelterNames(en, await shelterNames()), page.slug)?.body}
             previewContext={{
               contact: pickPreviewContact(content),
               photo: pagePhotoOf(content, page.slug),

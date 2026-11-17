@@ -174,7 +174,7 @@ const th: Dictionary = {
   },
 
   header: {
-    appName: "Lanna Care for Animals",
+    appName: "{shelter}",
     shortName: "LCA",
     signOut: "ออกจากระบบ",
     accountMenu: "เมนูบัญชี",
@@ -358,7 +358,7 @@ const th: Dictionary = {
   },
 
   home: {
-    eyebrow: "Lanna Care for Animals Foundation",
+    eyebrow: "{shelter} Foundation",
     eyebrowPlace: "เชียงใหม่ ประเทศไทย",
     heroHeading: "สุนัขและแมวจรทุกตัวควรได้รับโอกาสครั้งที่สอง",
     heroLead:
@@ -368,7 +368,7 @@ const th: Dictionary = {
     ourStoryFallback: "เรื่องราวของเรา",
     seeOurWork: "ดูงานของเราในชุมชน",
     readMoreAbout: "อ่านเพิ่มเติมเกี่ยวกับเรา",
-    footerOrgName: "มูลนิธิ Lanna Care for Animals",
+    footerOrgName: "มูลนิธิ {shelter}",
     stats: {
       heading: "ผลงานของเรา",
       inCare: "สุนัขและแมวในความดูแลของเราวันนี้",
@@ -409,7 +409,7 @@ const th: Dictionary = {
       },
     },
     shareFallback: "ศูนย์พักพิงช่วยเหลือสุนัขและแมวที่ไม่แสวงหากำไร ในอำเภอแม่วาง จังหวัดเชียงใหม่",
-    metaTitle: "Lanna Care for Animals — ศูนย์ช่วยเหลือสุนัขและแมว แม่วาง เชียงใหม่",
+    metaTitle: "{shelter} — ศูนย์ช่วยเหลือสุนัขและแมว แม่วาง เชียงใหม่",
   },
 
   trustBlock: {
@@ -428,11 +428,11 @@ const th: Dictionary = {
     followUs: "ติดตามเรา",
     openMap: "เปิดใน Google Maps",
     staffLogin: "เข้าสู่ระบบเจ้าหน้าที่",
-    facebook: "Lanna Care for Animals บน Facebook",
-    instagram: "Lanna Care for Animals บน Instagram",
-    x: "Lanna Care for Animals บน X",
-    messenger: "ส่งข้อความถึง Lanna Care for Animals ทาง Messenger",
-    whatsapp: "ส่งข้อความถึง Lanna Care for Animals ทาง WhatsApp",
+    facebook: "{shelter} บน Facebook",
+    instagram: "{shelter} บน Instagram",
+    x: "{shelter} บน X",
+    messenger: "ส่งข้อความถึง {shelter} ทาง Messenger",
+    whatsapp: "ส่งข้อความถึง {shelter} ทาง WhatsApp",
   },
 
   publicNav: {
@@ -489,7 +489,7 @@ const th: Dictionary = {
   publicEvents: {
     navLabel: "กิจกรรม",
     pageTitle: "กิจกรรมระดมทุน",
-    metaDescription: "กิจกรรมระดมทุนเพื่อสัตว์ที่ Lanna Care: กิจกรรมที่กำลังจะมาถึงและสิ่งที่เราได้ทำไปแล้ว",
+    metaDescription: "กิจกรรมระดมทุนเพื่อสัตว์ที่ {shelterShort}: กิจกรรมที่กำลังจะมาถึงและสิ่งที่เราได้ทำไปแล้ว",
     heading: "กิจกรรมระดมทุน",
     lead: "ชวนเพื่อนมาร่วมงานและช่วยเราดูแลสัตว์ ทุกกิจกรรมที่นี่ช่วยสนับสนุนศูนย์พักพิง",
     upcomingHeading: "กำลังจะมาถึง",
@@ -611,13 +611,13 @@ const th: Dictionary = {
       hint: "เล่าให้เราฟังเกี่ยวกับธุรกิจของคุณและวิธีที่คุณอยากช่วย — ทางไลน์ โทรศัพท์ หรืออีเมล — แล้วเราจะติดต่อกลับ",
       subject: "สนใจเป็นเพื่อนของศูนย์พักพิง",
       message:
-        "สวัสดีค่ะ/ครับ Lanna Care for Animals\n\nธุรกิจของเราอยากเป็นเพื่อนของศูนย์พักพิง\n\nชื่อธุรกิจ:\nธุรกิจของเราทำอะไร:\nอยากช่วยในด้านใด:\nช่องทางติดต่อที่สะดวก:\n\nขอบคุณค่ะ/ครับ",
+        "สวัสดีค่ะ/ครับ {shelter}\n\nธุรกิจของเราอยากเป็นเพื่อนของศูนย์พักพิง\n\nชื่อธุรกิจ:\nธุรกิจของเราทำอะไร:\nอยากช่วยในด้านใด:\nช่องทางติดต่อที่สะดวก:\n\nขอบคุณค่ะ/ครับ",
     },
     friendsJoinStarter: {
       title: "มาเป็นเพื่อนของศูนย์พักพิง",
       body: [
         "## เพื่อนของศูนย์พักพิงคือใคร",
-        "เพื่อนของศูนย์พักพิงคือธุรกิจในท้องถิ่นที่ช่วยเราดูแลสัตว์ที่ Lanna Care for Animals แต่ละรายช่วยในแบบที่เหมาะกับธุรกิจของตัวเอง และเราขอบคุณพวกเขาอย่างเปิดเผย เพื่อให้ผู้สนับสนุนของเรารู้ว่าควรไปอุดหนุนใคร",
+        "เพื่อนของศูนย์พักพิงคือธุรกิจในท้องถิ่นที่ช่วยเราดูแลสัตว์ที่ {shelter} แต่ละรายช่วยในแบบที่เหมาะกับธุรกิจของตัวเอง และเราขอบคุณพวกเขาอย่างเปิดเผย เพื่อให้ผู้สนับสนุนของเรารู้ว่าควรไปอุดหนุนใคร",
         "## วิธีที่คุณช่วยได้",
         "- บริจาคของที่เราใช้ทุกวัน เช่น อาหารสุนัขและแมว ทรายแมว ยา หรือวัสดุก่อสร้างสำหรับคอกและรั้ว\n- ให้ส่วนลดแก่ผู้สนับสนุนของเรา เช่น ลดราคาให้ผู้รับเลี้ยงที่แสดงบัตรรับเลี้ยง\n- ให้บริการตามความถนัดของธุรกิจ เช่น การรักษาสัตว์ อาบน้ำตัดขน ขนส่ง งานพิมพ์ งานซ่อม\n- สนับสนุนเป็นเรื่อง ๆ เช่น ค่าอาหารหนึ่งเดือน",
         "## ธุรกิจของคุณจะได้อะไร",
@@ -667,7 +667,7 @@ const th: Dictionary = {
     title: "ประกาศความเป็นส่วนตัว",
     updated: "ปรับปรุงล่าสุด 19 ตุลาคม 2569",
     intro:
-      "มูลนิธิ Lanna Care for Animals เป็นผู้ดูแลเว็บไซต์นี้และแอปบันทึกข้อมูลที่อยู่เบื้องหลัง หน้านี้อธิบายว่าเราเก็บข้อมูลส่วนบุคคลอะไรบ้าง เก็บไว้เพื่ออะไร และจะสอบถามเราได้อย่างไร",
+      "มูลนิธิ {shelter} เป็นผู้ดูแลเว็บไซต์นี้และแอปบันทึกข้อมูลที่อยู่เบื้องหลัง หน้านี้อธิบายว่าเราเก็บข้อมูลส่วนบุคคลอะไรบ้าง เก็บไว้เพื่ออะไร และจะสอบถามเราได้อย่างไร",
     sections: [
       {
         heading: "การเข้าชมเว็บไซต์",
@@ -773,7 +773,7 @@ const th: Dictionary = {
   },
 
   login: {
-    heading: "Lanna Care for Animals",
+    heading: "{shelter}",
     email: "อีเมล",
     password: "รหัสผ่าน",
     signingIn: "กำลังเข้าสู่ระบบ...",
@@ -8023,9 +8023,9 @@ const th: Dictionary = {
     },
     showPhoto: (index: number, total: number) => `แสดงรูปที่ ${index} จาก ${total}`,
     metaDescription:
-      "สุนัขและแมวที่กำลังหาบ้านที่ Lanna Care for Animals อำเภอแม่วาง จังหวัดเชียงใหม่",
-    shareFallback: (name: string) => `พบกับ ${name} ที่กำลังหาบ้านที่ Lanna Care for Animals`,
-    shareText: (name: string) => `พบกับ ${name} ที่ Lanna Care for Animals`,
+      "สุนัขและแมวที่กำลังหาบ้านที่ {shelter} อำเภอแม่วาง จังหวัดเชียงใหม่",
+    shareFallback: (name: string) => `พบกับ ${name} ที่กำลังหาบ้านที่ {shelter}`,
+    shareText: (name: string) => `พบกับ ${name} ที่ {shelter}`,
     similar: (name: string) => `สัตว์ตัวอื่นที่คล้ายกับ ${name}`,
     filters: {
       label: "กรองรายชื่อสัตว์",
@@ -8222,7 +8222,7 @@ const th: Dictionary = {
     moreStories: "ผลงานอื่น ๆ ของเรา",
     helpMore: "ช่วยให้เราทำแบบนี้ได้อีก — เงินบริจาคของคุณช่วยค่าใช้จ่ายของการช่วยเหลือครั้งต่อไปและวันทำหมันครั้งต่อไป",
     helpMoreLink: "บริจาค",
-    shareFallback: "เรื่องราวจาก Lanna Care for Animals",
+    shareFallback: "เรื่องราวจาก {shelter}",
   },
 
   linkErrors: {
@@ -8296,7 +8296,7 @@ const th: Dictionary = {
   merchShop: {
     navLabel: "สินค้าของศูนย์",
     pageTitle: "สินค้าของศูนย์",
-    pageSubtitle: "สินค้าที่ทำขึ้นเพื่อ Lanna Care รายได้หลังหักค่าผลิตและค่าส่งจะนำไปดูแลสัตว์",
+    pageSubtitle: "สินค้าที่ทำขึ้นเพื่อ {shelterShort} รายได้หลังหักค่าผลิตและค่าส่งจะนำไปดูแลสัตว์",
     emptyTitle: "กำลังเตรียมสินค้า",
     empty: "ยังไม่มีสินค้าวางจำหน่าย โปรดกลับมาดูใหม่เร็ว ๆ นี้ และขอบคุณที่นึกถึงน้อง ๆ",
     couldntLoad: "โหลดร้านไม่สำเร็จ โปรดลองอีกครั้งในอีกสักครู่",
@@ -8517,7 +8517,7 @@ const th: Dictionary = {
     navLabel: "เพื่อนของศูนย์พักพิง",
     pageTitle: "เพื่อนของศูนย์พักพิง",
     pageSubtitle:
-      "ธุรกิจในท้องถิ่นที่ช่วยเราดูแลสัตว์ — ด้วยอาหาร ของใช้ บริการ หรือส่วนลดสำหรับผู้สนับสนุนของเรา ขอบคุณจากใจ อุดหนุนพวกเขา และบอกว่า Lanna Care for Animals แนะนำมา",
+      "ธุรกิจในท้องถิ่นที่ช่วยเราดูแลสัตว์ — ด้วยอาหาร ของใช้ บริการ หรือส่วนลดสำหรับผู้สนับสนุนของเรา ขอบคุณจากใจ อุดหนุนพวกเขา และบอกว่า {shelter} แนะนำมา",
     couldntLoad: "โหลดรายชื่อเพื่อนของเราไม่สำเร็จ",
     noneYet: "เรากำลังเริ่มขอบคุณธุรกิจที่ช่วยเหลือเรา — โปรดกลับมาดูใหม่เร็ว ๆ นี้",
     joinLine: "มีธุรกิจและอยากช่วยเราใช่ไหม?",
@@ -8542,7 +8542,7 @@ const th: Dictionary = {
     openInMaps: "เปิดใน Google Maps",
     mapOf: (name: string) => `แผนที่แสดงที่ตั้งของ ${name}`,
     logoAlt: (name: string) => `โลโก้ของ ${name}`,
-    shareFallback: "ธุรกิจในท้องถิ่นที่ช่วยเหลือ Lanna Care for Animals — ขอบคุณจากใจ",
+    shareFallback: "ธุรกิจในท้องถิ่นที่ช่วยเหลือ {shelter} — ขอบคุณจากใจ",
     homeStrip: {
       heading: "ขอบคุณเพื่อนของศูนย์พักพิง",
       subtitle:
@@ -9355,9 +9355,9 @@ const th: Dictionary = {
       emailCopied: "คัดลอกอีเมลผู้บริจาคแล้ว วางในช่อง ถึง (To)",
       copyFailed: "คัดลอกอีเมลไม่สำเร็จ",
       // The email goes to the donor, who is usually overseas: English, like the receipt.
-      emailSubject: (number: string) => `ใบเสร็จรับเงินบริจาคเลขที่ ${number} — Lanna Care for Animals`,
+      emailSubject: (number: string) => `ใบเสร็จรับเงินบริจาคเลขที่ ${number} — {shelter}`,
       emailBody: (name: string, number: string) =>
-        `เรียน คุณ${name}\n\nขอขอบคุณสำหรับการบริจาคให้มูลนิธิ Lanna Care for Animals ใบเสร็จรับเงินเลขที่ ${number} แนบมากับอีเมลฉบับนี้\n\nด้วยความขอบคุณ\nมูลนิธิ Lanna Care for Animals`,
+        `เรียน คุณ${name}\n\nขอขอบคุณสำหรับการบริจาคให้มูลนิธิ {shelter} ใบเสร็จรับเงินเลขที่ ${number} แนบมากับอีเมลฉบับนี้\n\nด้วยความขอบคุณ\nมูลนิธิ {shelter}`,
       markSent: "ส่งแล้ว",
       driveSaved: "บันทึกลง Drive แล้ว",
       driveOpen: "เปิดใน Drive",

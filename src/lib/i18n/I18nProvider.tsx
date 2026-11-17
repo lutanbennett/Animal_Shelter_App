@@ -4,8 +4,10 @@ import { createContext, use, useContext, useMemo, type ReactNode } from "react";
 import type { Dictionary } from "./dictionaries/en";
 import type { Locale } from "./locales";
 import { unitNameMap, type UnitRow } from "@/lib/unit-list";
+import { fillShelterNames } from "./shelter-prose";
+import { DEFAULT_SHELTER_NAMES, type ShelterNames } from "@/lib/shelter-names-default";
 
-type I18nContextValue = { locale: Locale; t: Dictionary; units: UnitRow[] };
+type I18nContextValue = { locale: Locale; t: Dictionary; units: UnitRow[]; shelterNames: ShelterNames };
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 

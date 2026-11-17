@@ -5,6 +5,7 @@ import { PublicPhoto } from "@/components/PublicPhoto";
 import { SitePageArticle } from "@/components/SitePageArticle";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { fillShelterNames } from "@/lib/i18n/shelter-prose";
 import { preferredChannels, type ChannelLink } from "@/lib/site/channels";
 import { PagePuppy } from "@/components/PuppyPages";
 import { sitePageStarter } from "@/lib/site/starter";
@@ -36,7 +37,7 @@ export function SitePagePreview({
   body: string;
   context: PagePreviewContext;
 }) {
-  const { t: adminT } = useI18n();
+  const { t: adminT, shelterNames } = useI18n();
   const p = adminT.admin.website.pages;
   const [lang, setLang] = useState<"en" | "th">("en");
   const [failed, setFailed] = useState<string | null>(null);
@@ -46,7 +47,7 @@ export function SitePagePreview({
     let live = true;
     const load = lang === "th" ? import("@/lib/i18n/dictionaries/th") : import("@/lib/i18n/dictionaries/en");
     load
-      .then((m) => live && setDicts((d) => ({ ...d, [lang]: m.default as Dictionary })))
+      .then((m) => live && setDicts((d) => ({ ...d, [lang]: fillShelterNames(m.default as Dictionary, shelterNames) })))
       .catch((e) => live && setFailed(String(e)));
     return () => {
       live = false;

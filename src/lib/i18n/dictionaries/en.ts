@@ -195,7 +195,7 @@ const en = {
   },
 
   header: {
-    appName: "Lanna Care for Animals",
+    appName: "{shelter}",
     shortName: "LCA",
     signOut: "Sign out",
     accountMenu: "Account menu",
@@ -387,7 +387,7 @@ const en = {
 
   home: {
     /** The line above the hero heading. */
-    eyebrow: "Lanna Care for Animals Foundation",
+    eyebrow: "{shelter} Foundation",
     /** The second line of the hero eyebrow. */
     eyebrowPlace: "Chiang Mai, Thailand",
     heroHeading: "Every street dog and cat deserves a second chance.",
@@ -405,7 +405,7 @@ const en = {
     ourStoryFallback: "Our story",
     seeOurWork: "See our work in the community",
     readMoreAbout: "Read more about us",
-    footerOrgName: "Lanna Care for Animals Foundation",
+    footerOrgName: "{shelter} Foundation",
     /** The impact band under the hero — each label reads after its number. */
     stats: {
       heading: "Our impact",
@@ -451,7 +451,7 @@ const en = {
     /** Open Graph description when no tagline is set. */
     shareFallback: "A non-profit rescue shelter for dogs and cats in Mae Wang, Chiang Mai.",
     /** The window title and search-result title: the name, then what and where (review 2026-10-13, §8.3). */
-    metaTitle: "Lanna Care for Animals — dog and cat rescue, Mae Wang, Chiang Mai",
+    metaTitle: "{shelter} — dog and cat rescue, Mae Wang, Chiang Mai",
   },
 
   /** The footer on every public page. */
@@ -472,11 +472,11 @@ const en = {
     openMap: "Open in Google Maps",
     staffLogin: "Staff login",
     /** aria-labels for the social and chat links (footer, and the phone menu's icons). */
-    facebook: "Lanna Care for Animals on Facebook",
-    instagram: "Lanna Care for Animals on Instagram",
-    x: "Lanna Care for Animals on X",
-    messenger: "Message Lanna Care for Animals on Messenger",
-    whatsapp: "Message Lanna Care for Animals on WhatsApp",
+    facebook: "{shelter} on Facebook",
+    instagram: "{shelter} on Instagram",
+    x: "{shelter} on X",
+    messenger: "Message {shelter} on Messenger",
+    whatsapp: "Message {shelter} on WhatsApp",
   },
 
   /** The public header's navigation, desktop and the phone's full-screen menu. */
@@ -547,7 +547,7 @@ const en = {
   publicEvents: {
     navLabel: "Events",
     pageTitle: "Fundraising events",
-    metaDescription: "Fundraising events that support the animals at Lanna Care: what is coming up and what we have done.",
+    metaDescription: "Fundraising events that support the animals at {shelterShort}: what is coming up and what we have done.",
     heading: "Fundraising events",
     lead: "Come along, bring a friend, and help us look after the animals. Every event here supports the shelter.",
     upcomingHeading: "Coming up",
@@ -683,7 +683,7 @@ const en = {
       hint: "Tell us about your business and how you'd like to help — by LINE, phone or email — and we'll get back to you.",
       subject: "Becoming a Shelter Friend",
       message:
-        "Hello Lanna Care for Animals,\n\nI'd like my business to become a Shelter Friend.\n\nBusiness name:\nWhat we do:\nHow we'd like to help:\nBest way to reach me:\n\nThank you!",
+        "Hello {shelter},\n\nI'd like my business to become a Shelter Friend.\n\nBusiness name:\nWhat we do:\nHow we'd like to help:\nBest way to reach me:\n\nThank you!",
     },
     /**
      * /friends/join's starter text, shown until an admin saves a body of
@@ -696,7 +696,7 @@ const en = {
       title: "Become a Shelter Friend",
       body: [
         "## What is a Shelter Friend?",
-        "Shelter Friends are local businesses that help us care for the animals at Lanna Care for Animals. Every Friend helps in the way that suits their business, and we thank them in public — so our supporters know who to give their custom to.",
+        "Shelter Friends are local businesses that help us care for the animals at {shelter}. Every Friend helps in the way that suits their business, and we thank them in public — so our supporters know who to give their custom to.",
         "## Ways to help",
         "- Donating goods we use every day: dog and cat food, litter, medicine, or building materials for kennels and fences\n- Giving our supporters a discount — for example, money off for adopters who show their adoption card\n- Offering a service, whatever your trade: animal health care, grooming, transport, printing, repairs\n- Sponsoring something specific, such as a month's food",
         "## What your business gets",
@@ -725,7 +725,7 @@ const en = {
       title: "About us and visiting",
       body: [
         "## Who we are",
-        "Lanna Care for Animals Foundation is a registered Thai foundation in Mae Wang, near Chiang Mai. [Foundation registration number and year: the Director to fill in.] [Who runs the shelter, how many staff and volunteers, and how it began: the Director to fill in.]",
+        "{shelter} Foundation is a registered Thai foundation in Mae Wang, near Chiang Mai. [Foundation registration number and year: the Director to fill in.] [Who runs the shelter, how many staff and volunteers, and how it began: the Director to fill in.]",
         "## Where we are",
         "[Full address in Thai and English: the Director to fill in.] [How to get here from Chiang Mai, and where to park: the Director to fill in.] The map link and our contact details are in the footer at the bottom of this page.",
         "## Visiting",
@@ -764,7 +764,7 @@ const en = {
     title: "Privacy notice",
     updated: "Last updated 19 October 2026",
     intro:
-      "Lanna Care for Animals Foundation runs this website and the record-keeping app behind it. This page explains what personal information we hold, why we hold it, and how to ask us about it.",
+      "{shelter} Foundation runs this website and the record-keeping app behind it. This page explains what personal information we hold, why we hold it, and how to ask us about it.",
     sections: [
       {
         heading: "Visiting the website",
@@ -870,7 +870,7 @@ const en = {
   },
 
   login: {
-    heading: "Lanna Care for Animals",
+    heading: "{shelter}",
     email: "Email",
     password: "Password",
     signingIn: "Signing in...",
@@ -8285,10 +8285,10 @@ const en = {
     },
     showPhoto: (index: number, total: number) => `Show photo ${index} of ${total}`,
     metaDescription:
-      "Dogs and cats looking for a home at Lanna Care for Animals, Mae Wang, Chiang Mai.",
+      "Dogs and cats looking for a home at {shelter}, Mae Wang, Chiang Mai.",
     /** Open Graph description when a resident has no bio. */
-    shareFallback: (name: string) => `Meet ${name}, looking for a home at Lanna Care for Animals.`,
-    shareText: (name: string) => `Meet ${name} at Lanna Care for Animals`,
+    shareFallback: (name: string) => `Meet ${name}, looking for a home at {shelter}.`,
+    shareText: (name: string) => `Meet ${name} at {shelter}`,
     similar: (name: string) => `More residents like ${name}`,
     filters: {
       label: "Filter residents",
@@ -8510,7 +8510,7 @@ const en = {
     helpMore: "Help us do more of this — a gift pays for the next rescue and the next sterilisation day.",
     helpMoreLink: "Donate",
     /** Open Graph description when a story has no summary. */
-    shareFallback: "A story from Lanna Care for Animals.",
+    shareFallback: "A story from {shelter}.",
   },
 
   /**
@@ -8590,7 +8590,7 @@ const en = {
   merchShop: {
     navLabel: "Merchandise",
     pageTitle: "Merchandise",
-    pageSubtitle: "Things made for Lanna Care. What is left after the cost of making and posting them goes to the animals.",
+    pageSubtitle: "Things made for {shelterShort}. What is left after the cost of making and posting them goes to the animals.",
     emptyTitle: "The shop is being stocked",
     empty: "There is nothing for sale yet. Please check back soon, and thank you for thinking of the animals.",
     couldntLoad: "Couldn't load the shop. Please try again in a moment.",
@@ -8757,7 +8757,7 @@ const en = {
     pageSubtitle: "Buy what you were going to buy anyway, and a little of it comes back to the animals.",
     /** The plain statement that the shelter earns from these links. Shown above the list, always. */
     disclosure:
-      "Lanna Care earns a small commission when you buy through the links on this page. It costs you nothing extra, and it helps pay for the animals' care.",
+      "{shelterShort} earns a small commission when you buy through the links on this page. It costs you nothing extra, and it helps pay for the animals' care.",
     noneYet: "There is nothing here yet. Please check back soon.",
     couldntLoad: "Couldn't load the shop",
     visit: "Visit shop",
@@ -8765,7 +8765,7 @@ const en = {
     /** The line on /donate that points here. */
     donateLine: "Shopping anyway? Some of what you spend can come back to the animals.",
     donateLink: "Shop for the shelter",
-    shareFallback: "Shops and Shelter Friends that give a little back to Lanna Care when you buy through these links.",
+    shareFallback: "Shops and Shelter Friends that give a little back to {shelterShort} when you buy through these links.",
     manage: {
       title: "Shop for the shelter",
       subtitle: "The shops and Shelter Friends on the public Shop page. Only entries marked Show are on it.",
@@ -8813,7 +8813,7 @@ const en = {
     navLabel: "Shelter Friends",
     pageTitle: "Shelter Friends",
     pageSubtitle:
-      "Local businesses that help us care for the animals — with food, supplies, services, or a discount for our supporters. Thank you. Give them your custom, and tell them Lanna Care for Animals sent you.",
+      "Local businesses that help us care for the animals — with food, supplies, services, or a discount for our supporters. Thank you. Give them your custom, and tell them {shelter} sent you.",
     couldntLoad: "Couldn't load our friends",
     noneYet: "We're just getting started on thanking the businesses that help us — check back soon.",
     /** The line under /friends' subtitle, to /friends/join. */
@@ -8845,7 +8845,7 @@ const en = {
     mapOf: (name: string) => `Map showing where ${name} is`,
     logoAlt: (name: string) => `${name} logo`,
     /** Open Graph description for /friends. */
-    shareFallback: "The local businesses that help Lanna Care for Animals — thank you.",
+    shareFallback: "The local businesses that help {shelter} — thank you.",
     homeStrip: {
       heading: "Thank you to our Shelter Friends",
       subtitle:
@@ -9670,9 +9670,9 @@ const en = {
       emailCopied: "Donor email address copied. Paste it into the To line.",
       copyFailed: "Could not copy the address.",
       shareHint: "Opens your phone's share menu with the PDF attached: Gmail, LINE or anything else.",
-      emailSubject: (number: string) => `Your donation receipt ${number} — Lanna Care for Animals`,
+      emailSubject: (number: string) => `Your donation receipt ${number} — {shelter}`,
       emailBody: (name: string, number: string) =>
-        `Dear ${name},\n\nThank you for your donation to Lanna Care for Animals Foundation. Your receipt ${number} is attached.\n\nWith gratitude,\nLanna Care for Animals`,
+        `Dear ${name},\n\nThank you for your donation to {shelter} Foundation. Your receipt ${number} is attached.\n\nWith gratitude,\n{shelter}`,
       markSent: "I've sent it",
       driveSaved: "Saved to Drive",
       driveOpen: "Open on Drive",
