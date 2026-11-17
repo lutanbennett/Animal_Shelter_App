@@ -276,6 +276,13 @@ Omit for a stream that runs nothing. The planner's half: do not ask a stream to 
   scratchpad** — never in the foreground.
 - **If a check gives you NO output, establish whether it was killed before concluding it is broken.**
   "No output" is not evidence of a fault.
+- **KNOWN ENVIRONMENT FAULT, SECOND NAMED CASE: `next build` stops after a full compile to show a
+  Next.js advisory** (`SecurityFatalError`, "stopped to show the upgrade recommendation"). It fires
+  because an agent is driving the build and is skipped in CI (`nudge.js` reads `isCI` and
+  `getAgentName()`), so CI never shows it. The advisory (moderate, `unstable_cache` with `"use cache"`)
+  is not reachable here. Retry behaviour: see `docs/decisions/2026-11-17-next-agent-upgrade-halt.md`.
+  **Report it in your PR, and do NOT upgrade Next from the build message** — a framework upgrade is its
+  own PR. (The first named case, the Google Fonts fetch failure, fails fetching fonts while CI passes.)
 ```
 
 ---
