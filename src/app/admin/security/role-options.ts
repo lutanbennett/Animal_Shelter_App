@@ -39,8 +39,12 @@ function rank(key: string) {
 
 export async function loadRoleOptions(
   admin: ReturnType<typeof createAdminClient>,
+  shelterId: string | null,
 ): Promise<{ roles: RoleOption[]; error: string | null }> {
-  const { data, error } = await admin.from("roles").select("key, name, name_th, is_admin");
+  const { data, error } = await admin
+    .from("roles")
+    .select("key, name, name_th, is_admin")
+    .eq("shelter_id", shelterId ?? "00000000-0000-0000-0000-000000000000");
   if (error) return { roles: [], error: error.message };
   const roles = (data ?? [])
     .map((r) => ({

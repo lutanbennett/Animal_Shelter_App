@@ -64,6 +64,8 @@ function revalidateSecurity() {
  */
 async function openSetupForNewAdmin(userId: string, role: GivableRole) {
   if (role.key !== "admin") return;
+  // Only a login of the acting shelter (role.shelterId is the acting shelter's): never open set-up on another shelter's login.
+  if (!(await userInActingShelter(userId))) return;
   const { error } = await createAdminClient().auth.admin.updateUserById(userId, {
     app_metadata: { [SETUP_OPEN_UNTIL]: setupWindowEnd() },
   });
@@ -414,6 +416,8 @@ export async function removeExtraRole(userId: string, roleKey: string, requestId
  * doctor and their visits untouched.
  */
 async function loadDoctorLogin(userId: string, t: T) {
+  // The login must belong to the acting shelter before it is linked to one of its doctors.
+  if (!(await userInActingShelter(userId))) return { denied: refuse(t.admin.security.errors.userNotFound) };
   const admin = createAdminClient();
   // Any login may be linked to a doctor: what a role is called, or whether a shelter has a doctor role at all,
   // is the shelter's to choose (CLAUDE.md, no fallback to a role by name). The login only has to exist.

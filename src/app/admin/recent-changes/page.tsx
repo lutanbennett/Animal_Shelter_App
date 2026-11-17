@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionLink } from "@/components/ActionLink";
-import { listAllUsers } from "@/lib/auth/access-requests";
+import { listUsersOfShelter } from "@/lib/auth/access-requests";
 import {
   AUDITED_TABLES,
   SYSTEM_ACTOR,
@@ -20,6 +20,7 @@ import { formatDateTime } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { requireAdminUser } from "@/lib/auth/require-admin";
 import { DateInput } from "@/components/DateInput";
 
@@ -49,7 +50,7 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
   const supabase = await createClient();
   const [page, users, detail] = await Promise.all([
     loadPage(supabase, filters),
-    listAllUsers(createAdminClient()),
+    listUsersOfShelter(createAdminClient(), await actingShelterId()),
     filters.open ? loadDetail(supabase, filters.open) : Promise.resolve(null),
   ]);
 
