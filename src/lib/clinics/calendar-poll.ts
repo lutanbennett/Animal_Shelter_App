@@ -74,10 +74,6 @@ function describe(v: Visit): string {
 /** "[DEV] " before the subject, nothing for production, so a test alert never reads as a live one. */
 const envPrefix = (env: string) => (env === "production" ? "" : `[${env.toUpperCase()}] `);
 
-/** The footer of an admin notice. Pure, so a test can prove the default shelter's text is unchanged. */
-export const calendarNoticeFooter = (env: string, shortName: string, origin: string) =>
-  `It is a change made in the shelter calendar, picked up by the ${env} ${shortName} system (${origin}). If this was a mistake, open the visit and set it back to scheduled.`;
-
 async function tellAdmins(origin: string, subject: string, line: string): Promise<void> {
   try {
     const to = await adminEmails();
