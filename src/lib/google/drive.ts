@@ -28,6 +28,8 @@
 import { driveRootFolderId } from "@/lib/shelter-settings";
 import { ADOPTION_UPDATES_FOLDER } from "@/lib/adoption-updates/options";
 import { purgeCachedPhoto } from "@/lib/photo-cache";
+import { DriveCredentialsError } from "./drive-credentials-crypto";
+import { resolveDriveCredentials } from "./shelter-drive-credentials";
 
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const DRIVE_API = "https://www.googleapis.com/drive/v3";
@@ -108,28 +110,31 @@ async function readError(
  * on a cold start is simply one extra refresh. Concurrent callers on a cold
  * cache share a single in-flight refresh rather than each minting a token.
  */
-let cachedToken: { value: string; expiresAt: number } | null = null;
-let pendingRefresh: Promise<string> | null = null;
+const cachedTokens = new Map<string, { value: string; expiresAt: number }>();
+const pendingRefreshes = new Map<string, Promise<string>>();
 
 // Refresh a minute early so a token can't expire mid-request.
 const TOKEN_EXPIRY_MARGIN_MS = 60 * 1000;
 
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new DriveNotConnectedError(`${name} is not configured.`, 500);
+/** The credentials for the shelter being served (see shelter-drive-credentials.ts); a missing or undecryptable set is "not connected". */
+async function credentialsOrNotConnected() {
+  try {
+    return await resolveDriveCredentials();
+  } catch (err) {
+    if (err instanceof DriveCredentialsError) throw new DriveNotConnectedError(err.message, 500);
+    throw err;
   }
-  return value;
 }
 
 async function fetchAccessToken(): Promise<string> {
+  const creds = await credentialsOrNotConnected();
   const res = await fetch(TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      client_id: requireEnv("GOOGLE_OAUTH_CLIENT_ID"),
-      client_secret: requireEnv("GOOGLE_OAUTH_CLIENT_SECRET"),
-      refresh_token: requireEnv("GOOGLE_OAUTH_REFRESH_TOKEN"),
+      client_id: creds.clientId,
+      client_secret: creds.clientSecret,
+      refresh_token: creds.refreshToken,
       grant_type: "refresh_token",
     }),
   });
@@ -145,23 +150,23 @@ async function fetchAccessToken(): Promise<string> {
     throw new DriveApiError("Google OAuth token refresh returned no access token.", 502);
   }
 
-  cachedToken = {
+  cachedTokens.set(creds.cacheKey, {
     value: data.access_token,
     expiresAt: Date.now() + (data.expires_in ?? 3600) * 1000 - TOKEN_EXPIRY_MARGIN_MS,
-  };
+  });
   return data.access_token;
 }
 
 async function getAccessToken(): Promise<string> {
-  if (cachedToken && Date.now() < cachedToken.expiresAt) {
-    return cachedToken.value;
+  const { cacheKey } = await credentialsOrNotConnected();
+  const cached = cachedTokens.get(cacheKey);
+  if (cached && Date.now() < cached.expiresAt) return cached.value;
+  let pending = pendingRefreshes.get(cacheKey);
+  if (!pending) {
+    pending = fetchAccessToken().finally(() => pendingRefreshes.delete(cacheKey));
+    pendingRefreshes.set(cacheKey, pending);
   }
-  if (!pendingRefresh) {
-    pendingRefresh = fetchAccessToken().finally(() => {
-      pendingRefresh = null;
-    });
-  }
-  return pendingRefresh;
+  return pending;
 }
 
 // ---------------------------------------------------------------------------

@@ -406,6 +406,11 @@
       "file": "src/lib/shelter-settings.ts",
       "for": "Reads one setting (shelters.drive_root_folder_id) of the shelter being served; no login can read the shelters table.",
       "guard": "Reads only the row whose id is actingShelterId(), returns a folder id to server code and exposes nothing to the caller; grants no access."
+    },
+    {
+      "file": "src/lib/google/shelter-drive-credentials.ts",
+      "for": "Reads the shelter being served's own Google Drive credentials (shelter_drive_credentials, 0404; no login holds a grant on it) and decrypts them, to choose which Google account the server acts as.",
+      "guard": "Reads only the row whose shelter_id is actingShelterId(); secrets are ciphertext in the table and decrypted with DRIVE_CREDENTIALS_KEY, a Worker secret; returns them to server code only and exposes nothing to a caller. A shelter with no row other than the fallback shelter is refused. Grants no access to anyone."
     }
   ],
   "serviceRoleHelpers": [],
