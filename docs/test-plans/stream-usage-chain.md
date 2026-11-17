@@ -81,7 +81,7 @@ it. Everything outside those comments is judged.
 |---|---|
 | Feature | stream-usage-chain |
 | Backlog item | `docs/backlog.md` → #3qmzt |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/stream-usage-chain` @ `C:\Development\Animal_Shelter_stream-usage-chain` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | opened next |
 | Tested by / date | Claude / 2026-11-17 |
@@ -336,4 +336,4 @@ Manual verification by: n/a: nothing a person needs to look at
 
 Result: pass
 
-Release manager acknowledgement: <name>  Date: <yyyy-mm-dd>
+Release manager acknowledgement: n/a: docs-only, no deploy
