@@ -88,7 +88,7 @@ gates: typecheck=0 lint=0 test=0 build=1
 - [x] Backlog item ticked in `docs/backlog.md` on this branch: `#lhdr7` ticked; `#ujqr5` re-titled and left open (NOT NULL and Part 7 are not this stream's)
 - [x] Non-obvious design choices added as `docs/decisions/2026-11-17-tenancy-part5-policies.md`
 - [x] `README.md` still accurate — n/a: nothing in it describes these policies
-- [x] **Release notes.** n/a: no shelter user would notice; the policies are on dev only and in no release yet
+- [ ] **Release notes.** n/a: no shelter user would notice; the policies are on dev only and in no release yet
 - [x] Commit messages say why, not just what
 - [x] Claims were measured, not reasoned: every count in the decision file is a query result from dev on 2026-11-17
 
