@@ -3,7 +3,7 @@
 //   node scripts/check-card-catalogue-writes.mjs [--env test|production]     (read-only; needs SUPABASE_ACCESS_TOKEN, so NOT in the PR check job)
 //
 // Fails if either table has a PERMISSIVE policy for insert, update, delete or all, if row security is off, or if anon/authenticated
-// hold an insert/update/delete privilege. Restrictive policies are ignored (they can only narrow). Reads are not asserted away.
+// hold an insert/update/delete privilege. Restrictive policies are ignored, and so is the tenancy sweep's definer_all (0375/0382), which is `to rls_definer` only: a nologin role that owns security-definer functions, not a login (they can only narrow). Reads are not asserted away.
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 import { exitWith } from "./lib/exit.mjs";
 
@@ -30,7 +30,8 @@ const T = "'card_grants','card_includes'";
 let failed = 0;
 
 const pol = await query(`select tablename, policyname, cmd from pg_policies
-  where schemaname='public' and tablename in (${T}) and permissive='PERMISSIVE' and cmd in ('INSERT','UPDATE','DELETE','ALL')`);
+  where schemaname='public' and tablename in (${T}) and permissive='PERMISSIVE' and cmd in ('INSERT','UPDATE','DELETE','ALL')
+  and roles <> '{rls_definer}'::name[]`);
 for (const p of pol) { failed++; console.log(`FAIL ${p.tablename} has a permissive ${p.cmd} policy ${p.policyname}: a login could write the shared catalogue.`); }
 if (!pol.length) console.log("ok   no permissive insert/update/delete/all policy on either table.");
 
