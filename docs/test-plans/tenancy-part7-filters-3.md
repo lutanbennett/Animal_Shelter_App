@@ -59,8 +59,8 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — n/a: storage and database paths verified by typecheck and the registry check only; no browser upload driven this slice
-- [ ] Data persists — reload the page and the change is still there — n/a: no new UI; behaviour with one shelter is unchanged
+- [x] Happy path works end to end (read path only: signed in as admin on dev, reached /admin/facility-map by client-side navigation, the stored plan image served 200 image/webp through the new ownership check; no upload pressed)
+- [ ] Data persists — reload the page and the change is still there — n/a: no write was pressed this slice
 - [ ] Create / edit / delete all exercised (whichever the feature has) — n/a: no new UI; behaviour with one shelter is unchanged
 - [ ] Empty state renders sensibly (no rows yet) — n/a: no new UI; behaviour with one shelter is unchanged
 - [ ] Invalid input is rejected with a readable message, not a crash — n/a: storage and database paths verified by typecheck and the registry check only; no browser upload driven this slice
