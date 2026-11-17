@@ -7,6 +7,7 @@
 //       the proof: exports, then loads the export (in memory, ephemeral key) into an empty throwaway PostgreSQL
 //       server and checks (a) every row is there, (b) no other shelter's row is, (c) every foreign key resolves
 //
+// The proof builds its empty database from the source catalogue, not the migrations (no triggers/defaults/RLS): see docs/decisions/2026-11-18-export-proof-catalogue-rebuild.md.
 // The export is DATA ONLY: a new database gets its tables from the migrations, as a new shelter's would. Rows are read
 // per table with the shelter filter built in scripts/lib/shelter-export.mjs and nowhere else. A row with a null
 // shelter_id stops the export and is named: dropping it loses data and including it leaks (decision file).
