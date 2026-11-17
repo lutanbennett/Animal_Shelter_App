@@ -77,6 +77,7 @@ import { ACTIONS_KEY_VAR, actionsKeyProblem, builtKeyProblem, keyFingerprint } f
 import { latestRelease, majorReleasesSince, unreleased } from "../src/lib/releases.ts";
 import { appEnvForSupabaseUrl } from "../src/lib/app-env.ts";
 import { buildReleaseMail } from "../src/lib/release-mail.ts";
+import { DEFAULT_SHELTER_NAMES } from "../src/lib/shelter-names-default.ts";
 
 const { name: envName, rest } = parseEnvArg(process.argv.slice(2));
 const pushSecrets = rest.includes("--secrets");
@@ -511,7 +512,7 @@ async function announce() {
   const res = await fetch(`${SITE_ORIGINS[envName]}/api/releases/mail`, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-    body: JSON.stringify({ ...buildReleaseMail(majors, SITE_ORIGINS[envName]), to }),
+    body: JSON.stringify({ ...buildReleaseMail(majors, SITE_ORIGINS[envName], DEFAULT_SHELTER_NAMES), to }),
   });
   const result = await res.json().catch(() => ({}));
   if (!res.ok) {

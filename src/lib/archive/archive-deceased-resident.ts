@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { shelterNames } from "@/lib/shelter-settings";
 import {
   type DriveClient,
   getDriveClient,
@@ -160,8 +161,9 @@ export async function archiveDeceasedResident(
       ? await loadProfilePhoto(drive, residentId, resident.profile_photo_drive_file_id)
       : null;
 
+    const { displayName: shelterName } = await shelterNames();
     const pdfName = summaryPdfFileName(record);
-    const pdfBytes = await renderResidentSummaryPdf(record, { profilePhotoDataUri });
+    const pdfBytes = await renderResidentSummaryPdf(record, { profilePhotoDataUri, shelterName });
     const summaryFileId = await upsertGeneratedFile(drive, residentFolderId, {
       name: pdfName,
       mimeType: "application/pdf",
@@ -169,7 +171,7 @@ export async function archiveDeceasedResident(
       existingFileId: resident.deceased_summary_drive_file_id,
     });
 
-    const html = renderResidentIndexHtml(record, { summaryPdfFileName: pdfName, appOrigin: await archiveAppOrigin() });
+    const html = renderResidentIndexHtml(record, { summaryPdfFileName: pdfName, appOrigin: await archiveAppOrigin(), shelterName });
     const indexFileId = await upsertGeneratedFile(drive, residentFolderId, {
       name: RESIDENT_INDEX_FILE_NAME,
       mimeType: "text/html",

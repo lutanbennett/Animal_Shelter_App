@@ -113,13 +113,13 @@ function Shot({ topic, images }: { topic: ManualTopic; images: ManualImages }) {
   );
 }
 
-function ManualDocument({ manual, cards, cardLabels, cardsHeading, all, images, perms, hasMenu }: { manual: Manual; cards: readonly ManualCard[]; cardLabels?: ReadonlyMap<CardKey, string>; cardsHeading: string; all: boolean; images: ManualImages; perms?: Permissions | null; hasMenu?: boolean }) {
+function ManualDocument({ shelterName, manual, cards, cardLabels, cardsHeading, all, images, perms, hasMenu }: { shelterName: string; manual: Manual; cards: readonly ManualCard[]; cardLabels?: ReadonlyMap<CardKey, string>; cardsHeading: string; all: boolean; images: ManualImages; perms?: Permissions | null; hasMenu?: boolean }) {
   const labelOf = new Map<CardKey, string>([...(cardLabels ?? []), ...cards.map((c) => [c.key, c.label] as [CardKey, string])]);
   const scope = all ? "Full edition" : "Your cards' edition";
   return (
-    <Document title={manual.title} author="Lanna Care for Animals" subject={scope}>
+    <Document title={manual.title} author={shelterName} subject={scope}>
       <Page size="A4" style={styles.page}>
-        <Text style={styles.kicker}>{`LANNA CARE FOR ANIMALS · ${scope.toUpperCase()}`}</Text>
+        <Text style={styles.kicker}>{`${shelterName.toUpperCase()} · ${scope.toUpperCase()}`}</Text>
         <Text style={styles.title}>{manual.title}</Text>
         <Text style={styles.subtitle}>{manual.subtitle}</Text>
         <Text style={styles.version}>{manual.version}</Text>
@@ -196,7 +196,7 @@ function TopicCardsLine({ topic, labelOf, filter }: { topic: ManualTopic; labelO
 /** Renders the manual to PDF bytes. No permissions known = everything. */
 export async function renderManualPdf(
   manual: Manual,
-  options: { cards: readonly ManualCard[]; cardLabels?: ReadonlyMap<CardKey, string>; cardsHeading: string; all: boolean; images: ManualImages; perms?: Permissions | null; hasMenu?: boolean },
+  options: { shelterName: string; cards: readonly ManualCard[]; cardLabels?: ReadonlyMap<CardKey, string>; cardsHeading: string; all: boolean; images: ManualImages; perms?: Permissions | null; hasMenu?: boolean },
 ): Promise<Uint8Array> {
   const buffer = await renderToBuffer(<ManualDocument manual={manual} {...options} />);
   return new Uint8Array(buffer);

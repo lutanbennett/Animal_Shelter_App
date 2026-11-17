@@ -1,5 +1,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getAppEnv } from "@/lib/app-env";
+import { shelterNames } from "@/lib/shelter-settings";
 import en from "@/lib/i18n/dictionaries/en";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { type HealthCheckKey, type HealthReport, runHealthChecks } from "./health";
@@ -177,7 +178,7 @@ export async function send(
   origin: string,
 ): Promise<{ sent: string[]; skipped: Skipped[]; note: string | null }> {
   const env = workerEnv();
-  const site = hostOf(origin);
+  const site = hostOf(origin, (await shelterNames()).shortName);
   const subject = `[${site}] ${mail.subject}`;
   if (env?.STATUS_ALERT_MAIL && env.STATUS_ALERT_FROM) {
     const sent: string[] = [];
@@ -185,7 +186,7 @@ export async function send(
     for (const address of to) {
       try {
         await env.STATUS_ALERT_MAIL.send({
-          from: { email: env.STATUS_ALERT_FROM, name: "Lanna Care status" },
+          from: { email: env.STATUS_ALERT_FROM, name: `${(await shelterNames()).shortName} status` },
           to: address,
           subject,
           text: mail.text,
@@ -209,11 +210,11 @@ export async function send(
   return { sent: [], skipped: to.map((address) => ({ address, reason })), note: reason };
 }
 
-const hostOf = (origin: string) => {
+const hostOf = (origin: string, fallback: string) => {
   try {
-    return new URL(origin).host || "Lanna Care";
+    return new URL(origin).host || fallback;
   } catch {
-    return "Lanna Care";
+    return fallback;
   }
 };
 

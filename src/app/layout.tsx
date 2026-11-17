@@ -14,6 +14,7 @@ import { I18nProvider } from "@/lib/i18n/I18nProvider";
 import { HydrationMark } from "./HydrationMark";
 import { loadUnitList } from "@/lib/unit-list-server";
 import { EARLY_SUBMIT_GUARD } from "@/lib/early-submit-guard";
+import { shelterNames } from "@/lib/shelter-settings";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -48,13 +49,15 @@ const sourceSans = Source_Sans_3({
   preload: false,
 });
 
-export const metadata: Metadata = {
-  title: "Lanna Care for Animals",
-  description: "Resident and shelter management",
-  icons: {
-    icon: "/lca-logo.jpg",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: (await shelterNames()).displayName,
+    description: "Resident and shelter management",
+    icons: {
+      icon: "/lca-logo.jpg",
+    },
+  };
+}
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();

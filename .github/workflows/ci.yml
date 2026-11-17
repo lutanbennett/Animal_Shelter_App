@@ -197,6 +197,7 @@ jobs:
       - run: node scripts/check-backlog-ids.mjs
       # Public hostnames (site-hosts.ts) and public pages (public-paths.ts) are each one list.
       - run: node scripts/check-site-hosts.mjs
+      - run: node scripts/check-no-lanna-literal.mjs
       - run: node scripts/check-public-paths.mjs
       # Every table with an audit trigger is listed in Recent changes with a name and a label in both dictionaries,
       # and no listed table is gone. Reads the migrations and the source: no database, no node_modules.
