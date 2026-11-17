@@ -165,6 +165,13 @@ eq("D eligibility asks about both stock pages", ["stock.count", "stock.delivery"
 // ---- E ----
 eq("E route paths are unique", new Set(ROUTES.map((r) => r.path)).size, ROUTES.length);
 for (const r of ROUTES) {
+  if (r.adminOnly) {
+    // Admin only, no card and no activity (system status, Lutan 2026-11-17): the page asks requireAdminUser() and the entry names no activity.
+    eq(`E ${r.path} is adminOnly and names no activity`, r.activity, undefined);
+    const p = join(root, "src/app", r.path, "page.tsx");
+    eq(`E ${r.path} guards with requireAdminUser()`, existsSync(p) && /requireAdminUser()/.test(readFileSync(p, "utf8")), true);
+    continue;
+  }
   const def = ACTIVITIES.find((a) => a.key === r.activity);
   eq(`E ${r.path} names a catalogue activity`, !!def, true);
   if (def?.kind === "yesno") eq(`E ${r.path} gives no level for a yes/no activity`, r.level, undefined);
