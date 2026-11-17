@@ -10,7 +10,7 @@
 |---|---|
 | Feature | Backlog title check (hook script) |
 | Backlog item | `docs/backlog.md` → `#ttl9h` |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/backlog-title-check` @ `C:DevelopmentAnimal_Shelter_backlog-title-check` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | pending: opened after this commit |
 | Tested by / date | Claude, 2026-11-17 |
