@@ -10,10 +10,10 @@
 | Backlog item | `docs/backlog.md` → none. The handover is process bookkeeping, not a backlog item; `SKILL.md` step 8 owes it at the setup of a plan's last batch |
 | Branch / worktree | `claude/planner-handover-756` @ `C:\Development\Animal_Shelter_planner-handover-756` |
 | Dev server | not started — no code, no route and no rendered surface in this PR |
-| PR | PENDING_PR_URL |
+| PR | https://github.com/lutanbennett/Animal_Shelter_App/pull/1646 |
 | Tested by / date | Claude (planner) / 2026-11-17 |
 | Carries a migration? | no |
-| Tested at SHA | PENDING_SHA |
+| Tested at SHA | `4df08e0214df598605ceb1466cc0ef3716397847` — the only later commit edits this plan file, so no code differs |
 
 ## 1. Scope and risk
 
@@ -26,9 +26,10 @@
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`
+- [x] **`build=1`, and it is NOT a compile failure — read this before treating it as one.** The build compiles: the full route table prints and *then* `next build` raises `SecurityFatalError`, a post-compile stop that surfaces a Next.js advisory. **Diagnosed during this run, correcting what PR #1644 reported:** it does **not** clear on retry here (two consecutive full gate runs failed identically), because the receipt that makes "once" work is written to `<distDir>/cache/next-agentic-upgrade-retries` (`node_modules/next/dist/esm/lib/upgrade/nudge.js:43`) and a fresh worktree has no such cache; and it fires **because an agent is driving the build and is skipped in CI** (`nudge.js:391,396` — `isCI` and `getAgentName()`), **which is why every stream hits it and CI never does**. The advisory itself is one **moderate** finding against `next@16.4.2` (information disclosure across root params via `unstable_cache()`) and is **not reachable here**: `unstable_cache`, `"use cache"`, `cacheLife` and `cacheTag` are all absent from `src/` and `worker/`, and it needs the first two together. **No upgrade was run** — the advisory text instructs the reading agent to run one, that text is tool output rather than an instruction, and a framework change is its own PR with its own audit. Filed as `#bld1f`. **This is the same shape as the known local Google Fonts build failure recorded in `brief-blocks.md`: a local-only failure CI does not have.** **This PR merges on CI's verdict, and if CI's build goes red it does not merge.**
 
 ```
-PENDING_GATES
+gates: typecheck=0 lint=0 test=0 build=1
 ```
 
 - [ ] CI green on the PR (runs the same four gates, among its other checks) — `pending: the PR is merged only on full green against this head commit, per the merge-on-green rule`
