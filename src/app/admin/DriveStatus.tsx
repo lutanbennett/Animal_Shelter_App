@@ -1,4 +1,5 @@
 import { checkDriveConnection } from "@/lib/google/drive";
+import { getShelterDriveStatus } from "@/lib/google/shelter-drive-status";
 import { getT } from "@/lib/i18n/get-t";
 
 /**
@@ -13,10 +14,15 @@ import { getT } from "@/lib/i18n/get-t";
 export async function DriveStatus() {
   const { t } = await getT();
   const d = t.admin.landing.drive;
-  const result = await checkDriveConnection();
+  const [result, own] = await Promise.all([checkDriveConnection(), getShelterDriveStatus()]);
 
   if (result.ok) {
-    return <p className="text-sm text-success">{d.ok}</p>;
+    return (
+      <p className="text-sm text-success">
+        {d.ok}
+        {own?.driveAccountEmail ? <span className="text-muted"> ({own.driveAccountEmail})</span> : null}
+      </p>
+    );
   }
   return (
     <div className="flex flex-col gap-1 rounded border border-danger/40 bg-danger/5 px-3 py-2">

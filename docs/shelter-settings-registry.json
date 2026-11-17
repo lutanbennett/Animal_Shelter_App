@@ -8,6 +8,14 @@
   ],
   "lannaLiteralFiles": [
     {
+      "file": "src/lib/google/shelter-drive-credentials.ts",
+      "reason": "FALLBACK_SHELTER_KEY: the shelters.key of the one shelter allowed to fall back to the environment variables, plus comments. A database key, not output."
+    },
+    {
+      "file": "src/lib/shelter-settings.ts",
+      "reason": "Comments naming Lanna as the fallback shelter whose behaviour must not change; no output varies."
+    },
+    {
       "file": "src/app/admin/security/role-options.ts",
       "reason": "Comment about the order roles are listed in."
     },
