@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { getT } from "@/lib/i18n/get-t";
 import { loadAdopterScope } from "@/lib/adopter/scope";
 import { SignOutButton } from "../login/SignOutButton";
@@ -22,12 +23,14 @@ export default async function AdopterUpdatePage() {
   if (!scope) redirect("/login?error=no_role");
   const a = t.adopterUpdate;
 
+  const shelterId = await actingShelterId();
   const admin = createAdminClient();
   const contactIds = [...new Set(scope.residents.map((r) => r.contactId))];
-  const { data: rows } = contactIds.length
+  const { data: rows } = contactIds.length && shelterId
     ? await admin
         .from("adoption_updates")
         .select("id, resident_id, received_on, note, text_approval")
+        .eq("shelter_id", shelterId)
         .in("sender_contact_id", contactIds)
         .eq("channel", "app")
         .order("created_at", { ascending: false })

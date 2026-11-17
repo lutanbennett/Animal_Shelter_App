@@ -35,6 +35,7 @@ async function handlePost(request: Request) {
     .from("video_uploads")
     .select("id, resident_id, sub_folder, file_name, mime_type, size_bytes, state, started_by")
     .eq("id", uploadId)
+    .eq("shelter_id", own.shelterId)
     .maybeSingle();
   if (!upload || upload.resident_id !== residentId || upload.state !== "started" || upload.started_by !== own.userId || upload.sub_folder !== own.subFolder) {
     return NextResponse.json({ error: "Unknown upload." }, { status: 404 });
@@ -46,7 +47,7 @@ async function handlePost(request: Request) {
   const duration = typeof durationMs === "number" && Number.isFinite(durationMs) && durationMs > 0 ? Math.round(durationMs) : null;
   const recorded = await recordAdopterFile(own, { driveFileId, fileName: upload.file_name, kind: "video", durationMs: duration });
   if ("error" in recorded) return NextResponse.json({ error: t.common.somethingWentWrong("adopter-update") }, { status: 500 });
-  await admin.from("video_uploads").update({ state: "complete", attachment_id: recorded.id, finished_at: new Date().toISOString() }).eq("id", uploadId);
+  await admin.from("video_uploads").update({ state: "complete", attachment_id: recorded.id, finished_at: new Date().toISOString() }).eq("id", uploadId).eq("shelter_id", own.shelterId);
   return NextResponse.json({ attachmentId: recorded.id });
 }
 

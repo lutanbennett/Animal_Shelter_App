@@ -347,7 +347,7 @@ export async function uploadPlan(form: FormData, requestId: string): Promise<Act
       if (existing.error) return databaseFailure("facilityMap.uploadPlan", existing.error, t.common);
       if (existing.data.length) return refuse(e.alreadyHasPlan);
       const id = crypto.randomUUID();
-      const imagePath = await storePlanImage(id, bytes, type);
+      const imagePath = await storePlanImage(id, bytes, type, { newPlan: true });
       const { error } = await supabase
         .from("facility_maps")
         .insert({ id, kind: zoneId ? "zone" : "overview", zone_id: zoneId, image_path: imagePath, width, height });

@@ -1,5 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 
 /**
  * Where a public report's photo lives: the private bucket made by 0377. No storage policy exists for it, so only the
@@ -11,6 +12,9 @@ export const REPORT_PHOTO_NAME = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 
 /** True when stored, or already there (a replay of the same report). */
 export async function storeReportPhoto(reportId: string, jpeg: Buffer): Promise<boolean> {
+  // The object is named by a report id the caller has just minted, and the report row (stamped with the acting shelter)
+  // is inserted straight after. With no acting shelter that row could not be placed, so nothing is stored.
+  if (!(await actingShelterId())) return false;
   const { error } = await createAdminClient()
     .storage.from(REPORT_PHOTO_BUCKET)
     .upload(`${reportId}.jpg`, jpeg, { contentType: "image/jpeg", upsert: false, cacheControl: "0" });
@@ -19,7 +23,13 @@ export async function storeReportPhoto(reportId: string, jpeg: Buffer): Promise<
 
 export async function readReportPhoto(name: string): Promise<ArrayBuffer | null> {
   if (!REPORT_PHOTO_NAME.test(name)) return null;
-  const { data, error } = await createAdminClient().storage.from(REPORT_PHOTO_BUCKET).download(name);
+  // The name is a report id: serve it only when that report row belongs to the acting shelter.
+  const shelterId = await actingShelterId();
+  if (!shelterId) return null;
+  const db = createAdminClient();
+  const { data: report } = await db.from("animal_reports").select("id").eq("id", name.replace(/\.jpg$/, "")).eq("shelter_id", shelterId).maybeSingle();
+  if (!report) return null;
+  const { data, error } = await db.storage.from(REPORT_PHOTO_BUCKET).download(name);
   if (error || !data) return null;
   return data.arrayBuffer();
 }

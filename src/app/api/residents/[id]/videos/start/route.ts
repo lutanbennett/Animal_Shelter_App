@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { MAX_VIDEO_BYTES, VIDEO_MIME_TYPES } from "@/lib/uploads/limits";
 import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
@@ -124,10 +125,13 @@ async function handlePost(
     origin,
   });
 
+  const shelterId = await actingShelterId();
+  if (!shelterId) return NextResponse.json({ error: t.photos.errors.notAuthorized }, { status: 403 });
   const { data: userData } = await supabase.auth.getUser();
   const { data: row, error } = await createAdminClient()
     .from("video_uploads")
     .insert({
+      shelter_id: shelterId,
       resident_id: id,
       sub_folder: subFolder,
       file_name: fileName,

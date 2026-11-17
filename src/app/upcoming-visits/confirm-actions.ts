@@ -10,6 +10,7 @@ import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { calendarConfigured } from "@/lib/clinics/calendar-sync";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { createVisits, dismissEvent, fetchEvent, isCandidate, loadRefs } from "@/lib/clinics/calendar-import";
 
 // PI FAILOVER (D), 2026-11-01: both writes go through runWriteAction()
@@ -48,7 +49,9 @@ export async function confirmCalendarEntry(_state: ConfirmEntryState, formData: 
     if (typeof eventId !== "string" || !eventId || typeof clinicId !== "string" || !clinicId || residentIds.length === 0) return { ok: true };
     const event = await fetchEvent(eventId);
     if (!event || !isCandidate(event)) return { ok: true };
-    const refs = await loadRefs();
+    const shelterId = await actingShelterId();
+    if (!shelterId) return { ok: true }; // no shelter, no refs: never fall back to every shelter
+    const refs = await loadRefs(shelterId);
     if (!refs.clinics.some((c) => c.id === clinicId)) return { ok: true };
     const live = new Set(refs.residents.filter((r) => r.status !== "Deceased" && r.status !== "Adopted").map((r) => r.id));
     if (!residentIds.every((id) => live.has(id))) return { ok: true };

@@ -138,63 +138,63 @@
     },
     {
       "id": "src/app/adopter-update/actions.ts#sendAdopterUpdate",
-      "classification": "needs-shelter-filter",
-      "reason": "Adopter-portal site: reads and writes residents, video_uploads and adoption_updates for a resident the adopter's scope names. The scope is by verified email, so a person linked at two shelters must see only the one the request is for."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/app/adopter-update/media/photo/route.ts#handlePost",
-      "classification": "needs-shelter-filter",
-      "reason": "Adopter-portal site: reads and writes residents, video_uploads and adoption_updates for a resident the adopter's scope names. The scope is by verified email, so a person linked at two shelters must see only the one the request is for."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/app/adopter-update/media/video/finish/route.ts#handlePost",
-      "classification": "needs-shelter-filter",
-      "reason": "Adopter-portal site: reads and writes residents, video_uploads and adoption_updates for a resident the adopter's scope names. The scope is by verified email, so a person linked at two shelters must see only the one the request is for."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/app/adopter-update/media/video/start/route.ts#handlePost",
-      "classification": "needs-shelter-filter",
-      "reason": "Adopter-portal site: reads and writes residents, video_uploads and adoption_updates for a resident the adopter's scope names. The scope is by verified email, so a person linked at two shelters must see only the one the request is for."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/app/adopter-update/page.tsx#AdopterUpdatePage",
-      "classification": "needs-shelter-filter",
-      "reason": "Adopter-portal site: reads and writes residents, video_uploads and adoption_updates for a resident the adopter's scope names. The scope is by verified email, so a person linked at two shelters must see only the one the request is for."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/app/api/reels/finish/route.ts#handlePost",
-      "classification": "needs-shelter-filter",
-      "reason": "Records video uploads (video_uploads) for a signed-in uploader; rows are shelter data."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/app/api/reels/start/route.ts#handlePost",
-      "classification": "needs-shelter-filter",
-      "reason": "Records video uploads (video_uploads) for a signed-in uploader; rows are shelter data."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/app/api/residents/[id]/videos/finish/route.ts#handlePost",
-      "classification": "needs-shelter-filter",
-      "reason": "Records video uploads for a resident id from the URL; the resident must belong to the acting shelter."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/app/api/residents/[id]/videos/start/route.ts#handlePost",
-      "classification": "needs-shelter-filter",
-      "reason": "Records video uploads for a resident id from the URL; the resident must belong to the acting shelter."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/lib/adopter/media.ts#loadOwnUpdate",
-      "classification": "needs-shelter-filter",
-      "reason": "Adopter-portal reads and writes of adoption_updates and attachments for a resident the adopter's scope names; shelter data."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/lib/adopter/media.ts#recordAdopterFile",
-      "classification": "needs-shelter-filter",
-      "reason": "Adopter-portal reads and writes of adoption_updates and attachments for a resident the adopter's scope names; shelter data."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/lib/adopter/scope.ts#loadAdopterScope",
-      "classification": "needs-shelter-filter",
-      "reason": "Finds contacts by verified email with ilike across the whole contacts table; the same email at two shelters returns both, so it needs the request's shelter."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/lib/animal-reports/photo-retention.ts#runReportPhotoRetention",
@@ -203,23 +203,23 @@
     },
     {
       "id": "src/lib/animal-reports/photo-store.ts#storeReportPhoto",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads and writes the animal-report photo bucket by object name; names carry no shelter prefix, so one shelter's file is reachable by another's request."
+      "classification": "filtered",
+      "reason": "Refuses with no acting shelter; the object is named by the report id just minted, and the report row is inserted stamped with that shelter."
     },
     {
       "id": "src/lib/animal-reports/photo-store.ts#readReportPhoto",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads and writes the animal-report photo bucket by object name; names carry no shelter prefix, so one shelter's file is reachable by another's request."
+      "classification": "filtered",
+      "reason": "The object name is a report id; served only when an animal_reports row with that id has .eq(\"shelter_id\", acting shelter)."
     },
     {
       "id": "src/lib/animal-reports/photo-store.ts#listReportPhotos",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads and writes the animal-report photo bucket by object name; names carry no shelter prefix, so one shelter's file is reachable by another's request."
+      "classification": "cross-shelter",
+      "reason": "Runs from the installation-wide report-photo retention job (#6rkux), which sweeps every shelter's expired and orphaned objects on purpose; it names objects only after they are found expired or without a row."
     },
     {
       "id": "src/lib/animal-reports/photo-store.ts#removeReportPhotos",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads and writes the animal-report photo bucket by object name; names carry no shelter prefix, so one shelter's file is reachable by another's request."
+      "classification": "cross-shelter",
+      "reason": "Runs from the installation-wide report-photo retention job (#6rkux), which sweeps every shelter's expired and orphaned objects on purpose; it names objects only after they are found expired or without a row."
     },
     {
       "id": "src/lib/auth/held-roles.ts#loadHeldRoleKeys",
@@ -233,18 +233,18 @@
     },
     {
       "id": "src/lib/clinics/calendar-import.ts#loadRefs",
-      "classification": "needs-shelter-filter",
-      "reason": "User-driven calendar import: reads clinics, residents and resident_current_state and creates clinic_visits; all shelter data."
+      "classification": "filtered",
+      "reason": "Request callers pass the acting shelter and see only its clinics and residents; the calendar poll passes none (one calendar per installation) and only feeds createVisits, which fences each visit by the clinic's shelter."
     },
     {
       "id": "src/lib/clinics/calendar-import.ts#createVisits",
-      "classification": "needs-shelter-filter",
-      "reason": "User-driven calendar import: reads clinics, residents and resident_current_state and creates clinic_visits; all shelter data."
+      "classification": "filtered",
+      "reason": "Reads the clinic's shelter_id, lets only residents of that shelter through, checks \"imported before\" within it, and inserts every visit with that shelter_id (service role does not stamp)."
     },
     {
       "id": "src/lib/clinics/calendar-import.ts#listToConfirm",
-      "classification": "needs-shelter-filter",
-      "reason": "User-driven calendar import: reads clinics, residents and resident_current_state and creates clinic_visits; all shelter data."
+      "classification": "filtered",
+      "reason": "Returns nothing with no acting shelter; the claimed-events lookup and the refs are .eq(\"shelter_id\", acting shelter)."
     },
     {
       "id": "src/lib/clinics/calendar-poll.ts#apply",
@@ -258,13 +258,13 @@
     },
     {
       "id": "src/lib/clinics/calendar-sync.ts#syncRow",
-      "classification": "needs-shelter-filter",
-      "reason": "Writes the calendar event id back onto a clinic_visits row; must be limited to the visit's own shelter."
+      "classification": "filtered",
+      "reason": "Writes to the visit's own row, fenced by that row's shelter_id (the sweep syncs rows of every shelter, each as itself)."
     },
     {
       "id": "src/lib/clinics/calendar-sync.ts#syncVisitToCalendar",
-      "classification": "needs-shelter-filter",
-      "reason": "Writes the calendar event id back onto a clinic_visits row; must be limited to the visit's own shelter."
+      "classification": "filtered",
+      "reason": "Request-scoped: reads the visit .eq(\"shelter_id\", acting shelter); no acting shelter, unchanged."
     },
     {
       "id": "src/lib/clinics/calendar-sync.ts#syncPendingVisits",
@@ -283,28 +283,33 @@
     },
     {
       "id": "src/lib/facility-map/plan-store.ts#ensureBucket",
-      "classification": "needs-shelter-filter",
-      "reason": "Plan image and its history live in one storage bucket under names that carry no shelter; each shelter's map must be fenced."
+      "classification": "cross-shelter",
+      "reason": "Creates the one shared private bucket if missing; infrastructure, touches no shelter row. Objects inside it are fenced per plan by shelterIdOwnsPlan."
     },
     {
       "id": "src/lib/facility-map/plan-store.ts#storePlanImage",
-      "classification": "needs-shelter-filter",
-      "reason": "Plan image and its history live in one storage bucket under names that carry no shelter; each shelter's map must be fenced."
+      "classification": "filtered",
+      "reason": "Object path carries the plan id; the plan id is proved to belong to a facility_maps row of the acting shelter (shelterIdOwnsPlan, .eq(\"shelter_id\")) before the object is touched; no shelter, no object."
     },
     {
       "id": "src/lib/facility-map/plan-store.ts#readPlanImage",
-      "classification": "needs-shelter-filter",
-      "reason": "Plan image and its history live in one storage bucket under names that carry no shelter; each shelter's map must be fenced."
+      "classification": "filtered",
+      "reason": "Object path carries the plan id; the plan id is proved to belong to a facility_maps row of the acting shelter (shelterIdOwnsPlan, .eq(\"shelter_id\")) before the object is touched; no shelter, no object."
     },
     {
       "id": "src/lib/facility-map/plan-store.ts#readHistory",
-      "classification": "needs-shelter-filter",
-      "reason": "Plan image and its history live in one storage bucket under names that carry no shelter; each shelter's map must be fenced."
+      "classification": "filtered",
+      "reason": "Object path carries the plan id; the plan id is proved to belong to a facility_maps row of the acting shelter (shelterIdOwnsPlan, .eq(\"shelter_id\")) before the object is touched; no shelter, no object."
     },
     {
       "id": "src/lib/facility-map/plan-store.ts#appendHistory",
-      "classification": "needs-shelter-filter",
-      "reason": "Plan image and its history live in one storage bucket under names that carry no shelter; each shelter's map must be fenced."
+      "classification": "filtered",
+      "reason": "Object path carries the plan id; the plan id is proved to belong to a facility_maps row of the acting shelter (shelterIdOwnsPlan, .eq(\"shelter_id\")) before the object is touched; no shelter, no object."
+    },
+    {
+      "id": "src/lib/facility-map/plan-store.ts#shelterIdOwnsPlan",
+      "classification": "filtered",
+      "reason": "The ownership proof itself: reads facility_maps by plan id AND .eq(\"shelter_id\", acting shelter); no shelter returns false."
     },
     {
       "id": "src/lib/home/roles.ts#loadRoleCards",
@@ -328,8 +333,8 @@
     },
     {
       "id": "src/lib/merch/checkout.ts#placeOrder",
-      "classification": "needs-shelter-filter",
-      "reason": "Public merchandise shop: places and reads orders (merch_orders, place_merch_order). Orders are shelter data and the shop is public, so the shelter must come from the request."
+      "classification": "filtered",
+      "reason": "Passes the acting shelter to createAdminClient({ shelterId }) so the order function's column defaults stamp it (0390); no acting shelter, no order. Rates are read with .eq(\"shelter_id\") already."
     },
     {
       "id": "src/lib/merch/checkout.ts#loadOrderView",

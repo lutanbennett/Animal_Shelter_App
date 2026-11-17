@@ -1,5 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import type { Point } from "./geometry";
 import { PLAN_EXTENSIONS, PLAN_MAX_BYTES, type PlanImageType } from "./plan-image";
 import { STORED_PREFIX } from "./types";
@@ -46,6 +47,26 @@ export type HistoryEntry = {
   cleared?: ShapeSnapshot;
 };
 
+/**
+ * THE STORAGE-PATH SHAPE (docs/decisions/2026-11-17-tenancy-part7-filters-3.md). Object names carry the
+ * plan's id and no shelter, and a service-role call is trusted with every shelter, so a path is only
+ * touched after the plan id in it is proved to belong to a `facility_maps` row of the acting shelter:
+ * an explicit `.eq("shelter_id", …)` on that row, then the object. No shelter, or a plan of another
+ * shelter, means no object. A brand-new plan has no row yet; its id was minted a moment ago by the
+ * caller, so the only path it can name is one nothing else owns.
+ */
+async function shelterIdOwnsPlan(planId: string): Promise<boolean> {
+  const shelterId = await actingShelterId();
+  if (!shelterId) return false;
+  const { data } = await createAdminClient().from("facility_maps").select("id").eq("id", planId).eq("shelter_id", shelterId).maybeSingle();
+  return !!data;
+}
+
+/** The plan id inside an object name (`plans/<id>/…`), or null. */
+function planIdOf(objectName: string): string | null {
+  return /^plans\/([0-9a-f-]{36})\//.exec(objectName)?.[1] ?? null;
+}
+
 let bucketChecked = false;
 
 /** Creates the bucket the first time it is needed, so a new environment needs no setup step. */
@@ -66,7 +87,8 @@ async function ensureBucket() {
 }
 
 /** Stores one image under a name nothing else has used, and returns the `image_path` for the row. */
-export async function storePlanImage(planId: string, bytes: Uint8Array, type: PlanImageType): Promise<string> {
+export async function storePlanImage(planId: string, bytes: Uint8Array, type: PlanImageType, opts: { newPlan?: boolean } = {}): Promise<string> {
+  if (!opts.newPlan && !(await shelterIdOwnsPlan(planId))) throw new Error("plan is not in this shelter");
   await ensureBucket();
   const random = Array.from(crypto.getRandomValues(new Uint8Array(4)), (b) => b.toString(16).padStart(2, "0")).join("");
   const name = `plans/${planId}/${Date.now()}-${random}.${PLAN_EXTENSIONS[type]}`;
@@ -79,6 +101,8 @@ export async function storePlanImage(planId: string, bytes: Uint8Array, type: Pl
 
 /** The image's bytes and type, or null when there is no such object. */
 export async function readPlanImage(objectName: string): Promise<{ body: ArrayBuffer; type: string } | null> {
+  const planId = planIdOf(objectName);
+  if (!planId || !(await shelterIdOwnsPlan(planId))) return null;
   const { data, error } = await createAdminClient().storage.from(PLAN_BUCKET).download(objectName);
   if (error || !data) return null;
   return { body: await data.arrayBuffer(), type: data.type || "application/octet-stream" };
@@ -88,6 +112,7 @@ const historyName = (planId: string) => `plans/${planId}/history.json`;
 
 /** Oldest first; empty when the plan has never been uploaded or replaced here. */
 export async function readHistory(planId: string): Promise<HistoryEntry[]> {
+  if (!(await shelterIdOwnsPlan(planId))) return [];
   const { data, error } = await createAdminClient().storage.from(PLAN_BUCKET).download(historyName(planId));
   if (error || !data) return [];
   try {
@@ -99,6 +124,7 @@ export async function readHistory(planId: string): Promise<HistoryEntry[]> {
 }
 
 export async function appendHistory(planId: string, entry: HistoryEntry): Promise<void> {
+  if (!(await shelterIdOwnsPlan(planId))) throw new Error("plan is not in this shelter");
   await ensureBucket();
   const history = [...(await readHistory(planId)), entry];
   const { error } = await createAdminClient()

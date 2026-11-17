@@ -35,7 +35,7 @@ async function handlePost(request: Request) {
   const drive = getDriveClient();
   const { residentFolderId, uploadFolderId, isNewResidentFolder } = await ensureResidentAdoptionUpdateFolder(drive, own.resident, own.subFolder);
   if (isNewResidentFolder) {
-    await createAdminClient().from("residents").update({ drive_folder_id: residentFolderId }).eq("id", own.residentId);
+    await createAdminClient().from("residents").update({ drive_folder_id: residentFolderId }).eq("id", own.residentId).eq("shelter_id", own.shelterId);
   }
   const driveFileId = await uploadImageToFolder(drive, uploadFolderId, { name: file.name, mimeType, content: file });
   const recorded = await recordAdopterFile(own, { driveFileId, fileName: file.name, kind: "photo" });
