@@ -10,7 +10,7 @@
 |---|---|
 | Feature | tenancy-not-null |
 | Backlog item | `docs/backlog.md` → `#stmp5` |
-| Branch / worktree | `claude/tenancy-not-null` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/tenancy-not-null` @ `C:\Development\Animal_Shelter_tenancy-not-null` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3002` (not started: no UI surface) |
 | PR | pending: opened after this commit |
 | Tested by / date | Claude / 2026-11-17 |
