@@ -281,6 +281,7 @@ jobs:
         with:
           node-version: 22
       - run: node scripts/check-hard-coded-security.mjs
+      - run: node scripts/check-service-role-sites.mjs
       # Every sectioned registry route is a tile on its hub page, so Admin (who holds no cards) can reach it (#fc7te).
       - run: node scripts/check-section-hubs.mjs
 
