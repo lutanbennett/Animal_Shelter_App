@@ -38,6 +38,8 @@ need no shelter.
 
 ## What Lutan must do, and only this
 
+**Done 2026-11-17: the repository variable `TEST_SHELTER_ID` was set, and `check-public-views.mjs` then passed with the header in place.** What follows is the original request, kept as written.
+
 **Add a GitHub repository variable `TEST_SHELTER_ID`** (Settings → Secrets and variables → Actions → Variables) with the dev shelter's
 uuid, `ab3ecaac-1cf3-4570-ae79-d32f5ed2d13a`. Until it exists CI sends no header and `public-views` still passes (no policy is on), so
 nothing is red now; **it must exist before any Part 5 policy is applied to dev**, or `public-views` goes red. A repository *variable*,

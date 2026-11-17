@@ -42,6 +42,8 @@ if (projectRef(env) !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${pro
 
 const url = env.NEXT_PUBLIC_SUPABASE_URL;
 const service = createClient(url, env.SUPABASE_SERVICE_ROLE_KEY, {
+  // The shelter header makes every row this script writes take the dev shelter (0390 default), so the per-shelter policies (0392) can see it.
+  global: { headers: scriptShelterHeaders(env) },
   auth: { autoRefreshToken: false, persistSession: false },
 });
 const PREFIX = "dev-signin-";

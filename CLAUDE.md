@@ -585,6 +585,10 @@ is why the old "ask for your port to be added" step was a dead end. Nothing abou
 
 Know its limits, and say so in the test plan when they bite:
 
+- **A shelter header is sent by `next dev` from `DEV_SHELTER_ID` (in `.env.local`).** `worktree.mjs` copies it into a new
+  worktree. Since the per-shelter policies (0392, 2026-11-17) **an unset value means no shelter, and no shelter means no rows**: signed in, every
+  list reads empty. It does nothing outside `next dev`. Scripts that write through the service role must send it too (`scriptShelterHeaders`),
+  or the rows they write take a null shelter and are invisible. Mechanism: `docs/decisions/2026-11-16-dev-and-ci-send-the-shelter-header.md`.
 - **The session is aal1 (password only).** Pages that demand the second step redirect to it. A page
   that *loads* is not the same as an action that *runs*, so the list is two lists. **Re-measured
   2026-10-28** (clicked through, `requestAnimationFrame` firing; the 2026-10-22 reading listed all four
