@@ -909,6 +909,11 @@
         "reason": "A retention job run only by pg_cron, as 0227 purge_assistant_actions is. Execute is revoked from public, anon and authenticated, so no login can call it; it takes no input and decides no one's access. It deletes donation_tax_ids rows past retain_until (#q7x4m)."
       },
       {
+        "migration": "0397_shelter_id_not_null.sql",
+        "item": "function public.purge_donation_tax_ids definer",
+        "reason": "Same cron-only retention job as 0385 (execute revoked from public, anon and authenticated), redefined only so each retention_runs row is stamped with the shelter it ran for, taken from the shelters table, now that shelter_id is NOT NULL. It decides no one access."
+      },
+      {
         "migration": "0388_definer_all_donation_tax_ids_retention_runs.sql",
         "item": "policy public.donation_tax_ids.definer_all",
         "reason": "Policy for the rls_definer role only, the convention 0375 set for every RLS table (docs/decisions/2026-11-14-tenancy-reown.md, 2026-11-16-definer-all-two-tables.md). rls_definer is a NOLOGIN owner role for definer functions, not a login, so it grants no person anything; no card could apply to it. Without it a definer-owned function reads the table as empty. Same shape as the policy 0375 created in a loop."
