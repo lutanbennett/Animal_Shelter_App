@@ -16,5 +16,5 @@ imported the raw dictionary and would otherwise have shown `{shelter}`. Other ra
 
 **Left on purpose (recorded in the registry):** "Lanna Animal Care" in the security-step sentence (it names the authenticator
 issuer, itself left on purpose); the `@lannacare` example in the LINE hint; and the Thai-script name ลานนาแคร์ in two shop sentences, for
-which there is no Thai-name setting. Converted: 51 of the 55 lines the check could see (26 en, 23 th plus the long-name/short-name variants).
+which there is no Thai-name setting. Converted: 49 of the 53 lines (26 en, 23 th); the 4 left are the issuer sentence and the LINE hint in each language.
 Not verified: a Thai speaker has not read the converted sentences (`#y1dqu`).

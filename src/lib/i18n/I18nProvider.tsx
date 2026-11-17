@@ -37,18 +37,24 @@ function loadDictionary(locale: Locale) {
 export function I18nProvider({
   locale,
   units,
+  shelterNames = DEFAULT_SHELTER_NAMES,
   children,
 }: {
   locale: Locale;
+  /** The shelter being served (two plain strings, so they cross the boundary); the dictionaries name it through {shelter}/{shelterShort}. */
+  shelterNames?: ShelterNames;
   /** The units table (Settings → Units), read once by the layout: forms offer from it, labels print from it. */
   units: UnitRow[];
   children: ReactNode;
 }) {
   const dictionary = use(loadDictionary(locale));
+  const { displayName, shortName } = shelterNames;
   const value = useMemo(() => {
-    const t = { ...dictionary, enums: { ...dictionary.enums, unitNames: unitNameMap(units, locale) } };
-    return { locale, t, units };
-  }, [locale, dictionary, units]);
+    const names = { displayName, shortName };
+    const named = fillShelterNames(dictionary, names);
+    const t = { ...named, enums: { ...named.enums, unitNames: unitNameMap(units, locale) } };
+    return { locale, t, units, shelterNames: names };
+  }, [locale, dictionary, units, displayName, shortName]);
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
 
