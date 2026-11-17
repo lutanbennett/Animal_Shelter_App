@@ -127,7 +127,7 @@ export async function runSupplierEmails(now = new Date()): Promise<SupplierRun[]
   const grouped = await unsentParts(db);
   const results: SupplierRun[] = [];
   for (const [supplierId, parts] of grouped) {
-    const { data: sup } = await db.from("suppliers").select("name, email, delivery_method").eq("id", supplierId).single();
+    const { data: sup } = await db.from("suppliers").select("name, email, delivery_method, shelter_id").eq("id", supplierId).single();
     const name = sup?.name ?? supplierId;
     if (!sup || sup.delivery_method !== "daily_email") continue;
     if (!sup.email) {
@@ -138,7 +138,7 @@ export async function runSupplierEmails(now = new Date()): Promise<SupplierRun[]
     const ids = parts.map((p) => p.id);
     const { data: log, error: le } = await db
       .from("merch_supplier_emails")
-      .insert({ supplier_id: supplierId, sent_to: sup.email, part_count: parts.length, body: mail.text })
+      .insert({ supplier_id: supplierId, shelter_id: sup.shelter_id, sent_to: sup.email, part_count: parts.length, body: mail.text })
       .select("id")
       .single();
     if (le || !log) {
