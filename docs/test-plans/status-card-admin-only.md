@@ -14,7 +14,7 @@
 | PR | opened after this commit |
 | Tested by / date | Claude, 2026-11-17 |
 | Carries a migration? | yes (0399) |
-| Tested at SHA | 89b85cf26 |
+| Tested at SHA | a0c7764a9 |
 
 ## 1. Scope and risk
 
