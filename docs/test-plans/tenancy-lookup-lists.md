@@ -11,7 +11,7 @@
 | PR | pending: number known once opened |
 | Tested by / date | Claude, 2026-11-17 |
 | Carries a migration? | yes |
-| Tested at SHA | 32ef5b25d |
+| Tested at SHA | 423c33714 |
 
 ## 1. Scope and risk
 
@@ -26,10 +26,10 @@
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`:
 
 ```
-=== gates: typecheck exited 0 after 19s
-=== gates: lint exited 0 after 149s
-=== gates: test exited 0 after 51s
-=== gates: build exited 1 after 64s
+=== gates: typecheck exited 0 after 7s
+=== gates: lint exited 0 after 127s
+=== gates: test exited 0 after 37s
+=== gates: build exited 1 after 45s
 gates: FAILED — build
 gates: typecheck=0 lint=0 test=0 build=1
 
@@ -49,7 +49,7 @@ build=1 above is the known Next advisory halt (SecurityFatalError, docs/decision
 - [x] Existing rows still read correctly after the change (all stamped Lanna; null count checked inside the migration)
 - [x] Constraints and defaults exercised in a rolled-back harness: same-name row in a second shelter accepted; shelter-one session saw 0 of shelter two's rows and edited 0; shelter two's cost stayed 999, Lanna's 250
 - [ ] Down-migration written — n/a: undo steps are in the file header (drop policies, restore old keys, drop column)
-- [x] Production apply plan: `0403_lookup_lists_per_shelter.sql` to project `dbkodyyxxhtygxcxmfcu`, before or with the deploy; app code unchanged
+- [x] Production apply plan: `0403_lookup_lists_per_shelter.sql` to project `dbkodyyxxhtygxcxmfcu`, before or with the deploy; app code unchanged. Production is still behind on 0390, which applies first
 
 ## 4. Functional checks
 
