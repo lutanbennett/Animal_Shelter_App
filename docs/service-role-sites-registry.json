@@ -223,13 +223,13 @@
     },
     {
       "id": "src/lib/auth/held-roles.ts#loadHeldRoleKeys",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads user_roles with roles(key) for user ids the caller names; ids and roles must be limited to the acting shelter."
+      "classification": "filtered",
+      "reason": "Reads user_roles for the acting shelter only, .eq(\"shelter_id\", …) from actingShelterId(); no shelter means no rows."
     },
     {
       "id": "src/lib/auth/held-roles.ts#loadHeldRoles",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads user_roles with roles(key) for user ids the caller names; ids and roles must be limited to the acting shelter."
+      "classification": "filtered",
+      "reason": "Reads user_roles for the acting shelter only, .eq(\"shelter_id\", …) from actingShelterId(); no shelter means no rows."
     },
     {
       "id": "src/lib/clinics/calendar-import.ts#loadRefs",
@@ -348,33 +348,33 @@
     },
     {
       "id": "src/lib/status/alerts.ts#adminEmails",
-      "classification": "unclassified",
-      "reason": "Status alert mail and its run log. Whether checks, recipients and runs belong to one platform operator or to each shelter depends on whether Part 5 models a platform operator separately from a shelter admin; not decidable from the code."
+      "classification": "cross-shelter",
+      "reason": "Installation monitoring: checkAlerts reads Pi/Worker health and mails the admins; its run log and test requests are platform tables (status_alert_checks/runs/test_requests take no shelter_id, 0392). Deliberately cross-shelter, measured by reachability in docs/decisions/2026-11-17-tenancy-part5-policies.md question 2."
     },
     {
       "id": "src/lib/status/alerts.ts#recordRun",
-      "classification": "unclassified",
-      "reason": "Status alert mail and its run log. Whether checks, recipients and runs belong to one platform operator or to each shelter depends on whether Part 5 models a platform operator separately from a shelter admin; not decidable from the code."
+      "classification": "cross-shelter",
+      "reason": "Installation monitoring: checkAlerts reads Pi/Worker health and mails the admins; its run log and test requests are platform tables (status_alert_checks/runs/test_requests take no shelter_id, 0392). Deliberately cross-shelter, measured by reachability in docs/decisions/2026-11-17-tenancy-part5-policies.md question 2."
     },
     {
       "id": "src/lib/status/alerts.ts#runStatusAlerts",
-      "classification": "unclassified",
-      "reason": "Status alert mail and its run log. Whether checks, recipients and runs belong to one platform operator or to each shelter depends on whether Part 5 models a platform operator separately from a shelter admin; not decidable from the code."
+      "classification": "cross-shelter",
+      "reason": "Installation monitoring: checkAlerts reads Pi/Worker health and mails the admins; its run log and test requests are platform tables (status_alert_checks/runs/test_requests take no shelter_id, 0392). Deliberately cross-shelter, measured by reachability in docs/decisions/2026-11-17-tenancy-part5-policies.md question 2."
     },
     {
       "id": "src/lib/status/alerts.ts#requestTestAlert",
-      "classification": "unclassified",
-      "reason": "Status alert mail and its run log. Whether checks, recipients and runs belong to one platform operator or to each shelter depends on whether Part 5 models a platform operator separately from a shelter admin; not decidable from the code."
+      "classification": "cross-shelter",
+      "reason": "Installation monitoring: checkAlerts reads Pi/Worker health and mails the admins; its run log and test requests are platform tables (status_alert_checks/runs/test_requests take no shelter_id, 0392). Deliberately cross-shelter, measured by reachability in docs/decisions/2026-11-17-tenancy-part5-policies.md question 2."
     },
     {
       "id": "src/lib/status/alerts.ts#processTestRequests",
-      "classification": "unclassified",
-      "reason": "Status alert mail and its run log. Whether checks, recipients and runs belong to one platform operator or to each shelter depends on whether Part 5 models a platform operator separately from a shelter admin; not decidable from the code."
+      "classification": "cross-shelter",
+      "reason": "Installation monitoring: checkAlerts reads Pi/Worker health and mails the admins; its run log and test requests are platform tables (status_alert_checks/runs/test_requests take no shelter_id, 0392). Deliberately cross-shelter, measured by reachability in docs/decisions/2026-11-17-tenancy-part5-policies.md question 2."
     },
     {
       "id": "src/lib/status/alerts.ts#checkAlerts",
-      "classification": "unclassified",
-      "reason": "Status alert mail and its run log. Whether checks, recipients and runs belong to one platform operator or to each shelter depends on whether Part 5 models a platform operator separately from a shelter admin; not decidable from the code."
+      "classification": "cross-shelter",
+      "reason": "Installation monitoring: checkAlerts reads Pi/Worker health and mails the admins; its run log and test requests are platform tables (status_alert_checks/runs/test_requests take no shelter_id, 0392). Deliberately cross-shelter, measured by reachability in docs/decisions/2026-11-17-tenancy-part5-policies.md question 2."
     },
     {
       "id": "src/lib/status/health.ts#checkDatabase",
@@ -398,13 +398,13 @@
     },
     {
       "id": "src/lib/status/usage.ts#countSince",
-      "classification": "unclassified",
-      "reason": "Counts rows and sign-ins across the whole database for /admin/status. Platform monitoring if the page is for the platform operator, a tenant leak if for shelter admins; same open question as the alerts."
+      "classification": "filtered",
+      "reason": "Counts only the acting shelter: every count and the sign-in list carry .eq(\"shelter_id\", …) from actingShelterId(), and the report cache is keyed by shelter. Was a confirmed tenant leak behind the system.status card (#1645)."
     },
     {
       "id": "src/lib/status/usage.ts#countSignIns",
-      "classification": "unclassified",
-      "reason": "Counts rows and sign-ins across the whole database for /admin/status. Platform monitoring if the page is for the platform operator, a tenant leak if for shelter admins; same open question as the alerts."
+      "classification": "filtered",
+      "reason": "Counts only the acting shelter: every count and the sign-in list carry .eq(\"shelter_id\", …) from actingShelterId(), and the report cache is keyed by shelter. Was a confirmed tenant leak behind the system.status card (#1645)."
     }
   ]
 }

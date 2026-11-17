@@ -1,5 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { todayIso } from "@/lib/format";
 import type { AppUser } from "./app-users";
 
@@ -17,11 +18,14 @@ export async function loadHeldRoleKeys(userIds: readonly string[]): Promise<Map<
   const held = new Map<string, string[]>();
   const ids = [...new Set(userIds)];
   if (ids.length === 0) return held;
+  const shelterId = await actingShelterId();
+  if (!shelterId) return held; // no shelter, no rows: callers fall back to the main role
   const today = todayIso();
   const { data, error } = await createAdminClient()
     .from("user_roles")
     .select("user_id, is_main, starts_on, ends_on, roles(key)")
     .in("user_id", ids)
+    .eq("shelter_id", shelterId)
     .is("archived_at", null)
     .order("is_main", { ascending: false });
   // A failed read must not look like "nobody covers anyone"; the main role (app_users) is the caller's fallback.
@@ -53,11 +57,14 @@ export type HeldRole = { key: string; name: string; nameTh: string | null; isMai
  * counts. Same rule and same service-role read as loadHeldRoleKeys; names are for headings only, never for a check.
  */
 export async function loadHeldRoles(userId: string): Promise<HeldRole[]> {
+  const shelterId = await actingShelterId();
+  if (!shelterId) return [];
   const today = todayIso();
   const { data, error } = await createAdminClient()
     .from("user_roles")
     .select("is_main, starts_on, ends_on, roles(key, name, name_th)")
     .eq("user_id", userId)
+    .eq("shelter_id", shelterId)
     .is("archived_at", null)
     .order("is_main", { ascending: false })
     .order("ends_on", { ascending: true, nullsFirst: false });

@@ -31,7 +31,26 @@ export function compare(sites, registry) {
   return {
     unregistered: sites.filter((s) => !recorded.has(s.id)),
     stale: registry.sites.filter((r) => !have.has(r.id)).map((r) => r.id),
-    unclassified: registry.sites.filter((r) => r.classification !== "needs-shelter-filter" && r.classification !== "cross-shelter" && r.classification !== "unclassified"),
+    unclassified: registry.sites.filter((r) => r.classification !== "needs-shelter-filter" && r.classification !== "cross-shelter" && r.classification !== "unclassified" && r.classification !== "filtered"),
     noReason: registry.sites.filter((r) => !r.reason || r.reason.trim().length < 15).map((r) => r.id),
   };
+}
+
+// A site recorded "filtered" must actually name a shelter filter in its own function: from the call's function header to the next
+// top-level function. A claim of filtering with no shelter_id / actingShelterId in that body fails.
+export function unfilteredClaims(files, sites, registry) {
+  const byId = new Map(sites.map((s) => [s.id, s]));
+  const bad = [];
+  for (const r of registry.sites) {
+    if (r.classification !== "filtered") continue;
+    const s = byId.get(r.id);
+    if (!s) continue;
+    const lines = files[s.file].split(String.fromCharCode(10));
+    let start = s.line - 1;
+    while (start > 0 && !FN.test(lines[start])) start--;
+    let end = s.line;
+    while (end < lines.length && !FN.test(lines[end])) end++;
+    if (!/shelter_id|shelterId|actingShelterId/.test(lines.slice(start, end).join("\n"))) bad.push(r.id);
+  }
+  return bad;
 }
