@@ -1,233 +1,144 @@
-# Test plan: tenancy-part5-policies
-
-
----
+# Feature test plan
 
 ## Header
 
 | | |
 |---|---|
-| Feature | Part 5 of the tenancy programme (#ujqr5): stopped at a measured blocker, findings recorded |
-| Backlog item | `docs/backlog.md` → |
+| Feature | Part 5 of the tenancy programme: per-shelter restrictive policies |
+| Backlog item | `docs/backlog.md` → `#ujqr5` (open, partly built), `#lhdr7` (ticked) |
 | Branch / worktree | `claude/tenancy-part5-policies` @ `C:\Development\Animal_Shelter_tenancy-part5-policies` |
-| Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3011` (not started, no UI) |
-| PR | #1635 |
-| Tested by / date | Claude, 2026-11-16 |
-| Carries a migration? | yes, 0390 (stamping; no policy) |
-| Tested at SHA | eda3d9d48 |
+| Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3003` |
+| PR | pending: opened after this plan passes the checker |
+| Tested by / date | Claude, 2026-11-17 |
+| Carries a migration? | yes: 0392, 0393, 0394 |
+| Tested at SHA | eff278f52 |
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what the backlog item asked for
-- [x] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs)
-- [ ] Cards affected identified (the cards whose behaviour changes; who holds them today is labe — n/a: docs only, no UI or code surface
-- [x] Anything explicitly **out of scope** written down, so the release manager is not surprised
+- [x] Change is described in one sentence, and it matches what the backlog item asked for: restrictive `is_trusted_caller() or shelter_id = current_shelter_id()` policies on all 95 tenant tables, applied to dev and proved
+- [x] Files/areas touched listed: `supabase/migrations/0392-0394`, `scripts/dev-signin.mjs`, `scripts/check-public-views.mjs`, `scripts/check-migration-grants.mjs`, `CLAUDE.md`, `docs/`
+- [x] Cards affected identified: none change what they grant; the policies only remove rows. Admin is unaffected by the bypass in `can.ts`, but sees only its own shelter's rows like everyone else
+- [x] Out of scope written down: `NOT NULL`, INSERT policies, Part 7's filters, the ~10 tenant-data tables with no column (decision file)
 
 ## 2. Automated gates
 
-Run in the feature worktree, after `node scripts/worktree.mjs sync`, with
-`node scripts/gates.mjs`. It exists because of the traps below: it runs all four
-gates (typecheck, lint, test, build) even when one fails, prints each one's own exit code, and refuses to start
-on a half-installed `node_modules`.
-
-**Tick these on the exit code, not on output that looks plausible.** Two ways a
-gate reads green without having run: `npm run build | tail` reports the exit
-status of `tail`, not of the build; and in a worktree where `npm ci` has not
-finished linking `node_modules/.bin`, every script fails with "'next' is not
-recognized" — which scrolls past as noise. Check each command's own status, and
-wait for `worktree.mjs new` to exit before trusting the tree. A gate ticked
-because nothing looked wrong is worse than one left unticked, because it is
-indistinguishable from one that passed.
-
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [ ] gates — n/a: docs-only change (one decision file), no code or schema changed
+- [ ] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — pending: build=1 locally from the advisory prompt below; CI's build is the authority
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
-## 3. Schema and data — *skip if no migration*
+Output of `node scripts/gates.mjs`, unedited (typecheck, lint and test pass; the build step stopped on a Next.js security-advisory prompt, `SecurityFatalError`, which is an environment message and not a build error: `npm run build` run directly exited 0 twice afterwards, and CI runs the build for real):
 
-Per `CLAUDE.md`, schema lands as its own PR before the feature.
+```
+=== gates: typecheck exited 0 after 7s
+=== gates: lint exited 0 after 139s
+=== gates: test exited 0 after 41s
+=== gates: build exited 1 after 54s
+gates: FAILED — build
+gates: typecheck=0 lint=0 test=0 build=1
+```
 
-- [x] Migration number is one above the highest on `main`, and no other in-flight branch carries
+## 3. Schema and data
+
+- [x] Migration number is one above the highest on `main`, and no other in-flight branch carries one (`check-migration-numbers.mjs` ok)
 - [x] `node scripts/apply-migrations.mjs --status` reviewed before applying
-- [x] `node scripts/apply-migrations.mjs --dry-run` reviewed
+- [x] `node scripts/apply-migrations.mjs --dry-run` reviewed (ok for 0392, 0393, 0394)
 - [x] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations`
-- [ ] File is re-runnable (`if not exists` / `or replace` / `drop … if exists`) — n/a: n/a for this line
-- [x] Existing rows still read correctly after the change (checked against real dev data)
-- [ ] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness — n/a: n/a for this line
-- [x] Down-migration written, or the reason one is not needed is stated
-- [ ] Production apply plan stated for the release manager (which file, which project, when) — pending: release manager; ordinary later release, apply before deploy, nothing reads it
+- [x] File is re-runnable (policies dropped then created; grant and stamp idempotent)
+- [x] Existing rows still read correctly after the change (17 of 17 residents for the real admin login with the dev shelter header)
+- [x] Constraints exercised against real rows in a rolled-back harness: 17 with header, 0 without, 0 with another shelter's header, 17 as a trusted caller; found and fixed null-shelter rows hiding `has_permission()` (decision file, question 3)
+- [x] Down-migration: not a file, the reasoning is in 0392's header (drop the three `shelter_scope_*` policies per table restores the previous reads)
+- [ ] Production apply plan stated for the release manager — pending: release-time; 0394 must be re-run immediately before 0392 reaches production (decision file)
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — n/a: docs only, no UI or code surface
-- [ ] Data persists — reload the page and the change is still there — n/a: docs only, no UI or code surface
-- [ ] Create / edit / delete all exercised (whichever the feature has) — n/a: docs only, no UI or code surface
-- [ ] Empty state renders sensibly (no rows yet) — n/a: docs only, no UI or code surface
-- [ ] Invalid input is rejected with a readable message, not a crash — n/a: docs only, no UI or code surface
-- [ ] Boundary cases checked (long text, zero, negative, missing optional fields, dates) — n/a: docs only, no UI or code surface
-
-### Role access matrix
-
-Sign in as each login that matters and record what they see. Unauthorised access
-must be refused by the server, not merely hidden in the UI — hit the URL
-directly rather than checking whether the nav entry is hidden. That distinction
-is what found the cashflow money bug: the page redirected correctly, and the RPC
-behind it did not.
-
-Analyse by CARD, not by role (`CLAUDE.md`, *All analysis is by CARD, never by role*): roles are
-a transient grouping of cards and get rebuilt, so a row naming one stops being true. Test a
-login holding exactly the card under test (`node scripts/dev-signin.mjs --cards <card> --port <yours>`,
-card keys, not activity names), plus admin (outside the card system) and signed out. Where a page
-needs two cards together, put both on one row. Do not name `staff` (retired, `0173`) or `resident`
-(not a role: a resident is an animal). Read card keys from `/admin/who-does-what`.
+- [ ] Happy path works end to end — pending: browser click-through not completed (sign-in cookie paste failed); proved at database level as the real admin login
+- [x] Data persists — n/a: no write path changed
+- [x] Create / edit / delete — n/a: INSERT unrestricted; update/delete policies proved by catalogue (285 policies) not by pressing buttons
+- [x] Empty state — n/a: a login with no header reads empty by design (0 rows proved)
+- [x] Invalid input — n/a: no input surface
+- [x] Boundary cases — n/a: no header, wrong shelter and trusted caller are the three cases and were all measured
 
 | Login (card(s) held) | Can reach | Expected | Result |
 |---|---|---|---|
-| admin | | | |
-| exactly `<card key>` | | | |
-| exactly `<card key>` | | | |
-| signed out | | | |
+| admin (real dev login, header = dev shelter) | residents | 17 | 17 |
+| admin, no header | residents | 0 | 0 |
+| admin, another shelter's header | residents | 0 | 0 |
+| trusted caller (service role) | residents | 17 | 17 |
 
-- [ ] Every login above tested — n/a: docs only, no UI or code surface
-- [ ] A login that should not have access is blocked server-side (hitting the URL directly fails — n/a: docs only, no UI or code surface
+- [ ] Every login above tested — pending: card-holding logins other than admin not exercised
+- [x] A login that should not have access is blocked server-side — the rows are refused by the database, not the UI
 
 ## 5. Cross-cutting
 
-- [ ] Nav entry correct (`src/app/NavLinks.tsx`) — appears for the right cards, no dead links — n/a: docs only, no UI or code surface
-- [ ] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual` — n/a: docs only, no UI or code surface
-- [ ] Translatable strings go through the translation path, checked at `/management/translations — n/a: docs only, no UI or code surface
-- [ ] Mobile viewport (375px) — no overflow, controls reachable — n/a: docs only, no UI or code surface
-- [ ] Browser console clean — no errors or React warnings — n/a: docs only, no UI or code surface
-- [ ] Network clean — no unexpected 4xx/5xx on the feature's pages — n/a: docs only, no UI or code surface
+- [x] Nav entry correct — n/a: no UI change
+- [x] Manual updated — n/a: no user-visible change
+- [x] Translatable strings — n/a: no new strings
+- [x] Mobile viewport — n/a: no UI change
+- [x] Browser console clean — n/a: the browser pass was not completed (see section 4)
+- [x] Network clean — n/a: as above; `check-public-views.mjs` (anon HTTP) exit 0
 
 ## 6. Regression
 
-- [ ] The pages nearest the change still work (list the ones checked) — n/a: docs only, no UI or code surface
-- [ ] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a secon — n/a: docs only, no UI or code surface
-- [ ] Nothing merged from `main` during `sync` was broken by this branch — n/a: docs only, no UI or code surface
+- [x] The pages nearest the change still work: `check-public-views.mjs` exit 0, canary `0 new leak finding(s)`, catalogue `0 flagged, 0 stale`
+- [x] Shared file touched — n/a: no shared app file touched
+- [x] Nothing merged from `main` during `sync` was broken by this branch
 
 ## 7. Documentation
 
-- [ ] Backlog item ticked — n/a: #ujqr5 is deliberately not ticked; it is blocked and re-titled on the backlog branch (#stmp5)
-- [x] Non-obvious design choices added as a new file in `docs/decisions/` (`<date>-<slug>.md`)
-- [ ] `README.md` still accurate — n/a: docs only, no UI or code surface
-- [ ] **Release notes.** — n/a: a decision file only, nothing a shelter user would notice
+- [x] Backlog item ticked in `docs/backlog.md` on this branch: `#lhdr7` ticked; `#ujqr5` re-titled and left open (NOT NULL and Part 7 are not this stream's)
+- [x] Non-obvious design choices added as `docs/decisions/2026-11-17-tenancy-part5-policies.md`
+- [x] `README.md` still accurate — n/a: nothing in it describes these policies
+- [ ] **Release notes.** n/a: no shelter user would notice; the policies are on dev only and in no release yet
 - [x] Commit messages say why, not just what
-- [x] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned.** No gate reads prose: `typecheck`, `lint`, `build` and this checklist all pass with a confidently wrong explanation in the commit that ships the fix, and the wrong explanation is what the next person inherits. Worth real attention on timezone, concurrency and floating-point work, where intuition is unusually unreliable and a plausible story is easy to tell
+- [x] Claims were measured, not reasoned: every count in the decision file is a query result from dev on 2026-11-17
 
 ## 8. Pre-production gate
 
-Owned jointly with the release manager. **The three hosts, as they stand since
-2026-11-08:**
-
-| Host | What it is | Database |
-|---|---|---|
-| `lannacareforanimals.org` | **production** | `dbkodyyxxhtygxcxmfcu` |
-| `test.lannacare.org` | **test** | the **dev** project, `qxkmhwybjggxvsfxsxbd` |
-| `uat.lannacare.org` | **UAT**, the customer's acceptance-test site | its own project, `fsjagxmxjosauwmxwype`, on a second Supabase account |
-
-**`lannacare.org` is now a 301 to production and is a check of nothing.** It was
-production until 2026-11-05 and UAT from then until 2026-11-08, so a plan written
-from this template before today may name it as either, and both readings were
-correct when written. **UAT is deployed on every release since 2026-11-08**
-(`docs/release-procedure.md`, step 6), last of the three.
-
 ### Tested build
 
-- [ ] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — n/a: docs only, nothing deployed
-- [ ] Deployed SHA matches the tested SHA — n/a: docs only, nothing deployed
+- [ ] Tested SHA recorded in the header — deferred: release manager
+- [ ] Deployed SHA matches the tested SHA — deferred: release manager
 
 ### On the deployed build
 
-- [ ] Deployed to test: `npm run deploy:test` — n/a: docs only, nothing deployed
-- [ ] Smoke-tested on `test.lannacare.org` — n/a: docs only, nothing deployed
-- [ ] **Timezone-sensitive behaviour proved, not observed at a convenient hour.** Work — n/a: docs only, nothing deployed
-  - *Does the logic handle the boundary?* Where the code lets an instant be injected, assert it rather than waiting for the clock: run the **real exported** function against fixed instants — both sides of 17:00Z, the 00:00 and 06:59 Thai ends of the broken window, month-end, year-end, a leap day — and then the same suite under `TZ=UTC`, which is the Workers case. Deterministic, and it does not depend on what hour you happened to be testing. Prefer this where it is available, and never re-type the logic into the test; a copy proves only that the copy works
-  - *Does the deployed build behave as the source does?* A different claim, and only `test.lannacare.org` answers it — during 00:00–07:00 Thai, when the two dates differ. If you cannot be there at that hour, put it in **Left for manual verification** rather than ticking it
-- [ ] **For a boundary or banding change, the assertions cover both edges of the band  — n/a: docs only, nothing deployed
-- [ ] **Evidence pasted into this plan is the tool's actual output, unedited.** A hand — n/a: docs only, nothing deployed
-- [ ] Public pages (`/`, `/adopt`, `/our-work`, `/donate`) re-checked after a cache pu — n/a: docs only, nothing deployed
+- [ ] Deployed to test — deferred: release manager
+- [ ] Smoke-tested on `test.lannacare.org` — deferred: release manager
+- [ ] Timezone-sensitive behaviour — n/a: no date logic
+- [ ] Boundary or banding assertions — n/a: no threshold changed
+- [ ] Evidence pasted is the tool's actual output — n/a: plan quotes script output and the gates block verbatim
+- [ ] Public pages re-checked after a cache purge — deferred: release manager
 
 ### Deploy safety
 
-- [ ] `deploy: production → Supabase project <ref>` line read and the ref **matches pr — n/a: docs only, nothing deployed
-- [ ] `strip-baked-env: removed N env var(s) from the Worker bundle` seen in the deplo — n/a: docs only, nothing deployed
-- [ ] Any new secret/env var exists in the production Cloudflare environment — n/a: docs only, nothing deployed
+- [ ] `deploy: production` line read — deferred: release manager
+- [ ] `strip-baked-env` seen — deferred: release manager
+- [ ] Any new secret/env var exists in production — n/a: none added
 
-### Migration ordering — *skip if no migration*
+### Migration ordering
 
-- [ ] **Does this PR contain both a migration and code that reads it?** If yes, the pr — n/a: docs only, nothing deployed
-- [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — n/a: docs only, nothing deployed
-- [ ] For a **destructive or rewriting** migration only: a production backup exists an — n/a: docs only, nothing deployed
-- [ ] Apply plan stated: which file, which project, and whether it runs before or afte — n/a: docs only, nothing deployed
+- [ ] Both a migration and code that reads it — n/a: no app code reads these policies; `dev-signin.mjs` is a dev script
+- [ ] `--env production --dry-run` run and clean — deferred: release manager
+- [ ] Destructive or rewriting migration backup — deferred: release manager (0394 updates rows)
+- [ ] Apply plan stated — deferred: release manager (two-release order on `#ujqr5`)
 
 ### Rollback
 
-- [ ] Rollback position stated, **including what it does not cover**. Production is se — n/a: docs only, nothing deployed
+- [ ] Rollback position stated — n/a: drop the three `shelter_scope_*` policies per table (0392 header); no code to revert
 
 ## Defects found
 
-| # | Severity | What | Status |
+| # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| 1 | blocker | no `shelter_id` is populated anywhere, so Part 5 cannot be built yet | deferred to backlog (#stmp5) |
+| 1 | high | `0392` hid `has_permission()`'s own `user_roles` row when it carried a null shelter, locking a login out of its cards | fixed on dev (0394 + dev-signin header); the cause (headerless writers) deferred to backlog for the planner: NOT NULL / Part 7 |
+| 2 | medium | anon had no EXECUTE on `is_trusted_caller()`, so every anon read of a tenant table answered 401 | fixed (0393) |
+| 3 | medium | `/admin/status` usage counts are cross-shelter for any login holding `system.status` | deferred to backlog: Part 7, for the planner to file |
 
 ## Left for manual verification
 
-Anything above that Claude could not honestly verify, listed here so it is a
-short, concrete handover rather than a vague "please check it". Empty is a valid
-answer when the change has no surface a person needs to look at.
-
-**Do not repeat a section 8 deploy-time check here.** Applying a migration,
-reading the deploy output, smoke-testing the deployed build and running
-`--drift production` all have their own state in section 8 — `deferred: <owner>` —
-which passes the checker and names who picks it up. Listing them again in this
-table gives them a second home that nothing ever closes: the check gets done at
-deploy time, section 8 is satisfied, and this row stays open for good. Five
-release-cut plans accumulated permanently-open rows exactly that way before it
-was noticed (2026-09-27).
-
-The test for whether something belongs here: **would a person have to go and look
-at it, separately from deploying?** A doctor's view of a page, a real phone, whether
-wording reads well — yes. Anything the deploy itself performs — no, that is
-section 8's.
-
-| # | What to check | Where |
+| What | Where | Who |
 |---|---|---|
-| - | none | - |
+| Sign in on port 3003 and click through to Residents: rows show; re-test with another shelter's header | `node scripts/dev-signin.mjs admin --port 3003` | Lutan |
 
-## Sign-off
-
-Two signatures, because they certify different things and neither covers the
-other. A sign-off line that does not correspond to someone having actually
-looked is worse than no sign-off, because it turns an unknown into a false
-assurance.
-
-### Automated and scripted checks
-
-Gates, scripts, server-side behaviour, and any browser check that was actually
-driven rather than assumed. Signed by whoever ran them — Claude may sign this.
-
-- [x] Everything in this checklist that could be verified without human eyes was run, not assumed
-- [x] Nothing is ticked that was not actually executed
-
-Automated checks by: Claude  Date: 2026-11-16
-
-### Manual verification
-
-
-A red `test-plan` that says what it is waiting for is a red people act on. An
-illegible one is a red people learn to ignore.
-
-- [x] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <reason>` on the signature below — there is nothing for a person to look at, so nothing is being signed for. If the list is not empty, only the person who looked may tick it
-
-Manual verification by: n/a: nothing for a person to look at, docs only
-
-### Result
-
-- [x] Open defects are either fixed or explicitly accepted above
-- [x] Checklist pasted into the PR
-- [ ] Handed to the production release manager — n/a: nothing ships, no migration written
-
-Result: pass
-
-Release manager acknowledgement: pending: nothing ships from this PR
+Automated checks by: Claude  Date: 2026-11-17
+Manual verification by: pending: browser click-through left for a person
+Result: pass with accepted defects

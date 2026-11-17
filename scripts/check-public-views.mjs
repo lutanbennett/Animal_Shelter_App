@@ -125,6 +125,7 @@ const PUBLIC_FUNCTIONS = {
   shelter_time_zone: {},
   shelter_today: {},
   current_shelter_id: {},
+  is_trusted_caller: {},
 };
 
 for (const name of PUBLIC) {

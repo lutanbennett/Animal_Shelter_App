@@ -203,6 +203,7 @@ const ANON_FUNCTIONS = new Set([
   "shelter_time_zone",
   "shelter_today",
   "current_shelter_id", // 0390: a column default runs as the inserting role, and the public forms insert as anon
+  "is_trusted_caller", // 0393: the per-shelter restrictive policies (0392) call it, and a policy runs with the querying role's rights
   // Granted by 0082, taken back by 0089; the file that granted it is history.
   "is_known_drive_file",
 ]);
