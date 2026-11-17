@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { adminEmails, send } from "@/lib/status/alerts";
 import { getAppEnv } from "@/lib/app-env";
+import { calendarNoticeFooter } from "./calendar-notice";
 import { shelterNames } from "@/lib/shelter-settings";
 import { decideChange, isOtherEnvironment } from "./calendar-change";
 import { calendarConfigured, calendarFetch, errorText } from "./calendar-sync";
