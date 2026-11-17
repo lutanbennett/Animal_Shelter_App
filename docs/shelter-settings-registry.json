@@ -72,12 +72,16 @@
       "reason": "Comment, example or placeholder text, or a host/header name, not output that varies by shelter."
     },
     {
+      "file": "src/lib/i18n/shelter-prose.test.mjs",
+      "reason": "Test: asserts the exact previous text for the live shelter (the byte-for-byte proof), so it must name her."
+    },
+    {
       "file": "src/lib/i18n/dictionaries/en.ts",
-      "reason": "Public-site and app copy in the dictionaries names the shelter in prose; the dictionaries are static per-language records read by client components with no shelter in scope, so a name needs a placeholder mechanism across ~50 strings and function entries; handed to the website/i18n part (decision 2026-11-17-per-shelter-dictionary-prose)."
+      "reason": "Left on purpose after the prose moved to {shelter}/{shelterShort} (i18n/shelter-prose.ts): the security-step sentence names the authenticator issuer \"Lanna Animal Care\", which is left on purpose (decision 2026-11-17-per-shelter-naming; changing the text without the issuer would mislead), and the LINE hint uses @lannacare as an example id."
     },
     {
       "file": "src/lib/i18n/dictionaries/th.ts",
-      "reason": "Public-site and app copy in the dictionaries names the shelter in prose; the dictionaries are static per-language records read by client components with no shelter in scope, so a name needs a placeholder mechanism across ~50 strings and function entries; handed to the website/i18n part (decision 2026-11-17-per-shelter-dictionary-prose)."
+      "reason": "Left on purpose after the prose moved to {shelter}/{shelterShort} (i18n/shelter-prose.ts): the security-step sentence names the authenticator issuer \"Lanna Animal Care\" (left on purpose), the LINE hint uses @lannacare as an example id; the Thai-script name ลานนาแคร์ in two shop sentences has no setting to fill from and is flagged, not guessed."
     },
     {
       "file": "src/lib/links/donation.test.mjs",
