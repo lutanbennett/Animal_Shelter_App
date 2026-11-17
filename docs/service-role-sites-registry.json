@@ -203,23 +203,23 @@
     },
     {
       "id": "src/lib/animal-reports/photo-store.ts#storeReportPhoto",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads and writes the animal-report photo bucket by object name; names carry no shelter prefix, so one shelter's file is reachable by another's request."
+      "classification": "filtered",
+      "reason": "Refuses with no acting shelter; the object is named by the report id just minted, and the report row is inserted stamped with that shelter."
     },
     {
       "id": "src/lib/animal-reports/photo-store.ts#readReportPhoto",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads and writes the animal-report photo bucket by object name; names carry no shelter prefix, so one shelter's file is reachable by another's request."
+      "classification": "filtered",
+      "reason": "The object name is a report id; served only when an animal_reports row with that id has .eq(\"shelter_id\", acting shelter)."
     },
     {
       "id": "src/lib/animal-reports/photo-store.ts#listReportPhotos",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads and writes the animal-report photo bucket by object name; names carry no shelter prefix, so one shelter's file is reachable by another's request."
+      "classification": "cross-shelter",
+      "reason": "Runs from the installation-wide report-photo retention job (#6rkux), which sweeps every shelter's expired and orphaned objects on purpose; it names objects only after they are found expired or without a row."
     },
     {
       "id": "src/lib/animal-reports/photo-store.ts#removeReportPhotos",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads and writes the animal-report photo bucket by object name; names carry no shelter prefix, so one shelter's file is reachable by another's request."
+      "classification": "cross-shelter",
+      "reason": "Runs from the installation-wide report-photo retention job (#6rkux), which sweeps every shelter's expired and orphaned objects on purpose; it names objects only after they are found expired or without a row."
     },
     {
       "id": "src/lib/auth/held-roles.ts#loadHeldRoleKeys",
