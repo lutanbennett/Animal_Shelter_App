@@ -280,7 +280,10 @@ Omit for a stream that runs nothing. The planner's half: do not ask a stream to 
   Next.js advisory** (`SecurityFatalError`, "stopped to show the upgrade recommendation"). It fires
   because an agent is driving the build and is skipped in CI (`nudge.js` reads `isCI` and
   `getAgentName()`), so CI never shows it. The advisory (moderate, `unstable_cache` with `"use cache"`)
-  is not reachable here. Retry behaviour: see `docs/decisions/2026-11-17-next-agent-upgrade-halt.md`.
+  is not reachable here. **It suppresses itself for FIVE MINUTES after it fires (a receipt in
+  `.next/cache`; `RETRY_TTL` in `nudge.js`), so re-run `npx next build` — about two minutes — and NOT
+  `node scripts/gates.mjs`, whose five-to-six-minute run lets the receipt expire and halts again.**
+  Measured both ways: `docs/decisions/2026-11-17-next-agent-upgrade-halt.md`.
   **Report it in your PR, and do NOT upgrade Next from the build message** — a framework upgrade is its
   own PR. (The first named case, the Google Fonts fetch failure, fails fetching fonts while CI passes.)
 ```
