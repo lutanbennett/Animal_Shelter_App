@@ -62,6 +62,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
   const units = await loadUnitList();
+  const names = await shelterNames();
   // The person's colour theme, from their own user_metadata, rendered into
   // the HTML so the first paint is already theirs (src/lib/theme/themes.ts).
   // Signed out — the login page, the public site — is always the default.
