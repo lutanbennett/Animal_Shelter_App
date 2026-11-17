@@ -1,0 +1,410 @@
+{
+  "rule": "Every createAdminClient() call in src/ is trusted with every shelter, so each is either needs-shelter-filter (tenant data a Lanna admin or another shelter must not reach) or cross-shelter with its reason. unclassified names a site that cannot be decided from the code; the check tolerates and lists it. scripts/check-service-role-sites.mjs fails on any call not recorded here. Part 7 of #ykefa, item #ps6ms; docs/decisions/2026-11-17-service-role-sites-audit.md.",
+  "sites": [
+    {
+      "id": "src/app/account/password/actions.ts#changeOwnPassword",
+      "classification": "cross-shelter",
+      "reason": "Changes the signed-in person's own password by their own auth user id. An auth-account operation on the one row the session already names, not a read of tenant data."
+    },
+    {
+      "id": "src/app/admin/recent-changes/page.tsx#RecentChangesPage",
+      "classification": "needs-shelter-filter",
+      "reason": "listAllUsers() lists every auth account to name who made each change. With several shelters on one project a Lanna admin sees every shelter's users here (audit_log itself is read through the user's own client, so RLS governs that half). Spike-named site."
+    },
+    {
+      "id": "src/app/admin/security/actions.ts#openSetupForNewAdmin",
+      "classification": "needs-shelter-filter",
+      "reason": "Opens two-step setup for a user id taken from the request; must be limited to users of the acting admin's shelter."
+    },
+    {
+      "id": "src/app/admin/security/actions.ts#givableRole",
+      "classification": "needs-shelter-filter",
+      "reason": "Reads roles by key to decide whether a role may be given; role keys are unique per shelter only, so the read must carry the shelter."
+    },
+    {
+      "id": "src/app/admin/security/actions.ts#createUser",
+      "classification": "needs-shelter-filter",
+      "reason": "Creates an auth user and its role row; the new login must be created inside the acting admin's shelter."
+    },
+    {
+      "id": "src/app/admin/security/actions.ts#setUserName",
+      "classification": "needs-shelter-filter",
+      "reason": "Writes a name on an auth user id from the request; must refuse a user of another shelter."
+    },
+    {
+      "id": "src/app/admin/security/actions.ts#approveAccessRequest",
+      "classification": "needs-shelter-filter",
+      "reason": "Approves an access request and creates the login; request and new user must both belong to the acting admin's shelter."
+    },
+    {
+      "id": "src/app/admin/security/actions.ts#updateUserRole",
+      "classification": "needs-shelter-filter",
+      "reason": "Changes the main role of a user id from the request; target user and role must both be in the acting shelter."
+    },
+    {
+      "id": "src/app/admin/security/actions.ts#addExtraRole",
+      "classification": "needs-shelter-filter",
+      "reason": "Adds a user_roles row for a user and role from the request; both must be in the acting shelter."
+    },
+    {
+      "id": "src/app/admin/security/actions.ts#removeExtraRole",
+      "classification": "needs-shelter-filter",
+      "reason": "Deletes a user_roles row; must be limited to the acting shelter's users and roles."
+    },
+    {
+      "id": "src/app/admin/security/actions.ts#loadDoctorLogin",
+      "classification": "needs-shelter-filter",
+      "reason": "Reads the doctor row linked to a login; doctors are shelter data."
+    },
+    {
+      "id": "src/app/admin/security/actions.ts#unlinkDoctor",
+      "classification": "needs-shelter-filter",
+      "reason": "Clears doctors.user_id for a doctor id from the request; must refuse another shelter's doctor."
+    },
+    {
+      "id": "src/app/admin/security/actions.ts#issueTemporaryPassword",
+      "classification": "needs-shelter-filter",
+      "reason": "Sets a password on an auth user id from the request; must refuse a user of another shelter."
+    },
+    {
+      "id": "src/app/admin/security/actions.ts#archiveUser",
+      "classification": "needs-shelter-filter",
+      "reason": "Archives a user's user_roles rows and bans the login; target must be in the acting shelter."
+    },
+    {
+      "id": "src/app/admin/security/actions.ts#restoreUser",
+      "classification": "needs-shelter-filter",
+      "reason": "Restores a user's user_roles rows; target must be in the acting shelter."
+    },
+    {
+      "id": "src/app/admin/security/actions.ts#deleteUser",
+      "classification": "needs-shelter-filter",
+      "reason": "Deletes an auth user; target must be in the acting shelter (the most destructive site in the file)."
+    },
+    {
+      "id": "src/app/admin/security/actions.ts#dismissAccessRequest",
+      "classification": "needs-shelter-filter",
+      "reason": "Dismisses an access request and archives its user_roles; request must be in the acting shelter."
+    },
+    {
+      "id": "src/app/admin/security/actions.ts#resetTwoStep",
+      "classification": "needs-shelter-filter",
+      "reason": "Removes another login's two-step factors; target must be in the acting shelter."
+    },
+    {
+      "id": "src/app/admin/security/actions.ts#allowTwoStepSetup",
+      "classification": "needs-shelter-filter",
+      "reason": "Marks another login as allowed to set up two-step; target must be in the acting shelter."
+    },
+    {
+      "id": "src/app/admin/security/page.tsx#SecurityPage",
+      "classification": "needs-shelter-filter",
+      "reason": "Lists every auth user, user_roles row, clinic and doctor to draw Security. The spike-named second site: a Lanna admin would see every shelter's users here."
+    },
+    {
+      "id": "src/app/admin/security/verify/actions.ts#startTwoStepSetup",
+      "classification": "cross-shelter",
+      "reason": "Enrols and confirms the signed-in admin's OWN two-step factor by their own user id; an auth-account operation on the caller's own row, no tenant data."
+    },
+    {
+      "id": "src/app/admin/security/verify/actions.ts#confirmTwoStep",
+      "classification": "cross-shelter",
+      "reason": "Enrols and confirms the signed-in admin's OWN two-step factor by their own user id; an auth-account operation on the caller's own row, no tenant data."
+    },
+    {
+      "id": "src/app/admin/who-does-what/details/page.tsx#WhoDoesWhatPage",
+      "classification": "needs-shelter-filter",
+      "reason": "Reads and edits roles, role_cards, role_permissions, role_groups and card features; roles are per-shelter rows, so each read must be filtered to the acting shelter."
+    },
+    {
+      "id": "src/app/admin/who-does-what/features/page.tsx#WhoDoesWhatFeaturesPage",
+      "classification": "needs-shelter-filter",
+      "reason": "Reads and edits roles, role_cards, role_permissions, role_groups and card features; roles are per-shelter rows, so each read must be filtered to the acting shelter."
+    },
+    {
+      "id": "src/app/admin/who-does-what/page.tsx#WhoDoesWhatPage",
+      "classification": "needs-shelter-filter",
+      "reason": "Reads and edits roles, role_cards, role_permissions, role_groups and card features; roles are per-shelter rows, so each read must be filtered to the acting shelter."
+    },
+    {
+      "id": "src/app/admin/who-does-what/roles.ts#holderNames",
+      "classification": "needs-shelter-filter",
+      "reason": "Reads and edits roles, role_cards, role_permissions, role_groups and card features; roles are per-shelter rows, so each read must be filtered to the acting shelter."
+    },
+    {
+      "id": "src/app/admin/who-does-what/roles.ts#loadRoles",
+      "classification": "needs-shelter-filter",
+      "reason": "Reads and edits roles, role_cards, role_permissions, role_groups and card features; roles are per-shelter rows, so each read must be filtered to the acting shelter."
+    },
+    {
+      "id": "src/app/adopter-update/actions.ts#sendAdopterUpdate",
+      "classification": "needs-shelter-filter",
+      "reason": "Adopter-portal site: reads and writes residents, video_uploads and adoption_updates for a resident the adopter's scope names. The scope is by verified email, so a person linked at two shelters must see only the one the request is for."
+    },
+    {
+      "id": "src/app/adopter-update/media/photo/route.ts#handlePost",
+      "classification": "needs-shelter-filter",
+      "reason": "Adopter-portal site: reads and writes residents, video_uploads and adoption_updates for a resident the adopter's scope names. The scope is by verified email, so a person linked at two shelters must see only the one the request is for."
+    },
+    {
+      "id": "src/app/adopter-update/media/video/finish/route.ts#handlePost",
+      "classification": "needs-shelter-filter",
+      "reason": "Adopter-portal site: reads and writes residents, video_uploads and adoption_updates for a resident the adopter's scope names. The scope is by verified email, so a person linked at two shelters must see only the one the request is for."
+    },
+    {
+      "id": "src/app/adopter-update/media/video/start/route.ts#handlePost",
+      "classification": "needs-shelter-filter",
+      "reason": "Adopter-portal site: reads and writes residents, video_uploads and adoption_updates for a resident the adopter's scope names. The scope is by verified email, so a person linked at two shelters must see only the one the request is for."
+    },
+    {
+      "id": "src/app/adopter-update/page.tsx#AdopterUpdatePage",
+      "classification": "needs-shelter-filter",
+      "reason": "Adopter-portal site: reads and writes residents, video_uploads and adoption_updates for a resident the adopter's scope names. The scope is by verified email, so a person linked at two shelters must see only the one the request is for."
+    },
+    {
+      "id": "src/app/api/reels/finish/route.ts#handlePost",
+      "classification": "needs-shelter-filter",
+      "reason": "Records video uploads (video_uploads) for a signed-in uploader; rows are shelter data."
+    },
+    {
+      "id": "src/app/api/reels/start/route.ts#handlePost",
+      "classification": "needs-shelter-filter",
+      "reason": "Records video uploads (video_uploads) for a signed-in uploader; rows are shelter data."
+    },
+    {
+      "id": "src/app/api/residents/[id]/videos/finish/route.ts#handlePost",
+      "classification": "needs-shelter-filter",
+      "reason": "Records video uploads for a resident id from the URL; the resident must belong to the acting shelter."
+    },
+    {
+      "id": "src/app/api/residents/[id]/videos/start/route.ts#handlePost",
+      "classification": "needs-shelter-filter",
+      "reason": "Records video uploads for a resident id from the URL; the resident must belong to the acting shelter."
+    },
+    {
+      "id": "src/lib/adopter/media.ts#loadOwnUpdate",
+      "classification": "needs-shelter-filter",
+      "reason": "Adopter-portal reads and writes of adoption_updates and attachments for a resident the adopter's scope names; shelter data."
+    },
+    {
+      "id": "src/lib/adopter/media.ts#recordAdopterFile",
+      "classification": "needs-shelter-filter",
+      "reason": "Adopter-portal reads and writes of adoption_updates and attachments for a resident the adopter's scope names; shelter data."
+    },
+    {
+      "id": "src/lib/adopter/scope.ts#loadAdopterScope",
+      "classification": "needs-shelter-filter",
+      "reason": "Finds contacts by verified email with ilike across the whole contacts table; the same email at two shelters returns both, so it needs the request's shelter."
+    },
+    {
+      "id": "src/lib/animal-reports/photo-retention.ts#runReportPhotoRetention",
+      "classification": "cross-shelter",
+      "reason": "Retention sweep: clears expired report photos across every shelter's animal_reports, run by the bearer-keyed cron route. A platform job by design; it acts by age, not by tenant."
+    },
+    {
+      "id": "src/lib/animal-reports/photo-store.ts#storeReportPhoto",
+      "classification": "needs-shelter-filter",
+      "reason": "Reads and writes the animal-report photo bucket by object name; names carry no shelter prefix, so one shelter's file is reachable by another's request."
+    },
+    {
+      "id": "src/lib/animal-reports/photo-store.ts#readReportPhoto",
+      "classification": "needs-shelter-filter",
+      "reason": "Reads and writes the animal-report photo bucket by object name; names carry no shelter prefix, so one shelter's file is reachable by another's request."
+    },
+    {
+      "id": "src/lib/animal-reports/photo-store.ts#listReportPhotos",
+      "classification": "needs-shelter-filter",
+      "reason": "Reads and writes the animal-report photo bucket by object name; names carry no shelter prefix, so one shelter's file is reachable by another's request."
+    },
+    {
+      "id": "src/lib/animal-reports/photo-store.ts#removeReportPhotos",
+      "classification": "needs-shelter-filter",
+      "reason": "Reads and writes the animal-report photo bucket by object name; names carry no shelter prefix, so one shelter's file is reachable by another's request."
+    },
+    {
+      "id": "src/lib/auth/held-roles.ts#loadHeldRoleKeys",
+      "classification": "needs-shelter-filter",
+      "reason": "Reads user_roles with roles(key) for user ids the caller names; ids and roles must be limited to the acting shelter."
+    },
+    {
+      "id": "src/lib/auth/held-roles.ts#loadHeldRoles",
+      "classification": "needs-shelter-filter",
+      "reason": "Reads user_roles with roles(key) for user ids the caller names; ids and roles must be limited to the acting shelter."
+    },
+    {
+      "id": "src/lib/clinics/calendar-import.ts#loadRefs",
+      "classification": "needs-shelter-filter",
+      "reason": "User-driven calendar import: reads clinics, residents and resident_current_state and creates clinic_visits; all shelter data."
+    },
+    {
+      "id": "src/lib/clinics/calendar-import.ts#createVisits",
+      "classification": "needs-shelter-filter",
+      "reason": "User-driven calendar import: reads clinics, residents and resident_current_state and creates clinic_visits; all shelter data."
+    },
+    {
+      "id": "src/lib/clinics/calendar-import.ts#listToConfirm",
+      "classification": "needs-shelter-filter",
+      "reason": "User-driven calendar import: reads clinics, residents and resident_current_state and creates clinic_visits; all shelter data."
+    },
+    {
+      "id": "src/lib/clinics/calendar-poll.ts#apply",
+      "classification": "cross-shelter",
+      "reason": "Cron poll of the shared Google calendar for changes, for every shelter that syncs one. A platform job by design; the calendar_sync_state row belongs to the calendar, not to a request."
+    },
+    {
+      "id": "src/lib/clinics/calendar-poll.ts#pollCalendarChanges",
+      "classification": "cross-shelter",
+      "reason": "Cron poll of the shared Google calendar for changes, for every shelter that syncs one. A platform job by design; the calendar_sync_state row belongs to the calendar, not to a request."
+    },
+    {
+      "id": "src/lib/clinics/calendar-sync.ts#syncRow",
+      "classification": "needs-shelter-filter",
+      "reason": "Writes the calendar event id back onto a clinic_visits row; must be limited to the visit's own shelter."
+    },
+    {
+      "id": "src/lib/clinics/calendar-sync.ts#syncVisitToCalendar",
+      "classification": "needs-shelter-filter",
+      "reason": "Writes the calendar event id back onto a clinic_visits row; must be limited to the visit's own shelter."
+    },
+    {
+      "id": "src/lib/clinics/calendar-sync.ts#syncPendingVisits",
+      "classification": "cross-shelter",
+      "reason": "Cron sweep that pushes every shelter's pending clinic_visits to the calendar; cross-shelter by design."
+    },
+    {
+      "id": "src/lib/clinics/calendar-sync.ts#checkCalendar",
+      "classification": "cross-shelter",
+      "reason": "Status check of the calendar link (state and last poll); reads sync state, not shelter rows shown to a person."
+    },
+    {
+      "id": "src/lib/clinics/calendar-sync.ts#checkCalendar#2",
+      "classification": "cross-shelter",
+      "reason": "Status check of the calendar link (state and last poll); reads sync state, not shelter rows shown to a person."
+    },
+    {
+      "id": "src/lib/facility-map/plan-store.ts#ensureBucket",
+      "classification": "needs-shelter-filter",
+      "reason": "Plan image and its history live in one storage bucket under names that carry no shelter; each shelter's map must be fenced."
+    },
+    {
+      "id": "src/lib/facility-map/plan-store.ts#storePlanImage",
+      "classification": "needs-shelter-filter",
+      "reason": "Plan image and its history live in one storage bucket under names that carry no shelter; each shelter's map must be fenced."
+    },
+    {
+      "id": "src/lib/facility-map/plan-store.ts#readPlanImage",
+      "classification": "needs-shelter-filter",
+      "reason": "Plan image and its history live in one storage bucket under names that carry no shelter; each shelter's map must be fenced."
+    },
+    {
+      "id": "src/lib/facility-map/plan-store.ts#readHistory",
+      "classification": "needs-shelter-filter",
+      "reason": "Plan image and its history live in one storage bucket under names that carry no shelter; each shelter's map must be fenced."
+    },
+    {
+      "id": "src/lib/facility-map/plan-store.ts#appendHistory",
+      "classification": "needs-shelter-filter",
+      "reason": "Plan image and its history live in one storage bucket under names that carry no shelter; each shelter's map must be fenced."
+    },
+    {
+      "id": "src/lib/home/roles.ts#loadRoleCards",
+      "classification": "needs-shelter-filter",
+      "reason": "Reads roles, role_cards and role_groups by role key or group id for the person's own home; keys are unique per shelter only."
+    },
+    {
+      "id": "src/lib/home/roles.ts#loadGroup",
+      "classification": "needs-shelter-filter",
+      "reason": "Reads roles, role_cards and role_groups by role key or group id for the person's own home; keys are unique per shelter only."
+    },
+    {
+      "id": "src/lib/menu/show-menu.ts#(module level)",
+      "classification": "needs-shelter-filter",
+      "reason": "Reads roles.show_menu by role key; keys are unique per shelter only, so another shelter's role of the same name could answer."
+    },
+    {
+      "id": "src/lib/merch/checkout.ts#loadRates",
+      "classification": "needs-shelter-filter",
+      "reason": "Reads merch_exchange_rates, a staff-edited per-shelter table."
+    },
+    {
+      "id": "src/lib/merch/checkout.ts#placeOrder",
+      "classification": "needs-shelter-filter",
+      "reason": "Public merchandise shop: places and reads orders (merch_orders, place_merch_order). Orders are shelter data and the shop is public, so the shelter must come from the request."
+    },
+    {
+      "id": "src/lib/merch/checkout.ts#loadOrderView",
+      "classification": "needs-shelter-filter",
+      "reason": "Public merchandise shop: places and reads orders (merch_orders, place_merch_order). Orders are shelter data and the shop is public, so the shelter must come from the request."
+    },
+    {
+      "id": "src/lib/merch/supplier-email.ts#runSupplierEmails",
+      "classification": "cross-shelter",
+      "reason": "Cron that emails each supplier its pending orders across every shelter, run by the bearer-keyed route; cross-shelter by design."
+    },
+    {
+      "id": "src/lib/status/access-requests.ts#checkAccessRequests",
+      "classification": "needs-shelter-filter",
+      "reason": "Counts waiting access requests for the nav; requests are per-shelter."
+    },
+    {
+      "id": "src/lib/status/alerts.ts#adminEmails",
+      "classification": "unclassified",
+      "reason": "Status alert mail and its run log. Whether checks, recipients and runs belong to one platform operator or to each shelter depends on whether Part 5 models a platform operator separately from a shelter admin; not decidable from the code."
+    },
+    {
+      "id": "src/lib/status/alerts.ts#recordRun",
+      "classification": "unclassified",
+      "reason": "Status alert mail and its run log. Whether checks, recipients and runs belong to one platform operator or to each shelter depends on whether Part 5 models a platform operator separately from a shelter admin; not decidable from the code."
+    },
+    {
+      "id": "src/lib/status/alerts.ts#runStatusAlerts",
+      "classification": "unclassified",
+      "reason": "Status alert mail and its run log. Whether checks, recipients and runs belong to one platform operator or to each shelter depends on whether Part 5 models a platform operator separately from a shelter admin; not decidable from the code."
+    },
+    {
+      "id": "src/lib/status/alerts.ts#requestTestAlert",
+      "classification": "unclassified",
+      "reason": "Status alert mail and its run log. Whether checks, recipients and runs belong to one platform operator or to each shelter depends on whether Part 5 models a platform operator separately from a shelter admin; not decidable from the code."
+    },
+    {
+      "id": "src/lib/status/alerts.ts#processTestRequests",
+      "classification": "unclassified",
+      "reason": "Status alert mail and its run log. Whether checks, recipients and runs belong to one platform operator or to each shelter depends on whether Part 5 models a platform operator separately from a shelter admin; not decidable from the code."
+    },
+    {
+      "id": "src/lib/status/alerts.ts#checkAlerts",
+      "classification": "unclassified",
+      "reason": "Status alert mail and its run log. Whether checks, recipients and runs belong to one platform operator or to each shelter depends on whether Part 5 models a platform operator separately from a shelter admin; not decidable from the code."
+    },
+    {
+      "id": "src/lib/status/health.ts#checkDatabase",
+      "classification": "cross-shelter",
+      "reason": "Database and platform health (schema_migrations, scheduled job status, database_health): facts about the shared project, not any shelter's rows."
+    },
+    {
+      "id": "src/lib/status/health.ts#checkMigrations",
+      "classification": "cross-shelter",
+      "reason": "Database and platform health (schema_migrations, scheduled job status, database_health): facts about the shared project, not any shelter's rows."
+    },
+    {
+      "id": "src/lib/status/health.ts#checkCronJobs",
+      "classification": "cross-shelter",
+      "reason": "Database and platform health (schema_migrations, scheduled job status, database_health): facts about the shared project, not any shelter's rows."
+    },
+    {
+      "id": "src/lib/status/health.ts#readDatabaseHealth",
+      "classification": "cross-shelter",
+      "reason": "Database and platform health (schema_migrations, scheduled job status, database_health): facts about the shared project, not any shelter's rows."
+    },
+    {
+      "id": "src/lib/status/usage.ts#countSince",
+      "classification": "unclassified",
+      "reason": "Counts rows and sign-ins across the whole database for /admin/status. Platform monitoring if the page is for the platform operator, a tenant leak if for shelter admins; same open question as the alerts."
+    },
+    {
+      "id": "src/lib/status/usage.ts#countSignIns",
+      "classification": "unclassified",
+      "reason": "Counts rows and sign-ins across the whole database for /admin/status. Platform monitoring if the page is for the platform operator, a tenant leak if for shelter admins; same open question as the alerts."
+    }
+  ]
+}
