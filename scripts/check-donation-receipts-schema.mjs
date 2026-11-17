@@ -46,6 +46,7 @@ register(
 );
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
 const env = loadEnv("test");
+const { scriptShelterId } = await import(pathToFileURL(join(root, "scripts/lib/shelter-env.mjs")).href);
 const ref = projectRef(env);
 const { receiptIssuer } = await import(pathToFileURL(join(root, "src/lib/donations/issuer.ts")).href);
 const want = (c) => JSON.stringify(receiptIssuer(c)).replaceAll("'", "''");
@@ -90,6 +91,7 @@ declare v text;
 begin
   perform set_config('request.jwt.claims', case when p_uid is null then json_build_object('role', p_pgrole)::text
     else json_build_object('sub', p_uid, 'role', p_pgrole, 'aal', 'aal1')::text end, true);
+  perform set_config('request.headers', json_build_object('x-shelter-id', '${SHELTER}')::text, true);
   execute format('set local role %I', p_pgrole);
   begin execute 'select (' || p_expr || ')::text' into v; exception when others then v := 'ERR:' || sqlstate; end;
   reset role; return v;
@@ -99,6 +101,7 @@ declare v bigint;
 begin
   perform set_config('request.jwt.claims', case when p_uid is null then json_build_object('role', p_pgrole)::text
     else json_build_object('sub', p_uid, 'role', p_pgrole, 'aal', 'aal1')::text end, true);
+  perform set_config('request.headers', json_build_object('x-shelter-id', '${SHELTER}')::text, true);
   execute format('set local role %I', p_pgrole);
   begin execute p_sql; get diagnostics v = row_count;
   exception when insufficient_privilege then v := -1; when others then v := -2; end;

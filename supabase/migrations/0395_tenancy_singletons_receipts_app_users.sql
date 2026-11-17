@@ -1,4 +1,4 @@
--- consumer: src/app/admin/website/actions.ts, src/app/admin/website/CreateSiteContentRow.tsx, src/lib/donations/issuer.ts (mirrored by receipt_issuer()), public.app_users readers
+-- consumer: src/app/admin/website/actions.ts, src/app/admin/website/CreateSiteContentRow.tsx
 --
 -- Tenancy Part 6 (backlog #bncd0): the singletons that were singletons for the whole DATABASE, the receipt series,
 -- and the one hand-written view. docs/decisions/2026-11-17-tenancy-part6-singletons.md has the reasoning.
