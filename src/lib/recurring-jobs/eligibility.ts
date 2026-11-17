@@ -44,18 +44,20 @@ type Rule = { prefix: string; needs: readonly Need[] };
 
 /** The cell a job linked to this page needs: Edit unless the entry says the page opens lower than the work does. */
 const jobNeed = (route: (typeof ROUTES)[number]): Need => ({
-  activity: route.activity,
+  activity: route.activity!,
   level: route.jobLevel ?? route.level ?? "edit",
 });
+/** An adminOnly page names no activity, so it has no need a role could hold: only Admin does that job. */
+const jobNeeds = (routes: readonly (typeof ROUTES)[number][]): Need[] => routes.filter((r) => r.activity).map(jobNeed);
 
 /** Longest prefix wins, so a page is decided by its own entry before its landing's. */
 const RULES: Rule[] = [
   // Every registered page, from its route entry.
-  ...ROUTES.map((route): Rule => ({ prefix: route.path, needs: [jobNeed(route)] })),
+  ...ROUTES.map((route): Rule => ({ prefix: route.path, needs: jobNeeds([route]) })),
   // The landings: open for whoever can open any page under them.
   ...["/management", "/admin"].map((prefix): Rule => ({
     prefix,
-    needs: ROUTES.filter((r) => r.path.startsWith(prefix + "/")).map(jobNeed),
+    needs: jobNeeds(ROUTES.filter((r) => r.path.startsWith(prefix + "/"))),
   })),
 ];
 

@@ -1495,7 +1495,6 @@ export const ENTRIES = {
   "system-status": [
     {
       activity: "Read the system status",
-      needs: "system.status",
       device: "desktop",
       do: "Open Settings → System status and tap Check now.",
       expect: "Every health tile is green or says plainly what is wrong, and the Usage numbers are plausible.",

@@ -2586,7 +2586,7 @@ const manual: Manual = {
         {
           id: "system-status",
           title: "System status",
-          activity: "system.status",
+          adminOnly: true,
           path: "Settings → System status",
           intro:
             "One page that says whether everything behind the app is working, and how much it is being used — and the alert mail that tells admins when something breaks, so nobody has to keep looking. Apart from the two alert buttons, nothing on it changes anything.",

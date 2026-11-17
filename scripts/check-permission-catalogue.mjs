@@ -333,7 +333,7 @@ const PINNED = {
   },
 
   // The three landings: a grid of the registry's own pages, open to whoever opens one of them.
-  "/admin": { guards: ['requireAnyPageIn("settings")'], decides: ["system.status"] },
+  "/admin": { guards: ['requireAnyPageIn("settings")'], decides: [] },
   "/management": { guards: ['requireAnyPageIn("management")'], decides: [] },
   "/operations": { guards: ['requireAnyPageIn("operations")'], decides: [] },
 
@@ -423,7 +423,7 @@ const EXEMPT = {
     decides: ["maintenance.jobs:read", "maintenance.progress", "recurring.do_any", "recurring.do_own", "recurring.manage"],
   },
   "/manual": { why: `The user manual: text for every app role; the body greys the topics that are not the reader's but hides none. ${APP}` },
-  "/releases": { why: `What changed in each release, for every app role. The environment line is behind can(system.status). ${APP}`, decides: ["system.status"] },
+  "/releases": { why: `What changed in each release, for every app role. The environment line is shown to Admin only (perms.isAdmin). ${APP}`, decides: [] },
   "/assistant": {
     why: `The assistant: a role without assistant.ask gets the "can't use" note and nothing is loaded (the body's can()). ${APP}`,
     decides: ["assistant.ask"],

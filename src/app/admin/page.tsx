@@ -153,7 +153,7 @@ export default async function AdminPage() {
         <p className="text-sm text-muted">{t.admin.landing.subtitle}</p>
       </div>
 
-      {can(perms, "system.status") && (
+      {perms?.isAdmin && (
         <Suspense fallback={<p className="text-sm text-muted">{t.admin.landing.drive.checking}</p>}>
           <DriveStatus />
         </Suspense>

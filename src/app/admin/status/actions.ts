@@ -9,8 +9,7 @@ import { requestTestAlert, runStatusAlerts, sendTestAlert, type Skipped } from "
 import { clearStatusCache } from "@/lib/status/run";
 import { renderedBy } from "@/lib/status/runtime";
 import { createClient } from "@/lib/supabase/server";
-import { can } from "@/lib/permissions/can";
-import { loadPermissions } from "@/lib/permissions/load";
+import { hasAdminRole } from "@/lib/auth/require-admin";
 
 /** The words runWriteAction() needs. */
 const write = (t: Dictionary): WriteMessages => ({
@@ -28,7 +27,7 @@ export async function checkNow(requestId: string): Promise<ActionResult> {
   const { t } = await getT();
   const supabase = await createClient();
   return runWriteAction("status.checkNow", write(t), { id: requestId, action: "status.checkNow", db: supabase }, async () => {
-    if (!can(await loadPermissions(), "system.status")) {
+    if (!(await hasAdminRole())) {
       return { ok: false, error: t.admin.security.errors.adminAccessRequired };
     }
     clearStatusCache();
@@ -57,7 +56,7 @@ export type AlertActionResult = ActionResult<AlertOutcome>;
 export async function runAlertCheckNow(requestId: string): Promise<AlertActionResult> {
   const { t } = await getT();
   const a = t.admin.status.alerts;
-  if (!can(await loadPermissions(), "system.status")) return { ok: false, error: t.admin.security.errors.adminAccessRequired };
+  if (!(await hasAdminRole())) return { ok: false, error: t.admin.security.errors.adminAccessRequired };
   if (renderedBy() === "pi") return { ok: false, error: a.onPi };
   const supabase = await createClient();
   return runWriteAction<AlertOutcome>("status.runAlertCheckNow", write(t), { id: requestId, action: "status.runAlertCheckNow", db: supabase }, async () => {
@@ -81,7 +80,7 @@ export async function runAlertCheckNow(requestId: string): Promise<AlertActionRe
 export async function sendTestAlertNow(requestId: string): Promise<AlertActionResult> {
   const { t } = await getT();
   const a = t.admin.status.alerts;
-  if (!can(await loadPermissions(), "system.status")) return { ok: false, error: t.admin.security.errors.adminAccessRequired };
+  if (!(await hasAdminRole())) return { ok: false, error: t.admin.security.errors.adminAccessRequired };
   const supabase = await createClient();
   return runWriteAction<AlertOutcome>("status.sendTestAlert", write(t), { id: requestId, action: "status.sendTestAlert", db: supabase }, async () => {
     if (renderedBy() === "pi") {

@@ -52,7 +52,7 @@ export default async function ReleasesPage({ searchParams }: PageProps<"/release
   const envLabel = ENV_LABEL[appEnv];
   // The environment tag is for whoever runs the system: to everyone else
   // "Dev" on every release is a developer's word on a staff screen.
-  const showEnv = can(perms, "system.status");
+  const showEnv = !!perms?.isAdmin;
   // The reader's own role name, whatever the shelter calls it; none for a session that does not open the app.
   const roleName = perms && entersApp(perms) ? perms.role.name : null;
     const showAll = view === "all" || !roleName;

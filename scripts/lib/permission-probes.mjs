@@ -188,7 +188,6 @@ export const PROBES = [
 ];
 
 // A statement a read on a Yes/No activity: "read" there means "needs Yes".
-// (system.status is a Yes/No activity probed by reading.)
 // Marked so the runner knows the SQL is a select though the level is edit.
 // (Handled by the runner: a select statement counts rows; a write counts rows too.)
 
@@ -221,7 +220,6 @@ export const NO_DB_PROBE = {
   "social.library": "a page over memes and social shares, exercised by scripts/check-social-shares-schema.mjs; the cell is compared by check-permission-tables.mjs H",
   "photos.approve": "the approver guard (0224) is exercised by scripts/check-card-grants.mjs and check-home-cards.mjs; the Management cell is compared by check-permission-tables.mjs H",
   "stock.usage": "a page over stock_counts and stock_receipts, covered by the stock.delivery and stock.count probes",
-  "system.status": "status_alert_runs is not granted to authenticated at all, Admin included: the page reads it with the service role, so the database has no per-role statement to test",
   "reports.dashboard": "a page that reads tables other activities own; it has no table",
   "translations.manage": "the translations table has no fixture row that is stable across runs; the policy is read by hand in Appendix C",
   "translations.view": "management and staff read the table through this cell, but a doctor and a volunteer still read it through their own legacy policies (doctor_read_translations, volunteer_read_translations, perm-convert-vet's), so a read probe would report them as differences that are not this cell's; check-app-access-gate.mjs reads it under every login instead",
