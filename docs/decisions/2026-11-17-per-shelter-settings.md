@@ -21,7 +21,7 @@ direct read of the variable in `src/` or `worker/` (registry: `docs/shelter-sett
 value that differs from the environment's. The folder id is a value, not rendered output, so equal value means equal behaviour; no
 PDF diff is needed (PDFs embed timestamps) for this slice.
 
-**Converted:** 11 `src/` files read the variable; all now call `driveRootFolderId()` (`drive.ts` has nine readers).
+**Converted:** 12 `src/` files read the variable; all now call `driveRootFolderId()` (`drive.ts` has nine readers).
 **Left, recorded as out of scope:** scripts under `scripts/` (CLI infrastructure reading their own environment), tests, comments and
 the two dictionary strings that merely name the variable. **Not converted: the naming and branding group** (layout, public nav, PDFs,
 archive HTML, release and status mail). The "no new hard-coded Lanna" half of the check is therefore not built: it needs the
