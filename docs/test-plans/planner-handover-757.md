@@ -13,7 +13,7 @@
 | PR | https://github.com/lutanbennett/Animal_Shelter_App/pull/1655 |
 | Tested by / date | Claude (planner) / 2026-11-17 |
 | Carries a migration? | no |
-| Tested at SHA | `98231d1e2eeae7d1a677184adcc2b794bd01e64c` — the only later commit adds this plan file, so no other file differs |
+| Tested at SHA | `98231d1e2eeae7d1a677184adcc2b794bd01e64c` — **the gates quoted below ran against this commit.** Later commits add this plan and amend two Markdown documents (`brief-blocks.md`, the Next-halt decision file); **no file the build reads differs, and CI runs against the head commit, which is what the merge is judged on** |
 
 ## 1. Scope and risk
 
