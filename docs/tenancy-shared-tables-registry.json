@@ -26,13 +26,6 @@
     "features": "all",
     "translatable_fields": "all",
     "translatable_labels": "all",
-    "bill_kinds": "all",
-    "blood_test_types": "all",
-    "immunization_types": "all",
-    "procedure_types": "all",
-    "frequency": "all",
-    "units": "all",
-    "group_origins": "all",
     "schema_migrations": "all"
   }
 }
