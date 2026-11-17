@@ -97,6 +97,7 @@ const r = (n) => `insert into roles (key, name, kind, home_path, shelter_id)
   values ('harness_${n}', 'Harness ${n}', 'custom', '/home', (select id from shelters order by id limit 1)) returning id`;
 const block = `
 begin;
+select set_config('request.headers', json_build_object('x-shelter-id', (select id from shelters order by id limit 1))::text, true);
 do $h$
 declare
   a uuid; b uuid; c uuid;
