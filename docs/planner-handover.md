@@ -175,8 +175,8 @@ nightly, not CI.
   checkout's `.env.local` before clearing**, with a comment saying why: new worktrees copy that file, and
   a different key orphans the ciphertext already on dev. **A decision file can state a falsehood about an
   environment and no instrument will catch it.**
-- **THE GATES RETRY IS SETTLED: EIGHT RUNS, SEVEN INDEPENDENT OF THE STREAM THAT WROTE IT.** #1671,
-  #1673, #1674, #1675, handover `759`, #1676, #1677 and #1678 all reported `build=0` on a single honest
+- **THE GATES RETRY IS SETTLED: NINE RUNS, EIGHT INDEPENDENT OF THE STREAM THAT WROTE IT.** #1671,
+  #1673, #1674, #1675, handover `759`, #1676, #1677, #1678 and this edition's own gates run all reported `build=0` on a single honest
   run, with **#1669 as the control at `build=1`** from before it merged. **`759` recorded it as a
   hypothesis with one run; it is now a fix that works.**
 - **A `git merge backlog` CONFLICT NEEDED A THREE-WAY JUDGEMENT FOR THE FIRST TIME.** `#b4cmn` was
@@ -198,6 +198,34 @@ nightly, not CI.
   refusal.** `worktree.mjs` declined rather than leaving husks. **Closing those sessions is his.**
 - **PREFLIGHT: everything a planner needs is reachable. Production was not probed**, so nothing in this
   edition asserts a production fact that was not read from a committed file or a stream's own report.
+
+## A RELEASE CUT IS IN FLIGHT AND IT CHANGES THIS EDITION'S PRODUCTION FACTS
+
+**Found while this edition was being written, in a worktree this planner did not create:**
+`claude/cut-release-0-47-2`, commit `e312e67c2` — *"Cut 0.47.2, no email: the tenancy
+groundwork reaches production"*. **No PR was open at the time of writing** and `main` still read
+`0.47.1`.
+
+**EVERY "PRODUCTION IS BEHIND" SENTENCE IN THIS EDITION HAS A CLOCK ON IT.** If `0.47.2` ships and
+its migrations are applied:
+
+- **`#shtci` stops being blocked.** Its production job is written, proven and parked unmerged on
+  `claude/shared-tables-production` (commit `1d974727f`, no PR ever opened) **only**
+  because `0390`–`0400` are not on production and the nightly would be red every
+  night. **Once they are, merge it and run `gh workflow run tenancy-shared-tables.yml` by hand to
+  confirm it goes green.**
+- **`#ccwnx`'s dev-only reasoning changes.** Today's brief says to point the new card-catalogue
+  nightly at dev because `0407` is not on production. **That reason expires with the APPLY, not
+  with the cut.**
+- **Part 5 (`#ujqr5`) is this release's own subject**, and its order is fixed: **Worker first,
+  then `0392`, in two different releases.** The release-order guard
+  (`scripts/check-release-order.mjs`, shipped as #1659) is what enforces it, and the item records
+  the guard's own limit — it checks an assertion rather than observing the Worker.
+
+**DO NOT ASSUME IT SHIPPED.** Read the release record in `docs/releases/` and
+`node scripts/apply-migrations.mjs --status --env production` before relying on any of it: **the cut
+is a commit, the apply and the deploy are Lutan's, and the two are not the same event.** **This planner
+did not touch that worktree.**
 
 ## INTERRUPTIONS
 
