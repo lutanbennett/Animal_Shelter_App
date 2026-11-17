@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { isCardKey, type CardKey } from "@/lib/permissions/cards";
 import { parsePermissions, type Permissions } from "@/lib/permissions/can";
 import type { Locale } from "@/lib/i18n/locales";
@@ -62,8 +63,9 @@ const groupLabel = (g: GroupRow, locale: Locale) => (locale === "th" && g.name_t
  * is previewing). Nothing else of either table leaves here.
  */
 export async function loadRoleCards(roleKey: string, locale: Locale): Promise<RoleCards> {
+  const shelterId = await actingShelterId();
   const admin = createAdminClient();
-  const { data: role } = await admin.from("roles").select("id").eq("key", roleKey).maybeSingle();
+  const { data: role } = shelterId ? await admin.from("roles").select("id").eq("shelter_id", shelterId).eq("key", roleKey).maybeSingle() : { data: null };
   if (!role) return { cards: [], groups: [] };
   const [{ data, error }, { data: groupRows, error: groupError }] = await Promise.all([
     admin.from("role_cards").select("card, group_id").eq("role_id", role.id).order("position").returns<{ card: string; group_id: string | null }[]>(),
@@ -87,10 +89,13 @@ export async function loadRoleCards(roleKey: string, locale: Locale): Promise<Ro
  */
 export async function loadGroup(id: string, locale: Locale): Promise<{ roleKey: string; group: RoleGroup } | null> {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
+  const shelterId = await actingShelterId();
+  if (!shelterId) return null;
   const admin = createAdminClient();
   const { data: g } = await admin
     .from("role_groups")
     .select("id, name, name_th, icon, position, roles!inner(key)")
+    .eq("shelter_id", shelterId)
     .eq("id", id)
     .maybeSingle<GroupRow & { roles: { key: string } }>();
   if (!g) return null;

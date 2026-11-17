@@ -308,23 +308,23 @@
     },
     {
       "id": "src/lib/home/roles.ts#loadRoleCards",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads roles, role_cards and role_groups by role key or group id for the person's own home; keys are unique per shelter only."
+      "classification": "filtered",
+      "reason": "roles and role_groups read inside the acting shelter (.eq shelter_id from actingShelterId()); no shelter returns nothing."
     },
     {
       "id": "src/lib/home/roles.ts#loadGroup",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads roles, role_cards and role_groups by role key or group id for the person's own home; keys are unique per shelter only."
+      "classification": "filtered",
+      "reason": "roles and role_groups read inside the acting shelter (.eq shelter_id from actingShelterId()); no shelter returns nothing."
     },
     {
       "id": "src/lib/menu/show-menu.ts#(module level)",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads roles.show_menu by role key; keys are unique per shelter only, so another shelter's role of the same name could answer."
+      "classification": "filtered",
+      "reason": "roles read for the acting shelter only (.eq shelter_id from actingShelterId()); no shelter keeps the menu."
     },
     {
       "id": "src/lib/merch/checkout.ts#loadRates",
-      "classification": "needs-shelter-filter",
-      "reason": "Reads merch_exchange_rates, a staff-edited per-shelter table."
+      "classification": "filtered",
+      "reason": "Rates read for the acting shelter only (.eq shelter_id from actingShelterId())."
     },
     {
       "id": "src/lib/merch/checkout.ts#placeOrder",
@@ -333,8 +333,8 @@
     },
     {
       "id": "src/lib/merch/checkout.ts#loadOrderView",
-      "classification": "needs-shelter-filter",
-      "reason": "Public merchandise shop: places and reads orders (merch_orders, place_merch_order). Orders are shelter data and the shop is public, so the shelter must come from the request."
+      "classification": "filtered",
+      "reason": "Order read only inside the acting shelter (.eq shelter_id from actingShelterId())."
     },
     {
       "id": "src/lib/merch/supplier-email.ts#runSupplierEmails",
@@ -343,8 +343,8 @@
     },
     {
       "id": "src/lib/status/access-requests.ts#checkAccessRequests",
-      "classification": "needs-shelter-filter",
-      "reason": "Counts waiting access requests for the nav; requests are per-shelter."
+      "classification": "cross-shelter",
+      "reason": "Counts logins that hold no role yet. An auth account with no user_roles row belongs to no shelter, so there is no shelter to filter by; the page showing the count is gated by a card. Revisit when access requests carry a shelter."
     },
     {
       "id": "src/lib/status/alerts.ts#adminEmails",
