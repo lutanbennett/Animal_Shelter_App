@@ -88,7 +88,7 @@ export function consumerReport(files, { release, read }) {
   }
   if (warnings.length) {
     notes.push(
-      "These tables/columns land before the code that reads them is live. That is the safe direction - nothing is blocked - but do not deploy the reader before this is applied, and expect nothing to use it yet.",
+      "These tables/columns land before the code that reads them is live. That is usually harmless, but this check only warns and blocks nothing: it cannot tell a harmless file from one that must follow its code (a restrictive policy, NOT NULL). Those are refused by scripts/check-release-order.mjs (docs/release-procedure.md section 5), not here.",
       release.exact
         ? `\"Live\" here is what ${release.origin} reports it runs: ${release.version} @ ${release.ref.slice(0, 7)}${release.servedBy === "worker" ? " (answered by the Worker, the fallback, not the Pi)" : ""}.`
         : `\"Live\" here is ASSUMED to be the commit that cut ${release.version} (${release.askedFailed}), so an undeployed cut counts as live.`,

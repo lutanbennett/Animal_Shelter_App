@@ -510,6 +510,8 @@ cannot break a build.
 
 ## 5. Migrations, before any deploy
 
+**FIRST, the release-order guard (it refuses; nothing else here does).** `node scripts/check-release-order.mjs --env production --worker-deployed <commit the Worker was deployed from>`. Some migrations must follow the Worker, not precede it: `0392`'s per-shelter policies blank the public website until the Worker sends `x-shelter-id`. If one is pending, deploy the Worker (§6) BEFORE the apply, then run this. It exits 1 with `REFUSED` otherwise. Run it for each environment you apply to.
+
 ```bash
 node scripts/apply-migrations.mjs --env production --status
 node scripts/apply-migrations.mjs --env production --dry-run
