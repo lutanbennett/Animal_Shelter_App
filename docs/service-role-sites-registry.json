@@ -415,6 +415,11 @@
       "id": "src/app/admin/security/actions.ts#userInActingShelter",
       "classification": "filtered",
       "reason": "Reads the target login's user_roles rows and compares their shelter_id with the acting shelter (actingShelterId()); no shelter refuses."
+    },
+    {
+      "id": "src/lib/shelter-settings.ts#driveRootFolderId",
+      "classification": "filtered",
+      "reason": "Reads one column of the acting shelter row, .eq(id, actingShelterId()); shelters is a tenant table no login can read, so the service role is the only reader."
     }
   ]
 }

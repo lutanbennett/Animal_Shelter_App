@@ -25,6 +25,7 @@
  * GOOGLE_OAUTH_REFRESH_TOKEN. See .env.example.
  */
 
+import { driveRootFolderId } from "@/lib/shelter-settings";
 import { ADOPTION_UPDATES_FOLDER } from "@/lib/adoption-updates/options";
 import { purgeCachedPhoto } from "@/lib/photo-cache";
 
@@ -499,7 +500,7 @@ export type DriveConnectionCheck =
 export async function checkDriveConnection(): Promise<DriveConnectionCheck> {
   try {
     await fetchAccessToken();
-    const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+    const rootId = await driveRootFolderId();
     if (!rootId) {
       return { ok: false, notConnected: true, detail: "GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured." };
     }
@@ -585,7 +586,7 @@ async function ensureResidentFolder(
   drive: DriveClient,
   resident: { name: string; resident_code: string; drive_folder_id: string | null },
 ): Promise<{ residentFolderId: string; isNewResidentFolder: boolean }> {
-  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  const rootId = await driveRootFolderId();
   if (!rootId) {
     throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured.");
   }
@@ -796,7 +797,7 @@ export async function syncMaintenanceJobFolder(
   drive: DriveClient,
   job: MaintenanceFolderJob,
 ): Promise<{ folderId: string; isNew: boolean }> {
-  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  const rootId = await driveRootFolderId();
   if (!rootId) {
     throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured.");
   }
@@ -866,7 +867,7 @@ export async function moveResidentFolderToDeceasedArchive(
   drive: DriveClient,
   resident: { name: string; resident_code: string; drive_folder_id: string | null },
 ): Promise<{ residentFolderId: string; archiveFolderId: string; alreadyArchived: boolean }> {
-  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  const rootId = await driveRootFolderId();
   if (!rootId) {
     throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured.");
   }
@@ -915,7 +916,7 @@ export async function moveResidentFolderOutOfDeceasedArchive(
   drive: DriveClient,
   resident: { name: string; resident_code: string; drive_folder_id: string | null },
 ): Promise<{ residentFolderId: string; wasArchived: boolean } | null> {
-  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  const rootId = await driveRootFolderId();
   if (!rootId) {
     throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured.");
   }
@@ -1077,7 +1078,7 @@ export async function ensureProjectFolderPath(
   drive: DriveClient,
   chain: ProjectFolderChain,
 ): Promise<{ folderId: string; resolvedIds: Map<string, string> }> {
-  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  const rootId = await driveRootFolderId();
   if (!rootId) {
     throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured.");
   }
@@ -1135,7 +1136,7 @@ const BILLS_FOLDER = "Bills";
 
 /** Bills/<year>/<month>/ for a YYYY-MM-DD day (docs/decisions/2026-10-12-bills-inbox.md). */
 export async function ensureBillsFolder(drive: DriveClient, isoDate: string): Promise<string> {
-  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  const rootId = await driveRootFolderId();
   if (!rootId) {
     throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured.");
   }
@@ -1157,7 +1158,7 @@ const EVENTS_FOLDER = "Events";
  * kept apart from Projects/ on purpose: a project folder the event links to is NOT its gallery (0312).
  */
 export async function ensureEventFolder(drive: DriveClient, event: { event_date: string; title: string }): Promise<string> {
-  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  const rootId = await driveRootFolderId();
   if (!rootId) {
     throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured.");
   }

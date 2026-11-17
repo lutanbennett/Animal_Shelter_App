@@ -1,3 +1,4 @@
+import { driveRootFolderId } from "@/lib/shelter-settings";
 import "server-only";
 import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
@@ -17,7 +18,7 @@ export async function uploadShopPhoto(file: File, t: Dictionary): Promise<string
   const mimeType = await checkFileSignature(file, WEBSITE_IMAGE_MIME_TYPES);
   if (!mimeType) throw new Error(t.uploads.notReadable(file.name, formatNames(WEBSITE_IMAGE_MIME_TYPES)));
 
-  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  const rootId = await driveRootFolderId();
   if (!rootId) throw new Error(t.admin.website.errors.driveNotConfigured);
 
   const drive = getDriveClient();

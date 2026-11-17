@@ -1,5 +1,6 @@
 "use server";
 
+import { driveRootFolderId } from "@/lib/shelter-settings";
 import { revalidatePath } from "next/cache";
 import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
@@ -106,7 +107,7 @@ export async function createMeme(formData: FormData): Promise<ActionResult<{ id:
     const mimeType = await checkFileSignature(file, IMAGE_MIME_TYPES);
     if (!mimeType) return { ok: false, error: t.uploads.notReadable(file.name, formatNames(IMAGE_MIME_TYPES)) };
 
-    const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+    const rootId = await driveRootFolderId();
     if (!rootId) return { ok: false, error: e.driveNotConfigured };
 
     let fileId: string;

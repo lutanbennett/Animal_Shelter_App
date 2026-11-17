@@ -1,3 +1,4 @@
+import { driveRootFolderId } from "@/lib/shelter-settings";
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { findOrCreateFolder, getDriveClient, upsertGeneratedFile } from "@/lib/google/drive";
@@ -51,7 +52,7 @@ export async function loadReceipt(supabase: SupabaseClient, id: string): Promise
  */
 export async function fileReceiptOnDrive(supabase: SupabaseClient, row: DonationReceiptRow): Promise<boolean> {
   try {
-    const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+    const rootId = await driveRootFolderId();
     if (!rootId) throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured.");
     const drive = getDriveClient();
     let folderId = rootId;

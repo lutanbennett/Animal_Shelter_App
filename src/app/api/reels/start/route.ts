@@ -1,3 +1,4 @@
+import { driveRootFolderId } from "@/lib/shelter-settings";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -54,7 +55,7 @@ async function handlePost(request: Request) {
     return NextResponse.json({ error: t.photos.videos.errors.tooBig(fileName) }, { status: 400 });
   }
 
-  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  const rootId = await driveRootFolderId();
   if (!rootId) return NextResponse.json({ error: t.reels.errors.driveNotConfigured }, { status: 500 });
 
   const drive = getDriveClient();

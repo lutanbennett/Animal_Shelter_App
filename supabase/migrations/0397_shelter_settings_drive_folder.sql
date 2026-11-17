@@ -1,0 +1,14 @@
+-- consumer: src/lib/shelter-settings.ts
+--
+-- Tenancy Part 8 (backlog #b4cmn): the settings a shelter used to take from the environment live on `shelters`.
+-- Columns, not a key/value table: 0395 already put receipt_series and receipt_issuers there, shelters keeps 0392's
+-- policies and no login can write it, so a second mechanism for the same job would be one more thing to keep in step.
+--
+-- THIS FILE ADDS NO shelter_id TO ANY TABLE and creates no table, so 0392's policy loop need not re-run.
+--
+-- The column is added EMPTY on purpose. The folder id differs per environment (dev, UAT, production), so a migration
+-- cannot know it; `node scripts/populate-shelter-settings.mjs --env <env>` copies each environment's own
+-- GOOGLE_DRIVE_ROOT_FOLDER_ID into it. Until then the reader falls back to the variable, so Lanna's output is unchanged.
+--
+-- TO UNDO: alter table shelters drop column drive_root_folder_id. Re-runnable.
+alter table shelters add column if not exists drive_root_folder_id text;
