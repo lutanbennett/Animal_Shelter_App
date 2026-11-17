@@ -161,7 +161,7 @@ Automated checks by: Claude (planner)  Date: 2026-11-17
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — `pending: the list is NOT empty. It carries one check forward from PR #1645, whose own browser click-through was not completed, and no person has looked yet. It is not this PR own surface and does not gate this PR`
 
 Manual verification by: pending: the carried-forward browser check in the list above is for a person; it is not this PR's own surface and it does not gate this PR
 
