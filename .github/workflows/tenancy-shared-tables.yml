@@ -1,0 +1,40 @@
+# Nightly shared-tables check against the DEV project (backlog #shtci; docs/decisions/2026-11-17-shared-tables-check-scheduled.md).
+#
+# Proves every public table with no shelter_id is recorded, with a reason, in docs/tenancy-shared-tables-registry.json,
+# and that no record is stale. A new tenant table added without shelter_id is invisible to the canary (these tables are
+# readable by design), so this is the only instrument that notices it. It reads pg_catalog through the Management API,
+# so it uses the SUPABASE_ACCESS_TOKEN repository secret: dev project, Database: Read, nothing else. It cannot see
+# production (production would need its own read-only token; see the decision file).
+#
+# Scheduled, not per PR, and allowed to FAIL: a scheduled run has no PR to stand on, so a failure cannot turn any PR red.
+# WHERE A FAILURE GOES: GitHub emails whoever last edited the cron line below, and shows a red run in the Actions tab.
+# That is the whole mechanism; nothing else alerts anybody. Whoever edits the cron line owns that email.
+#
+# Separate from tenancy-catalogue.yml because the two fail for unrelated reasons and one job would hide which went red.
+# 07:31 UTC chosen to collide with neither tenancy-catalogue.yml (05:43) nor advisories.yml (06:17).
+
+name: Tenancy shared tables
+
+on:
+  schedule:
+    - cron: "31 7 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  shared-tables:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/check-tenancy-shared-tables.mjs
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
