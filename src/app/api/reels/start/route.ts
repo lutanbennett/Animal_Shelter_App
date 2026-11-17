@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { MAX_VIDEO_BYTES, VIDEO_MIME_TYPES } from "@/lib/uploads/limits";
 import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
@@ -60,10 +61,13 @@ async function handlePost(request: Request) {
   const folderId = await findOrCreateFolder(drive, rootId, REELS_FOLDER);
   const uploadUrl = await drive.startResumableUpload({ name: fileName, mimeType, parentId: folderId, size, origin });
 
+  const shelterId = await actingShelterId();
+  if (!shelterId) return NextResponse.json({ error: t.reels.errors.notAllowed }, { status: 403 });
   const { data: userData } = await (await createClient()).auth.getUser();
   const { data: row, error } = await createAdminClient()
     .from("video_uploads")
     .insert({
+      shelter_id: shelterId,
       owner_kind: "reel",
       resident_id: null,
       sub_folder: REELS_FOLDER,

@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 
 /**
  * The adopter login (#l5gxn app half): a signed-in person with NO staff card whose VERIFIED sign-in email matches a live
@@ -30,10 +31,13 @@ export async function verifiedEmail(supabase: SupabaseClient): Promise<string | 
 export async function loadAdopterScope(supabase: SupabaseClient): Promise<AdopterScope | null> {
   const email = await verifiedEmail(supabase);
   if (!email) return null;
+  const shelterId = await actingShelterId();
+  if (!shelterId) return null;
   const admin = createAdminClient();
   const { data: contacts, error } = await admin
     .from("contacts")
     .select("id")
+    .eq("shelter_id", shelterId)
     .ilike("email", email.replace(/[\%_]/g, "\$&"))
     .is("archived_at", null)
     .returns<{ id: string }[]>();
@@ -52,6 +56,7 @@ export async function loadAdopterScope(supabase: SupabaseClient): Promise<Adopte
     .from("residents")
     .select("id, name, resident_code")
     .in("id", residents.map((r) => r.residentId))
+    .eq("shelter_id", shelterId)
     .returns<{ id: string; name: string; resident_code: string | null }[]>();
   if (nameError) throw new Error(nameError.message);
   const { data: places, error: placeError } = await admin

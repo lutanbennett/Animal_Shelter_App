@@ -45,12 +45,12 @@ async function handlePost(request: Request) {
   const drive = getDriveClient();
   const admin = createAdminClient();
   const { residentFolderId, uploadFolderId, isNewResidentFolder } = await ensureResidentAdoptionUpdateFolder(drive, own.resident, own.subFolder);
-  if (isNewResidentFolder) await admin.from("residents").update({ drive_folder_id: residentFolderId }).eq("id", own.residentId);
+  if (isNewResidentFolder) await admin.from("residents").update({ drive_folder_id: residentFolderId }).eq("id", own.residentId).eq("shelter_id", own.shelterId);
 
   const uploadUrl = await drive.startResumableUpload({ name: fileName, mimeType, parentId: uploadFolderId, size, origin });
   const { data: row, error } = await admin
     .from("video_uploads")
-    .insert({ resident_id: own.residentId, sub_folder: own.subFolder, file_name: fileName, mime_type: mimeType, size_bytes: size, started_by: own.userId })
+    .insert({ shelter_id: own.shelterId, resident_id: own.residentId, sub_folder: own.subFolder, file_name: fileName, mime_type: mimeType, size_bytes: size, started_by: own.userId })
     .select("id")
     .single();
   if (error || !row) return NextResponse.json({ error: t.uploads.errors.couldNotStartUpload }, { status: 500 });

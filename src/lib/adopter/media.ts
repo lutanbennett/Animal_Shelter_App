@@ -2,6 +2,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { loadAdopterScope } from "@/lib/adopter/scope";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { ADOPTER_MAX_FILES } from "@/lib/adopter/limits";
 import { dateToYyyymmdd } from "@/lib/google/drive-client";
 
@@ -14,6 +15,8 @@ import { dateToYyyymmdd } from "@/lib/google/drive-client";
  */
 export type OwnUpdate = {
   userId: string;
+  /** The shelter the request is for; every row below is read and written under it. */
+  shelterId: string;
   residentId: string;
   updateId: string;
   receivedOn: string;
@@ -23,6 +26,8 @@ export type OwnUpdate = {
 };
 
 export async function loadOwnUpdate(residentId: string, updateId: string): Promise<OwnUpdate | null> {
+  const shelterId = await actingShelterId();
+  if (!shelterId) return null;
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const scope = await loadAdopterScope(supabase);
@@ -38,6 +43,7 @@ export async function loadOwnUpdate(residentId: string, updateId: string): Promi
     .select("id, received_on")
     .eq("id", updateId)
     .eq("resident_id", residentId)
+    .eq("shelter_id", shelterId)
     .eq("sender_contact_id", mine.contactId)
     .eq("channel", "app")
     .maybeSingle<{ id: string; received_on: string }>();
@@ -47,16 +53,19 @@ export async function loadOwnUpdate(residentId: string, updateId: string): Promi
     .from("residents")
     .select("id, name, resident_code, drive_folder_id")
     .eq("id", residentId)
+    .eq("shelter_id", shelterId)
     .maybeSingle<OwnUpdate["resident"]>();
   if (!resident) return null;
 
   const { count } = await admin
     .from("attachments")
     .select("id", { count: "exact", head: true })
+    .eq("shelter_id", shelterId)
     .eq("adoption_update_id", updateId);
 
   return {
     userId: userData.user.id,
+    shelterId,
     residentId,
     updateId,
     receivedOn: update.received_on,
@@ -80,6 +89,7 @@ export async function recordAdopterFile(
   const { data, error } = await createAdminClient()
     .from("attachments")
     .insert({
+      shelter_id: u.shelterId,
       owner_type: "resident",
       owner_id: u.residentId,
       sub_folder: u.subFolder,

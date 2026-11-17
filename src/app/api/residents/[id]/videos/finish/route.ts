@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { getT } from "@/lib/i18n/get-t";
 import { dbRefusal } from "@/lib/db-refusal";
 import { can } from "@/lib/permissions/can";
@@ -52,11 +53,14 @@ async function handlePost(
 
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
+  const shelterId = await actingShelterId();
+  if (!shelterId) return NextResponse.json({ error: "Unknown upload." }, { status: 404 });
   const admin = createAdminClient();
   const { data: upload } = await admin
     .from("video_uploads")
     .select("id, resident_id, sub_folder, file_name, mime_type, size_bytes, state, started_by")
     .eq("id", uploadId)
+    .eq("shelter_id", shelterId)
     .maybeSingle();
   if (
     !upload ||
@@ -113,7 +117,8 @@ async function handlePost(
   const { error: kindError } = await admin
     .from("attachments")
     .update({ media_kind: "video", duration_ms: duration })
-    .eq("id", attachmentId);
+    .eq("id", attachmentId)
+    .eq("shelter_id", shelterId);
   if (kindError) return NextResponse.json({ error: kindError.message }, { status: 500 });
 
   // Belt-and-braces since 0306: record_attachment (told p_media_kind above) now refuses a video the profile slot itself. This undo
@@ -121,13 +126,14 @@ async function handlePost(
   // picture is public (is_public_drive_file reads public_resident_cards), so an unshared video would stream to anyone.
   // Found 2026-11-03 on dev: an update's video, never shared, answered a signed-out request. Undo it, only if it was this file.
   if (recorded.is_profile) {
-    await admin.from("residents").update({ profile_photo_drive_file_id: null }).eq("id", id).eq("profile_photo_drive_file_id", driveFileId);
+    await admin.from("residents").update({ profile_photo_drive_file_id: null }).eq("id", id).eq("shelter_id", shelterId).eq("profile_photo_drive_file_id", driveFileId);
   }
 
   await admin
     .from("video_uploads")
     .update({ state: "complete", attachment_id: attachmentId, finished_at: new Date().toISOString() })
-    .eq("id", uploadId);
+    .eq("id", uploadId)
+    .eq("shelter_id", shelterId);
 
   return NextResponse.json({ attachmentId, driveFileId });
 }

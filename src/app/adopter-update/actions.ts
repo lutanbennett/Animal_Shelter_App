@@ -6,6 +6,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { getT } from "@/lib/i18n/get-t";
 import { loadAdopterScope } from "@/lib/adopter/scope";
 import { ADOPTER_NOTE_MAX_CHARS, ADOPTER_DAILY_CAP } from "@/lib/adopter/limits";
@@ -29,6 +30,9 @@ export async function sendAdopterUpdate(residentId: string, words: string, withF
   const mine = scope?.residents.find((r) => r.residentId === residentId);
   if (!scope || !mine) return { ok: false, error: e.notYours };
 
+  // Everything below is read and written under the acting shelter (the host's); none means nothing is sent.
+  const shelterId = await actingShelterId();
+  if (!shelterId) return { ok: false, error: e.notYours };
   const admin = createAdminClient();
   const { data: may, error: mayError } = await admin.rpc("adopter_may_submit", { p_contact_id: mine.contactId, p_resident_id: residentId });
   if (mayError) return { ok: false, error: t.common.somethingWentWrong("adopter-update") };
@@ -38,6 +42,7 @@ export async function sendAdopterUpdate(residentId: string, words: string, withF
   const { count, error: countError } = await admin
     .from("adoption_updates")
     .select("id", { count: "exact", head: true })
+    .eq("shelter_id", shelterId)
     .eq("sender_contact_id", mine.contactId)
     .eq("channel", "app")
     .gte("created_at", since);
@@ -47,6 +52,7 @@ export async function sendAdopterUpdate(residentId: string, words: string, withF
   // Today in Thailand (UTC+7), the shelter date.
   const receivedOn = new Date(Date.now() + 7 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const { data: created, error } = await admin.from("adoption_updates").insert({
+    shelter_id: shelterId,
     resident_id: residentId,
     received_on: receivedOn,
     sender_contact_id: mine.contactId,

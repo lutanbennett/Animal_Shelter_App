@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -53,11 +54,14 @@ async function handlePost(request: Request) {
 
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
+  const shelterId = await actingShelterId();
+  if (!shelterId) return NextResponse.json({ error: "Unknown upload." }, { status: 404 });
   const admin = createAdminClient();
   const { data: upload } = await admin
     .from("video_uploads")
     .select("id, owner_kind, file_name, mime_type, size_bytes, state, started_by")
     .eq("id", uploadId)
+    .eq("shelter_id", shelterId)
     .maybeSingle();
   if (!upload || upload.owner_kind !== "reel" || upload.state !== "started" || upload.started_by !== (userData.user?.id ?? null)) {
     return NextResponse.json({ error: "Unknown upload." }, { status: 404 });
@@ -105,7 +109,7 @@ async function handlePost(request: Request) {
     }
   }
 
-  await admin.from("video_uploads").update({ state: "complete", finished_at: new Date().toISOString() }).eq("id", uploadId);
+  await admin.from("video_uploads").update({ state: "complete", finished_at: new Date().toISOString() }).eq("id", uploadId).eq("shelter_id", shelterId);
 
   return NextResponse.json({ reelId: reel.id, driveFileId, linkFailed });
 }

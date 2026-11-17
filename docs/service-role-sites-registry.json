@@ -138,63 +138,63 @@
     },
     {
       "id": "src/app/adopter-update/actions.ts#sendAdopterUpdate",
-      "classification": "needs-shelter-filter",
-      "reason": "Adopter-portal site: reads and writes residents, video_uploads and adoption_updates for a resident the adopter's scope names. The scope is by verified email, so a person linked at two shelters must see only the one the request is for."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/app/adopter-update/media/photo/route.ts#handlePost",
-      "classification": "needs-shelter-filter",
-      "reason": "Adopter-portal site: reads and writes residents, video_uploads and adoption_updates for a resident the adopter's scope names. The scope is by verified email, so a person linked at two shelters must see only the one the request is for."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/app/adopter-update/media/video/finish/route.ts#handlePost",
-      "classification": "needs-shelter-filter",
-      "reason": "Adopter-portal site: reads and writes residents, video_uploads and adoption_updates for a resident the adopter's scope names. The scope is by verified email, so a person linked at two shelters must see only the one the request is for."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/app/adopter-update/media/video/start/route.ts#handlePost",
-      "classification": "needs-shelter-filter",
-      "reason": "Adopter-portal site: reads and writes residents, video_uploads and adoption_updates for a resident the adopter's scope names. The scope is by verified email, so a person linked at two shelters must see only the one the request is for."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/app/adopter-update/page.tsx#AdopterUpdatePage",
-      "classification": "needs-shelter-filter",
-      "reason": "Adopter-portal site: reads and writes residents, video_uploads and adoption_updates for a resident the adopter's scope names. The scope is by verified email, so a person linked at two shelters must see only the one the request is for."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/app/api/reels/finish/route.ts#handlePost",
-      "classification": "needs-shelter-filter",
-      "reason": "Records video uploads (video_uploads) for a signed-in uploader; rows are shelter data."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/app/api/reels/start/route.ts#handlePost",
-      "classification": "needs-shelter-filter",
-      "reason": "Records video uploads (video_uploads) for a signed-in uploader; rows are shelter data."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/app/api/residents/[id]/videos/finish/route.ts#handlePost",
-      "classification": "needs-shelter-filter",
-      "reason": "Records video uploads for a resident id from the URL; the resident must belong to the acting shelter."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/app/api/residents/[id]/videos/start/route.ts#handlePost",
-      "classification": "needs-shelter-filter",
-      "reason": "Records video uploads for a resident id from the URL; the resident must belong to the acting shelter."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/lib/adopter/media.ts#loadOwnUpdate",
-      "classification": "needs-shelter-filter",
-      "reason": "Adopter-portal reads and writes of adoption_updates and attachments for a resident the adopter's scope names; shelter data."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/lib/adopter/media.ts#recordAdopterFile",
-      "classification": "needs-shelter-filter",
-      "reason": "Adopter-portal reads and writes of adoption_updates and attachments for a resident the adopter's scope names; shelter data."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/lib/adopter/scope.ts#loadAdopterScope",
-      "classification": "needs-shelter-filter",
-      "reason": "Finds contacts by verified email with ilike across the whole contacts table; the same email at two shelters returns both, so it needs the request's shelter."
+      "classification": "filtered",
+      "reason": "Reads and writes carry .eq(\"shelter_id\", acting shelter) and inserts stamp shelter_id explicitly (a service-role write is not stamped by the database); with no acting shelter the call refuses or returns nothing. The adopter scope (adopter_may_submit placement) is unchanged: this only adds the shelter fence."
     },
     {
       "id": "src/lib/animal-reports/photo-retention.ts#runReportPhotoRetention",
