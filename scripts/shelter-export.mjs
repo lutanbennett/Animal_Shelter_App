@@ -29,6 +29,7 @@ const shelterKey = val("--shelter");
 const outDir = val("--out");
 const port = Number(val("--port") ?? 55433);
 const PAGE = 500;
+let authFks = 0;
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 if (!shelterKey || !/^[a-z0-9_-]+$/.test(shelterKey)) fail("Usage: node scripts/shelter-export.mjs --shelter <key> (--out <dir> | --prove) [--env test|uat|production]");
@@ -192,7 +193,6 @@ async function proveIt() {
   console.log("Not proved here: auth.users (the logins) is not part of the export; ", `${authFks} foreign key(s) from public tables point at it.`);
 }
 
-let authFks = 0;
 
 /** The empty database's structure, rebuilt from the source's catalogue: columns, keys and every public->public foreign key. A new shelter's database gets the real thing from the migrations. */
 async function schemaSql() {
@@ -219,9 +219,18 @@ async function schemaSql() {
 }
 
 async function sql(query) {
-  const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
+  let res;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
     method: "POST", headers: { Authorization: `Bearer ${env.SUPABASE_ACCESS_TOKEN}`, "Content-Type": "application/json" }, body: JSON.stringify({ query }),
-  });
+      });
+      break;
+    } catch (e) {
+      if (attempt >= 5) fail(`Management API unreachable: ${e.cause?.code ?? e.message}`);
+      await new Promise((r) => setTimeout(r, 1000 * attempt));
+    }
+  }
   const text = await res.text();
   if (!res.ok) fail(`Management API ${res.status}: ${text.slice(0, 400)}`);
   return JSON.parse(text);
