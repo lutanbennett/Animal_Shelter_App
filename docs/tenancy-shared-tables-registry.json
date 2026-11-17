@@ -12,14 +12,7 @@
     "card_includes": "Card catalogue. Holds assignments as well as definitions: Part 10 (#omt6u), not here.",
     "features": "Card catalogue: code-defined, identical for every shelter.",
     "translatable_fields": "Schema metadata: which columns are translatable.",
-    "translatable_labels": "Schema metadata: which labels are translatable.",
-    "bill_kinds": "Shared-for-now lookup list. Gap: shelter two editing a value changes it for shelter one. Needs a column plus per-shelter values; for the planner to file.",
-    "blood_test_types": "Shared-for-now lookup list. Same gap as bill_kinds.",
-    "immunization_types": "Shared-for-now lookup list. Same gap; archived_at, sort and cost are edited per shelter.",
-    "procedure_types": "Shared-for-now lookup list. Same gap as bill_kinds.",
-    "frequency": "Shared-for-now lookup list. Same gap as bill_kinds.",
-    "units": "Shared-for-now lookup list. Same gap as bill_kinds.",
-    "group_origins": "Shared-for-now lookup list. Same gap as bill_kinds."
+    "translatable_labels": "Schema metadata: which labels are translatable."
   },
   "exportTreatment": {
     "shelters": "own-row",
