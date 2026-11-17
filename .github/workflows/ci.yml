@@ -208,6 +208,9 @@ jobs:
       # A permission prop is never JSX shorthand: a bare `canManage` is always true,
       # which is how #1126's Settings → Website hole was written.
       - run: node scripts/check-permission-props.mjs
+      # next@16.4.2 advisory GHSA-mfr8-8qww-v76h is unreachable only while unstable_cache / "use cache" / cacheLife / cacheTag
+      # stay absent from src/ and worker/ (#cchgd; docs/decisions/2026-11-17-next-cache-api-guard.md).
+      - run: node scripts/check-next-cache-apis.mjs
       # No Thai entry is its English copied across (a missing key already fails the
       # typecheck; a wrong one did not). Imports both dictionaries, so templated and
       # multi-line entries are compared too. Its second rule — English typed into a
