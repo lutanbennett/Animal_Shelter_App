@@ -283,28 +283,33 @@
     },
     {
       "id": "src/lib/facility-map/plan-store.ts#ensureBucket",
-      "classification": "needs-shelter-filter",
-      "reason": "Plan image and its history live in one storage bucket under names that carry no shelter; each shelter's map must be fenced."
+      "classification": "cross-shelter",
+      "reason": "Creates the one shared private bucket if missing; infrastructure, touches no shelter row. Objects inside it are fenced per plan by shelterIdOwnsPlan."
     },
     {
       "id": "src/lib/facility-map/plan-store.ts#storePlanImage",
-      "classification": "needs-shelter-filter",
-      "reason": "Plan image and its history live in one storage bucket under names that carry no shelter; each shelter's map must be fenced."
+      "classification": "filtered",
+      "reason": "Object path carries the plan id; the plan id is proved to belong to a facility_maps row of the acting shelter (shelterIdOwnsPlan, .eq(\"shelter_id\")) before the object is touched; no shelter, no object."
     },
     {
       "id": "src/lib/facility-map/plan-store.ts#readPlanImage",
-      "classification": "needs-shelter-filter",
-      "reason": "Plan image and its history live in one storage bucket under names that carry no shelter; each shelter's map must be fenced."
+      "classification": "filtered",
+      "reason": "Object path carries the plan id; the plan id is proved to belong to a facility_maps row of the acting shelter (shelterIdOwnsPlan, .eq(\"shelter_id\")) before the object is touched; no shelter, no object."
     },
     {
       "id": "src/lib/facility-map/plan-store.ts#readHistory",
-      "classification": "needs-shelter-filter",
-      "reason": "Plan image and its history live in one storage bucket under names that carry no shelter; each shelter's map must be fenced."
+      "classification": "filtered",
+      "reason": "Object path carries the plan id; the plan id is proved to belong to a facility_maps row of the acting shelter (shelterIdOwnsPlan, .eq(\"shelter_id\")) before the object is touched; no shelter, no object."
     },
     {
       "id": "src/lib/facility-map/plan-store.ts#appendHistory",
-      "classification": "needs-shelter-filter",
-      "reason": "Plan image and its history live in one storage bucket under names that carry no shelter; each shelter's map must be fenced."
+      "classification": "filtered",
+      "reason": "Object path carries the plan id; the plan id is proved to belong to a facility_maps row of the acting shelter (shelterIdOwnsPlan, .eq(\"shelter_id\")) before the object is touched; no shelter, no object."
+    },
+    {
+      "id": "src/lib/facility-map/plan-store.ts#shelterIdOwnsPlan",
+      "classification": "filtered",
+      "reason": "The ownership proof itself: reads facility_maps by plan id AND .eq(\"shelter_id\", acting shelter); no shelter returns false."
     },
     {
       "id": "src/lib/home/roles.ts#loadRoleCards",
