@@ -30,7 +30,7 @@ if (args.includes("--env")) {
   const root = env.GOOGLE_DRIVE_ROOT_FOLDER_ID?.trim();
   const res = await fetch(`https://api.supabase.com/v1/projects/${projectRef(env)}/database/query`, {
     method: "POST", headers: { Authorization: `Bearer ${env.SUPABASE_ACCESS_TOKEN}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ query: "select key, drive_root_folder_id from shelters where key = 'lanna'" }),
+    body: JSON.stringify({ query: "select key, drive_root_folder_id, display_name, short_name from shelters where key = 'lanna'" }),
   });
   const rows = await res.json();
   if (!res.ok || !Array.isArray(rows)) { console.error(`read failed (HTTP ${res.status}). VALUES NOT CHECKED.`); process.exit(2); }
@@ -38,6 +38,9 @@ if (args.includes("--env")) {
     if (!r.drive_root_folder_id) bad.push(`UNPOPULATED  ${r.key}: empty, so readers use the variable (safe, but run populate-shelter-settings.mjs --apply)`);
     else if (r.drive_root_folder_id !== root) bad.push(`DIFFERS  ${r.key}: stored value is not this environment's GOOGLE_DRIVE_ROOT_FOLDER_ID`);
   }
+  // 0400: the stored names must equal the literals the converted readers replaced, so Lanna's output cannot differ.
+  const want = { display_name: "Lanna Care for Animals", short_name: "Lanna Care" };
+  for (const r of rows) for (const [col, lit] of Object.entries(want)) if (r[col] !== lit) bad.push(`NAME DIFFERS  ${r.key}.${col}: stored ${JSON.stringify(r[col])}, the code it replaced said ${JSON.stringify(lit)}`);
   console.log(`${rows.length} shelter(s) compared with ${name}'s variable`);
 }
 bad.forEach((b) => console.log(b));

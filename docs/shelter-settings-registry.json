@@ -1,6 +1,147 @@
 {
-  "rule": "src/ and worker/ read the Drive folder through driveRootFolderId(); only the files here read GOOGLE_DRIVE_ROOT_FOLDER_ID directly. scripts/check-shelter-settings.mjs fails on any other. Part 8 of #ykefa, item #b4cmn.",
+  "rule": "src/ and worker/ read the Drive folder through driveRootFolderId(); only the files here read GOOGLE_DRIVE_ROOT_FOLDER_ID directly. scripts/check-shelter-settings.mjs fails on any other. Part 8 of #ykefa, item #b4cmn. From 0400 the shelter's display and short names are read through shelterNames(); lannaLiteralFiles records every file still naming Lanna, checked by scripts/check-no-lanna-literal.mjs.",
   "driveRootFolderIdReaders": [
-    { "file": "src/lib/shelter-settings.ts", "reason": "The reader itself: the environment variable is its fallback when a shelter has no stored value or there is no request." }
+    {
+      "file": "src/lib/shelter-settings.ts",
+      "reason": "The reader itself: the environment variable is its fallback when a shelter has no stored value or there is no request."
+    }
+  ],
+  "lannaLiteralFiles": [
+    {
+      "file": "src/app/admin/security/role-options.ts",
+      "reason": "Comment about the order roles are listed in."
+    },
+    {
+      "file": "src/app/admin/website/SiteSettingsForm.tsx",
+      "reason": "Comment, example or placeholder text, or a host/header name, not output that varies by shelter."
+    },
+    {
+      "file": "src/app/adopt/PublicNav.tsx",
+      "reason": "Comment, example or placeholder text, or a host/header name, not output that varies by shelter."
+    },
+    {
+      "file": "src/app/adopt/[id]/page.tsx",
+      "reason": "Comment, example or placeholder text, or a host/header name, not output that varies by shelter."
+    },
+    {
+      "file": "src/app/api/version/route.ts",
+      "reason": "Comment, example or placeholder text, or a host/header name, not output that varies by shelter."
+    },
+    {
+      "file": "src/app/manual/pdf/route.ts",
+      "reason": "Download file name lanna-care-manual.pdf; a file name, left to keep Lanna's downloads unchanged."
+    },
+    {
+      "file": "src/app/page.tsx",
+      "reason": "Comment, example or placeholder text, or a host/header name, not output that varies by shelter."
+    },
+    {
+      "file": "src/app/releases/page.tsx",
+      "reason": "Comment, example or placeholder text, or a host/header name, not output that varies by shelter."
+    },
+    {
+      "file": "src/app/shop/merch/cart.ts",
+      "reason": "A browser storage key, not a name; changing it would silently empty open carts."
+    },
+    {
+      "file": "src/lib/app-env.ts",
+      "reason": "Comment naming the UAT Supabase project."
+    },
+    {
+      "file": "src/lib/auth/two-step.ts",
+      "reason": "The authenticator issuer is stored inside every enrolled person's app; changing it does not migrate those entries, so it stays as is (decision 2026-11-17-per-shelter-naming)."
+    },
+    {
+      "file": "src/lib/clinics/calendar-poll.ts",
+      "reason": "Admin-facing sentence in a calendar notice; follow-up for the clinics/calendar part."
+    },
+    {
+      "file": "src/lib/donations/issuer.ts",
+      "reason": "Receipt issuer details belong to shelters.receipt_issuers (0395, Part 7); out of the naming group."
+    },
+    {
+      "file": "src/lib/google/drive.ts",
+      "reason": "Comment, example or placeholder text, or a host/header name, not output that varies by shelter."
+    },
+    {
+      "file": "src/lib/i18n/dictionaries/en.ts",
+      "reason": "Public-site and app copy in the dictionaries names the shelter in prose; per-shelter copy is the website/i18n parts' work, not the naming group's (decision 2026-11-17-per-shelter-naming)."
+    },
+    {
+      "file": "src/lib/i18n/dictionaries/th.ts",
+      "reason": "Public-site and app copy in the dictionaries names the shelter in prose; per-shelter copy is the website/i18n parts' work, not the naming group's (decision 2026-11-17-per-shelter-naming)."
+    },
+    {
+      "file": "src/lib/links/donation.test.mjs",
+      "reason": "Comment, example or placeholder text, or a host/header name, not output that varies by shelter."
+    },
+    {
+      "file": "src/lib/mirror-read.test.mjs",
+      "reason": "Comment, example or placeholder text, or a host/header name, not output that varies by shelter."
+    },
+    {
+      "file": "src/lib/mirror-read.ts",
+      "reason": "A shelter KEY default (Part 4/5 ground), not a display name."
+    },
+    {
+      "file": "src/lib/release-mail.test.mjs",
+      "reason": "Test asserting Lanna's default names reproduce the old mail text."
+    },
+    {
+      "file": "src/lib/releases.ts",
+      "reason": "Historical release-note text describing what shipped; it is a record, not output that varies by shelter."
+    },
+    {
+      "file": "src/lib/shelter-names-default.ts",
+      "reason": "Home of the fallback literals shelterNames() uses when a shelter has no stored name."
+    },
+    {
+      "file": "src/lib/site-hosts.test.mjs",
+      "reason": "Comment, example or placeholder text, or a host/header name, not output that varies by shelter."
+    },
+    {
+      "file": "src/lib/site-hosts.ts",
+      "reason": "Comment, example or placeholder text, or a host/header name, not output that varies by shelter."
+    },
+    {
+      "file": "src/lib/site-origin.ts",
+      "reason": "Comment, example or placeholder text, or a host/header name, not output that varies by shelter."
+    },
+    {
+      "file": "src/lib/site/content.ts",
+      "reason": "Example LINE id in a comment."
+    },
+    {
+      "file": "src/lib/status/health.ts",
+      "reason": "Backup file prefix lannacare-<env>- is a stored naming convention for existing dumps, not a display name."
+    },
+    {
+      "file": "src/lib/supabase/shelter-header.test.mjs",
+      "reason": "Comment, example or placeholder text, or a host/header name, not output that varies by shelter."
+    },
+    {
+      "file": "worker/index.mjs",
+      "reason": "Names the x-lanna-* header family, an internal protocol name and not a display name; hostnames and headers are Parts 4 and 13."
+    },
+    {
+      "file": "worker/origin.mjs",
+      "reason": "Names the x-lanna-* header family, an internal protocol name and not a display name; hostnames and headers are Parts 4 and 13."
+    },
+    {
+      "file": "worker/origin.test.mjs",
+      "reason": "Names the x-lanna-* header family, an internal protocol name and not a display name; hostnames and headers are Parts 4 and 13."
+    },
+    {
+      "file": "worker/release-mail.mjs",
+      "reason": "The Worker relay has no shelter and no database; its sender name needs a deploy-supplied value (follow-up)."
+    },
+    {
+      "file": "worker/release-mail.test.mjs",
+      "reason": "Comment, example or placeholder text, or a host/header name, not output that varies by shelter."
+    },
+    {
+      "file": "worker/security-headers.mjs",
+      "reason": "Names the x-lanna-* header family, an internal protocol name and not a display name; hostnames and headers are Parts 4 and 13."
+    }
   ]
 }

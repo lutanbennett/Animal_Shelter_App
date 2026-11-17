@@ -22,13 +22,13 @@ const escapeHtml = (s: string) =>
  */
 const lineOf = (note: ReleaseNote) => (typeof note === "string" ? note : note.text);
 
-export function buildReleaseMail(list: Release[], siteOrigin: string): ReleaseMail {
+export function buildReleaseMail(list: Release[], siteOrigin: string, names: { displayName: string; shortName: string }): ReleaseMail {
   const pageUrl = `${siteOrigin}/releases`;
   const newest = list[0];
   const subject =
     list.length === 1
-      ? `Lanna Care release ${newest.version}: ${newest.title}`
-      : `Lanna Care releases ${list.map((r) => r.version).join(", ")}`;
+      ? `${names.shortName} release ${newest.version}: ${newest.title}`
+      : `${names.shortName} releases ${list.map((r) => r.version).join(", ")}`;
 
   const text = [
     ...list.flatMap((r) => [
@@ -38,7 +38,7 @@ export function buildReleaseMail(list: Release[], siteOrigin: string): ReleaseMa
     ]),
     `All release notes: ${pageUrl}`,
     "",
-    "You get this because you are an admin in Lanna Care for Animals.",
+    `You get this because you are an admin in ${names.displayName}.`,
   ].join("\n");
 
   const html = [
@@ -50,7 +50,7 @@ export function buildReleaseMail(list: Release[], siteOrigin: string): ReleaseMa
         `<ul style="margin:0;padding-left:20px">${r.notes.map((n) => `<li>${escapeHtml(lineOf(n))}</li>`).join("")}</ul>`,
     ),
     `<p style="margin-top:24px"><a href="${escapeHtml(pageUrl)}">All release notes</a></p>`,
-    `<p style="color:#888;font-size:12px">You get this because you are an admin in Lanna Care for Animals.</p>`,
+    `<p style="color:#888;font-size:12px">You get this because you are an admin in ${escapeHtml(names.displayName)}.</p>`,
     `</div>`,
   ].join("\n");
 

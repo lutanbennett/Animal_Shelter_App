@@ -295,6 +295,8 @@ export type SummaryPdfOptions = {
   profilePhotoDataUri?: string | null;
   /** Which environment's watermark to use; this build's own by default. */
   appEnv?: AppEnv;
+  /** The shelter's display name (shelterNames().displayName), for the PDF's author and footer. */
+  shelterName: string;
 };
 
 function ResidentSummaryDocument({
@@ -313,7 +315,7 @@ function ResidentSummaryDocument({
   return (
     <Document
       title={`${resident.name} (${resident.residentCode}) — resident summary`}
-      author="Lanna Care for Animals"
+      author={options.shelterName}
       subject="Deceased resident summary"
     >
       <Page size="A4" style={styles.page}>
@@ -577,7 +579,7 @@ function ResidentSummaryDocument({
 
         <View style={styles.footer} fixed>
           <Text>
-            {`Lanna Care for Animals · ${resident.name} (${resident.residentCode}) · generated ${day(record.generatedAt)}${watermark ? ` · ${watermark}` : ""}`}
+            {`${options.shelterName} · ${resident.name} (${resident.residentCode}) · generated ${day(record.generatedAt)}${watermark ? ` · ${watermark}` : ""}`}
           </Text>
           <Text
             render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`}
@@ -591,7 +593,7 @@ function ResidentSummaryDocument({
 /** Renders the summary to PDF bytes. */
 export async function renderResidentSummaryPdf(
   record: ResidentArchiveRecord,
-  options: SummaryPdfOptions = {},
+  options: SummaryPdfOptions,
 ): Promise<Uint8Array> {
   const buffer = await renderToBuffer(
     <ResidentSummaryDocument record={record} options={options} />,

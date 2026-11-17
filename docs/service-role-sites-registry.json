@@ -420,6 +420,11 @@
       "id": "src/lib/shelter-settings.ts#driveRootFolderId",
       "classification": "filtered",
       "reason": "Reads one column of the acting shelter row, .eq(id, actingShelterId()); shelters is a tenant table no login can read, so the service role is the only reader."
+    },
+    {
+      "id": "src/lib/shelter-settings.ts#shelterNames",
+      "classification": "filtered",
+      "reason": "Reads display_name and short_name of the acting shelter row, .eq(id, actingShelterId()); shelters is a tenant table no login can read, so the service role is the only reader."
     }
   ]
 }

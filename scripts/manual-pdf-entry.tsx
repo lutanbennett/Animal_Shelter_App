@@ -4,6 +4,7 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import manual from "@/lib/manual/en";
 import { renderManualPdf, screenshotSrcs, type ManualCard, type ManualImages } from "@/lib/manual/manual-pdf";
+import { DEFAULT_SHELTER_NAMES } from "@/lib/shelter-names-default";
 import { PREBUILT_DIR, prebuiltName } from "@/lib/manual/prebuilt";
 import { CARDS, CARD_KEYS } from "@/lib/permissions/cards";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
@@ -28,7 +29,7 @@ for (const locale of locales) {
     description: t.admin.whoDoesWhat.cardsView.description[key],
   }));
   const started = Date.now();
-  const pdf = await renderManualPdf(manual, { cards, cardsHeading: t.manualPage.cardsAtAGlance, all: true, images, perms: null });
+  const pdf = await renderManualPdf(manual, { shelterName: DEFAULT_SHELTER_NAMES.displayName, cards, cardsHeading: t.manualPage.cardsAtAGlance, all: true, images, perms: null });
   // Write beside, then rename: a reader never sees half a file.
   const final = path.join(outDir, prebuiltName(locale));
   await writeFile(final + ".tmp", pdf);

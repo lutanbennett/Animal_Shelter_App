@@ -241,7 +241,7 @@ const STYLES = `
  */
 export function renderResidentIndexHtml(
   record: ResidentArchiveRecord,
-  options: { summaryPdfFileName?: string | null; appOrigin?: string | null } = {},
+  options: { summaryPdfFileName?: string | null; appOrigin?: string | null; shelterName: string },
 ): string {
   appOrigin = options.appOrigin?.replace(/\/+$/, "") || null;
   const { resident, death } = record;
@@ -570,7 +570,7 @@ export function renderResidentIndexHtml(
     <footer>
       <p>
         Archived record for ${esc(title)}, generated ${esc(day(record.generatedAt))}
-        by Lanna Care for Animals.
+        by ${esc(options.shelterName)}.
       </p>
       <p>
         This page reads the photos and scans stored beside it in this folder,
