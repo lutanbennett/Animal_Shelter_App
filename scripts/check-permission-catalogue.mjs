@@ -165,6 +165,13 @@ eq("D eligibility asks about both stock pages", ["stock.count", "stock.delivery"
 // ---- E ----
 eq("E route paths are unique", new Set(ROUTES.map((r) => r.path)).size, ROUTES.length);
 for (const r of ROUTES) {
+  if (r.adminOnly) {
+    // Admin only, no card and no activity (system status, Lutan 2026-11-17): the page asks requireAdminUser() and the entry names no activity.
+    eq(`E ${r.path} is adminOnly and names no activity`, r.activity, undefined);
+    const p = join(root, "src/app", r.path, "page.tsx");
+    eq(`E ${r.path} guards with requireAdminUser()`, existsSync(p) && /requireAdminUser()/.test(readFileSync(p, "utf8")), true);
+    continue;
+  }
   const def = ACTIVITIES.find((a) => a.key === r.activity);
   eq(`E ${r.path} names a catalogue activity`, !!def, true);
   if (def?.kind === "yesno") eq(`E ${r.path} gives no level for a yes/no activity`, r.level, undefined);
@@ -333,7 +340,7 @@ const PINNED = {
   },
 
   // The three landings: a grid of the registry's own pages, open to whoever opens one of them.
-  "/admin": { guards: ['requireAnyPageIn("settings")'], decides: ["system.status"] },
+  "/admin": { guards: ['requireAnyPageIn("settings")'], decides: [] },
   "/management": { guards: ['requireAnyPageIn("management")'], decides: [] },
   "/operations": { guards: ['requireAnyPageIn("operations")'], decides: [] },
 
@@ -423,7 +430,7 @@ const EXEMPT = {
     decides: ["maintenance.jobs:read", "maintenance.progress", "recurring.do_any", "recurring.do_own", "recurring.manage"],
   },
   "/manual": { why: `The user manual: text for every app role; the body greys the topics that are not the reader's but hides none. ${APP}` },
-  "/releases": { why: `What changed in each release, for every app role. The environment line is behind can(system.status). ${APP}`, decides: ["system.status"] },
+  "/releases": { why: `What changed in each release, for every app role. The environment line is shown to Admin only (perms.isAdmin). ${APP}`, decides: [] },
   "/assistant": {
     why: `The assistant: a role without assistant.ask gets the "can't use" note and nothing is loaded (the body's can()). ${APP}`,
     decides: ["assistant.ask"],

@@ -73,7 +73,7 @@ const eligibility = Object.fromEntries(
 );
 // Every cell comes from the registry (the sweeps registered every page): a page's own entry, at the level a
 // job linking there needs (jobLevel, else the level that opens it), plus the two landings' any-of.
-const wanted = [...new Set(ROUTES.map((r) => needKey({ activity: r.activity, level: r.jobLevel ?? r.level ?? "edit" })))];
+const wanted = [...new Set(ROUTES.filter((r) => r.activity).map((r) => needKey({ activity: r.activity, level: r.jobLevel ?? r.level ?? "edit" })))];
 eq("S1 the rules ask about exactly what the registry registers", [...JOB_NEEDS.map(needKey)].sort(), wanted.sort());
 eq("S1 the maintenance board's work is Edit although the page opens at Read", needKey(JOB_NEEDS.find((n) => n.activity === "maintenance.jobs")), "maintenance.jobs:edit");
 

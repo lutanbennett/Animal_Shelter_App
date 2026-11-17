@@ -16,7 +16,8 @@ import { countStalePending } from "@/lib/photos/pending";
 import { CheckNowButton } from "./CheckNowButton";
 import { renderedBy } from "@/lib/status/runtime";
 import { AlertActions } from "./AlertActions";
-import { requirePermission } from "@/lib/permissions/require";
+import { requireAdminUser } from "@/lib/auth/require-admin";
+import { loadPermissions } from "@/lib/permissions/load";
 import { can } from "@/lib/permissions/can";
 
 type T = Awaited<ReturnType<typeof getT>>["t"];
@@ -27,11 +28,12 @@ type Locale = Awaited<ReturnType<typeof getT>>["locale"];
  * used. Read-only. The checks live in src/lib/status/ as small functions
  * (so a later "alert me" can reuse them); this page only lays them out.
  *
- * Admin only, checked here and not just by the Settings tile that links to
+ * Admin only (no card, no activity: Lutan, 2026-11-17), checked here and not just by the Settings tile that links to
  * it — the page names where secrets live and what's misconfigured.
  */
 export default async function SystemStatusPage(props: PageProps<"/admin/status">) {
-  const { perms } = await requirePermission("system.status");
+  await requireAdminUser();
+  const perms = await loadPermissions();
   const canVisits = can(perms, "medical.visits", "read");
   const canApprove = can(perms, "photos.approve");
   const { t, locale } = await getT();
@@ -104,7 +106,7 @@ export default async function SystemStatusPage(props: PageProps<"/admin/status">
           </nav>
         </div>
         <Suspense key={days} fallback={<p className="text-sm text-muted">{s.checking}</p>}>
-          <Usage t={t} locale={locale} days={days} isAdmin={perms.isAdmin} />
+          <Usage t={t} locale={locale} days={days} isAdmin={true} />
         </Suspense>
       </section>
     </main>

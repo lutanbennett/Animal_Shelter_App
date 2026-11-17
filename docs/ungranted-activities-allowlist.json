@@ -58,14 +58,6 @@
       "decision": "docs/decisions/2026-11-12-fourteen-activities-ruled.md"
     },
     {
-      "activity": "system.status",
-      "level": "edit",
-      "ruled": "2026-11-09",
-      "by": "Lutan",
-      "reason": "Lutan, 2026-11-09, asked directly: \"Yes they are Admin only.\" The status page shows the live health tiles and carries Check now, Run the alert check now and Send a test alert, the last of which mails every admin. Admin-only on purpose.",
-      "decision": "docs/decisions/2026-11-12-fourteen-activities-ruled.md"
-    },
-    {
       "activity": "appeal.medical_photo",
       "level": "edit",
       "ruled": "2026-11-12",

@@ -22,7 +22,13 @@ import type { ActivityKey, Level, LevelKey } from "./catalogue";
 export type RouteEntry = {
   /** The path as a person types it, no trailing slash. A page under it inherits nothing: list each page. */
   path: string;
-  activity: ActivityKey;
+  /** The activity that opens the page. Absent only on an adminOnly entry. */
+  activity?: ActivityKey;
+  /**
+   * Opens for Admin alone, through the perms.isAdmin short-circuit in can.ts and no card (Lutan, 2026-11-17: system status).
+   * Such an entry names no activity and no role; nothing but Admin can be granted it.
+   */
+  adminOnly?: true;
   /** A second yes/no activity that opens the page as well (either is enough); see requireAnyPermission. */
   alsoActivity?: ActivityKey;
   /** The level the page needs to open. Omit for a yes/no activity. */
@@ -616,7 +622,7 @@ export const ROUTES: readonly RouteEntry[] = [
   },
   {
     path: "/admin/status",
-    activity: "system.status",
+    adminOnly: true,
     icon: Activity,
     label: (t) => t.nav.systemStatus,
     device: "any",
@@ -626,6 +632,7 @@ export const ROUTES: readonly RouteEntry[] = [
 
 /** Whether `perms` opens this entry. */
 export function canOpen(perms: Permissions | null | undefined, route: RouteEntry): boolean {
+  if (route.adminOnly || !route.activity) return !!perms?.isAdmin;
   if (route.alsoActivity && can(perms, route.alsoActivity as LevelKey)) return true;
   return can(perms, route.activity as LevelKey, route.level);
 }
