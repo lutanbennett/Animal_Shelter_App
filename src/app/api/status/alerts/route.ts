@@ -1,4 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
+import { checkShelterDriveTokens } from "@/lib/google/shelter-drive-tokens";
 import { processTestRequests, runStatusAlerts } from "@/lib/status/alerts";
 
 /**
@@ -32,5 +33,10 @@ export async function POST(request: Request) {
   // Tests asked for from a Pi-drawn page (0226); after the run, so they can never delay it.
   const tests = await processTestRequests(origin);
   if (tests.note) console.error(`status-alerts: test requests: ${tests.note}`);
-  return Response.json({ ...result, testsSent: tests.handled }, { status: result.remembered ? 200 : 503, headers: { "cache-control": "no-store" } });
+  // Each shelter's own Google token (Part 9, #o2iyh): after the run, so it can never delay it, and never throws into it.
+  const driveTokens = await checkShelterDriveTokens(origin).catch((err) => {
+    console.error(`status-alerts: shelter drive tokens: ${err instanceof Error ? err.message : String(err)}`);
+    return [];
+  });
+  return Response.json({ ...result, testsSent: tests.handled, driveTokens: driveTokens.map((d) => ({ shelterId: d.shelterId, status: d.status })) }, { status: result.remembered ? 200 : 503, headers: { "cache-control": "no-store" } });
 }

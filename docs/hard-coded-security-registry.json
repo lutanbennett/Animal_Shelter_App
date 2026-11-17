@@ -411,6 +411,11 @@
       "file": "src/lib/google/shelter-drive-credentials.ts",
       "for": "Reads the shelter being served's own Google Drive credentials (shelter_drive_credentials, 0404; no login holds a grant on it) and decrypts them, to choose which Google account the server acts as.",
       "guard": "Reads only the row whose shelter_id is actingShelterId(); secrets are ciphertext in the table and decrypted with DRIVE_CREDENTIALS_KEY, a Worker secret; returns them to server code only and exposes nothing to a caller. A shelter with no row other than the fallback shelter is refused. Grants no access to anyone."
+    },
+    {
+      "file": "src/lib/google/shelter-drive-tokens.ts",
+      "for": "The 15-minute alert run checks each shelter's own Google token, records ok/dead on its shelter_drive_credentials row and mails that shelter's admins once when it dies and once when it recovers.",
+      "guard": "Called only from POST /api/status/alerts, which is bearer-authenticated with the service-role key. Mails only the shelter's own admins, writes only status columns of that table, returns no secret. Grants no access to anyone."
     }
   ],
   "serviceRoleHelpers": [],
@@ -618,6 +623,10 @@
     ]
   },
   "environment": [
+    {
+      "name": "DRIVE_CREDENTIALS_KEY",
+      "gates": "The key that decrypts each shelter's stored Google credentials (shelter_drive_credentials, 0404). Chooses which Google account the server acts as; not a role or card rule."
+    },
     {
       "name": "PUBLIC_SITE",
       "gates": "Whether the public website is open to strangers or locked behind sign-in on this Worker. Not a role or card rule."
