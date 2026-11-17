@@ -125,6 +125,7 @@ needs two cards together, put both on one row. Do not name `staff` (retired, `01
 - [x] Non-obvious design choices added as a new file in docs/decisions/
 - [x] `README.md` still accurate
 - [x] Non-obvious design choices added as a new file in docs/decisions/
+- [ ] **Release notes.** — n/a: no change a shelter user would notice; the Security actions behave the same for a single shelter
 - [x] Commit messages say why, not just what
 - [x] **Claims in commit messages and `docs/decisions.md` were mea
 
@@ -220,8 +221,8 @@ assurance.
 Gates, scripts, server-side behaviour, and any browser check that was actually
 driven rather than assumed. Signed by whoever ran them — Claude may sign this.
 
-- [ ] Everything in this checklist that could be verified without  — deferred: release manager
-- [ ] Nothing is ticked that was not actually executed — deferred: release manager
+- [ ] Everything in this checklist that could be verified without  — pending: at release
+- [ ] Nothing is ticked that was not actually executed — pending: at release
 
 Automated checks by: Claude  Date: 2026-11-17
 
@@ -231,15 +232,15 @@ Automated checks by: Claude  Date: 2026-11-17
 A red `test-plan` that says what it is waiting for is a red people act on. An
 illegible one is a red people learn to ignore.
 
-- [ ] The manual list above is empty, or every item in it was chec — deferred: release manager
+- [ ] The manual list above is empty, or every item in it was chec — pending: at release
 
 Manual verification by: pending: click-through of /admin/status as admin
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above — deferred: release manager
-- [ ] Checklist pasted into the PR — deferred: release manager
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Open defects are either fixed or explicitly accepted above — pending: at release
+- [ ] Checklist pasted into the PR — pending: at release
+- [ ] Handed to the production release manager — pending: at release
 
 Result: pass with accepted defects
 
