@@ -8,7 +8,7 @@
 |---|---|
 | Feature | Card catalogue not writable by any login |
 | Backlog item | `docs/backlog.md` → #ctlg8 |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/card-catalogue-writes` @ `C:DevelopmentAnimal_Shelter_card-catalogue-writes` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3001` |
 | PR | pending: opened after this commit |
 | Tested by / date | Claude / 2026-11-18 |
