@@ -105,12 +105,34 @@ for (const gate of gates) {
   // above, so there is nothing to quote.
   // Async, so the child's pid can be written into the lock: if this script is killed the build
   // lives on, and the lock must still say so (scripts/lib/tree-lock.mjs).
-  const r = await new Promise((resolve) => {
-    const c = spawn(gate.cmd, { cwd: repo, stdio: "inherit", shell: true });
-    recordTreeLockChild(c.pid);
-    c.on("error", (error) => resolve({ error }));
-    c.on("close", (status, signal) => resolve({ status, signal }));
-  });
+  // Run once; for the build gate only, a Next agent-advisory halt gets ONE immediate re-run
+  // (docs/decisions/2026-11-17-build-halt-gates-retry.md). Output is passed through unchanged.
+  const runOnce = (watch) =>
+    new Promise((resolve) => {
+      const c = spawn(gate.cmd, { cwd: repo, stdio: watch ? ["inherit", "pipe", "pipe"] : "inherit", shell: true });
+      recordTreeLockChild(c.pid);
+      let halted = false;
+      if (watch) {
+        // Keep a short tail so the marker is found even when split across chunks.
+        let tail = "";
+        const scan = (out) => (d) => {
+          out.write(d);
+          tail = (tail + d.toString()).slice(-4096);
+          if (tail.includes("SecurityFatalError")) halted = true;
+        };
+        c.stdout.on("data", scan(process.stdout));
+        c.stderr.on("data", scan(process.stderr));
+      }
+      c.on("error", (error) => resolve({ error }));
+      c.on("close", (status, signal) => resolve({ status, signal, halted }));
+    });
+  let r = await runOnce(gate.name === "build");
+  if (gate.name === "build" && r.status !== 0 && r.halted) {
+    console.log(
+      "\n=== gates: build stopped on Next's SecurityFatalError advisory halt; re-running build once now, while its five-minute receipt is fresh\n",
+    );
+    r = await runOnce(true);
+  }
   recordTreeLockChild(null);
   const seconds = Math.round((Date.now() - started) / 1000);
   // A gate that could not be started, or was killed by a signal, has no exit
