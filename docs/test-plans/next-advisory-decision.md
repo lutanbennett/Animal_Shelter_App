@@ -81,7 +81,7 @@ it. Everything outside those comments is judged.
 |---|---|
 | Feature | next-advisory-decision (#bld1f) |
 | Backlog item | `docs/backlog.md` → #bld1f |
-| Branch / worktree | `claude/3005` @ `C:\Development\Animal_Shelter_3005` |
+| Branch / worktree | `claude/next-advisory-decision` @ `C:DevelopmentAnimal_Shelter_next-advisory-decision` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | see PR |
 | Tested by / date | Claude, 2026-11-17 |
