@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { actingShelterId } from "@/lib/supabase/acting-shelter";
-import { FALLBACK_SHELTER_KEY } from "@/lib/google/shelter-drive-credentials";
+import { decideRootFolder } from "@/lib/google/shelter-drive-decide";
 import { DEFAULT_SHELTER_NAMES, type ShelterNames } from "@/lib/shelter-names-default";
 
 /**
@@ -20,11 +20,7 @@ export async function driveRootFolderId(): Promise<string | null> {
   }
   if (!shelterId) return fallback;
   const { data } = await createAdminClient({ shelterId }).from("shelters").select("key, drive_root_folder_id").eq("id", shelterId).maybeSingle();
-  const own = (data?.drive_root_folder_id as string | null | undefined)?.trim();
-  if (own) return own;
-  // Part 9 (#o2iyh): only the fallback shelter may borrow the environment variable. Any other shelter with no folder
-  // of its own gets null (callers then say "not configured"), never Lanna's folder in Lanna's Google account.
-  return data?.key === FALLBACK_SHELTER_KEY ? fallback : null;
+  return decideRootFolder(data?.drive_root_folder_id as string | null | undefined, data?.key as string | null | undefined, fallback);
 }
 
 /**
