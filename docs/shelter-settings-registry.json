@@ -84,8 +84,16 @@
       "reason": "A shelter KEY default (Part 4/5 ground), not a display name."
     },
     {
+      "file": "src/lib/release-mail.test.mjs",
+      "reason": "Test asserting Lanna's default names reproduce the old mail text."
+    },
+    {
       "file": "src/lib/releases.ts",
       "reason": "Historical release-note text describing what shipped; it is a record, not output that varies by shelter."
+    },
+    {
+      "file": "src/lib/shelter-names-default.ts",
+      "reason": "Home of the fallback literals shelterNames() uses when a shelter has no stored name."
     },
     {
       "file": "src/lib/site-hosts.test.mjs",
