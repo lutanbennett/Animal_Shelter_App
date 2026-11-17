@@ -52,8 +52,8 @@
       "reason": "The authenticator issuer is stored inside every enrolled person's app; changing it does not migrate those entries, so it stays as is (decision 2026-11-17-per-shelter-naming)."
     },
     {
-      "file": "src/lib/clinics/calendar-poll.ts",
-      "reason": "Admin-facing sentence in a calendar notice; follow-up for the clinics/calendar part."
+      "file": "src/lib/clinics/calendar-notice.test.mjs",
+      "reason": "Test asserting Lanna's default short name reproduces the old calendar notice text."
     },
     {
       "file": "src/lib/donations/issuer.ts",
@@ -65,11 +65,11 @@
     },
     {
       "file": "src/lib/i18n/dictionaries/en.ts",
-      "reason": "Public-site and app copy in the dictionaries names the shelter in prose; per-shelter copy is the website/i18n parts' work, not the naming group's (decision 2026-11-17-per-shelter-naming)."
+      "reason": "Public-site and app copy in the dictionaries names the shelter in prose; the dictionaries are static per-language records read by client components with no shelter in scope, so a name needs a placeholder mechanism across ~50 strings and function entries; handed to the website/i18n part (decision 2026-11-17-per-shelter-dictionary-prose)."
     },
     {
       "file": "src/lib/i18n/dictionaries/th.ts",
-      "reason": "Public-site and app copy in the dictionaries names the shelter in prose; per-shelter copy is the website/i18n parts' work, not the naming group's (decision 2026-11-17-per-shelter-naming)."
+      "reason": "Public-site and app copy in the dictionaries names the shelter in prose; the dictionaries are static per-language records read by client components with no shelter in scope, so a name needs a placeholder mechanism across ~50 strings and function entries; handed to the website/i18n part (decision 2026-11-17-per-shelter-dictionary-prose)."
     },
     {
       "file": "src/lib/links/donation.test.mjs",
@@ -133,7 +133,7 @@
     },
     {
       "file": "worker/release-mail.mjs",
-      "reason": "The Worker relay has no shelter and no database; its sender name needs a deploy-supplied value (follow-up)."
+      "reason": "The Worker relay has no shelter and no database; the sender name is the RELEASE_MAIL_SENDER_NAME deploy variable, and this literal is only its fallback so Lanna's mail is unchanged."
     },
     {
       "file": "worker/release-mail.test.mjs",

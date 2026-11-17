@@ -1,6 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { adminEmails, send } from "@/lib/status/alerts";
 import { getAppEnv } from "@/lib/app-env";
+import { calendarNoticeFooter } from "./calendar-notice";
+import { shelterNames } from "@/lib/shelter-settings";
 import { decideChange, isOtherEnvironment } from "./calendar-change";
 import { calendarConfigured, calendarFetch, errorText } from "./calendar-sync";
 import { importNewEvent } from "./calendar-import";
@@ -78,7 +80,8 @@ async function tellAdmins(origin: string, subject: string, line: string): Promis
     if (!to.length) return;
     const env = getAppEnv();
     subject = `${envPrefix(env)}${subject}`;
-    const text = `${line}\n\nIt is a change made in the shelter calendar, picked up by the ${env} Lanna Care system (${origin}). If this was a mistake, open the visit and set it back to scheduled.`;
+    const { shortName } = await shelterNames();
+    const text = `${line}\n\n${calendarNoticeFooter(env, shortName, origin)}`;
     await send({ subject, text, html: `<p>${line.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</p><p>${text.split("\n\n")[1]}</p>` }, to, origin);
   } catch {
     // the cancellation stands; a mail that cannot go is not a reason to undo it
@@ -146,7 +149,7 @@ async function apply(event: GEvent, origin: string | null, result: PollResult): 
     result.cancelled += 1;
     if (origin) {
       const what = describe(visit);
-      await tellAdmins(origin, `Vet visit cancelled in the calendar: ${what}`, `${what} was cancelled in your calendar; it is cancelled in Lanna Care too.`);
+      await tellAdmins(origin, `Vet visit cancelled in the calendar: ${what}`, `${what} was cancelled in your calendar; it is cancelled in ${(await shelterNames()).shortName} too.`);
     }
     return;
   }
