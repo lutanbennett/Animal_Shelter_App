@@ -233,7 +233,7 @@ Manual verification by: n/a: no UI surface, nothing for a person to look at
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR — n/a: pasted into the PR after it exists
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — pending: release manager's pre-deploy pass
 
 Result: pass
 
