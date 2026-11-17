@@ -16,7 +16,7 @@
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence, and it matches what the backlog item asked for: the seven shelter-chosen lookup lists gain `shelter_id`, scoped policies and per-shelter unique keys
-- [x] Files/areas touched listed: `supabase/migrations/0402_lookup_lists_per_shelter.sql`, `docs/tenancy-shared-tables-registry.json`, backlog, decision file
+- [x] Files/areas touched listed: `supabase/migrations/0403_lookup_lists_per_shelter.sql`, `docs/tenancy-shared-tables-registry.json`, backlog, decision file
 - [x] Cards affected identified: none change; the filter is by shelter, not card; admin and public unaffected on one-shelter production
 - [x] Out of scope written down: no app code changed; role/permission tables belong to `tenancy-part10-shelter-roles`
 
@@ -41,7 +41,7 @@ build=1 above is the known Next advisory halt (SecurityFatalError, docs/decision
 
 ## 3. Schema and data
 
-- [x] Migration number is one above the highest on `main`, and no other in-flight branch carries one (check-migration-numbers ok for 0402)
+- [x] Migration number is one above the highest on `main`, and no other in-flight branch carries one (check-migration-numbers ok for 0403)
 - [x] `node scripts/apply-migrations.mjs --status` reviewed before applying
 - [x] `node scripts/apply-migrations.mjs --dry-run` reviewed
 - [x] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations`
@@ -49,7 +49,7 @@ build=1 above is the known Next advisory halt (SecurityFatalError, docs/decision
 - [x] Existing rows still read correctly after the change (all stamped Lanna; null count checked inside the migration)
 - [x] Constraints and defaults exercised in a rolled-back harness: same-name row in a second shelter accepted; shelter-one session saw 0 of shelter two's rows and edited 0; shelter two's cost stayed 999, Lanna's 250
 - [ ] Down-migration written — n/a: undo steps are in the file header (drop policies, restore old keys, drop column)
-- [x] Production apply plan: `0402_lookup_lists_per_shelter.sql` to project `dbkodyyxxhtygxcxmfcu`, before or with the deploy; app code unchanged
+- [x] Production apply plan: `0403_lookup_lists_per_shelter.sql` to project `dbkodyyxxhtygxcxmfcu`, before or with the deploy; app code unchanged
 
 ## 4. Functional checks
 
@@ -120,7 +120,7 @@ build=1 above is the known Next advisory halt (SecurityFatalError, docs/decision
 - [ ] Both a migration and code that reads it? — n/a: the PR carries no code that reads the new column
 - [ ] `apply-migrations.mjs --env production --dry-run` run and clean — deferred: release manager
 - [ ] Destructive migration backup — n/a: additive column, unique keys swapped in one file
-- [ ] Apply plan stated: file 0402 to production before the deploy — deferred: release manager
+- [ ] Apply plan stated: file 0403 to production before the deploy — deferred: release manager
 
 ### Rollback
 

@@ -1,4 +1,4 @@
-# Seven lookup lists become per-shelter (`#lklst`, migration 0402)
+# Seven lookup lists become per-shelter (`#lklst`, migration 0403)
 
 **All seven get the same answer: a `shelter_id` column.** `bill_kinds`, `blood_test_types`, `immunization_types`, `procedure_types`, `frequency`, `units`, `group_origins`.
 
@@ -7,7 +7,7 @@
 - `units` and `frequency` looked like they might be universal, but each is an editable admin list (`/admin/units`, `frequency` is the dosing vocabulary a shelter picks from) with a name the shelter chooses; shelter two renaming "tablet" would rename it for shelter one. Nothing treats the lists as a closed set: no check, seed or fixture enumerates their rows (grepped `src`, `worker`, `scripts`), and the only `on conflict` uses are in old seed migrations that ran before this file.
 - The other twelve registry tables remain installation-owned and are untouched.
 
-## What 0402 does (the 0390 + 0397 pattern)
+## What 0403 does (the 0390 + 0397 pattern)
 1. Adds `shelter_id` with `current_shelter_id()` as default.
 2. Stamps today's rows **Lanna by an explicit named statement** (user triggers off for the update), then refuses to continue if any row is still null, then `NOT NULL`. There is no state in which these seven have a nullable `shelter_id`.
 3. Enables RLS and creates 0392's three restrictive `shelter_scope_*` policies (select/update/delete). Inserts take the header's shelter by default.
