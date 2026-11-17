@@ -1,0 +1,6 @@
+{
+  "rule": "src/ and worker/ read the Drive folder through driveRootFolderId(); only the files here read GOOGLE_DRIVE_ROOT_FOLDER_ID directly. scripts/check-shelter-settings.mjs fails on any other. Part 8 of #ykefa, item #b4cmn.",
+  "driveRootFolderIdReaders": [
+    { "file": "src/lib/shelter-settings.ts", "reason": "The reader itself: the environment variable is its fallback when a shelter has no stored value or there is no request." }
+  ]
+}
