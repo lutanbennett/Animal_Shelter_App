@@ -8,6 +8,10 @@
   ],
   "lannaLiteralFiles": [
     {
+      "file": "src/lib/google/shelter-drive-decide.ts",
+      "reason": "FALLBACK_SHELTER_KEY moved here from shelter-drive-credentials.ts so tests can load it: the shelters.key of the one shelter allowed to fall back to the environment variables, plus comments. A database key, not output."
+    },
+    {
       "file": "src/lib/google/shelter-drive-credentials.ts",
       "reason": "FALLBACK_SHELTER_KEY: the shelters.key of the one shelter allowed to fall back to the environment variables, plus comments. A database key, not output."
     },
