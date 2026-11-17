@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { todayIso } from "@/lib/format";
 import { wantsEvent } from "./calendar-change";
 import { getAppEnv } from "@/lib/app-env";
@@ -77,6 +78,7 @@ export async function calendarFetch(path: string, init: RequestInit = {}): Promi
 
 type Row = {
   id: string;
+  shelter_id: string | null;
   resident_id: string;
   appointment_date: string;
   reason: string | null;
@@ -90,7 +92,7 @@ type Row = {
 };
 
 const COLUMNS =
-  "id, resident_id, appointment_date, reason, status, archived_at, calendar_event_id, calendar_synced_at, calendar_out_of_date_at, residents(name), clinics(name)";
+  "id, shelter_id, resident_id, appointment_date, reason, status, archived_at, calendar_event_id, calendar_synced_at, calendar_out_of_date_at, residents(name), clinics(name)";
 
 export type SyncOutcome = "created" | "updated" | "deleted" | "unchanged" | "failed" | "off";
 
@@ -122,7 +124,8 @@ async function syncRow(row: Row, origin: string | null): Promise<SyncOutcome> {
   // Stamped with the moment we started, so a change made while Google was answering stays "out of date".
   const startedAt = new Date().toISOString();
   const write = (patch: Record<string, string | null>) =>
-    db.from("clinic_visits").update(patch).eq("id", row.id);
+    // Fenced to the visit's own shelter (the sweep reads rows of every shelter and syncs each as itself).
+    row.shelter_id ? db.from("clinic_visits").update(patch).eq("id", row.id).eq("shelter_id", row.shelter_id) : db.from("clinic_visits").update(patch).eq("id", row.id).is("shelter_id", null);
   try {
     if (!rowWantsEvent(row)) {
       if (!row.calendar_event_id) {
@@ -194,11 +197,14 @@ async function syncRow(row: Row, origin: string | null): Promise<SyncOutcome> {
 /** Sync one visit now. Never throws; "off" when the calendar is not set up (nothing is marked, so switching it on picks everything up). */
 export async function syncVisitToCalendar(visitId: string, origin: string | null): Promise<SyncOutcome> {
   if (!calendarConfigured()) return "off";
+  const shelterId = await actingShelterId();
+  if (!shelterId) return "unchanged";
   try {
     const { data } = await createAdminClient()
       .from("clinic_visits")
       .select(COLUMNS)
       .eq("id", visitId)
+      .eq("shelter_id", shelterId)
       .limit(1)
       .returns<Row[]>();
     return data?.[0] ? await syncRow(data[0], origin) : "unchanged";

@@ -64,7 +64,11 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   // One database transaction (0373): the order, its parts and items and the stock decrement all happen or none does.
   // The function re-reads every price, postage figure, name and source itself; only ids and quantities go in.
   try {
-    const db = createAdminClient();
+    // The order's rows take their shelter from the request header inside the function (column default, 0390), and a service-role
+    // client sends none of its own, so the acting shelter is passed. None means no shelter, and no order.
+    const shelterId = await actingShelterId();
+    if (!shelterId) return { ok: false, error: "failed" };
+    const db = createAdminClient({ shelterId });
     const { data, error } = await db.rpc("place_merch_order", {
       p_lines: [...lines].map(([variant_id, quantity]) => ({ variant_id, quantity })),
       p_buyer_name: input.buyerName,

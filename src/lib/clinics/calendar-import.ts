@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { getAppEnv } from "@/lib/app-env";
 import { isOtherEnvironment } from "./calendar-change";
 import { calendarFetch, errorText, syncPendingVisits } from "./calendar-sync";
@@ -39,16 +40,28 @@ export type CalEvent = {
 
 type Refs = { clinics: ClinicRef[]; residents: ResidentRef[] };
 
-export async function loadRefs(): Promise<Refs> {
+/**
+ * The clinics and residents an event's title may name. A request passes its acting shelter and sees only that shelter's; the calendar
+ * poll runs with none (one calendar per installation) and matches against everything, which only ever feeds createVisits, and that
+ * puts each visit in the CLINIC's shelter and refuses a resident of another one.
+ */
+export async function loadRefs(shelterId: string | null = null): Promise<Refs> {
   const db = createAdminClient();
-  const [clinics, residents, state] = await Promise.all([
-    db.from("clinics").select("id, name").returns<ClinicRef[]>(),
-    db
-      .from("residents")
-      .select("id, resident_code, name, thai_name")
-      .returns<{ id: string; resident_code: string | null; name: string; thai_name: string | null }[]>(),
-    db.from("resident_current_state").select("resident_id, current_status").returns<{ resident_id: string; current_status: string | null }[]>(),
+  let clinicsQ = db.from("clinics").select("id, name");
+  let residentsQ = db.from("residents").select("id, resident_code, name, thai_name");
+  if (shelterId) {
+    clinicsQ = clinicsQ.eq("shelter_id", shelterId);
+    residentsQ = residentsQ.eq("shelter_id", shelterId);
+  }
+  const [clinics, residents] = await Promise.all([
+    clinicsQ.returns<ClinicRef[]>(),
+    residentsQ.returns<{ id: string; resident_code: string | null; name: string; thai_name: string | null }[]>(),
   ]);
+  // The status view carries no shelter of its own, so it is asked only about the residents already fenced above.
+  const ids = (residents.data ?? []).map((r) => r.id);
+  const state = ids.length
+    ? await db.from("resident_current_state").select("resident_id, current_status").in("resident_id", ids).returns<{ resident_id: string; current_status: string | null }[]>()
+    : { data: [] as { resident_id: string; current_status: string | null }[] };
   const status = new Map((state.data ?? []).map((s) => [s.resident_id, s.current_status]));
   return {
     clinics: clinics.data ?? [],
@@ -80,12 +93,21 @@ export async function createVisits(
 ): Promise<{ created: number; error?: string }> {
   if (!hasTime(e) || residentIds.length === 0) return { created: 0, error: "The event has no time or no resident." };
   const db = createAdminClient();
-  const { data: already } = await db.from("clinic_visits").select("id").eq("calendar_event_id", e.id).limit(1);
+  // The visits go in the clinic's shelter, whoever asked: read it, and let only that shelter's residents through.
+  const { data: clinic } = await db.from("clinics").select("shelter_id").eq("id", clinicId).maybeSingle<{ shelter_id: string | null }>();
+  const shelterId = clinic?.shelter_id;
+  if (!shelterId) return { created: 0, error: "That clinic is not in a shelter." };
+  const { data: mine } = await db.from("residents").select("id").eq("shelter_id", shelterId).in("id", residentIds);
+  const allowed = new Set((mine ?? []).map((r) => r.id as string));
+  residentIds = residentIds.filter((id) => allowed.has(id));
+  if (residentIds.length === 0) return { created: 0, error: "No resident of this clinic's shelter." };
+  const { data: already } = await db.from("clinic_visits").select("id").eq("shelter_id", shelterId).eq("calendar_event_id", e.id).limit(1);
   if (already?.length) return { created: 0 }; // imported before: never twice
   const when = new Date(e.start!.dateTime!).toISOString();
   let created = 0;
   for (const [i, residentId] of [...new Set(residentIds)].entries()) {
     const { error } = await db.from("clinic_visits").insert({
+      shelter_id: shelterId,
       resident_id: residentId,
       clinic_id: clinicId,
       appointment_date: when,
@@ -126,6 +148,8 @@ export type ConfirmItem = {
 export async function listToConfirm(): Promise<{ items: ConfirmItem[]; refs: Refs; error: string | null }> {
   const empty: Refs = { clinics: [], residents: [] };
   try {
+    const shelterId = await actingShelterId();
+    if (!shelterId) return { items: [], refs: empty, error: null };
     const db = createAdminClient();
     const timeMin = new Date(Date.now() - 24 * 3600_000).toISOString();
     const qs = new URLSearchParams({ maxResults: "250", singleEvents: "false", showDeleted: "false", timeMin });
@@ -133,9 +157,9 @@ export async function listToConfirm(): Promise<{ items: ConfirmItem[]; refs: Ref
     if (!res.ok) return { items: [], refs: empty, error: `Calendar read failed (${res.status}): ${await errorText(res)}` };
     const events = (((await res.json()) as { items?: CalEvent[] }).items ?? []).filter(isCandidate);
     if (events.length === 0) return { items: [], refs: empty, error: null };
-    const { data: known } = await db.from("clinic_visits").select("calendar_event_id").in("calendar_event_id", events.map((e) => e.id));
+    const { data: known } = await db.from("clinic_visits").select("calendar_event_id").eq("shelter_id", shelterId).in("calendar_event_id", events.map((e) => e.id));
     const claimed = new Set((known ?? []).map((k) => k.calendar_event_id));
-    const refs = await loadRefs();
+    const refs = await loadRefs(shelterId);
     const items: ConfirmItem[] = [];
     for (const e of events) {
       if (claimed.has(e.id)) continue;

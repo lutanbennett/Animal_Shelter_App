@@ -233,18 +233,18 @@
     },
     {
       "id": "src/lib/clinics/calendar-import.ts#loadRefs",
-      "classification": "needs-shelter-filter",
-      "reason": "User-driven calendar import: reads clinics, residents and resident_current_state and creates clinic_visits; all shelter data."
+      "classification": "filtered",
+      "reason": "Request callers pass the acting shelter and see only its clinics and residents; the calendar poll passes none (one calendar per installation) and only feeds createVisits, which fences each visit by the clinic's shelter."
     },
     {
       "id": "src/lib/clinics/calendar-import.ts#createVisits",
-      "classification": "needs-shelter-filter",
-      "reason": "User-driven calendar import: reads clinics, residents and resident_current_state and creates clinic_visits; all shelter data."
+      "classification": "filtered",
+      "reason": "Reads the clinic's shelter_id, lets only residents of that shelter through, checks \"imported before\" within it, and inserts every visit with that shelter_id (service role does not stamp)."
     },
     {
       "id": "src/lib/clinics/calendar-import.ts#listToConfirm",
-      "classification": "needs-shelter-filter",
-      "reason": "User-driven calendar import: reads clinics, residents and resident_current_state and creates clinic_visits; all shelter data."
+      "classification": "filtered",
+      "reason": "Returns nothing with no acting shelter; the claimed-events lookup and the refs are .eq(\"shelter_id\", acting shelter)."
     },
     {
       "id": "src/lib/clinics/calendar-poll.ts#apply",
@@ -258,13 +258,13 @@
     },
     {
       "id": "src/lib/clinics/calendar-sync.ts#syncRow",
-      "classification": "needs-shelter-filter",
-      "reason": "Writes the calendar event id back onto a clinic_visits row; must be limited to the visit's own shelter."
+      "classification": "filtered",
+      "reason": "Writes to the visit's own row, fenced by that row's shelter_id (the sweep syncs rows of every shelter, each as itself)."
     },
     {
       "id": "src/lib/clinics/calendar-sync.ts#syncVisitToCalendar",
-      "classification": "needs-shelter-filter",
-      "reason": "Writes the calendar event id back onto a clinic_visits row; must be limited to the visit's own shelter."
+      "classification": "filtered",
+      "reason": "Request-scoped: reads the visit .eq(\"shelter_id\", acting shelter); no acting shelter, unchanged."
     },
     {
       "id": "src/lib/clinics/calendar-sync.ts#syncPendingVisits",
@@ -333,8 +333,8 @@
     },
     {
       "id": "src/lib/merch/checkout.ts#placeOrder",
-      "classification": "needs-shelter-filter",
-      "reason": "Public merchandise shop: places and reads orders (merch_orders, place_merch_order). Orders are shelter data and the shop is public, so the shelter must come from the request."
+      "classification": "filtered",
+      "reason": "Passes the acting shelter to createAdminClient({ shelterId }) so the order function's column defaults stamp it (0390); no acting shelter, no order. Rates are read with .eq(\"shelter_id\") already."
     },
     {
       "id": "src/lib/merch/checkout.ts#loadOrderView",
