@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { refuseFor } from "@/lib/auth/require-role";
 import { loadPermissions } from "@/lib/permissions/load";
 import { ACTIVITIES, type ActivityKey } from "@/lib/permissions/catalogue";
@@ -46,9 +47,10 @@ export default async function WhoDoesWhatPage() {
   const w = t.admin.whoDoesWhat;
 
   const admin = createAdminClient();
+  const shelterId = (await actingShelterId()) ?? "00000000-0000-0000-0000-000000000000";
   const [roles, { data: cellRows, error: cellsError }] = await Promise.all([
     loadRoles(),
-    admin.from("role_permissions").select("role_id, activity, level"),
+    admin.from("role_permissions").select("role_id, activity, level").eq("shelter_id", shelterId),
   ]);
   if (cellsError) throw new Error(`Who does what: ${cellsError.message}`);
 
