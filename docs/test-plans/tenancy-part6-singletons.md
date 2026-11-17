@@ -117,8 +117,8 @@ gates: typecheck=0 lint=0 test=0 build=1
 
 - [ ] Both a migration and code that reads it — n/a: no app code reads these policies; `dev-signin.mjs` is a dev script
 - [ ] `--env production --dry-run` run and clean — deferred: release manager
-- [ ] Destructive or rewriting migration backup — deferred: release manager (0394 updates rows)
-- [ ] Apply plan stated — deferred: release manager (two-release order on `#ujqr5`)
+- [ ] Destructive or rewriting migration backup — deferred: release manager (0395 backfills two shelters columns)
+- [ ] Apply plan stated — deferred: release manager (apply 0395 before the deploy)
 
 ### Rollback
 
