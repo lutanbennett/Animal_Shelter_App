@@ -11,7 +11,7 @@
 | PR | pending: number known once opened |
 | Tested by / date | Claude, 2026-11-17 |
 | Carries a migration? | yes |
-| Tested at SHA | SHA_PLACEHOLDER |
+| Tested at SHA | 32ef5b25d |
 
 ## 1. Scope and risk
 
@@ -22,11 +22,20 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — GATES_SYNC
+- [x] `node scripts/worktree.mjs sync` — origin/main merged in cleanly
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`:
 
 ```
-GATES_OUTPUT
+=== gates: typecheck exited 0 after 19s
+=== gates: lint exited 0 after 149s
+=== gates: test exited 0 after 51s
+=== gates: build exited 1 after 64s
+gates: FAILED — build
+gates: typecheck=0 lint=0 test=0 build=1
+
+[exited with code 0]
+
+build=1 above is the known Next advisory halt (SecurityFatalError, docs/decisions/2026-11-17-next-agent-upgrade-halt.md); npx next build run alone straight after exited 0.
 ```
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
