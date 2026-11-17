@@ -93,10 +93,11 @@ for (const role of roles) {
 if (!failed) pass(`all ${roles.filter((r) => r.kind !== "fixed").length} roles hold exactly what their cards require`);
 
 // ---- 2. the triggers and the guards, in a transaction that always rolls back
-const r = (n) => `insert into roles (key, name, kind, home_path)
-  values ('harness_${n}', 'Harness ${n}', 'custom', '/home') returning id`;
+const r = (n) => `insert into roles (key, name, kind, home_path, shelter_id)
+  values ('harness_${n}', 'Harness ${n}', 'custom', '/home', (select id from shelters order by id limit 1)) returning id`;
 const block = `
 begin;
+select set_config('request.headers', json_build_object('x-shelter-id', (select id from shelters order by id limit 1))::text, true);
 do $h$
 declare
   a uuid; b uuid; c uuid;
@@ -115,22 +116,22 @@ begin
   ${r("c").replace("returning id", "returning id into c")};
 
   -- a card given by a DIRECT insert grants its access (the 0251 route)
-  insert into role_cards (role_id, card, position) values (a, 'my_tasks', 1);
+  insert into role_cards (role_id, card, position, shelter_id) values (a, 'my_tasks', 1, (select shelter_id from roles where id = a));
   select count(*) into v_n from role_permissions where role_id = a;
   if v_n <> 1 or not exists (select 1 from role_permissions where role_id = a and activity = 'recurring.do_own' and level = 2) then
     raise exception 'ASSERT direct insert of my_tasks gave % cells, not exactly recurring.do_own', v_n;
   end if;
 
   -- an included card flows: residents includes view_residents; the higher level wins
-  insert into role_cards (role_id, card, position) values (a, 'residents', 2);
+  insert into role_cards (role_id, card, position, shelter_id) values (a, 'residents', 2, (select shelter_id from roles where id = a));
   select level into v_lvl from role_permissions where role_id = a and activity = 'resident.record';
   if v_lvl is distinct from 2 then raise exception 'ASSERT resident.record should be edit via residents, got %', v_lvl; end if;
-  insert into role_cards (role_id, card, position) values (b, 'medical_records', 1);
+  insert into role_cards (role_id, card, position, shelter_id) values (b, 'medical_records', 1, (select shelter_id from roles where id = b));
   select level into v_lvl from role_permissions where role_id = b and activity = 'resident.record';
   if v_lvl is distinct from 1 then raise exception 'ASSERT medical_records should bring resident.record at read via view_residents, got %', v_lvl; end if;
 
   -- changing what a card requires updates every holder at once (community.outings: held by no card these roles hold; facility.enclosures was used until 0265 gave it to view_residents)
-  insert into role_cards (role_id, card, position) values (c, 'my_tasks', 1);
+  insert into role_cards (role_id, card, position, shelter_id) values (c, 'my_tasks', 1, (select shelter_id from roles where id = c));
   insert into card_grants (card, activity, level) values ('my_tasks', 'community.outings', 1);
   if (select count(*) from role_permissions where activity = 'community.outings' and role_id in (a, c)) <> 2 then
     raise exception 'ASSERT adding a card_grants row did not reach both holders';
