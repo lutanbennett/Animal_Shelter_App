@@ -521,6 +521,8 @@ Both deploy paths refuse a commit whose database lacks a migration that is on
 columns. Re-run `--status` afterwards and read `0 pending` and a clean drift
 check before moving on.
 
+**A migration that tightens a constraint (`NOT NULL`, a new `check`, a foreign key) must reach a database no earlier than the code and SQL that stop writing the rows it forbids.** Read the file for the writers it fixes before applying; `0397_shelter_id_not_null.sql` carries its own writer fixes in the same transaction for exactly this reason, so applying it to production is safe only together with the Worker/Pi code of the release that stamps every service-role insert (Part 7). If the apply and the code deploy are not the same release, apply the migration last.
+
 **THREE databases, not two.** Production and test as always, and now **UAT's own
 project**, which the same runner reaches with `--env uat`. Apply to UAT in the same
 pass, before UAT's deploy, for the same reason: its code reads the new columns.
