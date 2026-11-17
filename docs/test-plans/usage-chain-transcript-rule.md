@@ -11,7 +11,7 @@
 | PR | pending: opened after this commit |
 | Tested by / date | Claude, 2026-11-17 |
 | Carries a migration? | no |
-| Tested at SHA | SHAHERE |
+| Tested at SHA | ce03db7ea |
 
 ## 1. Scope and risk
 
