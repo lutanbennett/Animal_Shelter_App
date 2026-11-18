@@ -69,7 +69,7 @@ declare
   o record; fn record; h text; n bigint; res jsonb := '{}'::jsonb; base1 jsonb := '{}'::jsonb; base2 jsonb := '{}'::jsonb;
   after jsonb := '{}'::jsonb; calls_a jsonb := '{}'::jsonb; calls_b jsonb := '{}'::jsonb; args_a text; args_b text; out_a text; out_b text;
   planted jsonb := '[]'::jsonb; objs jsonb := '[]'::jsonb; fns jsonb := '[]'::jsonb; src record;
-  cols text; lanna uuid;
+  cols text; lanna uuid; probe jsonb;
 begin
   ${pre}
   -- the caller is a visitor to Lanna, as the Worker would send it: with no header every shelter-scoped view reads empty before and after, and the diff proves nothing
@@ -128,6 +128,14 @@ begin
   end;
   ${mid}
 
+  -- measured, not assumed: who the read below really runs as, and whether is_trusted_caller() lets it through the per-shelter policies
+  begin
+    set local role anon;
+    probe := jsonb_build_object('current_user', current_user, 'jwt_claims', current_setting('request.jwt.claims', true), 'is_trusted_caller', public.is_trusted_caller());
+    reset role;
+  exception when others then reset role; probe := jsonb_build_object('refused', sqlstate || ' ' || sqlerrm);
+  end;
+
   -- phase 2: read again
   for o in select value #>> '{}' as name from jsonb_array_elements(objs) loop
     begin
@@ -173,7 +181,7 @@ begin
   end loop;
 
   raise exception 'CANARY_RESULT:%', jsonb_build_object('objects', objs, 'functions', fns, 'planted', planted,
-    'base1', base1, 'base2', base2, 'after', after, 'calls_a', calls_a, 'calls_b', calls_b)::text;
+    'base1', base1, 'base2', base2, 'after', after, 'calls_a', calls_a, 'calls_b', calls_b, 'probe', probe)::text;
 end
 $canary$;`;
 }
@@ -212,6 +220,7 @@ async function main() {
   const known = [];
   const unstable = Object.keys(data.base1).filter((k) => data.base1[k] !== data.base2[k]);
   console.log(`Project ${ref}${proveRed ? `; SABOTAGED (${proveRed}), a red result is the expected one` : ""}`);
+  console.log(`Read-as probe: ${JSON.stringify(data.probe)}`);
   console.log(`Planted (rolled back, nothing left behind): ${JSON.stringify(data.planted)}`);
   const refused = Object.values(data.base2).filter((v) => String(v).startsWith("refused:")).length;
   console.log(`Read ${data.objects.length} anon-reachable objects as the anon role (${data.objects.length - refused} answered, ${refused} refused at read, e.g. column-level grants).`);
