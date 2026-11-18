@@ -39,6 +39,19 @@
         "Not debt: no baseline, never counted."
       ],
       "counted": false
+    },
+    "productAdmin": {
+      "what": "PADMIN (Product Admin): a list of people, public.product_admins (0411), who may list every shelter on the platform and add or remove one another. Keyed on auth.users.id. No role, no card, no cell.",
+      "decision": "docs/decisions/2026-11-18-product-admin-list-schema.md",
+      "why": "Lutan, 2026-11-18: \"for access control it should just be a list of people with Product Admin (PADMIN)\" and \"doesnt need roles or cards\".",
+      "mechanism": "is_product_admin() (0411) is the one place the question is asked. The list is unreadable and unwritable to anyone not on it; writes also need an aal2 session (restrictive policies, the 0100 shape). product_admin_shelters() returns identifying columns only and is deliberately not scoped by current_shelter_id().",
+      "rules": [
+        "One list, one surface (managing shelters). Everything a PADMIN does inside a shelter's own data stays card-governed.",
+        "Not a precedent: nothing else may sit outside the card system by citing this, Admin or the website account.",
+        "Does not touch the Admin bypass (perms.isAdmin / roles.is_admin).",
+        "A named exception, not debt: no baseline, never counted."
+      ],
+      "counted": false
     }
   },
   "stillDecidesAccess": [],
@@ -961,6 +974,46 @@
         "migration": "0409_shelter_calendar_credentials.sql",
         "item": "policy public.shelter_calendar_credentials.definer_all",
         "reason": "Policy for the rls_definer role only, the convention 0375 set for every RLS table (docs/decisions/2026-11-14-tenancy-reown.md), copied from 0404. rls_definer is a NOLOGIN owner role for definer functions, not a login, so it grants no person anything; no card could apply to it. No login holds any grant on this table."
+      },
+      {
+        "migration": "0411_product_admins.sql",
+        "item": "policy public.product_admins.product_admins_select",
+        "reason": "PADMIN list (docs/decisions/2026-11-18-product-admin-list-schema.md): gated by is_product_admin(), a list of people outside the card system, by Lutan's 2026-11-18 decision. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0411_product_admins.sql",
+        "item": "policy public.product_admins.product_admins_insert",
+        "reason": "PADMIN list (docs/decisions/2026-11-18-product-admin-list-schema.md): gated by is_product_admin(), a list of people outside the card system, by Lutan's 2026-11-18 decision. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0411_product_admins.sql",
+        "item": "policy public.product_admins.product_admins_delete",
+        "reason": "PADMIN list (docs/decisions/2026-11-18-product-admin-list-schema.md): gated by is_product_admin(), a list of people outside the card system, by Lutan's 2026-11-18 decision. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0411_product_admins.sql",
+        "item": "policy public.product_admins.product_admins_insert_requires_aal2",
+        "reason": "PADMIN list (docs/decisions/2026-11-18-product-admin-list-schema.md): gated by is_product_admin(), a list of people outside the card system, by Lutan's 2026-11-18 decision. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0411_product_admins.sql",
+        "item": "policy public.product_admins.product_admins_delete_requires_aal2",
+        "reason": "PADMIN list (docs/decisions/2026-11-18-product-admin-list-schema.md): gated by is_product_admin(), a list of people outside the card system, by Lutan's 2026-11-18 decision. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0411_product_admins.sql",
+        "item": "policy public.product_admins.definer_all",
+        "reason": "The rls_definer convention (0375): the tenancy lint's role reads the table whole; no login uses it."
+      },
+      {
+        "migration": "0411_product_admins.sql",
+        "item": "function public.is_product_admin definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-18-product-admin-list-schema.md): gated by is_product_admin(), a list of people outside the card system, by Lutan's 2026-11-18 decision. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0411_product_admins.sql",
+        "item": "function public.product_admin_shelters definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-18-product-admin-list-schema.md): gated by is_product_admin(), a list of people outside the card system, by Lutan's 2026-11-18 decision. Recorded under outsideTheCardSystem.productAdmin, not debt."
       }
     ],
     "stubs": [
