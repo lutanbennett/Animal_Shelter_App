@@ -40,6 +40,10 @@ const SABOTAGE = {
   // drop-restrictive: the item's own proof. 0392's restrictive shelter_scope_select on residents is dropped, and so that a read can happen at all (anon holds no
   // grant on residents) a grant and a permissive policy are added: the proof is "restrictive policy dropped AND grant present". See docs/decisions/2026-11-18-canary-proved-red-by-dropping-a-policy.md.
   "drop-restrictive": { phase: "pre", sql: ["drop policy shelter_scope_select on public.residents", "grant select on public.residents to anon", "create policy canary_leak on public.residents for select to anon using (true)"] },
+  // untrusted-*: the two modes that isolate the restrictive policy. Real PostgREST sends jwt claims role=anon, so is_trusted_caller() is false; this harness sends none, so it is true and
+  // the policy lets everything through. These set the claim first. Same grant and permissive policy in both; only the restrictive policy differs. keep = expected GREEN, drop = expected RED.
+  "untrusted-keep-restrictive": { phase: "pre", sql: ["select set_config('request.jwt.claims', '{\"role\":\"anon\"}', true)", "grant select on public.residents to anon", "create policy canary_leak on public.residents for select to anon using (true)"] },
+  "untrusted-drop-restrictive": { phase: "pre", sql: ["select set_config('request.jwt.claims', '{\"role\":\"anon\"}', true)", "drop policy shelter_scope_select on public.residents", "grant select on public.residents to anon", "create policy canary_leak on public.residents for select to anon using (true)"] },
   "leak-attachments": { phase: "pre", sql: ["grant select on public.attachments to anon", "create policy canary_leak on public.attachments for select to anon using (true)"] },
 };
 // Leaks that exist TODAY, measured 2026-11-16 on dev, and are exactly what Part 5 (#ujqr5) is for. Listed by name so the nightly run
@@ -239,7 +243,7 @@ async function main() {
   }
   for (const f of findings) console.log(`FAIL  ${f}`);
   console.log(`\n${findings.length} new leak finding(s), ${known.length} known (Part 5), ${unstable.length} unstable object(s).`);
-  console.log("LIMITS: cannot see service-role calls (Part 7); cannot run on the pull-request path (a write-capable token on a public repo); reads as the anon database role, and the per-shelter policies (0392) exist on dev, so it shows nothing leaks across shelters through the anon role today and, via --prove-red drop-restrictive, that removing one is noticed.");
+  console.log("LIMITS: cannot see service-role calls (Part 7); cannot run on the pull-request path (a write-capable token on a public repo); reads as the anon database role WITHOUT jwt claims, so is_trusted_caller() is true for it and the plain run does not exercise 0392 shelter_scope_* restrictive policies at all: it shows nothing leaks across shelters through anon today and that a new row is noticed. Only --prove-red untrusted-keep-restrictive (green) against untrusted-drop-restrictive (red) isolates the restrictive policy, for residents.");
   console.log(strict ? "STRICT: exiting 1 on any finding." : "REPORT-ONLY: this does not fail the build.");
   return exitWith(strict && findings.length ? 1 : 0);
 }
