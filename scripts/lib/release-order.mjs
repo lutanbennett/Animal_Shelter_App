@@ -20,12 +20,24 @@ export const MUST_FOLLOW_WORKER = [
  * pending: migration names the target database has not applied. workerSha: the commit the live Worker was deployed from, or null.
  * read(ref, path) returns file text or null. Returns the reasons to refuse; [] means nothing is guarded or all of it is proven.
  */
-export function releaseOrderProblems({ pending, workerSha, read, registry = MUST_FOLLOW_WORKER }) {
+export const releaseVersionAt = (read, ref) => read(ref, "src/lib/releases.ts")?.match(/^\s*version:\s*"([^"]+)"/m)?.[1] ?? null;
+
+/** liveVersion: { ok: true, version } | { ok: false, reason } as read from the Worker's /api/releases/current. */
+export function releaseOrderProblems({ pending, workerSha, read, liveVersion, registry = MUST_FOLLOW_WORKER }) {
   const problems = [];
   for (const { migration, files, why } of registry) {
     if (!pending.includes(migration)) continue;
     if (!workerSha) {
       problems.push(`${migration} is about to be applied and nothing proves the Worker that sends x-shelter-id is live (${why}). Deploy the Worker first, then pass --worker-deployed <the commit it was deployed from>.`);
+      continue;
+    }
+    if (!liveVersion?.ok) {
+      problems.push(`${migration}: could not ask the live Worker what it runs (${liveVersion?.reason ?? "not asked"}). Unreachable is not the same as wrong, but a guard that cannot tell must not look like one that passed: retry once the host answers.`);
+      continue;
+    }
+    const wanted = releaseVersionAt(read, workerSha);
+    if (wanted && wanted !== liveVersion.version) {
+      problems.push(`${migration}: the live Worker reports release ${liveVersion.version} but ${workerSha} is release ${wanted}, so the Worker is not the one you named. Deploy the Worker again.`);
       continue;
     }
     for (const path of files) {
