@@ -418,6 +418,11 @@
       "guard": "Reads only the row whose shelter_id is actingShelterId(); secrets are ciphertext in the table and decrypted with DRIVE_CREDENTIALS_KEY, a Worker secret; returns them to server code only and exposes nothing to a caller. A shelter with no row other than the fallback shelter is refused. Grants no access to anyone."
     },
     {
+      "file": "src/lib/google/shelter-calendar-credentials.ts",
+      "for": "Reads the given shelter's own Google Calendar credentials (shelter_calendar_credentials, 0409; no login holds a grant on it) and decrypts them, to choose which calendar its clinic visits are written to.",
+      "guard": "Called with the visit's own shelter id and reads only that shelter's row; secrets are ciphertext decrypted with DRIVE_CREDENTIALS_KEY, a Worker secret; returns them to server code only. A shelter with no row other than the fallback shelter is refused, never routed to another shelter's calendar. Grants no access to anyone."
+    },
+    {
       "file": "src/lib/google/shelter-drive-tokens.ts",
       "for": "The 15-minute alert run checks each shelter's own Google token, records ok/dead on its shelter_drive_credentials row and mails that shelter's admins once when it dies and once when it recovers.",
       "guard": "Called only from POST /api/status/alerts, which is bearer-authenticated with the service-role key. Mails only the shelter's own admins, writes only status columns of that table, returns no secret. Grants no access to anyone."
