@@ -1734,20 +1734,20 @@ const th: Dictionary = {
             `Pi ที่ ${v.host} ไม่ตอบสนอง: หน้าต่าง ๆ ให้บริการจาก Worker สำรอง`,
         },
         cronJobs: {
-          title: "งานประจำคืนของฐานข้อมูล",
+          title: "งานตามกำหนดเวลา",
           ok: (v: { name: string | number; when: string | number }) =>
             `${v.name}: ทำงานล่าสุด ${v.when}`,
           missing: (v: { name: string | number; when: string | number }) =>
-            `ไม่ได้ติดตั้ง ${v.name} ในฐานข้อมูลนี้ คำขอเก่าของผู้ช่วยจึงถูกเก็บไว้ ไม่ถูกลบ`,
+            `ไม่ได้ติดตั้ง ${v.name} ในฐานข้อมูลนี้ จึงไม่ได้ทำงาน`,
           inactive: (v: { name: string | number; when: string | number }) =>
-            `${v.name} ถูกปิดอยู่ คำขอเก่าของผู้ช่วยจึงถูกเก็บไว้ ไม่ถูกลบ`,
+            `${v.name} ถูกปิดอยู่`,
           failed: (v: { name: string | number; when: string | number }) =>
-            `${v.name} ล้มเหลวในการทำงานครั้งล่าสุด (${v.when}) คำขอเก่าของผู้ช่วยอาจไม่ถูกลบ`,
+            `${v.name} ล้มเหลวในการทำงานครั้งล่าสุด (${v.when}) งานที่ต้องทำจึงไม่ได้ทำ`,
           neverRun: (v: { name: string | number; when: string | number }) =>
-            `ติดตั้ง ${v.name} แล้วแต่ยังไม่เคยทำงาน`,
+            `${v.name} ยังไม่เคยรายงานการทำงาน`,
           stale: (v: { name: string | number; when: string | number }) =>
-            `${v.name} ทำงานล่าสุด ${v.when} นานกว่า 2 วันแล้ว`,
-          fail: "อ่านงานประจำคืนไม่ได้",
+            `${v.name} ทำงานล่าสุด ${v.when} นานเกินกว่าที่ควร`,
+          fail: "อ่านงานตามกำหนดเวลาไม่ได้",
         },
       },
       usage: {
