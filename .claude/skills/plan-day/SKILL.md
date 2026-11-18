@@ -319,10 +319,14 @@ title, area, migration flag and one-line why, plus any dependency that fixed the
 current. Keep a `slug | model | effort | scale | estimated | actual` table, and record the dials the
 stream **actually ran on**, never what you recommended.
 
-**Counter: `Streams set up in this plan: <n> of <total> (last handover <slug>, <date>)`.** It counts
-streams set up **in the current plan**, added **at setup, once each**, however often the batch is
-re-planned. An unplanned stream that shipped a PR counts in; a release's own two PRs do not. **One plan
-is one handover**, written when the plan's LAST batch is set up.
+**Two counters.** `Streams set up in this plan: <n> of <total>` is the plan's progress, added **at
+setup, once each**, however often the batch is re-planned. `Streams merged since handover <slug>:
+<n> of 9 (<date>)` is the distance to the next edition. **A handover is written every NINE merged stream
+PRs since the previous one — across batches, plans and chats (Lutan, 2026-11-18); a plan finishing is no
+trigger.** One stream, one PR, one count, even with two PRs; an unplanned stream that shipped a PR counts
+in; a stream counts even if `unmeasured` or `rescoped=yes` (counting is not a band reading). A release's
+own two PRs, the handover's PR, bot PRs and unmerged branches do not. A fresh chat recovers the count
+from the latest handover's "Streams covered" list: merged stream PRs since then, by `gh pr list`.
 
 **Count interruptions as a cost of the BRIEF, not the stream**, and record them here. A batch that cost
 an unplanned interruption is a briefing defect even when every check is green.
@@ -341,19 +345,16 @@ same time:** `worktree.mjs list` saying `free` and `gh pr list` saying no PR mea
 happened yet*, **not that he never started them** — on 2026-11-18 a planner reported three streams as
 *"never started"* minutes after he had opened all three. The columns were right; the verdict was not.
 
-**When the plan's LAST batch is set up:** offer to update `docs/planner-handover.md` now, in this chat,
+**When the merged-stream count reaches nine:** offer to update `docs/planner-handover.md` now, in this chat,
 while the context exists; then he starts a fresh chat. Reset the counter once it is written.
 
 **The handover is not written until its PR is MERGED.** On 2026-11-08 edition `708` was written, pushed
 and never PR'd, so `main` read the previous edition for a day. Its test plan is part of it. It merges on
-green like everything else. **Write it at setup of the last batch.**
+green like everything else. **Write it when the count reaches nine, and list the streams it covers.**
 
-**SINCE 2026-11-11 THE FIGURES LAG ONE PLAN, AND THE HANDOVER MUST SAY SO.** Measurement moved to once a
-day (step 3), so a handover written at batch 3's setup carries **no figures from its own plan at all** —
-its own nine are read the next morning and reported by its successor. **That is the delta model working
-as intended, not a gap:** each edition reports the previous plan's complete set. **Say in each edition
-which plan's figures it is reporting**, so nobody reads a missing set as a lost one. The old wording —
-*"say that that batch's figures are not in it"* — described the per-batch world and is superseded.
+**THE FIGURES LAG, PER STREAM.** Measurement is once a day (step 3), so a stream that merged after the
+last reading has no figure yet. In each edition **name the streams it covers and say which have figures
+and which are read next morning**, so a missing figure is not read as a lost one.
 
 ## Bands — provisional, revise from the actuals
 

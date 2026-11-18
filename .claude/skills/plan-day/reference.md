@@ -471,3 +471,12 @@ its folder), then call **both** `get_usage` (for `context.tokensUsed`) and `get_
   figures look like. **The tell is `context.session`: it echoes back either the id you asked for or the
   literal `"self"`. Read that field on every call and refuse any figure whose `session` is not the id you
   passed.**
+
+## Why the handover counts nine merged streams (2026-11-18)
+
+Old rule: "one plan is one handover, written when the plan's LAST batch is set up." Rule 7 (nine is a target,
+not a quota) lets a thin backlog make a three-stream plan, so on 2026-11-18 a handover was offered after
+three streams. The two rules fought and the handover rule lost. Edition `761` covered twelve streams only
+because Lutan answered "Not yet" twice: the cadence was being rate-limited by him. Counting batches was
+rejected too: a batch is one to three streams (`761`'s batch 3 was one). Nine streams is also what makes a
+complete set of figures for the floor row. Full reasoning: `docs/decisions/2026-11-18-handover-every-nine-streams.md`.
