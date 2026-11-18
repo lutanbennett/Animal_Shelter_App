@@ -966,6 +966,11 @@
         "reason": "Policy for the rls_definer role only, the convention 0375 set for every RLS table (docs/decisions/2026-11-14-tenancy-reown.md, 2026-11-16-definer-all-two-tables.md). rls_definer is a NOLOGIN owner role for definer functions, not a login, so it grants no person anything; no card could apply to it. Without it a definer-owned function reads the table as empty. Same shape as the policy 0375 created in a loop."
       },
       {
+        "migration": "0413_scheduled_writer_runs_definer_all.sql",
+        "item": "policy public.scheduled_writer_runs.definer_all",
+        "reason": "Policy for the rls_definer role only, the convention 0375 set for every RLS table (docs/decisions/2026-11-14-tenancy-reown.md, 2026-11-18-writer-runs-lint-flag.md), same shape as 0388. rls_definer is a NOLOGIN owner role for definer functions, not a login, so it grants no person anything; no card could apply to it. No login holds any grant on this table."
+      },
+      {
         "migration": "0404_shelter_drive_credentials.sql",
         "item": "policy public.shelter_drive_credentials.definer_all",
         "reason": "Policy for the rls_definer role only, the convention 0375 set for every RLS table (docs/decisions/2026-11-14-tenancy-reown.md). rls_definer is a NOLOGIN owner role for definer functions, not a login, so it grants no person anything; no card could apply to it. No login holds any grant on this table."
