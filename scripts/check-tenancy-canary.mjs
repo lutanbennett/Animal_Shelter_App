@@ -3,7 +3,7 @@
 // Also makes a cross-tenant call for every anon-executable function that takes an id: shelter B's id must look exactly like
 // an id that does not exist.
 //
-//   node scripts/check-tenancy-canary.mjs [--env test|uat|production] [--strict] [--prove-red leak-table|leak-attachments]
+//   node scripts/check-tenancy-canary.mjs [--env test|uat|production] [--strict] [--prove-red leak-table|leak-attachments|drop-restrictive]
 //
 // Conventions copied from check-tenancy-catalogue.mjs: report-only (exit 0) by default, exit 1 only under --strict,
 // exit 2 when it could not read at all.
@@ -38,6 +38,9 @@ const pi = argv.indexOf("--prove-red");
 const proveRed = pi >= 0 ? argv[pi + 1] : null;
 const SABOTAGE = {
   "leak-table": { phase: "pre", sql: ["grant select on public.residents to anon", "create policy canary_leak on public.residents for select to anon using (true)"] },
+  // drop-restrictive: the item's own proof. 0392's restrictive shelter_scope_select on residents is dropped, and so that a read can happen at all (anon holds no
+  // grant on residents) a grant and a permissive policy are added: the proof is "restrictive policy dropped AND grant present". See docs/decisions/2026-11-18-canary-proved-red-by-dropping-a-policy.md.
+  "drop-restrictive": { phase: "pre", sql: ["drop policy shelter_scope_select on public.residents", "grant select on public.residents to anon", "create policy canary_leak on public.residents for select to anon using (true)"] },
   "leak-attachments": { phase: "pre", sql: ["grant select on public.attachments to anon", "create policy canary_leak on public.attachments for select to anon using (true)"] },
 };
 // Leaks that exist TODAY, measured 2026-11-16 on dev, and are exactly what Part 5 (#ujqr5) is for. Listed by name so the nightly run
@@ -228,7 +231,7 @@ async function main() {
   }
   for (const f of findings) console.log(`FAIL  ${f}`);
   console.log(`\n${findings.length} new leak finding(s), ${known.length} known (Part 5), ${unstable.length} unstable object(s).`);
-  console.log("LIMITS: cannot see service-role calls (Part 7); cannot run on the pull-request path (a write-capable token on a public repo); reads as the anon database role, and per-shelter policies (Part 5) do not exist yet.");
+  console.log("LIMITS: cannot see service-role calls (Part 7); cannot run on the pull-request path (a write-capable token on a public repo); reads as the anon database role, and the per-shelter policies (0392) exist on dev, so it shows nothing leaks across shelters through the anon role today and, via --prove-red drop-restrictive, that removing one is noticed.");
   console.log(strict ? "STRICT: exiting 1 on any finding." : "REPORT-ONLY: this does not fail the build.");
   return exitWith(strict && findings.length ? 1 : 0);
 }
