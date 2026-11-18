@@ -128,3 +128,61 @@ test("hook: a duplicate among new files and a number on main are still refused u
   const taken = evaluate(["supabase/migrations/0359_mine.sql"], MAIN, new Map(), { allowGap: true });
   assert.match(taken.problems[0], /already taken on/);
 });
+
+// #mnchk (2026-11-18): when the open-PR half cannot run, the check must say NOT CHECKED, advise no rename and
+// exit 2 — never a verdict. Proved end to end against a throwaway repo: base commit holds 0001-0002, HEAD adds
+// 0004 (a real gap). --gh-fails stands in for a GitHub outage; --prs-file stands in for a working gh.
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+
+const SCRIPT = resolve("scripts/check-migration-numbers.mjs");
+function gapRepo(newFile) {
+  const dir = mkdtempSync(join(tmpdir(), "mnchk-"));
+  const sh = (...a) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.invalid", ...a], { cwd: dir, encoding: "utf8" });
+  sh("init", "-q");
+  mkdirSync(join(dir, "supabase/migrations"), { recursive: true });
+  for (const n of ["0001_a.sql", "0002_b.sql"]) writeFileSync(join(dir, "supabase/migrations", n), "-- x\n");
+  sh("add", "."); sh("commit", "-q", "-m", "base"); sh("tag", "base");
+  if (newFile) {
+    writeFileSync(join(dir, "supabase/migrations", newFile), "-- x\n");
+    sh("add", "."); sh("commit", "-q", "-m", "new");
+  }
+  return dir;
+}
+const check = (dir, ...a) => spawnSync("node", [SCRIPT, "--base", "base", "--branch", "claude/mine", ...a], { cwd: dir, encoding: "utf8" });
+
+test("gh fails and a new file exists: NOT CHECKED, exit 2, no rename instruction, even for a real gap", () => {
+  const dir = gapRepo("0004_gap.sql");
+  try {
+    const r = check(dir, "--gh-fails");
+    assert.equal(r.status, 2);
+    assert.match(r.stderr, /NOT CHECKED/);
+    assert.doesNotMatch(r.stderr + r.stdout, /git mv|Rename it|safe to renumber/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("gh answers and the same real gap: still refused exactly as before, with the rename", () => {
+  const dir = gapRepo("0004_gap.sql");
+  const prs = join(dir, "prs.json");
+  writeFileSync(prs, "[]");
+  try {
+    const r = check(dir, "--prs-file", prs);
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /leaves a gap/);
+    assert.match(r.stderr, /Rename it to 0003_gap\.sql/);
+    assert.doesNotMatch(r.stderr, /NOT CHECKED/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("gh answers and the numbering is right: ok, exit 0", () => {
+  const dir = gapRepo("0003_fine.sql");
+  const prs = join(dir, "prs.json");
+  writeFileSync(prs, "[]");
+  try { assert.equal(check(dir, "--prs-file", prs).status, 0); } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("gh fails but no migration file is new: nothing to number, so ok (an outage must not block unrelated PRs)", () => {
+  const dir = gapRepo(null);
+  try { assert.equal(check(dir, "--gh-fails").status, 0); } finally { rmSync(dir, { recursive: true, force: true }); }
+});
