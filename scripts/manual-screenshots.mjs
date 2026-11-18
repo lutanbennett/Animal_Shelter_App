@@ -102,6 +102,8 @@ const SIGNED_IN = [
   { name: "admin-immunization-types", path: "/admin/immunization-types" },
   { name: "admin-procedure-types", path: "/admin/procedure-types" },
   { name: "admin-blood-test-types", path: "/admin/blood-test-types" },
+  // Runbook (docs/shelter-onboarding-runbook.md): needs a login on the product-administrator list; aal1 view only.
+  { name: "runbook-product-admin", path: "/admin/product-admin", full: true },
 ];
 
 const SIGNED_OUT = [
