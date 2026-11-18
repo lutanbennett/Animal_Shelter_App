@@ -69,7 +69,7 @@ import { withShelter } from "./shelter.mjs";
 import { handleCspReport } from "./csp-report.mjs";
 import { withSecurityHeaders } from "./security-headers.mjs";
 import { runLabelDrafts, runTranslations } from "./translations.mjs";
-import { reportWriterRun } from "./writer-runs.mjs";
+import { reportWriterRun, reportStage } from "./writer-runs.mjs";
 import { recordHeartbeat, finishHeartbeat } from "./heartbeat.mjs";
 import { isEdgeCachedPage, thPathRest } from "../src/lib/public-paths.ts";
 import { localeFromAcceptLanguage } from "../src/lib/i18n/locales.ts";
@@ -199,11 +199,11 @@ const worker = {
       stages.push(`status-alerts: threw, ${err?.message ?? err}`);
     }
     // The shelter calendar's safety net: sends any vet visit that is out of date. Never throws.
-    stages.push(await runCalendarSweep(env, ctx));
+    await reportStage(env, "calendar-sweep", await runCalendarSweep(env, ctx), stages);
     // The merchandise shop's supplier email: once a day, on the first tick after 09:00 in Thailand (02:00 UTC).
-    stages.push(await runMerchSupplierEmails(env, ctx, controller));
+    await reportStage(env, "merch-supplier-emails", await runMerchSupplierEmails(env, ctx, controller), stages);
     // The report-an-animal photo bucket clean-up (#6rkux): once a day, on the 20:00 UTC tick (03:00 in Thailand).
-    stages.push(await runReportPhotoRetention(env, ctx, controller));
+    await reportStage(env, "report-photo-retention", await runReportPhotoRetention(env, ctx, controller), stages);
     // Machine-drafted translations (worker/translations.mjs) share the trigger.
     // After the alerts so they can never delay one; runTranslations does not throw.
     await runTranslations(env);
