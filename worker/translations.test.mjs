@@ -73,3 +73,55 @@ test("runLabelDrafts: a refused sign-in is reported and nothing else is called",
   assert.match(out.note, /could not sign in|not running/);
   assert.ok(urls.every((u) => u.includes("/auth/v1/token")));
 });
+
+// #lblcr: the label run names a shelter on every request, and says how it went.
+const labelEnv = {
+  SUPABASE_URL: "https://x.supabase.co", SUPABASE_ANON_KEY: "anon", SUPABASE_SERVICE_ROLE_KEY: "svc",
+  LABEL_DRAFT_EMAIL: "m@x", LABEL_DRAFT_PASSWORD: "p", AI: { run: async () => ({ response: "ทดสอบ" }) }, TRANSLATE_ENGINE: "workers-ai",
+};
+/** A fake Supabase: records every call, answers sign-in, the login's roles, the label list and the proposal. */
+function fakeSupabase({ shelters, rpcStatus = 200 }) {
+  const calls = [];
+  const fetchImpl = async (url, init = {}) => {
+    const u = String(url);
+    calls.push({ url: u, headers: init.headers ?? {} });
+    if (u.includes("/auth/v1/token")) return Response.json({ access_token: "tok", user: { id: "u1" } });
+    if (u.includes("/rest/v1/user_roles")) return Response.json(shelters.map((s) => ({ shelter_id: s })));
+    if (rpcStatus !== 200) return new Response("{}", { status: rpcStatus });
+    if (u.endsWith("/rpc/label_translations")) return Response.json([{ status: "missing", source_text: "Dog", table_name: "diet_types", column_name: "name", row_id: `r-${init.headers["x-shelter-id"]}` }]);
+    if (u.endsWith("/rpc/propose_label_th")) return Response.json(true);
+    throw new Error(`unexpected ${u}`);
+  };
+  return { fetchImpl, calls };
+}
+
+test("runLabelDrafts: every database call for a shelter carries that shelter's x-shelter-id", async () => {
+  const { fetchImpl, calls } = fakeSupabase({ shelters: ["shelter-a", "shelter-b"] });
+  const out = await runLabelDrafts({ ...labelEnv, LABEL_DRAFT_BATCH: "5" }, { fetchImpl, log: () => {} });
+  assert.equal(out.outcome, "ok");
+  assert.equal(out.proposed, 2);
+  const rpcs = calls.filter((c) => c.url.includes("/rpc/"));
+  assert.equal(rpcs.length, 4);
+  assert.ok(rpcs.every((c) => c.headers["x-shelter-id"]), "an rpc went out with no shelter");
+  assert.deepEqual([...new Set(rpcs.map((c) => c.headers["x-shelter-id"]))].sort(), ["shelter-a", "shelter-b"]);
+});
+
+test("runLabelDrafts: a login with no shelter is a failure, and proposes nothing", async () => {
+  const { fetchImpl, calls } = fakeSupabase({ shelters: [] });
+  const out = await runLabelDrafts(labelEnv, { fetchImpl, log: () => {} });
+  assert.equal(out.outcome, "failed");
+  assert.match(out.note, /no role in any shelter/);
+  assert.equal(calls.filter((c) => c.url.includes("/rpc/")).length, 0);
+});
+
+test("runLabelDrafts: a refused rpc is reported as failed, not swallowed", async () => {
+  const { fetchImpl } = fakeSupabase({ shelters: ["shelter-a"], rpcStatus: 403 });
+  const out = await runLabelDrafts(labelEnv, { fetchImpl, log: () => {} });
+  assert.equal(out.outcome, "failed");
+  assert.match(out.note, /rpc label_translations → 403/);
+});
+
+test("runLabelDrafts: not configured is 'skipped', which is healthy", async () => {
+  const out = await runLabelDrafts({ SUPABASE_URL: "https://x.supabase.co" }, { fetchImpl: async () => { throw new Error("no network"); }, log: () => {} });
+  assert.equal(out.outcome, "skipped");
+});

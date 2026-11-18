@@ -25,11 +25,23 @@ by planners who read it, agreed with it, and did the reading first anyway (`refe
 and 1 of this file happen first as written** (resume-or-plan, then the sync); the sequence governs
 everything after them, and is lettered so it cannot be confused with this file's own numbered steps:
 
+- **(a0)** **THE BATCH HAS BEEN AGREED IN THIS CONVERSATION, IN AN ANSWER TO A QUESTION NAMING THESE
+  ITEMS — OR NOTHING IS CREATED.** His instruction, 2026-11-18: *"We seem to have missed agreeing to the
+  daily plan and you didn't provide the links when they were created to the streams."* **A quoted
+  agreement from an earlier plan agrees to THAT plan's items, not to today's** — `.plan-day.md` is the
+  planner's note to itself and he cannot see it, so a line in it saying he agreed is not an agreement.
+  **Where the answer is already in his latest message** ("set up batch 2", "yes, all three"), that IS
+  the agreement and you do not ask twice. Otherwise step 6's single `AskUserQuestion` comes first, and
+  (a) waits for it.
 - **(a)** `worktree.mjs new` for every stream in the batch.
 - **(b)** Every `.brief.md` written.
 - **(c)** `node scripts/worktree.mjs streams`, **the moment the last brief is written and before any
   other tool call.**
-- **(d)** The list, first in your reply.
+- **(d)** The list, first in your reply — folder, port, dials, **and a clickable session link for every
+  stream whose session is already open**, read from `mcp__ccd_session_mgmt__list_sessions` and written
+  as `[slug](#local_…)`. **A path is not a link and he has to hunt for the folder.** At setup there is
+  usually no session yet, because the planner does not start them: say so in one line, and give the
+  links the moment he says he has opened them (step 8).
 - **(e)** **Only now**: the PR bodies, the backlog filing, the bands, `.plan-day.md`, **and clearing
   the finished worktrees of the batch that just merged** (**first, one read per merged PR: does it carry a `stream-usage:` comment? A missing one means read that session's transcript with `search_session_transcripts`/`list_events` BEFORE its worktree is cleared, or record it as already gone; it is part of this step, never a reason to clear or measure earlier**, `docs/decisions/2026-11-17-usage-comment-check-before-clearing.md`) — and, **on the day's FIRST batch only, the
   measurement of the previous day's streams** (step 3).
@@ -61,9 +73,8 @@ in here. If you add to this file, something else comes out.**
   numeric stop threshold in a brief. (2026-10-14: *"it's actually unethical for you to block the usage I
   paid for."*) **Convert before forecasting: three streams ≈ 2% of the weekly allowance, nine ≈ 6%.**
 - **Never nine worktrees.** Two or three live, because merging is the bottleneck.
-- **Stick to the agreed plan.** Once he has agreed the day's nine, **do not re-check the next batch
-  against the backlog** — a change comes from him. (2026-11-11: *"I will request a change to the daily
-  plan if it's required otherwise you stick to the daily plan"*.) Step 0 has what this does not remove.
+- **Stick to the agreed plan** — no re-checking the next batch against the backlog; a change comes from
+  him (2026-11-11). **Step 0 carries it in full, including the two things it does not remove.**
 - **`test-plan` is advisory, permanently** (2026-10-20), and **every PR merges on green with no approval
   round-trip**, feature PRs included. Both are in `CLAUDE.md` in full; neither is a decision he owes.
 - **All analysis is by CARD, never by role.** Roles are a transient grouping and will be rebuilt. Before
@@ -321,6 +332,14 @@ an unplanned interruption is a briefing defect even when every check is green.
 Once the current batch has MERGED, **set up the next batch without asking him** — he triggers the plan and you sequence its batches (2026-11-11); *never nine worktrees* is a reason to wait for the merge, never a reason to ask permission. **What ends a turn is handing the list back, not a request for a go-ahead.** (The one case that does re-present: a FRESH conversation resuming a plan it did not write presents the batch first, because to him nothing was ever proposed — the 2026-11-08 incident. Resuming ≠ asking.) Tell him in one line that running `/plan-day` again sets up the next batch. (The
 list itself is step 4 of the hard sequence above; this is the third place it used to be restated, and
 restating it three times is what let the sequence be broken.)
+
+**THEN, THE MOMENT HE SAYS THE SESSIONS ARE OPEN — OR ON ANY LATER TURN WHERE THEY ARE — GIVE HIM A
+CLICKABLE LINK PER STREAM.** `mcp__ccd_session_mgmt__list_sessions` returns a `local_…` `sessionId`
+against each worktree's `cwd`; link it as `[slug](#local_…)`. **It is one tool call and it is the
+difference between a list he reads and a list he can use.** **And it corrects a reading fault at the
+same time:** `worktree.mjs list` saying `free` and `gh pr list` saying no PR means *nothing has
+happened yet*, **not that he never started them** — on 2026-11-18 a planner reported three streams as
+*"never started"* minutes after he had opened all three. The columns were right; the verdict was not.
 
 **When the plan's LAST batch is set up:** offer to update `docs/planner-handover.md` now, in this chat,
 while the context exists; then he starts a fresh chat. Reset the counter once it is written.

@@ -168,6 +168,12 @@ const declaredService = new Map((registry.serviceRoleSites ?? []).map((e) => [e.
 for (const f of serviceFiles) if (!declaredService.has(f) && !(registry.serviceRoleHelpers ?? []).includes(f)) fail(`${f} uses the service role (it bypasses every policy) and is not named under serviceRoleSites in the registry. Add it with what it is for and what guards it.`);
 for (const f of declaredService.keys()) if (!serviceFiles.includes(f)) fail(`serviceRoleSites names ${f}, which no longer uses the service role. Delete the record.`);
 
+// The per-call registry states its own scope (#srreg): which of the four ways the system writes with elevated rights it records and which
+// it does not. A green run here must never be read as covering a class the registry says it leaves out, so a missing statement FAILS and
+// the out-of-scope classes are printed with the run. The boundary lives in docs/service-role-sites-registry.json, not in this file.
+const siteScope = JSON.parse(readFileSync(join(root, "docs/service-role-sites-registry.json"), "utf8")).scope ?? {};
+for (const k of ["src", "worker", "scripts", "database"]) if (!siteScope[k]?.status || !siteScope[k]?.why) fail(`docs/service-role-sites-registry.json states no scope for "${k}". Say whether it is recorded or out of scope, and why.`);
+
 // environment variables read by the app
 const envSeen = new Set();
 for (const [, src] of text) for (const m of src.matchAll(/process\.env\.([A-Z][A-Z0-9_]+)/g)) envSeen.add(m[1]);
@@ -232,6 +238,9 @@ console.log("");
 console.log("Where the scan looked:");
 console.log(`  source files read: ${text.size}; role reads recorded as not access: ${notAccess.length}; named service-role sites: ${serviceFiles.length}; environment variables: ${envSeen.size}`);
 console.log(`  migrations from ${String(FROM).padStart(4, "0")} on: ${migFiles.length === 0 ? "none yet" : migFiles.join(", ")}`);
+console.log("");
+console.log("Service-role writers this run does NOT record (stated by docs/service-role-sites-registry.json, scope):");
+for (const [k, v] of Object.entries(siteScope)) if (v.status === "out-of-scope") console.log(`  ${k}: ${v.count} (${v.why.split(". ")[0]}.)`);
 console.log("");
 console.log("Counts of card-derived code (callers and pages, NOT rules and NOT security; a rise or fall means nothing here):");
 for (const c of counted) console.log(`  ${c.id}: ${c.n}   ${c.what}`);

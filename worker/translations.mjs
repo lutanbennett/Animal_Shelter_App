@@ -243,19 +243,26 @@ export function missingLabelLogin(env) {
   return ["LABEL_DRAFT_EMAIL", "LABEL_DRAFT_PASSWORD", "SUPABASE_ANON_KEY"].filter((k) => !env[k]);
 }
 
+// Every request below names a shelter. Since 0392 the database reads the shelter from the x-shelter-id header and
+// scopes user_roles by it, so with no header the login holds NO card at all and propose_label_th() answers 42501
+// (measured on dev, 2026-11-18, #lblcr). There is no request host in a cron to take it from, so the shelter comes
+// from the login itself: its own user_roles rows, read with the service key. A login in two shelters is served in
+// each in turn, with that shelter's header, so a draft is never written under another shelter's name.
+//
+// The returned summary carries `outcome`: 'ok', 'skipped' (deliberately not configured) or 'failed' (a thing that
+// should have worked did not). worker/writer-runs.mjs records it, which is what makes a failure visible.
 export async function runLabelDrafts(env, { fetchImpl = fetch, log = console.log } = {}) {
-  const summary = { proposed: 0, failed: 0, note: null };
+  const summary = { proposed: 0, failed: 0, note: null, outcome: "ok" };
+  const finish = (outcome, note) => {
+    summary.outcome = outcome;
+    summary.note = note;
+    return summary;
+  };
   try {
     const missing = missingLabelLogin(env);
-    if (missing.length || !env.SUPABASE_URL) {
-      summary.note = "no label login configured; skipped";
-      return summary;
-    }
+    if (missing.length || !env.SUPABASE_URL) return finish("skipped", "no label login configured; skipped");
     const picked = pickEngine(env);
-    if (!picked.engine) {
-      summary.note = `not running: ${picked.reason}`;
-      return summary;
-    }
+    if (!picked.engine) return finish("skipped", `not running: ${picked.reason}`);
     const base = env.SUPABASE_URL.replace(/\/$/, "");
 
     const signIn = await fetchImpl(`${base}/auth/v1/token?grant_type=password`, {
@@ -263,55 +270,71 @@ export async function runLabelDrafts(env, { fetchImpl = fetch, log = console.log
       headers: { apikey: env.SUPABASE_ANON_KEY, "content-type": "application/json" },
       body: JSON.stringify({ email: env.LABEL_DRAFT_EMAIL, password: env.LABEL_DRAFT_PASSWORD }),
     });
-    if (!signIn.ok) {
-      summary.note = `label login could not sign in (${signIn.status})`;
-      return summary;
-    }
-    const { access_token: token } = await signIn.json();
-    if (!token) {
-      summary.note = "label login could not sign in (no token)";
-      return summary;
-    }
-    const call = async (fn, body) => {
+    if (!signIn.ok) return finish("failed", `label login could not sign in (${signIn.status})`);
+    const { access_token: token, user } = await signIn.json();
+    if (!token || !user?.id) return finish("failed", "label login could not sign in (no token)");
+
+    // The shelters this login holds a role in. Service key: a headerless read of user_roles by the login
+    // itself would see nothing, which is the very fault this fixes.
+    if (!env.SUPABASE_SERVICE_ROLE_KEY) return finish("failed", "SUPABASE_SERVICE_ROLE_KEY is not set; cannot find the label login's shelter");
+    const rolesRes = await fetchImpl(
+      `${base}/rest/v1/user_roles?user_id=eq.${encodeURIComponent(user.id)}&archived_at=is.null&select=shelter_id`,
+      { headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` } },
+    );
+    if (!rolesRes.ok) return finish("failed", `could not read the label login's shelters (${rolesRes.status})`);
+    const shelters = [...new Set((await rolesRes.json()).map((r) => r.shelter_id).filter(Boolean))];
+    if (!shelters.length) return finish("failed", "the label login holds no role in any shelter, so it can propose nothing");
+
+    const call = async (shelter, fn, body) => {
       const response = await fetchImpl(`${base}/rest/v1/rpc/${fn}`, {
         method: "POST",
-        headers: { apikey: env.SUPABASE_ANON_KEY, authorization: `Bearer ${token}`, "content-type": "application/json" },
+        headers: {
+          apikey: env.SUPABASE_ANON_KEY,
+          authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+          "x-shelter-id": shelter,
+        },
         body: JSON.stringify(body),
       });
       if (!response.ok) throw new Error(`supabase rpc ${fn} → ${response.status}`);
       return response.json();
     };
 
-    // 'missing' is a label with no live Thai and no proposal waiting; anything else is left alone.
-    const rows = await call("label_translations", {});
-    const batch = intVar(env.LABEL_DRAFT_BATCH, DEFAULT_LABEL_BATCH);
-    const todo = rows.filter((r) => r.status === "missing" && r.source_text?.trim()).slice(0, batch);
+    let budget = intVar(env.LABEL_DRAFT_BATCH, DEFAULT_LABEL_BATCH);
+    for (const shelter of shelters) {
+      if (budget <= 0) break;
+      // 'missing' is a label with no live Thai and no proposal waiting; anything else is left alone.
+      const rows = await call(shelter, "label_translations", {});
+      const todo = rows.filter((r) => r.status === "missing" && r.source_text?.trim()).slice(0, budget);
+      budget -= todo.length;
 
-    for (const row of todo) {
-      let text;
-      try {
-        text = await translate(env, picked, { text: row.source_text, from: "en", to: "th", tier: "machine" }, fetchImpl);
-      } catch (err) {
-        summary.failed += 1;
-        log(`labels: ${row.table_name}.${row.column_name} ${row.row_id}: ${err?.message ?? err}`);
-        if (!(err instanceof OutputRejected)) {
-          summary.note = "engine error; stopped this run early";
-          break;
+      for (const row of todo) {
+        let text;
+        try {
+          text = await translate(env, picked, { text: row.source_text, from: "en", to: "th", tier: "machine" }, fetchImpl);
+        } catch (err) {
+          summary.failed += 1;
+          log(`labels: ${row.table_name}.${row.column_name} ${row.row_id}: ${err?.message ?? err}`);
+          if (!(err instanceof OutputRejected)) {
+            summary.outcome = "failed";
+            summary.note = "engine error; stopped this run early";
+            budget = 0;
+            break;
+          }
+          continue;
         }
-        continue;
+        const landed = await call(shelter, "propose_label_th", {
+          p_table: row.table_name,
+          p_row_id: row.row_id,
+          p_column: row.column_name,
+          p_text: text,
+        });
+        if (landed === true) summary.proposed += 1;
       }
-      const landed = await call("propose_label_th", {
-        p_table: row.table_name,
-        p_row_id: row.row_id,
-        p_column: row.column_name,
-        p_text: text,
-      });
-      if (landed === true) summary.proposed += 1;
     }
   } catch (err) {
-    summary.note = `error: ${err?.message ?? err}`;
-    console.error(`labels: ${summary.note}`);
-    return summary;
+    console.error(`labels: error: ${err?.message ?? err}`);
+    return finish("failed", `error: ${err?.message ?? err}`);
   }
   log(`labels: proposed ${summary.proposed}, failed ${summary.failed}${summary.note ? ` (${summary.note})` : ""}`);
   return summary;

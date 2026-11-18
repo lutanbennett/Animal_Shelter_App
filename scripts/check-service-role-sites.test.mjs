@@ -47,3 +47,22 @@ test("a shelter filter in a different function does not count", () => {
   const files = { "src/a.ts": `${src('  const db = createAdminClient();')}export async function other() {\n  return shelterId;\n}\n` };
   assert.deepEqual(unfilteredClaims(files, findSites(files), filteredReg("src/a.ts#load")), ["src/a.ts#load"]);
 });
+
+import { findWorkerSites } from "./lib/service-role-sites.mjs";
+const wsrc = (body) => `async function push(env) {\n${body}\n}\n`;
+
+test("worker: a function reading the service-role key is a site, once however often it reads it", () => {
+  const sites = findWorkerSites({ "worker/a.mjs": wsrc("  const a = env.SUPABASE_SERVICE_ROLE_KEY;\n  const b = env.SUPABASE_SERVICE_ROLE_KEY;") });
+  assert.deepEqual(sites.map((s) => s.id), ["worker/a.mjs#push"]);
+});
+test("PLANTED: a new worker function using the key and not recorded fails", () => {
+  const sites = findWorkerSites({ "worker/a.mjs": wsrc("  fetch(u, { headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY } });") });
+  assert.deepEqual(compare(sites, { sites: [] }).unregistered.map((s) => s.id), ["worker/a.mjs#push"]);
+});
+test("worker: comments, tests and a message that only names the variable do not count", () => {
+  const sites = findWorkerSites({
+    "worker/a.mjs": wsrc('  // env.SUPABASE_SERVICE_ROLE_KEY is the key\n  log("SUPABASE_SERVICE_ROLE_KEY is not set");'),
+    "worker/a.test.mjs": wsrc("  env.SUPABASE_SERVICE_ROLE_KEY"),
+  });
+  assert.equal(sites.length, 0);
+});

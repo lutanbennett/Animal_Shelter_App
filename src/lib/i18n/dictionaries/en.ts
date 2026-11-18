@@ -1850,20 +1850,20 @@ const en = {
             `The Pi at ${v.host} isn't answering: pages are being served from the Worker fallback.`,
         },
         cronJobs: {
-          title: "Nightly database jobs",
+          title: "Scheduled jobs",
           ok: (v: { name: string | number; when: string | number }) =>
             `${v.name}: last ran ${v.when}.`,
           missing: (v: { name: string | number; when: string | number }) =>
-            `${v.name} is not installed in this database. Old assistant requests are being kept, not deleted.`,
+            `${v.name} is not installed in this database, so it is not running.`,
           inactive: (v: { name: string | number; when: string | number }) =>
-            `${v.name} is switched off. Old assistant requests are being kept, not deleted.`,
+            `${v.name} is switched off.`,
           failed: (v: { name: string | number; when: string | number }) =>
-            `${v.name} failed on its last run (${v.when}). Old assistant requests may not be deleted.`,
+            `${v.name} failed on its last run (${v.when}), so what it does is not being done.`,
           neverRun: (v: { name: string | number; when: string | number }) =>
-            `${v.name} is installed but has not run yet.`,
+            `${v.name} has not reported a run yet.`,
           stale: (v: { name: string | number; when: string | number }) =>
-            `${v.name} last ran ${v.when}, more than 2 days ago.`,
-          fail: "Couldn't read the nightly jobs.",
+            `${v.name} last ran ${v.when}, longer ago than it should.`,
+          fail: "Couldn't read the scheduled jobs.",
         },
       },
       usage: {

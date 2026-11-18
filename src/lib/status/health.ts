@@ -346,6 +346,17 @@ export async function checkOrigin(): Promise<CheckOutcome<OriginFacts>> {
 /** Every pg_cron job this system relies on. Add the next one here and it is watched by construction. */
 export const EXPECTED_CRON_JOBS = ["purge-assistant-actions", "purge-donation-tax-ids"] as const;
 
+/**
+ * Scheduled writers that run in the Worker rather than pg_cron, watched through scheduled_writer_runs (0408). pg_cron
+ * cannot see them, so each reports its own outcome (worker/writer-runs.mjs). Add the next one here and it is watched.
+ */
+export const EXPECTED_WORKER_WRITERS = ["label-drafts"] as const;
+
+/** A Worker writer runs every 15 minutes: no report for this long means the trigger or the report stopped. */
+const WORKER_WRITER_STALE_HOURS = 3;
+/** One failed run is a blip (a slow answer, a deploy); this many in a row is a fault. */
+const WORKER_WRITER_RED_AFTER = 2;
+
 /** One missed night is not an incident; two is. */
 const CRON_STALE_HOURS = 48;
 
@@ -357,6 +368,14 @@ export type CronJobFact = {
   lastMessage: string | null;
 };
 export type CronJobsFacts = { jobs: CronJobFact[] };
+
+type WriterRow = {
+  job: string;
+  last_outcome: "ok" | "skipped" | "failed";
+  last_detail: string | null;
+  last_ran_at: string;
+  fail_runs: number;
+};
 
 type CronRow = {
   jobname: string;
@@ -373,9 +392,13 @@ type CronRow = {
  * deleted nothing is a normal night: only the run's status counts, never its row count.
  */
 export async function checkCronJobs(): Promise<CheckOutcome<CronJobsFacts>> {
-  const { data, error } = await createAdminClient().rpc("scheduled_job_status", { p_names: [...EXPECTED_CRON_JOBS] });
+  const admin = createAdminClient();
+  const { data, error } = await admin.rpc("scheduled_job_status", { p_names: [...EXPECTED_CRON_JOBS] });
   if (error) return { state: "fail", error: error.message };
   const rows = (data ?? []) as CronRow[];
+  const writers = await admin.from("scheduled_writer_runs").select("job,last_outcome,last_detail,last_ran_at,fail_runs").in("job", [...EXPECTED_WORKER_WRITERS]);
+  if (writers.error) return { state: "fail", error: writers.error.message };
+  const writerRows = (writers.data ?? []) as WriterRow[];
   const jobs: CronJobFact[] = EXPECTED_CRON_JOBS.map((name) => {
     const r = rows.find((x) => x.jobname === name);
     const base = { name, lastRanAt: r?.last_started_at ?? null, lastMessage: r?.last_message ?? null };
@@ -386,11 +409,29 @@ export async function checkCronJobs(): Promise<CheckOutcome<CronJobsFacts>> {
     const age = r.last_started_at ? Date.now() - Date.parse(r.last_started_at) : Infinity;
     return { ...base, problem: age > CRON_STALE_HOURS * 3_600_000 ? ("stale" as const) : null };
   });
+  // Worker-side writers. A job that has never reported is amber, not red: an environment where it is not deployed or
+  // not configured must not stay red for ever. A run that reported `skipped` (deliberately not configured) is healthy.
+  for (const name of EXPECTED_WORKER_WRITERS) {
+    const r = writerRows.find((x) => x.job === name);
+    const base = { name, lastRanAt: r?.last_ran_at ?? null, lastMessage: r?.last_detail ?? null };
+    if (!r) {
+      jobs.push({ ...base, problem: "neverRun" });
+      continue;
+    }
+    if (r.last_outcome === "failed" && r.fail_runs >= WORKER_WRITER_RED_AFTER) {
+      jobs.push({ ...base, problem: "failed" });
+      continue;
+    }
+    const age = Date.now() - Date.parse(r.last_ran_at);
+    jobs.push({ ...base, problem: age > WORKER_WRITER_STALE_HOURS * 3_600_000 ? "stale" : null });
+  }
   const facts = { jobs };
   const red = jobs.filter((j) => j.problem === "missing" || j.problem === "inactive" || j.problem === "failed");
   if (red.length) {
     const why = (p: CronJobFact["problem"]) => (p === "missing" ? "not installed" : p === "inactive" ? "switched off" : "last run failed");
-    return { state: "fail", error: red.map((j) => j.name + ": " + why(j.problem)).join("; "), facts };
+    // A Worker writer says what went wrong in its own words (worker/writer-runs.mjs); a pg_cron message is only a select result.
+    const detail = (j: CronJobFact) => ((EXPECTED_WORKER_WRITERS as readonly string[]).includes(j.name) && j.lastMessage ? " (" + j.lastMessage + ")" : "");
+    return { state: "fail", error: red.map((j) => j.name + ": " + why(j.problem) + detail(j)).join("; "), facts };
   }
   return { state: jobs.some((j) => j.problem) ? "warn" : "ok", facts };
 }

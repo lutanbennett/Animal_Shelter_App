@@ -43,6 +43,7 @@ function flagged(sql) {
     mkdirSync(join(dir, "src/lib/permissions"), { recursive: true });
     mkdirSync(join(dir, "supabase/migrations"), { recursive: true });
     cpSync(join(repo, "docs/hard-coded-security-registry.json"), join(dir, "docs/hard-coded-security-registry.json"));
+    cpSync(join(repo, "docs/service-role-sites-registry.json"), join(dir, "docs/service-role-sites-registry.json")); // the check reads its scope statement (#srreg)
     cpSync(join(repo, "src/lib/permissions/can.ts"), join(dir, "src/lib/permissions/can.ts"));
     writeFileSync(join(dir, "supabase/migrations/9999_fixture.sql"), sql + "\n");
     const r = spawnSync(process.execPath, [join(repo, "scripts/check-hard-coded-security.mjs")], { cwd: dir, encoding: "utf8" });
