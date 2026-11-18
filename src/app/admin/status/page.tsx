@@ -1,3 +1,4 @@
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { Suspense, type ReactNode } from "react";
 import Link from "next/link";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -163,7 +164,7 @@ function ageText(t: T, ageDays: number) {
 async function CalendarTile({ t, locale, canVisits = false }: { t: T; locale: Locale; canVisits?: boolean }) {
   const x = t.admin.status.tiles.calendar;
   const result = await runCheck(async () => {
-    const c = await checkCalendar();
+    const c = await checkCalendar(await actingShelterId());
     const none = { visits: [] as PendingVisit[], lastSweepAt: null as string | null, quiet: false };
     if (c.state === "off") return { state: "off" as const, facts: none };
     // No sweep for a while means nothing is being retried, whatever the visits say.

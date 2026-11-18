@@ -10,7 +10,8 @@ import { ACTION_ICONS, PLACEMENT_ICONS, SECTION_ICONS } from "@/components/hub-i
 import { RowActionLink } from "@/components/RowAction";
 import { placementActionsFor } from "@/lib/placements/available";
 import type { SectionContext } from "./types";
-import { calendarConfigured } from "@/lib/clinics/calendar-sync";
+import { shelterCalendarOn } from "@/lib/clinics/calendar-sync";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { RetryCalendarForm } from "@/app/clinic-visits/RetryCalendarForm";
 import { RecordList } from "./shared";
 
@@ -90,7 +91,7 @@ export async function renderClinicVisitsSection(ctx: SectionContext): Promise<Re
   // Where a booked visit to come stands with the shelter calendar: not switched on in this app (checked in
   // the app that served this page, which is the one that served the booking), waiting (Google down, or
   // just booked; the 15-minute sweep sends it), or matching.
-  const calendarOn = calendarConfigured();
+  const calendarOn = await shelterCalendarOn(await actingShelterId());
   const calendarState = (row: { status: string; appointment_date: string; calendar_synced_at: string | null; calendar_out_of_date_at: string | null }): "off" | "waiting" | "sent" | null => {
     if (row.status !== "scheduled" || visitDate(row) < today) return null;
     if (!calendarOn) return "off";

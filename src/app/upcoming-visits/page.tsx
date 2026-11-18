@@ -7,7 +7,8 @@ import { formatDate, todayIso } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { visitDate } from "@/lib/clinics/linkable";
 import { loadShelterVisits, shelterTime } from "@/lib/clinics/shelter-visits";
-import { calendarConfigured } from "@/lib/clinics/calendar-sync";
+import { shelterCalendarOn } from "@/lib/clinics/calendar-sync";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { listToConfirm } from "@/lib/clinics/calendar-import";
 import { ConfirmList } from "./ConfirmList";
 import { VetVisitsView, type VisitRow } from "./VetVisitsView";
@@ -29,7 +30,7 @@ export default async function VetVisitsPage() {
   const today = todayIso();
   // Entries typed into the shelter calendar that did not read as one clear visit (calendar-import.ts), for whoever
   // books visits and only where the calendar is switched on.
-  const toConfirm = can(perms, "visit.book") && calendarConfigured() ? await listToConfirm() : null;
+  const toConfirm = can(perms, "visit.book") && (await shelterCalendarOn(await actingShelterId())) ? await listToConfirm() : null;
   const confirmIds = [...new Set((toConfirm?.items ?? []).flatMap((i) => i.decision.matches.flatMap((m) => m.candidates.map((r) => r.id))))];
   const photoRows = confirmIds.length ? ((await supabase.from("residents").select("id, profile_photo_drive_file_id").in("id", confirmIds)).data ?? []) : [];
   const photos: Record<string, string | null> = Object.fromEntries(photoRows.map((r: { id: string; profile_photo_drive_file_id: string | null }) => [r.id, r.profile_photo_drive_file_id]));

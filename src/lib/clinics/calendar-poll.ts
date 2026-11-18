@@ -4,7 +4,8 @@ import { getAppEnv } from "@/lib/app-env";
 import { calendarNoticeFooter } from "./calendar-notice";
 import { shelterNames } from "@/lib/shelter-settings";
 import { decideChange, isOtherEnvironment } from "./calendar-change";
-import { calendarConfigured, calendarFetch, errorText } from "./calendar-sync";
+import { calendarFetch, errorText, shelterCalendar } from "./calendar-sync";
+import type { CalendarCreds } from "@/lib/google/shelter-calendar-decide";
 import { importNewEvent } from "./calendar-import";
 
 /**
@@ -92,11 +93,11 @@ async function tellAdmins(origin: string, subject: string, line: string): Promis
  * The environment an event says it came from. A deleted event usually reaches the poll as just an id and
  * a status, so for those the event is asked for by id; if Google will not say, the answer is "unknown".
  */
-async function taggedEnv(event: GEvent): Promise<string | undefined> {
+async function taggedEnv(event: GEvent, creds: CalendarCreds): Promise<string | undefined> {
   const direct = event.extendedProperties?.private?.env;
   if (direct || event.status !== "cancelled") return direct;
   try {
-    const res = await calendarFetch(`/events/${encodeURIComponent(event.id)}`);
+    const res = await calendarFetch(`/events/${encodeURIComponent(event.id)}`, {}, creds);
     if (!res.ok) return undefined;
     return ((await res.json()) as GEvent).extendedProperties?.private?.env;
   } catch {
@@ -104,21 +105,23 @@ async function taggedEnv(event: GEvent): Promise<string | undefined> {
   }
 }
 
-async function apply(event: GEvent, origin: string | null, result: PollResult): Promise<void> {
+async function apply(event: GEvent, shelterId: string, creds: CalendarCreds, origin: string | null, result: PollResult): Promise<void> {
   const db = createAdminClient();
+  // Only THIS shelter's visits: an event id from one shelter's calendar never touches another shelter's visit.
   const { data } = await db
     .from("clinic_visits")
     .select(VISIT_COLUMNS)
+    .eq("shelter_id", shelterId)
     .eq("calendar_event_id", event.id)
     .limit(1)
     .returns<Visit[]>();
   const visit = data?.[0];
   if (!visit) {
     // Not an event the app made: the Director's own entry, if it reads as one clear visit.
-    if (await importNewEvent(event, origin)) result.imported += 1;
+    if (await importNewEvent(event, origin, shelterId)) result.imported += 1;
     return;
   }
-  const tagged = await taggedEnv(event);
+  const tagged = await taggedEnv(event, creds);
   if (isOtherEnvironment(tagged, getAppEnv())) return; // another system's event: not ours to cancel or move
   const decision = decideChange(event, visit);
   if (decision === "ignore" || decision === "own") return;
@@ -166,14 +169,45 @@ async function apply(event: GEvent, origin: string | null, result: PollResult): 
   result.moved += 1;
 }
 
+/**
+ * The poll visits EVERY shelter, each with its own credentials and its own cursor (calendar_sync_state, one row per shelter's
+ * calendar). A shelter with no calendar of its own is skipped, never polled through another's (#calsh); the fallback shelter
+ * keeps the environment's calendar. One shelter failing never stops the next.
+ */
 export async function pollCalendarChanges(origin: string | null): Promise<PollResult> {
-  const result: PollResult = { configured: calendarConfigured(), moved: 0, cancelled: 0, imported: 0, clashes: 0 };
-  if (!result.configured) return result;
+  const total: PollResult = { configured: false, moved: 0, cancelled: 0, imported: 0, clashes: 0 };
+  let shelters: { id: string }[] = [];
+  try {
+    const { data } = await createAdminClient().from("shelters").select("id").returns<{ id: string }[]>();
+    shelters = data ?? [];
+  } catch {
+    total.note = "Could not list the shelters.";
+    return total;
+  }
+  const notes: string[] = [];
+  for (const { id } of shelters) {
+    const resolved = await shelterCalendar(id);
+    if (resolved.state !== "configured") continue;
+    const r = await pollShelterCalendar(id, resolved.creds, origin);
+    total.configured = true;
+    total.moved += r.moved;
+    total.cancelled += r.cancelled;
+    total.imported += r.imported;
+    total.clashes += r.clashes;
+    if (r.note) notes.push(r.note);
+  }
+  if (notes.length) total.note = notes.join(" | ");
+  return total;
+}
+
+/** One shelter's poll: its calendar, its cursor, its visits. The cursor row names the shelter explicitly (a service-role run has no request shelter). */
+export async function pollShelterCalendar(shelterId: string, creds: CalendarCreds, origin: string | null): Promise<PollResult> {
+  const result: PollResult = { configured: true, moved: 0, cancelled: 0, imported: 0, clashes: 0 };
   const db = createAdminClient();
-  const calendarId = process.env.GOOGLE_CALENDAR_ID ?? "";
+  const calendarId = creds.calendarId;
   const now = new Date().toISOString();
   const fail = async (message: string) => {
-    await db.from("calendar_sync_state").upsert({ calendar_id: calendarId, last_run_at: now, last_error: message.slice(0, 500) });
+    await db.from("calendar_sync_state").upsert({ calendar_id: calendarId, shelter_id: shelterId, last_run_at: now, last_error: message.slice(0, 500) });
     result.note = message;
     return result;
   };
@@ -181,6 +215,7 @@ export async function pollCalendarChanges(origin: string | null): Promise<PollRe
     const { data: state } = await db
       .from("calendar_sync_state")
       .select("sync_token")
+      .eq("shelter_id", shelterId)
       .eq("calendar_id", calendarId)
       .limit(1)
       .returns<{ sync_token: string | null }[]>();
@@ -193,15 +228,15 @@ export async function pollCalendarChanges(origin: string | null): Promise<PollRe
       const qs = new URLSearchParams({ maxResults: "250", singleEvents: "false" });
       if (token) qs.set("syncToken", token);
       if (pageToken) qs.set("pageToken", pageToken);
-      const res = await calendarFetch(`/events?${qs}`);
+      const res = await calendarFetch(`/events?${qs}`, {}, creds);
       if (res.status === 410) {
-        await db.from("calendar_sync_state").upsert({ calendar_id: calendarId, sync_token: null, last_run_at: now });
+        await db.from("calendar_sync_state").upsert({ calendar_id: calendarId, shelter_id: shelterId, sync_token: null, last_run_at: now });
         result.note = "Sync token expired; will re-baseline next run.";
         return result;
       }
       if (!res.ok) return await fail(`Calendar poll failed (${res.status}): ${await errorText(res)}`);
       const body = (await res.json()) as { items?: GEvent[]; nextPageToken?: string; nextSyncToken?: string };
-      if (!baseline) for (const event of body.items ?? []) await apply(event, origin, result);
+      if (!baseline) for (const event of body.items ?? []) await apply(event, shelterId, creds, origin, result);
       pageToken = body.nextPageToken ?? null;
       if (!pageToken) {
         nextSync = body.nextSyncToken ?? null;
@@ -211,7 +246,7 @@ export async function pollCalendarChanges(origin: string | null): Promise<PollRe
     if (!nextSync) return await fail("Calendar poll ended without a sync token.");
     await db
       .from("calendar_sync_state")
-      .upsert({ calendar_id: calendarId, sync_token: nextSync, last_run_at: now, last_ok_at: now, last_error: null });
+      .upsert({ calendar_id: calendarId, shelter_id: shelterId, sync_token: nextSync, last_run_at: now, last_ok_at: now, last_error: null });
     return result;
   } catch (err) {
     return await fail(err instanceof Error ? err.message : String(err));
