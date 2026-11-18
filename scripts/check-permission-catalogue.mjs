@@ -382,6 +382,7 @@ const PINNED = {
 const APP = "Behind the proxy's gate (signed in, a role that opens the app).";
 const EXEMPT = {
   "/adopter-update": { why: "The adopter's own page (#l5gxn). Not behind the app gate: the proxy lets a login with no staff card here only when its verified email is a live contact, and the page asks again (loadAdopterScope). It holds no card on purpose." },
+  "/admin/product-admin": { why: "The product-administrator list (#shmgt), outside the card system by Lutan's decision of 2026-11-18: the page asks is_product_admin() in the database and answers not-found to anyone not on the list. No card, role or cell is read; it is the third named exception, recorded under outsideTheCardSystem.productAdmin." },
   "/admin/role-draft": { why: "A redirect to /admin/who-does-what, which carries the guard (who-does-what-edit retired the page and kept the address)." },
   "/": { public: true, why: "The public home page. Reads the session only to choose the header; shows nothing from the app." },
   "/login": { public: true, why: "Sign-in. There is no one to ask a permission of yet." },
@@ -526,6 +527,7 @@ for (const k of known) console.log(`KNOWN ${k}`);
 const GUARD = /\b(?:can|requirePermission|requireAdminUser|assertAdminRole|hasAdminRole|canEditItemSettings|refuseUnlessAdmin)\(/;
 const ADMIN_CHECK = /\b(?:requireAdminUser|assertAdminRole|hasAdminRole|refuseUnlessAdmin)\(/;
 const NO_ACTIVITY = {
+  "admin/product-admin/actions.ts": "add and remove a product administrator (#shmgt): PADMIN is a list of people outside the card system, so there is no activity to ask; each action re-checks is_product_admin() and aal2, and 0411's policies (is_product_admin() plus a restrictive aal2 policy) are the security",
   "services/report-animal/actions.ts": "the public report-an-animal form, signed out by definition: written as the anon role with insert-only column grants (0372), so the database decides; it never reads a report back",
   "shop/merch/checkout/actions.ts": "the public checkout, signed out by definition: placeOrder (src/lib/merch/checkout.ts, recorded in the hard-coded-security registry) takes only variant ids and quantities and re-reads every price from the tables",
   "adopter-update/actions.ts": "an adopter holds no staff card on purpose (#l5gxn): sendAdopterUpdate verifies the email, takes the contact from loadAdopterScope and asks adopter_may_submit(contact, resident) before the one insert",
