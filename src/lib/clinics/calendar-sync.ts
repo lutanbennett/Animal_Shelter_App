@@ -122,6 +122,8 @@ async function stamp(res: Response): Promise<Record<string, string | null>> {
 
 async function syncRow(row: Row, origin: string | null, creds: CalendarCreds): Promise<SyncOutcome> {
   const db = createAdminClient();
+  // Always this shelter's own calendar: never the default, which is Lanna's.
+  const cal = (path: string, init: RequestInit = {}) => calendarFetch(path, init, creds);
   // Stamped with the moment we started, so a change made while Google was answering stays "out of date".
   const startedAt = new Date().toISOString();
   const write = (patch: Record<string, string | null>) =>
