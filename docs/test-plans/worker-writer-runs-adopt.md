@@ -11,7 +11,7 @@
 | PR | pending: number known once opened |
 | Tested by / date | Claude, 2026-11-18 |
 | Carries a migration? | no |
-| Tested at SHA | 4c8d49cab |
+| Tested at SHA | pending: head commit |
 
 ## 1. Scope and risk
 
@@ -22,11 +22,12 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — pending: run before opening the PR
+- [x] `node scripts/worktree.mjs sync` — origin/main merged, already up to date
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`:
 
 ```
-pending: filled in from the gates run
+gates: typecheck=0 lint=0 test=0 build=0
+(build hit the known Next advisory halt once; gates.mjs re-ran it and it passed)
 ```
 - [ ] CI green on the PR — n/a: checked at merge against the head SHA, not ticked here
 
@@ -65,7 +66,7 @@ pending: filled in from the gates run
 
 - [x] Nearest checks still pass: `worker/writer-runs.test.mjs` 4/4; `finishHeartbeat` still receives every stage string
 - [ ] Any shared file touched checked from a second page — n/a: none
-- [x] Nothing merged from `main` during `sync` was broken by this branch — pending until sync
+- [x] Nothing merged from `main` during `sync` was broken by this branch
 
 ## 7. Documentation
 
