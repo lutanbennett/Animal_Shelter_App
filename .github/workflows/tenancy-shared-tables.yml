@@ -1,10 +1,19 @@
-# Nightly shared-tables check against the DEV project (backlog #shtci; docs/decisions/2026-11-17-shared-tables-check-scheduled.md).
+# Nightly shared-tables check against the DEV and PRODUCTION projects (backlog #shtci; docs/decisions/2026-11-17-shared-tables-check-scheduled.md).
 #
 # Proves every public table with no shelter_id is recorded, with a reason, in docs/tenancy-shared-tables-registry.json,
 # and that no record is stale. A new tenant table added without shelter_id is invisible to the canary (these tables are
 # readable by design), so this is the only instrument that notices it. It reads pg_catalog through the Management API,
-# so it uses the SUPABASE_ACCESS_TOKEN repository secret: dev project, Database: Read, nothing else. It cannot see
-# production (production would need its own read-only token; see the decision file).
+# so it uses a repository secret per environment: SUPABASE_ACCESS_TOKEN (dev) and SUPABASE_ACCESS_TOKEN_PROD
+# (production), each scoped to its own project with Database: Read and nothing else.
+#
+# TWO JOBS, ONE PER ENVIRONMENT, ON PURPOSE: a red run then says WHICH database grew an unrecorded table, which one
+# job could not. Production's token was created 2026-11-17, closing the half #shtci was left open for.
+#
+# WHY NEITHER JOB PASSES --env: scripts/lib/env.mjs loads .env.deploy.<env> for any environment but "test", and
+# EXITS 2 when that file is missing. It is gitignored and exists only on the developer's PC, so --env production
+# would stop here before reaching the database. Without the flag the script takes NEXT_PUBLIC_SUPABASE_URL and
+# SUPABASE_ACCESS_TOKEN straight from the environment below, and projectRef() resolves the project from that URL.
+# The production address is not a secret and is already committed in wrangler.jsonc's production env.
 #
 # Scheduled, not per PR, and allowed to FAIL: a scheduled run has no PR to stand on, so a failure cannot turn any PR red.
 # WHERE A FAILURE GOES: GitHub emails whoever last edited the cron line below, and shows a red run in the Actions tab.
@@ -38,3 +47,19 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+
+  shared-tables-production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/check-tenancy-shared-tables.mjs
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_PROD }}
+          # Already committed in wrangler.jsonc's production env; not a secret.
+          NEXT_PUBLIC_SUPABASE_URL: https://dbkodyyxxhtygxcxmfcu.supabase.co
