@@ -355,7 +355,7 @@ export const EXPECTED_CRON_JOBS = ["purge-assistant-actions", "purge-donation-ta
  * Scheduled writers that run in the Worker rather than pg_cron, watched through scheduled_writer_runs (0408). pg_cron
  * cannot see them, so each reports its own outcome (worker/writer-runs.mjs). Add the next one here and it is watched.
  */
-export const EXPECTED_WORKER_WRITERS = ["label-drafts"] as const;
+export const EXPECTED_WORKER_WRITERS = ["label-drafts", "calendar-sweep", "merch-supplier-emails", "report-photo-retention"] as const;
 
 /** A Worker writer runs every 15 minutes: no report for this long means the trigger or the report stopped. */
 const WORKER_WRITER_STALE_HOURS = 3;
@@ -428,7 +428,7 @@ export async function checkCronJobs(): Promise<CheckOutcome<CronJobsFacts>> {
       continue;
     }
     const age = Date.now() - Date.parse(r.last_ran_at);
-    jobs.push({ ...base, problem: age > WORKER_WRITER_STALE_HOURS * 3_600_000 ? "stale" : null });
+    jobs.push({ ...base, problem: age > (DAILY_WORKER_WRITERS.includes(name) ? CRON_STALE_HOURS : WORKER_WRITER_STALE_HOURS) * 3_600_000 ? "stale" : null });
   }
   const facts = { jobs };
   const red = jobs.filter((j) => j.problem === "missing" || j.problem === "inactive" || j.problem === "failed");

@@ -27,3 +27,25 @@ export async function reportWriterRun(env, job, summary, fetchImpl = fetch) {
     return false;
   }
 }
+
+// The scheduled stages return a one-line string for the heartbeat ("calendar-sweep: 200", "...: skipped, not set: X",
+// "...: failed, boom", "...: not due"). This turns that line into the summary reportWriterRun wants, so a stage keeps
+// returning its string and one adapter decides what the string means (#rpwrt). Returns null for "not due": the stage did
+// not run this tick, so there is nothing to record and the last real run's age stays honest.
+// An HTTP answer is judged by its status: a 5xx from the endpoint is a failure, not an "ok" just because it answered.
+export function summariseStage(line) {
+  const rest = String(line).replace(/^[a-z0-9-]+:\s*/, "");
+  if (rest.startsWith("not due")) return null;
+  if (rest.startsWith("skipped")) return { outcome: "skipped", note: rest };
+  if (rest.startsWith("failed") || rest.startsWith("threw")) return { outcome: "failed", note: rest };
+  const status = /^(\d{3})\b/.exec(rest);
+  if (status) return Number(status[1]) < 300 ? { outcome: "ok", note: rest } : { outcome: "failed", note: `answered ${rest}` };
+  return { outcome: "failed", note: `unrecognised result: ${rest}` };
+}
+
+// Pushes a stage's string onto `stages` (for the heartbeat) and records its run. Never throws.
+export async function reportStage(env, job, line, stages, fetchImpl = fetch) {
+  stages.push(line);
+  const summary = summariseStage(line);
+  if (summary) await reportWriterRun(env, job, summary, fetchImpl);
+}
