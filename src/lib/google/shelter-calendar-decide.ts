@@ -33,14 +33,13 @@ export type CalendarResolution =
 
 /** Lanna's own calendar, from the environment; null unless all four values are present. */
 export function envCalendarCreds(): CalendarCreds | null {
-  const e = process.env;
-  if (!e.GOOGLE_CALENDAR_REFRESH_TOKEN || !e.GOOGLE_CALENDAR_ID || !e.GOOGLE_OAUTH_CLIENT_ID || !e.GOOGLE_OAUTH_CLIENT_SECRET) return null;
+  if (!process.env.GOOGLE_CALENDAR_REFRESH_TOKEN || !process.env.GOOGLE_CALENDAR_ID || !process.env.GOOGLE_OAUTH_CLIENT_ID || !process.env.GOOGLE_OAUTH_CLIENT_SECRET) return null;
   return {
     cacheKey: "env",
-    calendarId: e.GOOGLE_CALENDAR_ID,
-    clientId: e.GOOGLE_OAUTH_CLIENT_ID,
-    clientSecret: e.GOOGLE_OAUTH_CLIENT_SECRET,
-    refreshToken: e.GOOGLE_CALENDAR_REFRESH_TOKEN,
+    calendarId: process.env.GOOGLE_CALENDAR_ID,
+    clientId: process.env.GOOGLE_OAUTH_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+    refreshToken: process.env.GOOGLE_CALENDAR_REFRESH_TOKEN,
     source: "env",
   };
 }

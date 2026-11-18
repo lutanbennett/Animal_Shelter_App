@@ -61,6 +61,7 @@ const eslintConfig = defineConfig([
       "src/lib/status/alerts.ts",
       "src/lib/shelter-settings.ts",
       "src/lib/google/shelter-drive-credentials.ts",
+      "src/lib/google/shelter-calendar-credentials.ts",
       "src/lib/google/shelter-drive-tokens.ts",
       "src/lib/status/health.ts",
       "src/lib/status/usage.ts",
