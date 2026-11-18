@@ -75,6 +75,15 @@ export const unreleased: ReleaseNote[] = [
 /** Newest first. */
 export const releases: Release[] = [
   {
+    version: "0.47.2",
+    date: "2026-11-18",
+    title: "Groundwork so the app can hold more than one shelter",
+    major: false,
+    notes: [
+      "Behind the scenes, each shelter's information is now kept separately in the database, ready for other shelters to join later. Nothing changes on your screens and nothing you do is different.",
+    ],
+  },
+  {
     version: "0.47.1",
     date: "2026-11-16",
     title: "Tax-deductible donations, clearer sold-out merchandise, and quicker Shelter Friends maps",
