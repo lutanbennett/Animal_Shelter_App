@@ -4,6 +4,8 @@ import { todayIso } from "@/lib/format";
 import { wantsEvent } from "./calendar-change";
 import { getAppEnv } from "@/lib/app-env";
 import { buildCalendarEvent, calendarEventIdFor } from "./calendar-event";
+import { envCalendarCreds, envCalendarConfigured, type CalendarCreds, type CalendarResolution } from "@/lib/google/shelter-calendar-decide";
+import { resolveShelterCalendar } from "@/lib/google/shelter-calendar-credentials";
 
 /**
  * Vet visits into the shelter's Google Calendar, one event per visit
@@ -27,16 +29,12 @@ const CALENDAR_API = "https://www.googleapis.com/calendar/v3/calendars";
 /** How many visits one sweep handles; the rest wait for the next. */
 const SWEEP_BATCH = 40;
 
+/** Whether the ENVIRONMENT calendar (Lanna's own) is set up. Per-shelter calendars are resolved by resolveShelterCalendar. */
 export function calendarConfigured(): boolean {
-  return Boolean(
-    process.env.GOOGLE_CALENDAR_REFRESH_TOKEN &&
-      process.env.GOOGLE_CALENDAR_ID &&
-      process.env.GOOGLE_OAUTH_CLIENT_ID &&
-      process.env.GOOGLE_OAUTH_CLIENT_SECRET,
-  );
+  return envCalendarConfigured();
 }
 
-let cached: { value: string; expiresAt: number } | null = null;
+const cached = new Map<string, { value: string; expiresAt: number }>();
 
 export async function errorText(res: Response): Promise<string> {
   try {
@@ -48,15 +46,16 @@ export async function errorText(res: Response): Promise<string> {
   }
 }
 
-async function accessToken(): Promise<string> {
-  if (cached && Date.now() < cached.expiresAt) return cached.value;
+async function accessToken(creds: CalendarCreds): Promise<string> {
+  const hit = cached.get(creds.cacheKey);
+  if (hit && Date.now() < hit.expiresAt) return hit.value;
   const res = await fetch(TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      client_id: process.env.GOOGLE_OAUTH_CLIENT_ID ?? "",
-      client_secret: process.env.GOOGLE_OAUTH_CLIENT_SECRET ?? "",
-      refresh_token: process.env.GOOGLE_CALENDAR_REFRESH_TOKEN ?? "",
+      client_id: creds.clientId,
+      client_secret: creds.clientSecret,
+      refresh_token: creds.refreshToken,
       grant_type: "refresh_token",
     }),
     signal: AbortSignal.timeout(10_000),
@@ -64,14 +63,16 @@ async function accessToken(): Promise<string> {
   if (!res.ok) throw new Error(`Calendar token refresh failed (${res.status}): ${await errorText(res)}`);
   const data = (await res.json()) as { access_token?: string; expires_in?: number };
   if (!data.access_token) throw new Error("Calendar token refresh returned no access token.");
-  cached = { value: data.access_token, expiresAt: Date.now() + (data.expires_in ?? 3600) * 1000 - 60_000 };
+  cached.set(creds.cacheKey, { value: data.access_token, expiresAt: Date.now() + (data.expires_in ?? 3600) * 1000 - 60_000 });
   return data.access_token;
 }
 
-export async function calendarFetch(path: string, init: RequestInit = {}): Promise<Response> {
-  const id = encodeURIComponent(process.env.GOOGLE_CALENDAR_ID ?? "");
+/** Callers that name no credentials (the poll, the import, the status tile) act on the environment calendar: Lanna's. */
+export async function calendarFetch(path: string, init: RequestInit = {}, creds: CalendarCreds | null = envCalendarCreds()): Promise<Response> {
+  if (!creds) throw new Error("The calendar is not configured.");
+  const id = encodeURIComponent(creds.calendarId);
   const headers = new Headers(init.headers);
-  headers.set("Authorization", `Bearer ${await accessToken()}`);
+  headers.set("Authorization", `Bearer ${await accessToken(creds)}`);
   if (init.body) headers.set("Content-Type", "application/json; charset=UTF-8");
   return fetch(`${CALENDAR_API}/${id}${path}`, { ...init, headers, signal: AbortSignal.timeout(10_000) });
 }
@@ -119,7 +120,7 @@ async function stamp(res: Response): Promise<Record<string, string | null>> {
   }
 }
 
-async function syncRow(row: Row, origin: string | null): Promise<SyncOutcome> {
+async function syncRow(row: Row, origin: string | null, creds: CalendarCreds): Promise<SyncOutcome> {
   const db = createAdminClient();
   // Stamped with the moment we started, so a change made while Google was answering stays "out of date".
   const startedAt = new Date().toISOString();
@@ -132,7 +133,7 @@ async function syncRow(row: Row, origin: string | null): Promise<SyncOutcome> {
         await write({ calendar_synced_at: startedAt, calendar_error: null });
         return "unchanged";
       }
-      const res = await calendarFetch(`/events/${encodeURIComponent(row.calendar_event_id)}`, { method: "DELETE" });
+      const res = await cal(`/events/${encodeURIComponent(row.calendar_event_id)}`, { method: "DELETE" });
       // Already gone (404/410) is the outcome we wanted.
       if (!res.ok && res.status !== 404 && res.status !== 410) {
         throw new Error(`Calendar delete failed (${res.status}): ${await errorText(res)}`);
@@ -154,7 +155,7 @@ async function syncRow(row: Row, origin: string | null): Promise<SyncOutcome> {
     );
     if (!event) throw new Error("The visit's date could not be read.");
     if (row.calendar_event_id) {
-      const res = await calendarFetch(`/events/${encodeURIComponent(row.calendar_event_id)}`, {
+      const res = await cal(`/events/${encodeURIComponent(row.calendar_event_id)}`, {
         method: "PATCH",
         body: JSON.stringify(event),
       });
@@ -170,11 +171,11 @@ async function syncRow(row: Row, origin: string | null): Promise<SyncOutcome> {
     // The id is ours, derived from the visit (calendar-event.ts): two writers racing, or a create whose
     // id never got saved, meet a 409 here instead of making a second event.
     const eventId = calendarEventIdFor(row.id, getAppEnv());
-    let res = await calendarFetch("/events", { method: "POST", body: JSON.stringify({ ...event, id: eventId }) });
+    let res = await cal("/events", { method: "POST", body: JSON.stringify({ ...event, id: eventId }) });
     if (res.status === 409) {
       // The visit already has its event (made a moment ago by another writer, or deleted by hand: Google
       // keeps a deleted event's id, so this also brings it back). Bring it up to date and claim it.
-      res = await calendarFetch(`/events/${eventId}`, { method: "PATCH", body: JSON.stringify({ ...event, status: "confirmed" }) });
+      res = await cal(`/events/${eventId}`, { method: "PATCH", body: JSON.stringify({ ...event, status: "confirmed" }) });
     }
     if (!res.ok) throw new Error(`Calendar create failed (${res.status}): ${await errorText(res)}`);
     const created = (await res.json()) as { id?: string; etag?: string; updated?: string };
@@ -194,12 +195,18 @@ async function syncRow(row: Row, origin: string | null): Promise<SyncOutcome> {
   }
 }
 
-/** Sync one visit now. Never throws; "off" when the calendar is not set up (nothing is marked, so switching it on picks everything up). */
+/** Sync one visit now. Never throws; "off" when this shelter's calendar is not set up (nothing is marked, so switching it on picks everything up). */
 export async function syncVisitToCalendar(visitId: string, origin: string | null): Promise<SyncOutcome> {
-  if (!calendarConfigured()) return "off";
-  const shelterId = await actingShelterId();
+  let shelterId: string | null;
+  try {
+    shelterId = await actingShelterId();
+  } catch {
+    return "failed";
+  }
   if (!shelterId) return "unchanged";
   try {
+    const resolved = await resolveShelterCalendar(shelterId);
+    if (resolved.state !== "configured") return "off";
     const { data } = await createAdminClient()
       .from("clinic_visits")
       .select(COLUMNS)
@@ -207,7 +214,7 @@ export async function syncVisitToCalendar(visitId: string, origin: string | null
       .eq("shelter_id", shelterId)
       .limit(1)
       .returns<Row[]>();
-    return data?.[0] ? await syncRow(data[0], origin) : "unchanged";
+    return data?.[0] ? await syncRow(data[0], origin, resolved.creds) : "unchanged";
   } catch {
     return "failed";
   }
@@ -219,18 +226,12 @@ export const CALENDAR_OFF_NOTE = "The calendar is not switched on in this app, s
  * "No error" used to mean both "all well" and "the calendar is not switched on here". Say the second one
  * on the visits it affects, so a booking that silently went nowhere shows why. Only calendar columns are
  * written, which the 0207 trigger does not treat as a change. Cleared by the next successful sync.
+ * Fenced to the given visits (one shelter's): a refused shelter is marked, nobody else.
  */
-async function markCalendarOff(db: ReturnType<typeof createAdminClient>): Promise<void> {
+async function markCalendarOff(db: ReturnType<typeof createAdminClient>, ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
   try {
-    await db
-      .from("clinic_visits")
-      .update({ calendar_error: CALENDAR_OFF_NOTE })
-      .is("calendar_synced_at", null)
-      .is("calendar_event_id", null)
-      .is("calendar_error", null)
-      .eq("status", "scheduled")
-      .is("archived_at", null)
-      .gte("appointment_date", new Date(`${todayIso()}T00:00:00+07:00`).toISOString());
+    await db.from("clinic_visits").update({ calendar_error: CALENDAR_OFF_NOTE }).in("id", ids).is("calendar_error", null);
   } catch {
     // a note that cannot be written is not a reason to fail a booking
   }
@@ -242,13 +243,11 @@ export type SweepResult = { configured: boolean; synced: number; failed: number;
  * Sync everything out of date: visits changed since their event last matched, plus upcoming booked
  * visits never sent (the one-off back-fill when the calendar is switched on; past visits are left
  * alone). Called straight after a booking or edit, and by the Worker's cron as the safety net.
+ * EACH VISIT GOES TO ITS OWN SHELTER'S CALENDAR; a shelter with none (and not Lanna) is refused with
+ * CALENDAR_OFF_NOTE and nothing is written anywhere (#calsh).
  */
 export async function syncPendingVisits(origin: string | null, limit = SWEEP_BATCH): Promise<SweepResult> {
   const db = createAdminClient();
-  if (!calendarConfigured()) {
-    await markCalendarOff(db);
-    return { configured: false, synced: 0, failed: 0, remaining: 0 };
-  }
   try {
     const todayStart = new Date(`${todayIso()}T00:00:00+07:00`).toISOString();
     const [stale, neverSent] = await Promise.all([
@@ -273,14 +272,36 @@ export async function syncPendingVisits(origin: string | null, limit = SWEEP_BAT
     const byId = new Map<string, Row>();
     for (const r of [...(stale.data ?? []), ...(neverSent.data ?? [])]) byId.set(r.id, r);
     const pending = [...byId.values()].filter(isPending);
+
+    // Resolve each shelter's calendar once. A visit with no shelter has no calendar to go to.
+    const resolutions = new Map<string, Promise<CalendarResolution>>();
+    const resolveFor = (shelterId: string | null) => {
+      if (!shelterId) return Promise.resolve<CalendarResolution>({ state: "not_configured" });
+      let r = resolutions.get(shelterId);
+      if (!r) resolutions.set(shelterId, (r = resolveShelterCalendar(shelterId)));
+      return r;
+    };
+    const refused: string[] = [];
+    const ready: { row: Row; creds: CalendarCreds }[] = [];
+    for (const row of pending) {
+      let resolved: CalendarResolution;
+      try {
+        resolved = await resolveFor(row.shelter_id);
+      } catch {
+        resolved = { state: "not_configured" };
+      }
+      if (resolved.state === "configured") ready.push({ row, creds: resolved.creds });
+      else if (row.status === "scheduled" && !row.calendar_event_id && !row.calendar_synced_at) refused.push(row.id);
+    }
+    await markCalendarOff(db, refused);
     let synced = 0;
     let failed = 0;
-    for (const row of pending.slice(0, limit)) {
-      const outcome = await syncRow(row, origin);
+    for (const { row, creds } of ready.slice(0, limit)) {
+      const outcome = await syncRow(row, origin, creds);
       if (outcome === "failed") failed += 1;
       else synced += 1;
     }
-    return { configured: true, synced, failed, remaining: Math.max(0, pending.length - limit) };
+    return { configured: ready.length > 0 || envCalendarConfigured(), synced, failed, remaining: Math.max(0, ready.length - limit) };
   } catch {
     return { configured: true, synced: 0, failed: 1, remaining: 0 };
   }
