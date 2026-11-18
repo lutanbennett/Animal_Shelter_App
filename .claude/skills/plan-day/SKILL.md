@@ -365,10 +365,10 @@ never a figure.
 |---|---|
 | Floor, before any work | **~86–90k, measured 2026-11-17 across two complete sets in one day (nine streams)** — re-measure, never carry forward |
 | **Ordinary well-briefed stream — the default** | **146–175k** |
-| Quick win (1–3 files, answer already on the item) | 110–170k |
+| Quick win (1–3 files, answer already on the item) | 143–170k (bottom raised 2026-11-18, see reference.md) |
 | Routing into surfaces that already exist | 120–165k |
 | Schema PR, single file | 140–155k |
-| Schema PR, nothing left to discover (`src/` forbidden, columns handed over) | 110–140k |
+| Schema PR, nothing left to discover (`src/` forbidden, columns handed over) | 143–165k (raised 2026-11-18, see reference.md) |
 | A new integration on existing machinery | 145–180k |
 | **An AUDIT or REPORT over a wide but shallow surface** | **145–190k** — the length of the list does not move this |
 | Wording that must be SEEN ON SCREEN in two languages and chased through other documents | 150–195k |
