@@ -54,8 +54,10 @@ const namesFile = valueOf("--names-file");
 const prsFile = valueOf("--prs-file");
 const branchArg = valueOf("--branch");
 const noPrs = args.includes("--no-prs");
+// Fixture: behave as if gh could not list PRs, to prove the NOT CHECKED path without a network fault.
+const ghFails = args.includes("--gh-fails");
 const flagValues = new Set(["--base", "--names-file", "--prs-file", "--branch"]);
-const unknown = args.filter((a, i) => !["--staged", "--no-prs", ...flagValues].includes(a) && !flagValues.has(args[i - 1]));
+const unknown = args.filter((a, i) => !["--staged", "--no-prs", "--gh-fails", ...flagValues].includes(a) && !flagValues.has(args[i - 1]));
 if (unknown.length || (baseArg >= 0 && !base)) {
   console.error("usage: node scripts/check-migration-numbers.mjs [--staged] [--base <ref>] [--no-prs]");
   process.exit(2);
@@ -218,12 +220,14 @@ function main() {
   // Needs gh, so a run that cannot ask carries on without them, exactly as the collision half always has
   // (and the hook, --staged, never asks at all).
   let prs = null;
+  let prsUnreadable = null; // why the open-PR half could not run; null when it ran or was never asked for
   if (!staged && !noPrs) {
-    if (prsFile) prs = JSON.parse(readFileSync(prsFile, "utf8"));
+    if (ghFails) prsUnreadable = "gh could not list PRs (--gh-fails fixture)";
+    else if (prsFile) prs = JSON.parse(readFileSync(prsFile, "utf8"));
     else {
       const r = spawnSync("gh", ["pr", "list", "--state", "open", "--limit", "200", "--json", "number,headRefName,files"], { encoding: "utf8" });
       if (r.status === 0) prs = JSON.parse(r.stdout);
-      else console.error(`${TAG}: open-PR check skipped — gh could not list PRs (${(r.stderr || r.error?.message || "no gh").trim().split("\n")[0]}).`);
+      else prsUnreadable = `gh could not list PRs (${(r.stderr || r.error?.message || "no gh").trim().split("\n")[0]})`;
     }
   }
   const ownBranch = branchArg ?? process.env.GITHUB_HEAD_REF ?? git(["branch", "--show-current"]).out;
@@ -251,8 +255,24 @@ function main() {
   }
 
   const against = `${base} ${baseSha}, highest ${highestName ?? "none"}`;
-  for (const note of dupNotes) console.log(`${TAG}: note — ${note}`);
+  // Known-duplicate notes go AFTER the verdict, so the line that matters is never scrolled past by known noise.
+  const printNotes = () => { for (const note of dupNotes) console.log(`${TAG}: note — ${note}`); };
+
+  // The open-PR half could not run, so any answer about numbering would be a guess: another PR may hold the
+  // number a rename would take, and dev may already hold that row. A guard that cannot tell must not look like
+  // one that passed (check-release-order.mjs), so: NOT CHECKED, no rename instruction, exit 2 (as
+  // check-tenancy-canary.mjs). With no new migration file there is nothing to number and nothing hangs on PRs.
+  if (prsUnreadable && fresh.length) {
+    console.error(
+      `${TAG}: NOT CHECKED — ${prsUnreadable}. The numbering of ${fresh.join(", ")} was NOT judged, because other open PRs may hold the numbers.
+` +
+        `  This is not a pass and not a finding: no rename is advised. Re-run when GitHub answers (CI: re-run the job).`,
+    );
+    printNotes();
+    process.exit(2);
+  }
   if (!problems.length) {
+    printNotes();
     console.log(
       fresh.length
         ? `${TAG}: ok — ${ok.join(", ")} (against ${against})`
@@ -272,6 +292,7 @@ function main() {
     );
     process.exit(0);
   }
+  printNotes();
   console.error(
     `${TAG}: a new migration must be numbered one past the highest on ${base}, with no number used twice (against ${against}):\n` +
       `${report}\n` +
