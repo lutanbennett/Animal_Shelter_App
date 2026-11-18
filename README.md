@@ -745,7 +745,7 @@ check now* twice; the mail is printed to the server log.
 **Exporting one shelter, and restoring just one (#sxyw3).** Every shelter shares one database, so a bad migration or a runaway query takes all of them at once, and restoring the whole backup to undo one shelter's mistake rewinds everyone. The answer is the per-shelter export, which is also how a shelter leaves with its own data:
 
 ```
-node scripts/shelter-export.mjs --shelter <key> --out C:Temp<shelter>-export [--env test|uat|production]
+node scripts/shelter-export.mjs --shelter <key> --out C:\Temp\<shelter>-export [--env test|uat|production]
 ```
 
 It reads that shelter's rows (and only those) through the Management API and writes one age-encrypted SQL file, `lannacare-<env>-shelter-<key>-<timestamp>.sql.age`, to a folder outside the repo; no plaintext file is ever written. It is **data only**: load it into a database that already has the schema (the migrations), after decrypting in memory (`scripts/decrypt-backup.mjs` style; it is plain SQL inside, `psql -v ON_ERROR_STOP=1`). Tables load parents first, so every foreign key resolves. **It refuses, and names the tables, if any row has no `shelter_id`**: give those rows their shelter (or delete them) first. Logins (`auth.users`) are not in it. `node scripts/shelter-export.mjs --shelter <key> --prove` is the rehearsal: it exports, loads the export into an empty throwaway PostgreSQL server and checks every row arrived, no other shelter's row did, and every foreign key resolves (it needs a second shelter in the source to mean anything). `node scripts/check-shelter-export.mjs` checks offline that the export can only read the named shelter. Reasoning: `docs/decisions/2026-11-17-per-shelter-export.md`.

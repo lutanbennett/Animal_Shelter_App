@@ -5,10 +5,14 @@ Claude session available**: every command is given in full, with the folder you
 type it in.
 
 **It is a partial runbook on purpose.** It covers the steps that will never be a
-screen. A management screen for shelters is coming (backlog item `#shmgt`); when
-it lands, the steps marked **WILL BECOME A SCREEN** below are replaced by it, and
-the screenshots are added then (see "Screenshots" at the end). This document
-does not describe that screen, because it does not exist yet.
+screen. Backlog item `#shmgt` (the shelter management screen) has landed **in
+half**. **Landed (2026-11-18):** a product administrator can open **Settings →
+Product admin** (`/admin/product-admin`) and see every shelter with its hosts, and
+add or remove product administrators. **Not landed:** creating a shelter, setting
+its names and receipt series, its three missing lookup lists, and removing a
+shelter. Those are still terminal scripts or still nothing at all, and every
+**NOT YET POSSIBLE** note below that names `#shmgt` is still true. The screen's
+pictures are listed in `scripts/manual-screenshots.mjs` (see "Screenshots").
 
 ## Who can do each step
 
@@ -79,8 +83,10 @@ A shelter leaving is a separate section at the end.
 database's own service role may.
 
 **NOT YET POSSIBLE as a step you can follow.** No script and no screen creates
-these two rows today. Backlog item **`#shmgt`** builds the management screen and
-the route to do it. **Until then, this step needs a developer**; there is no
+these two rows today. The Product admin screen that has landed **only lists**
+shelters and hosts; it creates nothing. Backlog item **`#shmgt`** still has to add
+the create route (a database write function, then the screen's button).
+**Until then, this step needs a developer**; there is no
 keystroke-by-keystroke version to give you, because writing it by hand against
 the live database is exactly the kind of thing that should not be improvised.
 When `#shmgt` lands, this step becomes **WILL BECOME A SCREEN**: replace this
@@ -238,8 +244,8 @@ Close the window afterwards.
 **Names (`0400`).** A shelter's full name and short name are two columns on the
 `shelters` row (`display_name` for pages and PDFs, `short_name` for mail senders
 and subjects). **NOT YET POSSIBLE as a step you can follow:** no screen or script
-sets them. They are set when the shelter is created, which is `#shmgt`'s job (Step
-1); until then a developer sets them. If they are empty the app falls back to
+sets them. They are set when the shelter is created, which is the part of `#shmgt`
+that has **not** landed (the Product admin screen does not show or edit them); until then a developer sets them. If they are empty the app falls back to
 the original shelter's wording, which would be wrong for a new shelter — so
 **do not open a new shelter to its people until its names are set.**
 
@@ -303,6 +309,12 @@ project that is not that environment's own.
    Drive folder.
 5. Sign in on another shelter's host. Expected: **nothing** of the new shelter is
    visible, and the reverse.
+6. **As a product administrator** (someone on that list, not just a shelter
+   Admin): open **Settings**, click **Product admin**. Expected: the new shelter is
+   listed with its key and its host. A login not on the list gets a page that does
+   not exist; that is correct. Add and Remove for administrators appear only after
+   the two-step code; without it the page shows a sentence and a link instead.
+   The page shows hosts only: names and the receipt series are **not** shown there.
 
 Anything you add while testing is real data in that shelter. Use a test shelter
 on test, not a live one.
@@ -388,22 +400,28 @@ node scripts/decrypt-backup.mjs C:\Temp\<shelter-key>-export\<the file>.sql.age 
 
 Giving the file to the shelter, and removing the shelter's rows and host from the
 live database afterwards, are **NOT YET POSSIBLE** as steps you can follow: there
-is no script that removes a shelter. `#shmgt` is where that belongs.
+is no script that removes a shelter. `#shmgt` is where that belongs, and the
+Product admin screen that has landed does not remove one.
 
 ---
 
 ## Screenshots
 
-**There are none in this document yet, on purpose.** The screens this runbook
-will show (above all the shelter management screen) either change or do not exist
-yet, and a pasted picture of a screen goes out of date.
+**There are no pictures in this document yet, on purpose**: a pasted picture of a
+screen goes out of date.
 
-When the management screen lands, this runbook's pictures will be added to
-`scripts/manual-screenshots.mjs`, the script that already re-captures the user
-manual's images from a running copy of the app, and will be captured in the same
-pass as the manual's own re-run. They will then be regenerated whenever a screen
-changes, not pasted. Until then, trust the words, and where this document says
-"NOT YET POSSIBLE", trust that over any old picture.
+The Product admin screen's picture, `runbook-product-admin`, is now declared in
+`scripts/manual-screenshots.mjs`, the script that re-captures the user manual's
+images from a running copy of the app. It has **not been captured yet**: the next
+full manual re-run produces `public/manual/runbook-product-admin.png`. Capture it
+signed in as someone on the product-administrator list (anyone else sees no page).
+
+**Which states can be photographed.** On a development copy a sign-in has no
+authenticator, so only the two-step-**not**-done view can be captured: the
+shelters with their hosts, the administrator list, and the sentence with the
+step-up link. **Add and Remove, their refusals, and the page after the code cannot
+be photographed there**, so this document describes them in words only. Where this
+document says "NOT YET POSSIBLE", trust that over any old picture.
 
 ## Keeping this document true
 

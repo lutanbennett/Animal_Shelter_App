@@ -1,7 +1,12 @@
-// One-time script to mint a Google OAuth refresh token for Drive access.
+// One-time script to mint a Google OAuth refresh token, for Drive access by default or for the
+// shelter calendar with --calendar.
 //
 // Usage:
-//   node --env-file=.env.local scripts/google-oauth-setup.mjs
+//   node --env-file=.env.local scripts/google-oauth-setup.mjs              # Drive token -> GOOGLE_OAUTH_REFRESH_TOKEN
+//   node --env-file=.env.local scripts/google-oauth-setup.mjs --calendar   # calendar token -> GOOGLE_CALENDAR_REFRESH_TOKEN
+//
+// --calendar is the only flag. The Drive and calendar tokens are SEPARATE: each run asks for its own
+// consent and mints its own token, so run it once for each and paste each into its own setting.
 //
 // Requires GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET to already
 // be set (in .env.local or the environment) from a Desktop-app OAuth client
