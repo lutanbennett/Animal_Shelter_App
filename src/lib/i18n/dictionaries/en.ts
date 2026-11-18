@@ -1380,6 +1380,11 @@ const en = {
           "Photo storage (Google Drive) is not connected — every upload will fail until a new token is set.",
         failed: "Google Drive did not answer the check. Uploads may still work; look again in a minute.",
       },
+      calendarConnection: {
+        ok: "Vet-visit calendar connected.",
+        failed: "Vet-visit calendar is not working: visits are not reaching the calendar until it is reconnected.",
+        calendarLabel: "Calendar",
+      },
       subtitle:
         "System configuration: the public website, the places residents live, and the type lists the rest of the app picks from.",
       tiles: {
