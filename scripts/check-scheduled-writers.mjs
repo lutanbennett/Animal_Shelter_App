@@ -27,7 +27,8 @@ const sql = `select
   (select coalesce(json_agg(json_build_object('jobname', jobname, 'schedule', schedule, 'active', active, 'command', command) order by jobid), '[]'::json) from cron.job) as jobs,
   (select coalesce(json_agg(json_build_object('name', p.proname, 'definer', p.prosecdef, 'kind', p.prokind, 'src', p.prosrc) order by p.proname), '[]'::json)
      from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-     where n.nspname = 'public' and p.prokind = 'f' and (p.prosecdef or p.prorettype = 'trigger'::regtype)
+     where n.nspname = 'public' and p.prokind = 'f' and (p.prosecdef or p.prorettype = 'trigger'::regtype
+            or exists (select 1 from cron.job cj where cj.command ~* ('\\m' || p.proname || '\\s*\\(')))
        and p.prosrc ~* '(insert|update|delete|merge)') as fns,
   (select coalesce(json_agg(table_name), '[]'::json) from information_schema.columns
      where table_schema = 'public' and column_name = 'shelter_id') as shelter_tables`;
@@ -52,6 +53,7 @@ const strip = (s) => s.replace(/--[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "")
 //   sends     - every write to a shelter-bearing table names shelter_id (column list) or stamps from the row/request
 //   none      - a write to a shelter-bearing table that names no shelter, so it leans on the header default and ERRORS without one
 //   unknown   - dynamic SQL, or a write the pattern cannot tie to a table
+//   deleteonly- every write to a shelter-bearing table is a DELETE: it creates no row, so no mis-shelter'd row either
 //   nowrite   - touches no shelter-bearing table
 function classify(src) {
   const body = strip(src);
@@ -59,8 +61,8 @@ function classify(src) {
   for (const m of body.matchAll(/\binsert\s+into\s+(?:public\.)?"?([a-z_0-9]+)"?\s*(\(([^)]*)\))?/gi)) {
     writes.push({ op: "insert", table: m[1].toLowerCase(), cols: (m[3] ?? "").toLowerCase() });
   }
-  for (const m of body.matchAll(/\b(?:update|delete\s+from)\s+(?:public\.)?"?([a-z_0-9]+)"?/gi)) {
-    writes.push({ op: "update/delete", table: m[1].toLowerCase(), cols: "" });
+  for (const m of body.matchAll(/\b(update|delete\s+from)\s+(?:public\.)?"?([a-z_0-9]+)"?/gi)) {
+    writes.push({ op: /^update/i.test(m[1]) ? "update" : "delete", table: m[2].toLowerCase(), cols: "" });
   }
   const dynamic = /\bexecute\b/i.test(body);
   const hit = writes.filter((w) => tenant.has(w.table));
@@ -69,13 +71,14 @@ function classify(src) {
   const bare = inserts.filter((w) => !/\bshelter_id\b/.test(w.cols) && !/\binsert\s+into\s+\S+\s+select\b[\s\S]*shelter_id/i.test(body));
   if (bare.length) return { bucket: "none", why: `inserts into ${[...new Set(bare.map((w) => w.table))].join(", ")} without naming shelter_id` };
   if (dynamic) return { bucket: "unknown", why: "uses EXECUTE as well as named inserts" };
+  if (hit.every((w) => w.op === "delete")) return { bucket: "deleteonly", why: `only deletes from ${[...new Set(hit.map((w) => w.table))].join(", ")}` };
   return { bucket: "sends", why: inserts.length ? `every insert (${[...new Set(inserts.map((w) => w.table))].join(", ")}) names shelter_id` : `only updates/deletes ${[...new Set(hit.map((w) => w.table))].join(", ")}` };
 }
 
 const fns = row.fns.map((f) => ({ ...f, ...classify(f.src) }));
 const byName = new Map(fns.map((f) => [f.name, f]));
 console.log(`check-scheduled-writers (${envName}, database ${row.db}) read at ${row.read_at}`);
-console.log(`  ${row.jobs.length} cron job(s); ${fns.length} writing function(s) (security definer or trigger); ${tenant.size} tables carry shelter_id.\n`);
+console.log(`  ${row.jobs.length} cron job(s); ${fns.length} function(s) read (security definer, trigger, or named by a cron command); ${tenant.size} tables carry shelter_id.\n`);
 
 console.log("SCHEDULED (cron.job) — every job, from the live catalogue:");
 const jobRows = [];
@@ -83,7 +86,7 @@ for (const j of row.jobs) {
   const called = [...j.command.matchAll(/(?:public\.)?([a-z_0-9]+)\s*\(/gi)].map((m) => m[1]).filter((n) => byName.has(n));
   let bucket, why;
   if (called.length) {
-    const rank = { none: 0, unknown: 1, sends: 2, nowrite: 3 };
+    const rank = { none: 0, unknown: 1, sends: 2, deleteonly: 3, nowrite: 4 };
     const worst = called.map((n) => byName.get(n)).sort((a, b) => rank[a.bucket] - rank[b.bucket])[0];
     bucket = worst.bucket; why = `calls ${called.join(", ")}: ${worst.why}`;
   } else if (/\b(insert|update|delete)\b/i.test(j.command)) {
@@ -93,10 +96,10 @@ for (const j of row.jobs) {
   console.log(`  [${bucket.toUpperCase()}] ${j.jobname} ${j.schedule} active=${j.active}\n      ${why}\n      command: ${j.command.replace(/\s+/g, " ").slice(0, 160)}`);
 }
 
-const groups = { none: [], unknown: [], sends: [], nowrite: [] };
+const groups = { none: [], unknown: [], sends: [], deleteonly: [], nowrite: [] };
 for (const f of fns) groups[f.bucket].push(f);
-const label = { none: "SENDS NO SHELTER — errors without a request header", unknown: "CANNOT BE DETERMINED from here", sends: "SENDS A SHELTER", nowrite: "writes no shelter table (read only for this purpose)" };
-for (const k of ["none", "unknown", "sends", "nowrite"]) {
+const label = { none: "SENDS NO SHELTER — errors without a request header", unknown: "CANNOT BE DETERMINED from here", sends: "SENDS A SHELTER", deleteonly: "DELETES ONLY — creates no row, needs no shelter", nowrite: "writes no shelter table (read only for this purpose)" };
+for (const k of ["none", "unknown", "sends", "deleteonly", "nowrite"]) {
   console.log(`\n${label[k]}: ${groups[k].length}`);
   if (k === "nowrite" && !verbose) { console.log("  (use --verbose to list)"); continue; }
   for (const f of groups[k]) console.log(`  ${f.name}${f.definer ? "" : " (trigger, invoker)"} — ${f.why}`);
