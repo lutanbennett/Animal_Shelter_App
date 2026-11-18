@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { decideCalendar } from "../google/shelter-calendar-decide.ts";
+import { FALLBACK_SHELTER_KEY } from "../google/shelter-drive-decide.ts";
 
 // #calsh piece 3: no reader of a shelter calendar may fall back to another shelter's. Source-shape guards, because the
 // readers call Google and the database and cannot run here; the decision they all share is exercised for real.
@@ -44,5 +45,5 @@ test("a shelter with no row is refused even when the fallback shelter's environm
   process.env.GOOGLE_OAUTH_CLIENT_ID = "i";
   process.env.GOOGLE_OAUTH_CLIENT_SECRET = "s";
   assert.equal((await decideCalendar(null, "another-shelter")).state, "not_configured");
-  assert.equal((await decideCalendar(null, "lanna")).state, "configured"); // Lanna unchanged
+  assert.equal((await decideCalendar(null, FALLBACK_SHELTER_KEY)).state, "configured"); // the fallback shelter is unchanged
 });

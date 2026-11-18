@@ -272,6 +272,11 @@
       "reason": "Cron poll of the shared Google calendar for changes, for every shelter that syncs one. A platform job by design; the calendar_sync_state row belongs to the calendar, not to a request."
     },
     {
+      "id": "src/lib/clinics/calendar-poll.ts#pollShelterCalendar",
+      "classification": "filtered",
+      "reason": "One shelter's poll: its calendar, its cursor row and its visits, every read and write fenced by that shelter's id (the cursor upserts name shelter_id explicitly, #calsh)."
+    },
+    {
       "id": "src/lib/clinics/calendar-poll.ts#pollCalendarChanges",
       "classification": "cross-shelter",
       "reason": "Cron poll of the shared Google calendar for changes, for every shelter that syncs one. A platform job by design; the calendar_sync_state row belongs to the calendar, not to a request."

@@ -160,7 +160,7 @@ Manual verification by: pending: row 1, a look at Lanna's status tile and confir
 
 - [ ] Open defects are either fixed or explicitly accepted above — n/a: none found
 - [x] Checklist pasted into the PR
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — pending: release manager
 
 Result: pass
 
