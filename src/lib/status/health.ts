@@ -359,6 +359,8 @@ export const EXPECTED_WORKER_WRITERS = ["label-drafts", "calendar-sweep", "merch
 
 /** A Worker writer runs every 15 minutes: no report for this long means the trigger or the report stopped. */
 const WORKER_WRITER_STALE_HOURS = 3;
+/** The two once-a-day stages report one run a day, so they go stale on the same 48 hours as a nightly pg_cron job. */
+const DAILY_WORKER_WRITERS: readonly string[] = ["merch-supplier-emails", "report-photo-retention"];
 /** One failed run is a blip (a slow answer, a deploy); this many in a row is a fault. */
 const WORKER_WRITER_RED_AFTER = 2;
 
