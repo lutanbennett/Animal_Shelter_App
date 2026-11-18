@@ -464,6 +464,16 @@
   ],
   "workerSites": [
     {
+      "id": "worker/translations.mjs#runLabelDrafts",
+      "classification": "cross-shelter",
+      "reason": "Reads the user_roles rows (archived_at is null) of its OWN signed-in machine login with the service key, only to learn which shelter(s) to name in x-shelter-id; every proposal after that is made AS that login (so it still needs the Propose a Thai label card) and carries one shelter's header, one shelter at a time. The read is cross-shelter by construction (a headerless read by the login itself sees nothing, which was the fault, #lblcr). docs/decisions/2026-11-18-scheduled-writer-visibility.md."
+    },
+    {
+      "id": "worker/writer-runs.mjs#reportWriterRun",
+      "classification": "cross-shelter",
+      "reason": "Calls record_scheduled_writer_run() (0408, service_role only) to record how a Worker-side scheduled job's run went in scheduled_writer_runs, a platform table with no shelter_id and no shelter data (docs/tenancy-shared-tables-registry.json). Cross-shelter because the job is the installation's, not a shelter's."
+    },
+    {
       "id": "worker/heartbeat.mjs#rest",
       "classification": "cross-shelter",
       "reason": "Builds the REST target and service-role headers for ONE table, status_alert_runs: the platform's own cron-fired marker (HEARTBEAT_NOTE rows), not any shelter's data. recordHeartbeat and finishHeartbeat insert and patch only that table."
