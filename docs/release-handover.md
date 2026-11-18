@@ -1,142 +1,150 @@
-# Release handover — written 2026-11-15 after `0.47.0`
+# Release handover — written 2026-11-18 after `0.47.2`
 
-A **delta**. The durable rules are in `docs/release-procedure.md` and this release's own record is
-`docs/releases/2026-11-15-0-47-0.md`. **Both outrank this file.**
+A **delta**. The durable rules are in `docs/release-procedure.md` and the two releases' own records are
+`docs/releases/2026-11-16-0-47-1.md` and `docs/releases/2026-11-18-0-47-2.md`. **All three outrank
+this file.**
+
+**This edition covers TWO releases, because `0.47.1` never wrote one.** That is the first fault not to
+repeat: rule 3 of *The paperwork has a time budget too* says the record and the handover are **one
+PR**, and on `0.47.1` only the record was written. Nothing caught it — there is no check for a stale
+handover — and it surfaced on `0.47.2` only because Lutan asked outright whether the handover was
+done. **If you are reading this after a release you ran, write the next edition in the record's PR.**
 
 ## START HERE
 
-Production is `lannacareforanimals.org`, now on **`0.47.0`** — a **major release, and it mailed**.
-`test.lannacare.org` and `uat.lannacare.org` serve `0.47.0` too. All three Pi clones were built from
-the cut `ca23f2c27` and all three hosts answer `x-lanna-served-by: pi`.
+Production is `lannacareforanimals.org`, now on **`0.47.2`** — a **minor release that mailed nobody**.
+`test.lannacare.org` and `uat.lannacare.org` serve `0.47.2` too. All three Pi clones **and all three
+Workers** were built from `854891267`, and all three hosts answer `x-lanna-served-by: pi`.
 
-Five migrations — `0375`, `0377`, `0378`, `0379`, `0380`; **there is no `0376`**, a number a stream
-gave back. Applied to all three databases, 0 pending, **no drift either direction**, both schema
-assertions answered through the Management API. `0375` took the tenancy lint from **225 flagged to
-zero** on production, test and UAT.
+**Production holds every migration on `main`: 408 applied, 0 pending, 0 drift either way.** It had
+been eighteen behind. UAT is the same. Test's database (dev) was already current.
 
-**ONE THING IS NOT DONE, AND IT IS THE FIRST THING YOU SHOULD FIX: UAT's Worker is still on
-`0.46.0`.** Its Pi, which is the origin, serves `0.47.0`, so nobody sees a wrong page — but UAT's
-**fallback** is a release behind, and a fallback matters precisely when things are already going
-wrong. Your UAT deploy closes it. Read the next section before you plan your order.
+**Re-measure before trusting any of this**, and read **both** endpoints on all three hosts:
+`/api/releases/current` reports the **Worker's** version whatever the Pi serves, which is what
+exposed `0.47.0`'s UAT gap.
 
-**Re-measure before trusting any of this.** `git fetch`, `gh pr list`, `--status` on all three,
-`/api/version` **and** `/api/releases/current` on all three hosts. The second endpoint is the one
-that exposed the UAT gap: it reports the **Worker's** version whatever the Pi is serving.
+## What the two releases were
 
-## DEPLOY UAT'S WORKER *BEFORE* YOU HAND PRODUCTION'S TO LUTAN. THE RUNBOOK'S ORDER COST ME A DEPLOY
+**`0.47.1` (2026-11-16, minor, no mail).** 27 PRs, nine migrations `0381`–`0389`: tax-deductible
+donations, lazy Shelter Friends maps, the sold-out merchandise badge.
 
-This is the one thing in this edition most likely to bite you, and it is cheap to avoid.
+**`0.47.2` (2026-11-18, minor, no mail).** 38 PRs, eighteen migrations `0390`–`0407` — **the
+multi-tenancy groundwork the whole board was waiting on.** It rewrote about 4,600 existing production
+rows to stamp `shelter_id`, and `0397` then made the column `NOT NULL`.
 
-`deploy.mjs` refuses a UAT deploy unless `src/lib/releases.ts` has an **empty `unreleased` list**:
-*uat ships only a written-down release*. That guard is right — UAT's database holds production's real
-people, so it must never serve unreleased work.
+## Five things that are different for you now
 
-**What happened.** The runbook puts UAT last, after Lutan's production Worker. His build took around
-twenty-five minutes. In that window three feature PRs merged (#1603, #1604, #1605), and #1605 put two
-notes into `unreleased`. By the time UAT's turn came, `main` was no longer a written-down release and
-the deploy exited 2. **There is no flag, and do not go looking for one** — emptying `unreleased` to
-get past it is exactly the workaround the rules forbid, so the right outcome was to record it and
-stop. It is backlog item `#uatwk` and defect 4 in the record.
+1. **Cloudflare deploys use an API token, not wrangler's OAuth login.** `.env.deploy.production` and
+   `.env.deploy.uat` each hold `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit, Account Settings: Read,
+   Workers Routes: Edit on both zones; no expiry). Every deploy prints a `deploy: wrangler auth:` line
+   naming the layer it came from. **Test deliberately has no token and prints `wrangler's own OAuth
+   login` — correct, not a fault.** Built after an OAuth token expired mid-upload and gave Lutan a
+   `401 Authentication error [code: 10000]`, costing him a second run.
+   `docs/decisions/2026-11-16-deploy-cloudflare-api-token.md`.
+2. **The Worker deploy order is test → UAT → production**, reversed on `0.47.1` so Lutan's goes last
+   and nothing of ours starts a build under it. **`#uatwk` is closed** — `0.47.0`'s headline warning.
+3. **`scripts/check-release-order.mjs` exists and you must run it before any apply.** Some migrations
+   must reach a database only *after* the code that makes them safe — the opposite of the usual
+   direction, which no `-- consumer:` header can express. Today the registry holds `0392`, whose
+   per-shelter policies blank the public site if no `x-shelter-id` arrives. It refuses unless
+   `--worker-deployed <sha>` names a commit where `worker/shelter.mjs` and `worker/index.mjs` match
+   `origin/main`.
+4. **`scripts/check-scheduled-writers.mjs --env production` is now part of a release.** It reads the
+   live `cron.job` list and every writing function. On `0.47.2` it found the nightly tax-ID purge
+   would have started erroring silently at 03:41 under `0397` — and that **`0397` itself fixes it**.
+5. **`npm run audit:register` is the audit that counts**, not `audit:prod` (which exits 1 on
+   registered advisories). One high is registered and unreachable: `GHSA-5j98-mcp5-4vw2` (`glob`). The
+   two **moderate** Next.js cache advisories are judged unreachable and now **held so by a CI check**,
+   `check-next-cache-apis.mjs`.
 
-**The fix costs nothing: run test, then UAT, then hand Lutan production's.** The runbook's reason for
-putting UAT last is *"his is the one that must not be killed"* — and that reason is **better served**
-by his going last, because then nothing of yours runs after it at all. Deploying UAT while the tree is
-still the released tree removes the race entirely.
+## The Next.js advisory halt will interrupt you, in three places
 
-**Whatever order you choose, `main` moves during a release and you must measure the SHA per build.**
-Mine did: the Pi builds and test's Worker came from `ca23f2c27`, and the production Worker from
-`737549902` after those three PRs merged. Read each build log's own `built from` line.
+Next 16.4.2 stops a **completed** build with a `SecurityFatalError` notice. The build is not broken
+and the project is deliberately staying on 16.4.2
+(`docs/decisions/2026-11-17-next-agent-upgrade-halt.md`).
 
-## `lanna-pi.local` ONLY WORKS FROM THE HOME NETWORK, AND THE MESH IS NOW AN ALIAS
+- **`gates.mjs`** — handled: it recognises the halt and re-runs the build once.
+- **`next dev`** — prints `Ready`, then halts. Retry; it came up in ~1s.
+- **A deploy in Lutan's terminal** — an **interactive** "Upgrade now / Skip" menu. **Tell him Skip,
+  never Upgrade now**: upgrading mid-deploy would ship an ungated dependency bump to production. If
+  the command then exits, re-run it; the second attempt is the one that counts.
 
-**`ssh lutan@lanna-pi.local` timed out, and it reads exactly like a dead Pi.** The Pi was completely
-fine. The laptop was on a different network, and the ssh config aims at the FR205's forward, which
-admits only this PC's two home addresses.
+**It ends at `Running TypeScript ...` with no further output, which looks exactly like a hang.** On
+`0.47.2` this cost two round trips with Lutan.
 
-**Do this first, before you conclude anything about the Pi:**
+## Four traps this release paid for, none of which any check catches
 
-```bash
-for h in lannacareforanimals.org test.lannacare.org uat.lannacare.org; do curl -sI "https://$h/login" | grep -i x-lanna-served-by; done
-```
+- **Git Bash lies about line endings.** `grep -c $'\r'` answered **0** and `od -c` showed only `\n` for
+  a file Node read as CRLF — the MSYS tools strip CR in text mode. Editing `src/lib/releases.ts` on
+  that assumption nearly shipped a broken release file. **Detect the ending inside the script**, then
+  check the diff is the size you expect.
+- **`pgrep -f "deploy-pi.sh"` matches its own ssh command string**, so a waiter built on it never
+  reports the build finished. Use `pgrep -af "deploy-pi[.]sh"`.
+- **The terminal panel can show a stale view.** It showed a frozen `Running TypeScript` line while the
+  deploy was in fact bundling, and that produced a wrong "it has exited" report. **The process table
+  is the instrument**: `Get-CimInstance Win32_Process`, and ask whether anything holds the checkout.
+- **A launcher `ssh` returning is not the Pi build ending.** Confirm with the self-excluding `pgrep`
+  before starting the next one. The Pi has 4 GiB and the OOM killer takes one of two concurrent builds.
 
-Three `pi` answers mean the Pi is healthy and the **path** is broken, not the box.
+Still true: **`python` is the Store stub** (use `node -e`), **bash heredocs with nested quotes fail**
+(use the Write tool), **Lutan's log is UTF-16** (`tr -d '\000'` before `grep`).
 
-**The route is `ssh lanna-pi-mesh`**, a NordVPN Meshnet alias added to `~/.ssh/config` on 2026-11-15
-with Lutan's go. It works from home too, so there is no need to decide which network you are on. It
-is **port 22, not 2222** — the mesh reaches the Pi's own sshd with no forward in front of it. All
-three of this release's Pi builds ran over it with no other difference. `ssh -G lanna-pi-mesh` is the
-one-line check that the alias is still there. `docs/release-procedure.md` now names all of this in
-the Pi section. **Do not put the mesh to Lutan as a question** — it is already his decision.
+## `lanna-pi.local` failed again; the mesh worked
 
-## THE DEFERRED-NOTE STEP COST ONE ADDED NOTE, SO THE `--verify` BASE HAD TO BE HAND-BUILT
+The home-network name timed out for the whole of `0.47.2` and **all three Pi builds ran over
+`lanna-pi-mesh`**. Read the served headers before concluding anything about the Pi: three `pi`
+answers mean the box is healthy and your path is broken. Already in the runbook — follow it rather
+than rediscovering it. **Do not put the mesh to Lutan as a question.**
 
-`0.46.0` added none and ran `--verify` against plain `origin/main`. **This release added exactly
-one** — the 90-day report-photo retention note, whose manual step this release closed — so
-`origin/main:src/lib/releases.ts` was no longer the pre-cut state and the count assertion failed by
-exactly one.
+**The power alarm is quieter, re-read rather than repeated.** The Pi has been **up 5 days 17 hours,
+booted 2026-11-12 15:04** — no reboot since. And `journalctl --list-boots` now lists three boots, so
+the journal **is** persistent, contrary to the note carried since `0.44.2`.
 
-**Try plain `origin/main` first**, as `0.46.0` advised; build a base only when the count assertion
-fails, and then by exactly the notes your cut added. Mine then passed all 17 assertions first time
-with `nothing invented (note count equal) [7 vs 7]`, and that equality **is** the evidence that six
-notes were carried character-identical and one was added on purpose.
+## Two things NOT to re-derive
 
-Ten candidates were in range; reading each one's own test plan settled that **one** had its step
-closed by this release. Budget a lookup per candidate — it is the step that makes the release-note
-truth rule real rather than decorative.
+**An empty `unreleased` does not mean "no release".** `cut-release.mjs` **refuses** to cut with an
+empty list and has no override. On `0.47.2` all 38 PRs answered the release-notes line `n/a` and the
+list was empty — a real state, not an error. **Both options went to Lutan** (publish one plain note,
+or deploy under the old version) and **he chose the note**. Do not invent a note to get past the
+refusal without asking, and do not assume the answer repeats.
 
-## WHAT COST TIME, AND MOST OF IT WAS NOT MINE
+**When a cut ADDS a note, `--verify` needs a hand-built base** (`origin/main`'s file plus exactly the
+notes you added), or the count assertion fails on a count that is correct. The runbook has the
+recipe; try plain `origin/main` first. Third release running.
 
-- **The unreachable Pi** — one touch of Lutan's, and the only one of the three that was avoidable by
-  somebody. Both halves are now fixed at source: the runbook section and the ssh alias.
-- **`python` is the Microsoft Store stub on this machine.** Any heredoc through it dies with an
-  install prompt. Use `node -e`. **Bash heredocs with nested quotes also failed twice** — writing the
-  file with the Write tool is the reliable route, and I lost time to this three times in one release.
-- **PowerShell's `tee` buffers, and the log looks frozen.** Lutan reasonably read a 17 KB log that
-  had not changed for minutes as a finished deploy; it had another twenty minutes to run. Check
-  `.open-next`'s newest file timestamp, the node processes' memory, and `/api/releases/current`
-  instead. And his log is **UTF-16**, so `grep` matches nothing on it without `tr -d '\000'`.
-- **A Pi build that looks like it finished in 20 seconds has not.** Read the log: mine said
-  `Compiled successfully in 87s` plus two 25-second PDF renders, with a warm 802 MB Turbopack cache.
-  Suspect the reading, not the box — but then go and settle it.
+## What is still open
 
-## THINGS THAT ARE NOW ROUTINE — STOP TREATING THEM AS OPEN
+- **`#shtci` is unblocked and is the clearest next job.** `claude/shared-tables-production` holds
+  **one commit, on no PR**, held because production was eleven migrations behind. It no longer is. The
+  standing instruction is *"merge it in or straight after the release that applies `0390`–`0400`, then
+  `gh workflow run tenancy-shared-tables.yml`"*. **Lutan chose on 2026-11-18 to leave this to the
+  planner, not the release manager.** Its backlog entry may still read as blocked — if so, that is a
+  false block of the kind `CLAUDE.md` warns about.
+- **Thirteen person-checks**, listed by name in `0.47.2`'s record under *What is not tested*. **Five
+  are the same thing**: a browser click-through of the new per-shelter policies, needing a login
+  Claude does not have. The database half was proved thoroughly — strict tenancy lint clean at 125 of
+  125 tables on production and UAT, `role-cells` byte-identical, and the public site proved un-blanked
+  against two controls.
+- **The Thai sign-off, fifth release running.** `0.47.2` converted both dictionaries so text takes a
+  shelter's own name; a test asserts Lanna's output is byte-for-byte unchanged, but
+  `dictionary-shelter-prose` has no bilingual signature. **Still the project's largest standing gap**
+  (`#y1dqu`). Likewise **a signed-in look at production**, which Claude cannot do: the public site is
+  `locked` and it has no account there.
+- Carried forward unclosed: the **Cloudflare rate-limit rule** (`#8t3rk`), the **foundation document
+  store**'s two steps, the **PromptPay id and QR**, and **`SUPABASE_CANARY_TOKEN`** (a nightly check
+  needs it; no deploy does).
 
-- **The release mail is read from the message, not left for a person.** Third release running. One
-  Gmail query gives the subject (`[Production] …`), the sender name (`Lanna Care Production`, which is
-  the check that would catch a UAT Worker mailing real admins) and the recipient list, and the deploy
-  log says `sent 1, skipped 1` independently. **Never put it on a manual list.**
-- **`lannacareforanimals@gmail.com` skipped with `E_RECIPIENT_NOT_ALLOWED` is expected**, not a
-  delivery failure. The shelter's own address is refused by the relay; it is a known open question.
-- **A Claude session runs the UAT apply and nothing prompts**, and `assert-schema --env uat` answers
-  from the Management API.
-- **The Pi's six sudo rules are all present**; the UAT clone restarts itself, no password.
-- **One sentence from Lutan settles major, mail and the testing gaps.** Seven releases running.
+## Now routine — stop treating these as open
 
-## THE PI: THE POWER ALARM IS STILL QUIET, SO RE-READ IT RATHER THAN CARRYING IT
+- **`table-policy-commands` is closed**, not overtaken — `0.47.1` settled it on production.
+- **On a no-mail release the deploy's own `no major release new to <env>, so no email` line is the
+  measurement.** Do **not** pass `--no-mail` to production to be safe: it *suppresses* that line. UAT
+  takes it by its own rule. On a release that does mail, read the message itself.
+- **The UAT apply, the Pi's six sudo rules and reading the backup from Drive** are all settled and in
+  the runbook. **One sentence from Lutan settles major, mail and the gaps.** Nine releases running.
 
-`0.45.0` recorded three reboots since 11 November, one with no shutdown sequence. **Still no further
-reboot** — one unbroken boot, now about three days. **Still NOT ESTABLISHED** what caused the three,
-and still hardware and Lutan's. **Re-read it next release instead of repeating the alarm.**
+## The two touches that are his by rule, and stay his
 
-## WHAT IS STILL OPEN, AND NONE OF IT IS YOURS TO CLOSE ALONE
-
-- **UAT's Worker deploy** — above, and item `#uatwk`.
-- **The Thai sign-off.** A reader has been through the strings; the signature has not been given.
-  **This remains the largest standing gap in the project**, and `#y1dqu` is the weekly routine for it.
-- **`table-policy-commands` is overtaken, not solved.** It could not be reconciled with either of the
-  last two records (80 lines / 77 `no policy` today against 76 and 78, same applied set, same code).
-  **After `0375` the answer is zero on every table**, so close it as overtaken and do not re-derive it.
-- **A signed-in look at the new screens on production.** While the public site is `locked` a
-  signed-out check only sees the redirect, and Claude has no production account.
-- **The phone checks** on the merchandise and report screens, and three **click-throughs** the record
-  lists by name.
-- **The Cloudflare rate-limit rule** for the report form (`#8t3rk`), the two open steps on the
-  **foundation document store** (no card assigned, and Lutan's go on the information protection), the
-  shelter's **PromptPay id and QR image**, and where the **nightly backup** runs from — check Drive,
-  **never `backup.log`**, which is 0 bytes and dated 4 October.
-
-## THE TWO TOUCHES THAT ARE HIS BY RULE, AND STAY HIS
-
-**Major versus minor**, because it mails every admin and cannot be undone, and the **production Worker
-deploy**. This release took **three** touches against a target of two; the third was the unreachable
-Pi, and it is the one the runbook fix is meant to prevent happening again.
+**Major versus minor**, and the **production Worker deploy**. `0.47.2` cost him **four** touches
+against a target of two: the deploy, a re-run after the advisory halt, and two reports of an apparent
+stall — one of which was my misreading of a stale terminal panel, not his machine.
