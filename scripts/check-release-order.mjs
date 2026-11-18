@@ -9,7 +9,7 @@
 import { readdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { exitWith } from "./lib/exit.mjs";
-import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
+import { SITE_ORIGINS, loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 import { appliedMigrations } from "./lib/deploy-schema.mjs";
 import { releaseOrderProblems, MUST_FOLLOW_WORKER } from "./lib/release-order.mjs";
 
@@ -30,7 +30,15 @@ if (!applied.ok) {
 }
 const have = new Set(applied.applied);
 const pending = readdirSync("supabase/migrations").filter((n) => n.endsWith(".sql") && !have.has(n));
-const problems = releaseOrderProblems({ pending, workerSha, read });
+let liveVersion;
+try {
+  const res = await fetch(`${SITE_ORIGINS[envName]}/api/releases/current`, { signal: AbortSignal.timeout(15000) });
+  const body = res.ok ? await res.json() : null;
+  liveVersion = body?.version ? { ok: true, version: body.version } : { ok: false, reason: `HTTP ${res.status}` };
+} catch (e) {
+  liveVersion = { ok: false, reason: e?.message ?? String(e) };
+}
+const problems = releaseOrderProblems({ pending, workerSha, read, liveVersion });
 if (problems.length) {
   for (const p of problems) console.error(`REFUSED: ${p}`);
   await exitWith(1);
