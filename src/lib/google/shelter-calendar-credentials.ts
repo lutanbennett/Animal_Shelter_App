@@ -5,7 +5,7 @@ export { decideCalendar, envCalendarConfigured, type CalendarCreds, type Calenda
 /**
  * The calendar a given shelter's clinic visits are written to (#calsh, table 0409). Rule, per
  * docs/decisions/2026-11-18-per-shelter-calendar-credentials.md: a shelter with a complete row uses it; the shelter keyed
- * "lanna" with no row keeps the environment variables; any other shelter with no row is REFUSED, never routed to Lanna's.
+ * the fallback shelter with no row keeps the environment variables; any other shelter with no row is REFUSED, never routed to the fallback shelter's.
  * Not a permission: it picks which calendar the server writes to.
  */
 export async function resolveShelterCalendar(shelterId: string): Promise<CalendarResolution> {

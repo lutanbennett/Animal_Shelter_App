@@ -4,7 +4,7 @@ import { FALLBACK_SHELTER_KEY } from "./shelter-drive-decide";
 /**
  * The pure half of the per-shelter calendar rules (#calsh, app half; table: 0409). No I/O and no Next imports so a test
  * can load it. THE ONLY PLACE the four calendar environment variables are read, and only for the shelter keyed
- * FALLBACK_SHELTER_KEY with no row of its own: Lanna is unchanged, every other shelter with no row is refused.
+ * FALLBACK_SHELTER_KEY with no row of its own: the fallback shelter is unchanged, every other shelter with no row is refused.
  */
 export type CalendarCreds = {
   /** Token-cache key: one cached access token per Google account. */
@@ -31,7 +31,7 @@ export type CalendarResolution =
   | { state: "not_configured" }
   | { state: "dead"; error: string };
 
-/** Lanna's own calendar, from the environment; null unless all four values are present. */
+/** the fallback shelter's own calendar, from the environment; null unless all four values are present. */
 export function envCalendarCreds(): CalendarCreds | null {
   if (!process.env.GOOGLE_CALENDAR_REFRESH_TOKEN || !process.env.GOOGLE_CALENDAR_ID || !process.env.GOOGLE_OAUTH_CLIENT_ID || !process.env.GOOGLE_OAUTH_CLIENT_SECRET) return null;
   return {
@@ -44,7 +44,7 @@ export function envCalendarCreds(): CalendarCreds | null {
   };
 }
 
-/** Whether the environment's (Lanna's) calendar is set up. */
+/** Whether the environment's (the fallback shelter's) calendar is set up. */
 export function envCalendarConfigured(): boolean {
   return envCalendarCreds() !== null;
 }

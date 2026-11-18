@@ -29,7 +29,7 @@ const CALENDAR_API = "https://www.googleapis.com/calendar/v3/calendars";
 /** How many visits one sweep handles; the rest wait for the next. */
 const SWEEP_BATCH = 40;
 
-/** Whether the ENVIRONMENT calendar (Lanna's own) is set up. Per-shelter calendars are resolved by resolveShelterCalendar. */
+/** Whether the ENVIRONMENT calendar (the fallback shelter's own) is set up. Per-shelter calendars are resolved by resolveShelterCalendar. */
 export function calendarConfigured(): boolean {
   return envCalendarConfigured();
 }
@@ -67,7 +67,7 @@ async function accessToken(creds: CalendarCreds): Promise<string> {
   return data.access_token;
 }
 
-/** Callers that name no credentials (the poll, the import, the status tile) act on the environment calendar: Lanna's. */
+/** Callers that name no credentials (the poll, the import, the status tile) act on the environment calendar: the fallback shelter's. */
 export async function calendarFetch(path: string, init: RequestInit = {}, creds: CalendarCreds | null = envCalendarCreds()): Promise<Response> {
   if (!creds) throw new Error("The calendar is not configured.");
   const id = encodeURIComponent(creds.calendarId);
@@ -122,7 +122,7 @@ async function stamp(res: Response): Promise<Record<string, string | null>> {
 
 async function syncRow(row: Row, origin: string | null, creds: CalendarCreds): Promise<SyncOutcome> {
   const db = createAdminClient();
-  // Always this shelter's own calendar: never the default, which is Lanna's.
+  // Always this shelter's own calendar: never the default, which is the fallback shelter's.
   const cal = (path: string, init: RequestInit = {}) => calendarFetch(path, init, creds);
   // Stamped with the moment we started, so a change made while Google was answering stays "out of date".
   const startedAt = new Date().toISOString();
@@ -245,7 +245,7 @@ export type SweepResult = { configured: boolean; synced: number; failed: number;
  * Sync everything out of date: visits changed since their event last matched, plus upcoming booked
  * visits never sent (the one-off back-fill when the calendar is switched on; past visits are left
  * alone). Called straight after a booking or edit, and by the Worker's cron as the safety net.
- * EACH VISIT GOES TO ITS OWN SHELTER'S CALENDAR; a shelter with none (and not Lanna) is refused with
+ * EACH VISIT GOES TO ITS OWN SHELTER'S CALENDAR; a shelter with none (and not the fallback shelter) is refused with
  * CALENDAR_OFF_NOTE and nothing is written anywhere (#calsh).
  */
 export async function syncPendingVisits(origin: string | null, limit = SWEEP_BATCH): Promise<SweepResult> {
