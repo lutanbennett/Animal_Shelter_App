@@ -343,8 +343,13 @@ export async function checkOrigin(): Promise<CheckOutcome<OriginFacts>> {
   return { state: "ok", facts: { host, status: res.status } };
 }
 
-/** Every pg_cron job this system relies on. Add the next one here and it is watched by construction. */
-export const EXPECTED_CRON_JOBS = ["purge-assistant-actions", "purge-donation-tax-ids"] as const;
+/**
+ * Every pg_cron job this system relies on. Add the next one here and it is watched by construction.
+ * A name listed here must exist on EVERY database this page reads (dev, UAT, production): a job the database
+ * does not have shows the Scheduled jobs tile red, so list a job only once its migration is live everywhere.
+ * purge-write-requests (0292) was left off while its failure was silent; 0292 is applied on dev and production.
+ */
+export const EXPECTED_CRON_JOBS = ["purge-assistant-actions", "purge-donation-tax-ids", "purge-write-requests"] as const;
 
 /**
  * Scheduled writers that run in the Worker rather than pg_cron, watched through scheduled_writer_runs (0408). pg_cron
