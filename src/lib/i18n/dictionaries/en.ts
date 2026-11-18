@@ -1777,6 +1777,11 @@ const en = {
           notConnected: "Not connected — every upload fails until a new token is set.",
           failed: "Google Drive did not answer the check.",
         },
+        calendarConnection: {
+          ok: "Vet-visit calendar connected.",
+          failed: "Vet-visit calendar is not working: visits are not reaching the calendar until it is reconnected.",
+          calendarLabel: "Calendar",
+        },
         driveSpace: {
           title: "Drive space (photos and videos)",
           ok: (v: { used: string; limit: string; percent: number }) => `${v.used} of ${v.limit} used (${v.percent}%).`,

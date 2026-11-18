@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { Activity, CalendarClock, Grid3x3, History } from "lucide-react";
 import { DriveStatus } from "./DriveStatus";
+import { CalendarStatus } from "./CalendarStatus";
 import { can } from "@/lib/permissions/can";
 import { canOpen, routeFor } from "@/lib/permissions/routes";
 import { WHO_DOES_WHAT_PATH, opensWhoDoesWhat } from "@/lib/permissions/who-does-what";
@@ -156,6 +157,12 @@ export default async function AdminPage() {
       {perms?.isAdmin && (
         <Suspense fallback={<p className="text-sm text-muted">{t.admin.landing.drive.checking}</p>}>
           <DriveStatus />
+        </Suspense>
+      )}
+
+      {perms?.isAdmin && (
+        <Suspense fallback={null}>
+          <CalendarStatus />
         </Suspense>
       )}
 

@@ -1661,6 +1661,11 @@ const th: Dictionary = {
           notConnected: "ยังไม่ได้เชื่อมต่อ — การอัปโหลดทั้งหมดจะไม่สำเร็จจนกว่าจะตั้งค่าโทเค็นใหม่",
           failed: "Google Drive ไม่ตอบการตรวจสอบ",
         },
+        calendarConnection: {
+          ok: "เชื่อมต่อปฏิทินนัดสัตวแพทย์แล้ว",
+          failed: "ปฏิทินนัดสัตวแพทย์ใช้งานไม่ได้: นัดจะไม่ขึ้นในปฏิทินจนกว่าจะเชื่อมต่อใหม่",
+          calendarLabel: "ปฏิทิน",
+        },
         driveSpace: {
           title: "พื้นที่ Drive (รูปและวิดีโอ)",
           ok: (v: { used: string; limit: string; percent: number }) => `ใช้ไป ${v.used} จาก ${v.limit} (${v.percent}%)`,
