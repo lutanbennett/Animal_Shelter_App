@@ -8,6 +8,18 @@
   ],
   "lannaLiteralFiles": [
     {
+      "file": "src/lib/google/shelter-drive-decide.ts",
+      "reason": "FALLBACK_SHELTER_KEY moved here from shelter-drive-credentials.ts so tests can load it: the shelters.key of the one shelter allowed to fall back to the environment variables, plus comments. A database key, not output."
+    },
+    {
+      "file": "src/lib/google/shelter-drive-credentials.ts",
+      "reason": "FALLBACK_SHELTER_KEY: the shelters.key of the one shelter allowed to fall back to the environment variables, plus comments. A database key, not output."
+    },
+    {
+      "file": "src/lib/shelter-settings.ts",
+      "reason": "Comments naming Lanna as the fallback shelter whose behaviour must not change; no output varies."
+    },
+    {
       "file": "src/app/admin/security/role-options.ts",
       "reason": "Comment about the order roles are listed in."
     },
@@ -52,8 +64,8 @@
       "reason": "The authenticator issuer is stored inside every enrolled person's app; changing it does not migrate those entries, so it stays as is (decision 2026-11-17-per-shelter-naming)."
     },
     {
-      "file": "src/lib/clinics/calendar-poll.ts",
-      "reason": "Admin-facing sentence in a calendar notice; follow-up for the clinics/calendar part."
+      "file": "src/lib/clinics/calendar-notice.test.mjs",
+      "reason": "Test asserting Lanna's default short name reproduces the old calendar notice text."
     },
     {
       "file": "src/lib/donations/issuer.ts",
@@ -64,12 +76,16 @@
       "reason": "Comment, example or placeholder text, or a host/header name, not output that varies by shelter."
     },
     {
+      "file": "src/lib/i18n/shelter-prose.test.mjs",
+      "reason": "Test: asserts the exact previous text for the live shelter (the byte-for-byte proof), so it must name her."
+    },
+    {
       "file": "src/lib/i18n/dictionaries/en.ts",
-      "reason": "Public-site and app copy in the dictionaries names the shelter in prose; per-shelter copy is the website/i18n parts' work, not the naming group's (decision 2026-11-17-per-shelter-naming)."
+      "reason": "Left on purpose after the prose moved to {shelter}/{shelterShort} (i18n/shelter-prose.ts): the security-step sentence names the authenticator issuer \"Lanna Animal Care\", which is left on purpose (decision 2026-11-17-per-shelter-naming; changing the text without the issuer would mislead), and the LINE hint uses @lannacare as an example id."
     },
     {
       "file": "src/lib/i18n/dictionaries/th.ts",
-      "reason": "Public-site and app copy in the dictionaries names the shelter in prose; per-shelter copy is the website/i18n parts' work, not the naming group's (decision 2026-11-17-per-shelter-naming)."
+      "reason": "Left on purpose after the prose moved to {shelter}/{shelterShort} (i18n/shelter-prose.ts): the security-step sentence names the authenticator issuer \"Lanna Animal Care\" (left on purpose), the LINE hint uses @lannacare as an example id; the Thai-script name ลานนาแคร์ in two shop sentences has no setting to fill from and is flagged, not guessed."
     },
     {
       "file": "src/lib/links/donation.test.mjs",
@@ -133,7 +149,7 @@
     },
     {
       "file": "worker/release-mail.mjs",
-      "reason": "The Worker relay has no shelter and no database; its sender name needs a deploy-supplied value (follow-up)."
+      "reason": "The Worker relay has no shelter and no database; the sender name is the RELEASE_MAIL_SENDER_NAME deploy variable, and this literal is only its fallback so Lanna's mail is unchanged."
     },
     {
       "file": "worker/release-mail.test.mjs",

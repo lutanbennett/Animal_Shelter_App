@@ -96,7 +96,7 @@ async function relay(request, env) {
   for (const address of recipients) {
     try {
       await env.RELEASE_MAIL.send({
-        from: { email: env.RELEASE_MAIL_FROM, name: `Lanna Care ${label}` },
+        from: { email: env.RELEASE_MAIL_FROM, name: `${env.RELEASE_MAIL_SENDER_NAME || "Lanna Care"} ${label}` },
         to: address,
         subject: `[${label}] ${subject}`,
         text,

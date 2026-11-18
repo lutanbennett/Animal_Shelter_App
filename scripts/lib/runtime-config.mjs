@@ -36,6 +36,7 @@ export const RUNTIME_CONFIG = [
   { name: "GOOGLE_OAUTH_CLIENT_ID", where: "both", secret: true, scrub: false, required: true, purpose: "Google OAuth client for Drive." },
   { name: "GOOGLE_OAUTH_CLIENT_SECRET", where: "both", secret: true, scrub: true, required: true, purpose: "Google OAuth client secret for Drive." },
   { name: "GOOGLE_OAUTH_REFRESH_TOKEN", where: "both", secret: true, scrub: true, required: true, purpose: "Long-lived Drive token for the shelter's Google account." },
+  { name: "DRIVE_CREDENTIALS_KEY", where: "both", secret: true, scrub: true, required: false, purpose: "Base64 of 32 random bytes: decrypts each shelter's own stored Google credentials (shelter_drive_credentials, src/lib/google/drive-credentials-crypto.ts). Needed before any shelter but Lanna is connected; unset, Lanna still uses the GOOGLE_OAUTH_* variables." },
   { name: "GOOGLE_DRIVE_ROOT_FOLDER_ID", where: "both", secret: true, scrub: false, required: true, purpose: "Drive folder the app writes into." },
   { name: "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY", where: "both", secret: false, scrub: false, required: true, own: "scripts/lib/actions-key.mjs", purpose: "One Server Actions key per environment, built into both servers so a form one renders the other accepts." },
   { name: "GOOGLE_CALENDAR_REFRESH_TOKEN", where: "both", secret: true, scrub: true, required: false, purpose: "Its own long-lived token for the shelter calendar (calendar.events scope), apart from the Drive one so a calendar fault never stops photo uploads. Unset: visits are not sent to a calendar." },

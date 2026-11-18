@@ -425,6 +425,21 @@
       "id": "src/lib/shelter-settings.ts#shelterNames",
       "classification": "filtered",
       "reason": "Reads display_name and short_name of the acting shelter row, .eq(id, actingShelterId()); shelters is a tenant table no login can read, so the service role is the only reader."
+    },
+    {
+      "id": "src/lib/google/shelter-drive-credentials.ts#resolveDriveCredentials",
+      "classification": "filtered",
+      "reason": "Reads the acting shelter's own shelter_drive_credentials row, .eq(shelter_id, actingShelterId()), and its shelters.key by id; no login holds a grant on either table."
+    },
+    {
+      "id": "src/lib/google/shelter-drive-tokens.ts#adminEmailsOf",
+      "classification": "filtered",
+      "reason": "Lists one shelter's admins, .eq(shelter_id, that shelter) and roles.is_admin; used only to mail that shelter about its own Google connection."
+    },
+    {
+      "id": "src/lib/google/shelter-drive-tokens.ts#checkShelterDriveTokens",
+      "classification": "cross-shelter",
+      "reason": "By design the 15-minute alert run checks EVERY shelter's own Google token; it reads and updates only status columns of each row by its own shelter_id, mails only that shelter's admins, and returns no secret."
     }
   ]
 }
