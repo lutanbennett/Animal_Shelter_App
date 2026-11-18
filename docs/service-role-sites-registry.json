@@ -1,5 +1,25 @@
 {
-  "rule": "Every createAdminClient() call in src/ is trusted with every shelter, so each is either needs-shelter-filter (tenant data a Lanna admin or another shelter must not reach) or cross-shelter with its reason. unclassified names a site that cannot be decided from the code; the check tolerates and lists it. scripts/check-service-role-sites.mjs fails on any call not recorded here. Part 7 of #ykefa, item #ps6ms; docs/decisions/2026-11-17-service-role-sites-audit.md.",
+  "rule": "Every createAdminClient() call in src/ is trusted with every shelter, so each is either needs-shelter-filter (tenant data a Lanna admin or another shelter must not reach) or cross-shelter with its reason. unclassified names a site that cannot be decided from the code; the check tolerates and lists it. scripts/check-service-role-sites.mjs fails on any call not recorded here. Part 7 of #ykefa, item #ps6ms; docs/decisions/2026-11-17-service-role-sites-audit.md. SCOPE (#srreg, 2026-11-18): the `scope` block below states which of the four ways this system writes with elevated rights are recorded here and which are not; the check fails if it is missing.",
+  "scope": {
+    "src": {
+      "status": "recorded",
+      "why": "Every createAdminClient() call in src/ is a record in `sites`, with a classification and a reason."
+    },
+    "worker": {
+      "status": "recorded",
+      "why": "Every function in worker/ that reads env.SUPABASE_SERVICE_ROLE_KEY is a record in `workerSites` (the Worker reaches the database over REST, not through createAdminClient). Nine functions in five files on 2026-11-18. hard-coded-security-registry.json's serviceRoleSites names the same five files at file level; this is the per-function record."
+    },
+    "scripts": {
+      "status": "out-of-scope",
+      "count": 46,
+      "why": "46 files under scripts/ read SUPABASE_SERVICE_ROLE_KEY on 2026-11-18 (check-*, prove-*, dev-signin, deploy, worktree, bootstrap-admin). They run from a person's machine or CI against the DEV project with keys from .env.local, never in a request, never in production's request path. Not recorded one by one: the cost is 46 records that would rot, for no access the shelter's users can reach. Scripts that write through the service role must send the shelter header (scriptShelterHeaders; scripts/check-null-shelter-id.mjs proves no null-shelter row). Brought in later only if a script is ever scheduled against production."
+    },
+    "database": {
+      "status": "out-of-scope",
+      "count": 91,
+      "why": "91 security-definer or trigger functions write tables and 3 pg_cron jobs run on 2026-11-18 (dev, read by scripts/check-scheduled-writers.mjs --env test, which judges bodies by pattern and prints 12 that send no shelter). A registry here cannot see them; that script is the instrument for this class and `--strict` is its gate. Recording them here would duplicate a live read that already enumerates them, and would go stale at every migration."
+    }
+  },
   "sites": [
     {
       "id": "src/app/account/password/actions.ts#changeOwnPassword",
@@ -440,6 +460,53 @@
       "id": "src/lib/google/shelter-drive-tokens.ts#checkShelterDriveTokens",
       "classification": "cross-shelter",
       "reason": "By design the 15-minute alert run checks EVERY shelter's own Google token; it reads and updates only status columns of each row by its own shelter_id, mails only that shelter's admins, and returns no secret."
+    }
+  ],
+  "workerSites": [
+    {
+      "id": "worker/heartbeat.mjs#rest",
+      "classification": "cross-shelter",
+      "reason": "Builds the REST target and service-role headers for ONE table, status_alert_runs: the platform's own cron-fired marker (HEARTBEAT_NOTE rows), not any shelter's data. recordHeartbeat and finishHeartbeat insert and patch only that table."
+    },
+    {
+      "id": "worker/index.mjs#runCalendarSweep",
+      "classification": "cross-shelter",
+      "reason": "Passes the service-role key as a bearer token to the app's own /api/calendar/sweep route, which verifies it and does the work through createAdminClient (recorded under sites as src/app/api/calendar/sweep/route.ts). The Worker itself writes nothing."
+    },
+    {
+      "id": "worker/index.mjs#runMerchSupplierEmails",
+      "classification": "cross-shelter",
+      "reason": "Bearer-token call to the app's own /api/merch/supplier-emails route (recorded under sites); the daily supplier email. The Worker itself writes nothing."
+    },
+    {
+      "id": "worker/index.mjs#runReportPhotoRetention",
+      "classification": "cross-shelter",
+      "reason": "Bearer-token call to the app's own /api/animal-reports/photo-retention route (recorded under sites); the daily clean-up. The Worker itself writes nothing."
+    },
+    {
+      "id": "worker/index.mjs#runStatusAlerts",
+      "classification": "cross-shelter",
+      "reason": "Bearer-token call to the app's own /api/status/alerts route (recorded under sites); the 15-minute alert run. The Worker itself writes nothing."
+    },
+    {
+      "id": "worker/release-mail.mjs#authorised",
+      "classification": "cross-shelter",
+      "reason": "Reads the key only to compare it, in constant time, with the bearer token a release-mail request carries; it queries nothing and writes nothing."
+    },
+    {
+      "id": "worker/shelter.mjs#resolveShelter",
+      "classification": "cross-shelter",
+      "reason": "Calls resolve_shelter_host(p_host) (0382, executable by service_role only) to learn which shelter a request host belongs to, and sends the answer as x-shelter-id. Writes nothing; a failed lookup sends no header, so the database returns no rows."
+    },
+    {
+      "id": "worker/translations.mjs#rest",
+      "classification": "cross-shelter",
+      "reason": "Builds the REST helper that patches the translations table (a shared dictionary of interface labels, not a shelter's records): patchPending changes one row only while it is still the pending row the Worker read."
+    },
+    {
+      "id": "worker/translations.mjs#runTranslations",
+      "classification": "cross-shelter",
+      "reason": "Checks the key is set, then runs the background translation of pending dictionary rows through the rest() helper above: reads and patches translations only."
     }
   ]
 }

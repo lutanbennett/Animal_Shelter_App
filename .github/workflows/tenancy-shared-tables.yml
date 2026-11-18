@@ -63,3 +63,41 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_PROD }}
           # Already committed in wrangler.jsonc's production env; not a secret.
           NEXT_PUBLIC_SUPABASE_URL: https://dbkodyyxxhtygxcxmfcu.supabase.co
+
+  # Backlog #ccwnx; docs/decisions/2026-11-18-card-catalogue-not-writable.md. Proves no login can write the shared card
+  # catalogue (card_grants, card_includes): no permissive insert/update/delete/all policy, row security on, no write privilege
+  # for anon/authenticated. 0407 removed that access; check-hard-coded-security.mjs would PASS a re-added `for all using
+  # (is_admin())` policy and the canary diffs reads, not writes, so this is the only guard on the regression.
+  # Its own jobs (not steps of the two above) so a red one says which check failed. It lives in this workflow so it is not a
+  # fifth mechanism; the cron line above is its cron line, so whoever edits it gets the failure email (see header).
+  # Dev AND production: 0407 reached production in 0.47.2 (2026-11-18), so a production run is truthful, not red for a known reason.
+  card-catalogue-writes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/check-card-catalogue-writes.mjs
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+
+  card-catalogue-writes-production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/check-card-catalogue-writes.mjs
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_PROD }}
+          # Already committed in wrangler.jsonc's production env; not a secret.
+          NEXT_PUBLIC_SUPABASE_URL: https://dbkodyyxxhtygxcxmfcu.supabase.co
