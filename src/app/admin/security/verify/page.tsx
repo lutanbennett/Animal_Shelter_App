@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { BackLink } from "@/components/BackLink";
 import { redirect } from "next/navigation";
-import { requireAdminUser } from "@/lib/auth/require-admin";
+import { createClient } from "@/lib/supabase/server";
+import { requireAdminUser, hasAdminRole } from "@/lib/auth/require-admin";
+import { isProductAdmin } from "@/lib/auth/product-admin";
 import { getAssuranceLevel } from "@/lib/auth/two-step";
 import { getT } from "@/lib/i18n/get-t";
 import { TwoStepForm } from "./TwoStepForm";
@@ -13,9 +15,15 @@ import { TwoStepForm } from "./TwoStepForm";
  * it asks for the current code and goes back to Security.
  */
 export default async function TwoStepPage() {
-  await requireAdminUser();
+  // Admin, or someone on the product-administrator list (#shmgt), who needs the same second step for Product admin.
+  const forAdmin = await hasAdminRole();
+  if (!forAdmin) {
+    const { data: { user } } = await (await createClient()).auth.getUser();
+    if (!user) redirect("/login");
+    if (!(await isProductAdmin())) await requireAdminUser();
+  }
   const level = await getAssuranceLevel();
-  if (level.current === "aal2") redirect("/admin/security");
+  if (level.current === "aal2") redirect(forAdmin ? "/admin/security" : "/admin/product-admin");
 
   const { t } = await getT();
   const s = t.admin.security.twoStep;
