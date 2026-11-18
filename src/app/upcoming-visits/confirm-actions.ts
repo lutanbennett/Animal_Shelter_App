@@ -9,7 +9,8 @@ import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { getSiteOrigin } from "@/lib/site-origin";
-import { calendarConfigured } from "@/lib/clinics/calendar-sync";
+import { shelterCalendar } from "@/lib/clinics/calendar-sync";
+import type { CalendarCreds } from "@/lib/google/shelter-calendar-decide";
 import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { createVisits, dismissEvent, fetchEvent, isCandidate, loadRefs } from "@/lib/clinics/calendar-import";
 
@@ -31,8 +32,12 @@ const write = (t: Dictionary): WriteMessages => ({
  * event's time from Google, not from the form, and re-checks that the event is still unclaimed, that the
  * clinic exists and that every resident is still live: what the form carries is only which to use.
  */
-async function allowed(): Promise<boolean> {
-  return calendarConfigured() && can(await loadPermissions(), "visit.book");
+async function allowed(): Promise<{ shelterId: string; creds: CalendarCreds } | null> {
+  if (!can(await loadPermissions(), "visit.book")) return null;
+  const shelterId = await actingShelterId();
+  if (!shelterId) return null;
+  const resolved = await shelterCalendar(shelterId); // this shelter's own calendar, or nothing: never the fallback shelter's
+  return resolved.state === "configured" ? { shelterId, creds: resolved.creds } : null;
 }
 
 export type ConfirmEntryState = ActionResult | undefined;
@@ -41,21 +46,21 @@ export async function confirmCalendarEntry(_state: ConfirmEntryState, formData: 
   const { t } = await getT();
   const supabase = await createClient();
   return runWriteAction("upcomingVisits.confirm", write(t), { id: writeRequestIdFrom(formData), action: "upcomingVisits.confirm", db: supabase }, async () => {
-    if (!(await allowed())) return { ok: false, error: t.common.notAllowed };
+    const cal = await allowed();
+    if (!cal) return { ok: false, error: t.common.notAllowed };
     const eventId = formData.get("eventId");
     const clinicId = formData.get("clinicId");
     const residentIds = [...formData.entries()].filter(([k]) => /^pick-[0-9]+$/.test(k)).map(([, v]) => v).filter((x): x is string => typeof x === "string" && x.length > 0);
     // A stale or tampered form changes nothing and says nothing, as before.
     if (typeof eventId !== "string" || !eventId || typeof clinicId !== "string" || !clinicId || residentIds.length === 0) return { ok: true };
-    const event = await fetchEvent(eventId);
+    const event = await fetchEvent(eventId, cal.creds);
     if (!event || !isCandidate(event)) return { ok: true };
-    const shelterId = await actingShelterId();
-    if (!shelterId) return { ok: true }; // no shelter, no refs: never fall back to every shelter
+    const shelterId = cal.shelterId;
     const refs = await loadRefs(shelterId);
     if (!refs.clinics.some((c) => c.id === clinicId)) return { ok: true };
     const live = new Set(refs.residents.filter((r) => r.status !== "Deceased" && r.status !== "Adopted").map((r) => r.id));
     if (!residentIds.every((id) => live.has(id))) return { ok: true };
-    const made = await createVisits(event, clinicId, residentIds, (await getSiteOrigin())?.origin ?? null);
+    const made = await createVisits(event, clinicId, residentIds, (await getSiteOrigin())?.origin ?? null, shelterId);
     if (made.error) return unexpectedFailure("upcomingVisits.confirm", made.error, t.common.somethingWentWrong);
     revalidatePath("/upcoming-visits");
     return { ok: true };
@@ -66,9 +71,10 @@ export async function dismissCalendarEntry(eventId: string, requestId: string): 
   const { t } = await getT();
   const supabase = await createClient();
   return runWriteAction("upcomingVisits.dismiss", write(t), { id: requestId, action: "upcomingVisits.dismiss", db: supabase }, async () => {
-    if (!(await allowed())) return { ok: false, error: t.common.notAllowed };
+    const cal = await allowed();
+    if (!cal) return { ok: false, error: t.common.notAllowed };
     if (typeof eventId !== "string" || !eventId) return { ok: true };
-    const failed = await dismissEvent(eventId);
+    const failed = await dismissEvent(eventId, cal.creds);
     if (failed) return unexpectedFailure("upcomingVisits.dismiss", failed, t.common.somethingWentWrong);
     revalidatePath("/upcoming-visits");
     return { ok: true };

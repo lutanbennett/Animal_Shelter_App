@@ -4,7 +4,7 @@ import { todayIso } from "@/lib/format";
 import { wantsEvent } from "./calendar-change";
 import { getAppEnv } from "@/lib/app-env";
 import { buildCalendarEvent, calendarEventIdFor } from "./calendar-event";
-import { envCalendarCreds, envCalendarConfigured, type CalendarCreds, type CalendarResolution } from "@/lib/google/shelter-calendar-decide";
+import { envCalendarConfigured, type CalendarCreds, type CalendarResolution } from "@/lib/google/shelter-calendar-decide";
 import { resolveShelterCalendar } from "@/lib/google/shelter-calendar-credentials";
 
 /**
@@ -29,9 +29,22 @@ const CALENDAR_API = "https://www.googleapis.com/calendar/v3/calendars";
 /** How many visits one sweep handles; the rest wait for the next. */
 const SWEEP_BATCH = 40;
 
-/** Whether the ENVIRONMENT calendar (the fallback shelter's own) is set up. Per-shelter calendars are resolved by resolveShelterCalendar. */
-export function calendarConfigured(): boolean {
-  return envCalendarConfigured();
+/**
+ * Which calendar a shelter reads and writes, or why none: the one question every reader asks (the poll, the import,
+ * the status tile, the confirm list). Never throws; anything unreadable is "not_configured", which REFUSES (#calsh).
+ */
+export async function shelterCalendar(shelterId: string | null): Promise<CalendarResolution> {
+  if (!shelterId) return { state: "not_configured" };
+  try {
+    return await resolveShelterCalendar(shelterId);
+  } catch {
+    return { state: "not_configured" };
+  }
+}
+
+/** Whether this shelter's calendar is set up (a complete row, or the fallback shelter's environment). */
+export async function shelterCalendarOn(shelterId: string | null): Promise<boolean> {
+  return (await shelterCalendar(shelterId)).state === "configured";
 }
 
 const cached = new Map<string, { value: string; expiresAt: number }>();
@@ -67,8 +80,8 @@ async function accessToken(creds: CalendarCreds): Promise<string> {
   return data.access_token;
 }
 
-/** Callers that name no credentials (the poll, the import, the status tile) act on the environment calendar: the fallback shelter's. */
-export async function calendarFetch(path: string, init: RequestInit = {}, creds: CalendarCreds | null = envCalendarCreds()): Promise<Response> {
+/** Credentials are REQUIRED: there is no default calendar to fall back to (#calsh). Resolve them with shelterCalendar(). */
+export async function calendarFetch(path: string, init: RequestInit, creds: CalendarCreds | null): Promise<Response> {
   if (!creds) throw new Error("The calendar is not configured.");
   const id = encodeURIComponent(creds.calendarId);
   const headers = new Headers(init.headers);
@@ -318,12 +331,15 @@ export type CalendarStatus =
   | { state: "ok"; visits: PendingVisit[]; lastSweepAt: string | null };
 
 
-/** For the System status tile: does the token work, can the calendar be reached, which visits are waiting or failing. */
-export async function checkCalendar(): Promise<CalendarStatus> {
-  if (!calendarConfigured()) return { state: "off" };
+/** For the System status tile: does the token work, can the calendar be reached, which visits are waiting or failing. For ONE shelter: its own calendar, visits and cursor. */
+export async function checkCalendar(shelterId: string | null): Promise<CalendarStatus> {
+  const resolved = await shelterCalendar(shelterId);
+  if (resolved.state === "not_configured" || !shelterId) return { state: "off" };
+  if (resolved.state === "dead") return { state: "fail", error: resolved.error, visits: [], lastSweepAt: null };
   const { data } = await createAdminClient()
     .from("clinic_visits")
     .select("id, appointment_date, calendar_error, calendar_synced_at, calendar_out_of_date_at, residents(name)")
+    .eq("shelter_id", shelterId)
     .not("calendar_out_of_date_at", "is", null)
     .order("appointment_date")
     .limit(1000)
@@ -349,13 +365,14 @@ export async function checkCalendar(): Promise<CalendarStatus> {
   const { data: state } = await createAdminClient()
     .from("calendar_sync_state")
     .select("last_run_at")
-    .eq("calendar_id", process.env.GOOGLE_CALENDAR_ID ?? "")
+    .eq("shelter_id", shelterId)
+    .eq("calendar_id", resolved.creds.calendarId)
     .limit(1)
     .returns<{ last_run_at: string | null }[]>();
   const lastSweepAt = state?.[0]?.last_run_at ?? null;
   try {
     // calendar.events does not allow reading the calendar itself, only its events: list one.
-    const res = await calendarFetch("/events?maxResults=1");
+    const res = await calendarFetch("/events?maxResults=1", {}, resolved.creds);
     if (!res.ok) return { state: "fail", error: `Calendar answered ${res.status}: ${await errorText(res)}`, visits, lastSweepAt };
     return { state: "ok", visits, lastSweepAt };
   } catch (err) {

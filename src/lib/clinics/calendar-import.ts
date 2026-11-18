@@ -2,7 +2,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { getAppEnv } from "@/lib/app-env";
 import { isOtherEnvironment } from "./calendar-change";
-import { calendarFetch, errorText, syncPendingVisits } from "./calendar-sync";
+import { calendarFetch, errorText, shelterCalendar, syncPendingVisits } from "./calendar-sync";
+import type { CalendarCreds } from "@/lib/google/shelter-calendar-decide";
 import {
   decideImport,
   type ClinicRef,
@@ -41,9 +42,8 @@ export type CalEvent = {
 type Refs = { clinics: ClinicRef[]; residents: ResidentRef[] };
 
 /**
- * The clinics and residents an event's title may name. A request passes its acting shelter and sees only that shelter's; the calendar
- * poll runs with none (one calendar per installation) and matches against everything, which only ever feeds createVisits, and that
- * puts each visit in the CLINIC's shelter and refuses a resident of another one.
+ * The clinics and residents an event's title may name: only the given shelter's (the poll passes the shelter whose calendar it is
+ * reading, a request its acting shelter). createVisits then refuses a clinic of any other shelter and a resident of another one.
  */
 export async function loadRefs(shelterId: string | null = null): Promise<Refs> {
   const db = createAdminClient();
@@ -90,6 +90,8 @@ export async function createVisits(
   clinicId: string,
   residentIds: string[],
   origin: string | null,
+  /** The shelter whose calendar the event came from: a clinic of any other shelter is refused (#calsh). */
+  calendarShelterId: string,
 ): Promise<{ created: number; error?: string }> {
   if (!hasTime(e) || residentIds.length === 0) return { created: 0, error: "The event has no time or no resident." };
   const db = createAdminClient();
@@ -97,6 +99,7 @@ export async function createVisits(
   const { data: clinic } = await db.from("clinics").select("shelter_id").eq("id", clinicId).maybeSingle<{ shelter_id: string | null }>();
   const shelterId = clinic?.shelter_id;
   if (!shelterId) return { created: 0, error: "That clinic is not in a shelter." };
+  if (shelterId !== calendarShelterId) return { created: 0, error: "That clinic is not in the shelter this calendar belongs to." };
   const { data: mine } = await db.from("residents").select("id").eq("shelter_id", shelterId).in("id", residentIds);
   const allowed = new Set((mine ?? []).map((r) => r.id as string));
   residentIds = residentIds.filter((id) => allowed.has(id));
@@ -124,12 +127,12 @@ export async function createVisits(
 }
 
 /** The poll's hook: an event that is not one of the app's visits has just arrived. */
-export async function importNewEvent(e: CalEvent, origin: string | null): Promise<boolean> {
+export async function importNewEvent(e: CalEvent, origin: string | null, shelterId: string): Promise<boolean> {
   try {
     if (!isCandidate(e)) return false;
-    const d = decide(e, await loadRefs());
+    const d = decide(e, await loadRefs(shelterId)); // only this shelter's clinics and residents can be named
     if (d.kind !== "import") return false; // waits in the confirm list
-    const r = await createVisits(e, d.clinic.id, d.residents.map((x) => x.id), origin);
+    const r = await createVisits(e, d.clinic.id, d.residents.map((x) => x.id), origin, shelterId);
     return r.created > 0;
   } catch {
     return false;
@@ -150,10 +153,12 @@ export async function listToConfirm(): Promise<{ items: ConfirmItem[]; refs: Ref
   try {
     const shelterId = await actingShelterId();
     if (!shelterId) return { items: [], refs: empty, error: null };
+    const resolved = await shelterCalendar(shelterId);
+    if (resolved.state !== "configured") return { items: [], refs: empty, error: null }; // refused, never the fallback shelter's calendar
     const db = createAdminClient();
     const timeMin = new Date(Date.now() - 24 * 3600_000).toISOString();
     const qs = new URLSearchParams({ maxResults: "250", singleEvents: "false", showDeleted: "false", timeMin });
-    const res = await calendarFetch(`/events?${qs}`);
+    const res = await calendarFetch(`/events?${qs}`, {}, resolved.creds);
     if (!res.ok) return { items: [], refs: empty, error: `Calendar read failed (${res.status}): ${await errorText(res)}` };
     const events = (((await res.json()) as { items?: CalEvent[] }).items ?? []).filter(isCandidate);
     if (events.length === 0) return { items: [], refs: empty, error: null };
@@ -175,16 +180,16 @@ export async function listToConfirm(): Promise<{ items: ConfirmItem[]; refs: Ref
 }
 
 /** The event as Google has it now, for a confirm: the form is never trusted for the time. */
-export async function fetchEvent(eventId: string): Promise<CalEvent | null> {
-  const res = await calendarFetch(`/events/${encodeURIComponent(eventId)}`);
+export async function fetchEvent(eventId: string, creds: CalendarCreds): Promise<CalEvent | null> {
+  const res = await calendarFetch(`/events/${encodeURIComponent(eventId)}`, {}, creds);
   return res.ok ? ((await res.json()) as CalEvent) : null;
 }
 
 /** Dismiss: a private flag on the event, so the list stops showing it. Nothing else about the event changes. */
-export async function dismissEvent(eventId: string): Promise<string | null> {
+export async function dismissEvent(eventId: string, creds: CalendarCreds): Promise<string | null> {
   const res = await calendarFetch(`/events/${encodeURIComponent(eventId)}`, {
     method: "PATCH",
     body: JSON.stringify({ extendedProperties: { private: { dismissed: "1" } } }),
-  });
+  }, creds);
   return res.ok ? null : `Calendar update failed (${res.status}): ${await errorText(res)}`;
 }
