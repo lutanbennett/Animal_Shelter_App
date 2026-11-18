@@ -231,6 +231,7 @@ const en = {
     animalReports: "Animal reports",
     security: "Security",
     systemStatus: "System status",
+    productAdmin: "Product admin",
     assistantLog: "Assistant log",
     stocktaking: "Stocktaking",
     recentChanges: "Recent changes",
@@ -930,6 +931,40 @@ const en = {
   },
 
   admin: {
+    /** Settings → Product admin (#shmgt): the list of product administrators and the shelters, outside the card system. */
+    productAdmin: {
+      title: "Product admin",
+      subtitle: "The shelters this app serves, and the people who may manage them. Only people on this list can see this page.",
+      sheltersTitle: "Shelters",
+      shelterKey: "Key",
+      shelterName: "Name",
+      shelterCreated: "Set up",
+      shelterHosts: "Web addresses",
+      noHosts: "none",
+      noShelters: "No shelters yet.",
+      shelterNote: "Setting up a new shelter is done by script for now; see the onboarding runbook.",
+      adminsTitle: "Product administrators",
+      adminAccount: "Account",
+      you: "you",
+      noAdmins: "Nobody else is on the list.",
+      addTitle: "Add a product administrator",
+      addHelp: "Paste the person's account id. They must already have a login.",
+      accountId: "Account id",
+      add: "Add",
+      remove: "Remove",
+      removeConfirm: "Remove this person from the product administrators?",
+      stepUp: "Adding or removing a product administrator needs your authenticator app (2-step verification) first.",
+      stepUpLink: "Verify with your authenticator app",
+      added: "Added.",
+      removed: "Removed.",
+      errors: {
+        notProductAdmin: "Only a product administrator can do this.",
+        needsTwoStep: "Verify with your authenticator app first, then try again.",
+        badId: "That does not look like an account id.",
+        unknownAccount: "No login has that account id.",
+        lastOne: "You cannot remove yourself: someone else must do it, so the list is never left empty.",
+      },
+    },
     intakeDate: {
       title: "Correct an intake date",
       subtitle:
@@ -1420,6 +1455,8 @@ const en = {
           "What people typed at the assistant that it could not help with, to read and to export as a test set. Admin only.",
         systemStatus:
           "Whether the database, photo storage, migrations, release mail, backups and the Pi are healthy, and how much the app is being used.",
+        productAdmin:
+          "The shelters this app serves and the people who manage them. Only visible to product administrators.",
         recentChanges:
           "Who changed what: every add, edit, archive and delete on resident, medical and contact records, impact figures, facility plans, roles and permissions, newest first.",
       },

@@ -14,6 +14,7 @@ import {
   type ActionResult,
 } from "@/lib/action-result";
 import { hasAdminRole } from "@/lib/auth/require-admin";
+import { isProductAdmin } from "@/lib/auth/product-admin";
 import {
   APPROVED_FACTOR,
   SETUP_OPEN_UNTIL,
@@ -126,7 +127,8 @@ export async function confirmTwoStep(
   const e = t.admin.security.twoStep.errors;
   const claimDb = await createClient();
   const result = await runWriteAction("security.confirmTwoStep", write(t), { id: writeRequestIdFrom(formData), action: "security.confirmTwoStep", db: claimDb }, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    // Admin, or someone on the product-administrator list (#shmgt): the code only raises their own session.
+    if (!(await hasAdminRole()) && !(await isProductAdmin())) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const code = ((formData.get("code") as string | null) ?? "").replace(/\s+/g, "");
     if (!/^\d{6}$/.test(code)) return refuse(e.codeFormat);
@@ -165,6 +167,6 @@ export async function confirmTwoStep(
     return { ok: true };
   });
   // Outside runWriteAction: nothing to catch, and the redirect is the success.
-  if (result.ok) redirect("/admin/security");
+  if (result.ok) redirect((await hasAdminRole()) ? "/admin/security" : "/admin/product-admin");
   return result;
 }
