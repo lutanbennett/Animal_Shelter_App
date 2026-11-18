@@ -9,12 +9,12 @@
 |---|---|
 | Feature | PADMIN list, `is_product_admin()` and the cross-shelter `product_admin_shelters()`, schema half of `#shmgt` |
 | Backlog item | `docs/backlog.md` → `#shmgt` (not ticked: first of two halves) |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/shelter-management-schema` @ `C:DevelopmentAnimal_Shelter_shelter-management-schema` |
 | Dev server | not started — no UI surface; proof driven against the dev database directly |
 | PR | opened after this plan |
 | Tested by / date | Claude / 2026-11-18 |
 | Carries a migration? | yes — `0411_product_admins.sql`, `0412_product_admins_owner.sql` |
-| Tested at SHA | `SHAHERE` |
+| Tested at SHA | `b380c4671` |
 
 ## 1. Scope and risk
 
@@ -40,7 +40,19 @@ because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly — branch cut from `origin/main` `6c390bfc0` minutes earlier; nothing new to merge
-- [x] `node scripts/gates.mjs` — GATESLINE
+- [x] `node scripts/gates.mjs` ends with the four exit codes, read from the output file:
+
+```
+=== gates: typecheck — npm run typecheck
+=== gates: typecheck exited 0 after 104s
+=== gates: lint — npm run lint
+=== gates: lint exited 0 after 322s
+=== gates: test — npm test
+=== gates: test exited 0 after 49s
+=== gates: build — npm run build
+=== gates: build exited 0 after 163s
+gates: typecheck=0 lint=0 test=0 build=0
+```
 - [ ] CI green on the PR (runs the same four gates, among its other checks). — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
@@ -230,4 +242,4 @@ Manual verification by: pending: aal2 write by a PADMIN, no authenticator on a d
 
 Result: pass with accepted defects
 
-Release manager acknowledgement: <name>  Date: <yyyy-mm-dd>
+Release manager acknowledgement: pending: not yet released
