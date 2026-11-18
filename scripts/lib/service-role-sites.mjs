@@ -54,3 +54,28 @@ export function unfilteredClaims(files, sites, registry) {
   }
   return bad;
 }
+
+// worker/ is not a createAdminClient() caller: it reaches the database over REST with the service-role key held in
+// env.SUPABASE_SERVICE_ROLE_KEY. A worker site is therefore each function that READS that property in code (comments skipped; a string
+// that only names the variable in a message is not a use). Ids are `file#function`, with `#2` for a second function of the same name.
+// Pure: takes {path: text}, returns sites shaped like findSites(). Item #srreg.
+export function findWorkerSites(files) {
+  const sites = [];
+  for (const [file, text] of Object.entries(files)) {
+    if (/\.test\.mjs$/.test(file)) continue;
+    const lines = text.split(/\r?\n/);
+    const seen = new Set();
+    lines.forEach((line, i) => {
+      if (!/env\.SUPABASE_SERVICE_ROLE_KEY/.test(line) || /^\s*(\/\/|\*)/.test(line)) return;
+      let fn = "(module level)";
+      for (let j = i; j >= 0; j--) {
+        const m = FN.exec(lines[j]);
+        if (m) { fn = m[1] || m[2]; break; }
+      }
+      if (seen.has(fn)) return; // one record per function, however many times it reads the key
+      seen.add(fn);
+      sites.push({ id: `${file}#${fn}`, file, fn, line: i + 1 });
+    });
+  }
+  return sites;
+}
