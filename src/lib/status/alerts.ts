@@ -119,7 +119,7 @@ const isRed = (key: HealthCheckKey, report: HealthReport) =>
 /** What a person can do about a red check, appended to its line in the mail. */
 const ADVICE: Partial<Record<HealthCheckKey, string>> = {
   cronJobs:
-    "A nightly database job is not running, so old assistant requests may not be deleted, against what the privacy page promises. First check: node scripts/check-cron-job.mjs --env production.",
+    "A scheduled job is not running or keeps failing. If it is a nightly purge, old assistant requests or donor tax IDs may not be deleted, against what the privacy page promises; if it is label-drafts, Thai label proposals are not appearing. First checks: node scripts/check-scheduled-writers.mjs --env production, then node scripts/check-cron-job.mjs --env production.",
   origin:
     "Public pages still load (the Worker serves them); signing in and saving may be failing. First checks: is the Pi powered and on the network (power, router, cable), then cloudflared on it. The Pi serves production and test, so both are affected. If it cannot be fixed quickly and people cannot sign in, the emergency switch in docs/pi-hosting.md (\"The Pi is sick and nobody can sign in\") gets sign-in back without the Pi.",
 };

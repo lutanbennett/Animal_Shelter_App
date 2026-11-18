@@ -69,6 +69,7 @@ import { withShelter } from "./shelter.mjs";
 import { handleCspReport } from "./csp-report.mjs";
 import { withSecurityHeaders } from "./security-headers.mjs";
 import { runLabelDrafts, runTranslations } from "./translations.mjs";
+import { reportWriterRun } from "./writer-runs.mjs";
 import { recordHeartbeat, finishHeartbeat } from "./heartbeat.mjs";
 import { isEdgeCachedPage, thPathRest } from "../src/lib/public-paths.ts";
 import { localeFromAcceptLanguage } from "../src/lib/i18n/locales.ts";
@@ -207,7 +208,8 @@ const worker = {
     // After the alerts so they can never delay one; runTranslations does not throw.
     await runTranslations(env);
     // Labels: signs in as the machine login if one is configured, else does nothing.
-    await runLabelDrafts(env);
+    // Its outcome is recorded (0408) so a failure shows on System status and in the alert mail, not just in this log.
+    await reportWriterRun(env, "label-drafts", await runLabelDrafts(env));
     await finishHeartbeat(env, beat, controller.cron, stages);
   },
 };
