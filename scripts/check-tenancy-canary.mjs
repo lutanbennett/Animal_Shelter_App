@@ -25,9 +25,8 @@
 //  (b) It cannot run on the pull-request path. It needs a Management API token that can WRITE (it plants, then rolls back), and
 //      this repository is public on purpose, so a PR run would hand that token to every run. It runs nightly against dev only
 //      (.github/workflows/tenancy-canary.yml), and a read-only token is refused at the planting step (exit 2).
-//  Also: it reads as the anon DATABASE ROLE, not through the Worker, so it does not see a host-to-shelter mismatch, and until
-//  Part 5 (#ujqr5) lands there are no per-shelter policies, so it proves nothing is public that should not be, not that the
-//  restrictive policies work. The item's own proof (drop a restrictive policy, it must go red) is owed at Part 5.
+//  Also: it reads as the anon DATABASE ROLE, not through the Worker, so it does not see a host-to-shelter mismatch, and the
+//  restrictive per-shelter policies (0392, Part 5 #ujqr5) are on dev, so --prove-red drop-restrictive shows the canary notices one being removed.
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 import { exitWith } from "./lib/exit.mjs";
 
