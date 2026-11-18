@@ -144,9 +144,17 @@ node scripts/google-oauth-setup.mjs
 ```
 
    It prints a web address. Open it in your own browser while signed in to the
-   shelter's Google account and approve. The script then prints a refresh token.
-   For the calendar step the token needs the **calendar** permission as well as
-   Drive; approve every permission it asks for.
+   shelter's Google account and approve. The script then prints a refresh token:
+   this is the **Drive** token (Step 4).
+6. Mint a **separate** token for the calendar, the same way with `--calendar`
+   added (it asks only for calendar permission, and is kept apart so a calendar
+   fault can never stop photo uploads):
+
+```powershell
+node scripts/google-oauth-setup.mjs --calendar
+```
+
+   This is the **calendar** token (Step 5). Do not use one for the other.
 
 **Never put these values on the command line or in a file in the repository.**
 The command line is saved in your PowerShell history. Set them as environment
@@ -201,7 +209,7 @@ time; that needs a second Google account made by you. The proof is backlog
 ## Step 5. Connect the calendar  **[TERMINAL]**
 
 The script is `scripts/connect-shelter-calendar.mjs`. The same three secrets, in
-the same way, and optionally the account's address so an Admin can see which
+the same way (but the refresh token is the **calendar** one from Step 3), and optionally the account's address so an Admin can see which
 account is connected:
 
 ```powershell
