@@ -288,6 +288,12 @@ consecutive batches, so revise from actuals and never treat a row as settled.
   2026-10-28, 102–103k through 2026-10-31, 106.8–107.5k on 2026-11-07, **107,438 · 106,351 · 111,016 on
   2026-11-08**. The drift is slow and upward. The original 30k error was inherited by every band below it,
   which is most of why older rows read high.
+- **Quick win and nothing-left-to-discover schema rows, bottoms raised to 143k on 2026-11-18.** Fifteen
+  usable readings from PRs #1676–#1698 (#1698 excluded: `rescoped=yes`); the six streams banded with a
+  bottom of 110–125k came in at 143,281 · 146,673 · 148,976 · 149,997 · 154,869 · 160,170, and all four
+  with a bottom under 120k overran. **A real PR's own bookkeeping (test plan, decision file, gates, usage
+  comment, branch dance) puts its floor near 143k whatever the work.** The floor row and every other
+  scale row were deliberately NOT moved. Full list: `docs/decisions/2026-11-18-band-floors-raised.md`.
 - **Create vs route into.** 235,561 for a new public form with rate limiting and a staff screen against
   127,979 for routing into working pages — same band given to both, 108k apart.
 - **Existing machinery.** `two-way-calendar-app` banded 250–320k as a new transport path, came in at
