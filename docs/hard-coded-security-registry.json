@@ -384,8 +384,8 @@
     },
     {
       "file": "worker/translations.mjs",
-      "for": "Translates labels in the background.",
-      "guard": "Worker only."
+      "for": "Translates labels in the background. Its label arm also reads the user_roles rows of its own machine login, to learn which shelter(s) to name in x-shelter-id (#lblcr).",
+      "guard": "Worker only. The read is of the signed-in machine login's own roles and nothing else; the proposals themselves are made as that login, so they still need its Propose a Thai label card. Grants no access to anyone."
     },
     {
       "file": "worker/shelter.mjs",
@@ -396,6 +396,11 @@
       "file": "worker/heartbeat.mjs",
       "for": "Writes one 'the trigger fired' row to status_alert_runs each time the 15-minute cron runs, so a dead cron can be told from a skipped stage.",
       "guard": "Worker only. Writes and patches only status_alert_runs; grants no access to anyone."
+    },
+    {
+      "file": "worker/writer-runs.mjs",
+      "for": "Tells the database how a Worker-side scheduled writer's run went, by calling record_scheduled_writer_run() (0408), so a failure shows on System status and in the alert mail (#lblcr).",
+      "guard": "Worker only. One function call that upserts one row per job in scheduled_writer_runs (a platform table, no shelter data); the function is executable by service_role only. Grants no access to anyone."
     },
     {
       "file": "src/lib/merch/checkout.ts",
