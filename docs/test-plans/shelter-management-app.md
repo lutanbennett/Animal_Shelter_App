@@ -107,7 +107,7 @@ By card, and here the unit is the PADMIN list and the `aal2` step, not a card.
 - [ ] Smoke-tested on `test.lannacare.org` — deferred: release manager
 - [ ] **Timezone-sensitive behaviour proved** — n/a: nothing here derives a date
 - [ ] **Boundary or banding change** — n/a: no threshold or cutoff
-- [ ] **Evidence pasted into this plan is the tool's actual output, unedited** — the gates output above is unedited
+- [x] **Evidence pasted into this plan is the tool's actual output, unedited** — the gates output above is unedited
 - [ ] Public pages re-checked after a cache purge — n/a: the public site reads none of this
 
 ### Deploy safety
@@ -121,11 +121,11 @@ By card, and here the unit is the PADMIN list and the `aal2` step, not a card.
 - [ ] **Does this PR contain both a migration and code that reads it?** — n/a: no migration in this PR; the code reads 0411 and 0412, which must be on production before this deploys (they go in the same release)
 - [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — deferred: release manager (for 0411 and 0412)
 - [ ] For a **destructive or rewriting** migration only — n/a: none
-- [ ] Apply plan stated — 0411 and 0412 on production before this code deploys
+- [x] Apply plan stated — 0411 and 0412 on production before this code deploys
 
 ### Rollback
 
-- [ ] Rollback position stated — code rollback via the Pi `--ref` is clean; the screen is additive and the migrations stay
+- [x] Rollback position stated — code rollback via the Pi `--ref` is clean; the screen is additive and the migrations stay
 
 ## Defects found
 
