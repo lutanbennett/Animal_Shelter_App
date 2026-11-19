@@ -135,9 +135,11 @@ if (args.includes("--remove")) {
     target = cardRoleKey(list);
   } else if (named && named !== "all") target = named;
   else if (!named) throw new Error("--remove needs a role, --cards a,b, or the word all (all signs every other stream out)");
-  const cardRoles = await service.from("roles").select("id, key").like("key", `${CARD_ROLE_PREFIX}%`);
+  const cardRoles = await service.from("roles").select("id, key").or(`key.like.${CARD_ROLE_PREFIX}%,key.like.dev_signin_admin_%`);
   if (cardRoles.error) throw cardRoles.error;
-  if (target) cardRoles.data = cardRoles.data.filter((r) => r.key === target);
+  // a throwaway Admin made by --shelter admin has its own key (see the sign-in half); removing "admin" on a shelter removes that one only
+  const roleTarget = target === "admin" && targetShelter ? "dev_signin_admin_" + callerSuffix : target;
+  if (target) cardRoles.data = cardRoles.data.filter((r) => r.key === roleTarget);
   const wantEmail = target ? loginEmail(target) : null;
   const mine = (await allUsers()).filter((u) => u.email?.startsWith(PREFIX) && u.email.endsWith(DOMAIN) && (!wantEmail || u.email === wantEmail));
   for (const u of mine) {
@@ -209,7 +211,15 @@ if (cardsArg) {
 
 let roleQ = service.from("roles").select("id").eq("key", role);
 if (targetShelter) roleQ = roleQ.eq("shelter_id", targetShelter.id);
-const { data: roleRow, error: roleErr } = await roleQ.maybeSingle();
+let { data: roleRow, error: roleErr } = await roleQ.maybeSingle();
+if (!roleErr && !roleRow && targetShelter && role === "admin") {
+  // A bare shelter has no Admin role (roles are per shelter since 0401, one is_admin per shelter since 0387). Make a throwaway one
+  // whose key carries the port and shelter, so --remove --shelter removes it and nothing real on the shelter is touched.
+  const adminKey = "dev_signin_admin_" + callerSuffix;
+  const up = await service.from("roles").upsert({ key: adminKey, name: "Dev sign-in: admin", kind: "custom", home_path: "/home", is_admin: true, shelter_id: targetShelter.id }, { onConflict: "shelter_id,key" });
+  if (up.error) throw up.error;
+  ({ data: roleRow, error: roleErr } = await service.from("roles").select("id").eq("key", adminKey).eq("shelter_id", targetShelter.id).maybeSingle());
+}
 if (roleErr) throw roleErr;
 if (!roleRow) throw new Error(`no role with key "${role}"`);
 
