@@ -1,5 +1,5 @@
 /**
- * The two addresses the system answers on — settings, never literals.
+ * The three addresses the system answers on — settings, never literals.
  *
  * APP_HOST    the staff app (sign-in, residents, medical, Settings…).
  * PUBLIC_HOST the shelter's public website (/, /adopt, /r/…, the photo route).
@@ -31,13 +31,17 @@ export function appHost(env: Record<string, string | undefined> = process.env): 
   return clean(env.APP_HOST);
 }
 
+export function platformHost(env: Record<string, string | undefined> = process.env): string | null {
+  return clean(env.PLATFORM_HOST);
+}
+
 export function publicHost(env: Record<string, string | undefined> = process.env): string | null {
   return clean(env.PUBLIC_HOST);
 }
 
 /** The configured hosts, plus `www.` of each: the apex and www answer together. */
 export function siteHosts(env: Record<string, string | undefined> = process.env): string[] {
-  const hosts = [appHost(env), publicHost(env)].filter((h): h is string => !!h);
+  const hosts = [appHost(env), publicHost(env), platformHost(env)].filter((h): h is string => !!h);
   return [...new Set(hosts.flatMap((h) => (h.startsWith("www.") ? [h] : [h, `www.${h}`])))];
 }
 
@@ -69,6 +73,12 @@ export function publicUrl(path = "/", env: Record<string, string | undefined> = 
  */
 export function staffLoginHref(env: Record<string, string | undefined> = process.env): string {
   return (isSplit(env) && appUrl("/login", env)) || "/login";
+}
+
+/** Whether `hostname` is the platform front door (apex or www). */
+export function isPlatformHostname(hostname: string, env: Record<string, string | undefined> = process.env): boolean {
+  const p = platformHost(env);
+  return !!p && (hostname.toLowerCase() === p || hostname.toLowerCase() === `www.${p}`);
 }
 
 /** Whether the two addresses differ, i.e. the system is split. */
@@ -122,4 +132,24 @@ export function hostRedirect(
     return APP_KEEPS.includes(pathname) ? null : pub;
   }
   return null;
+}
+
+/**
+ * What the platform front door serves: the console, sign-in and the second step, plus what they load.
+ * Everything else is a shelter's page and would come up empty with no shelter header.
+ */
+const PLATFORM_KEEPS = ["/platform", "/login", "/auth/", "/api/", "/admin/security/verify", "/lca-logo.jpg", "/lca-logo-160.jpg", "/lca-logo.png", "/lca-logo-transparent.png", "/robots.txt", "/privacy"];
+
+/**
+ * On the platform host, the path a navigation should be sent to instead, or null to serve it here.
+ * Any shelter page goes to the console. Only for GET/HEAD; a Server Action is a POST.
+ */
+export function platformRedirect(
+  host: string | null,
+  pathname: string,
+  env: Record<string, string | undefined> = process.env,
+): string | null {
+  if (!host || !isPlatformHostname(host, env)) return null;
+  const kept = PLATFORM_KEEPS.some((k) => (k.endsWith("/") ? pathname.startsWith(k) : pathname === k || pathname.startsWith(`${k}/`)));
+  return kept ? null : "/platform";
 }

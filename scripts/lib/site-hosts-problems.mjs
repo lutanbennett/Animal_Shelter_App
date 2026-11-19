@@ -23,7 +23,7 @@ export function hostProblems(config, ingressYml) {
   const out = [];
   const say = (ok, msg) => out.push({ ok, msg });
   const envs = config.env ?? {};
-  const envHosts = (b) => ({ APP_HOST: b.vars?.APP_HOST, PUBLIC_HOST: b.vars?.PUBLIC_HOST });
+  const envHosts = (b) => ({ APP_HOST: b.vars?.APP_HOST, PUBLIC_HOST: b.vars?.PUBLIC_HOST, PLATFORM_HOST: b.vars?.PLATFORM_HOST });
 
   for (const [name, b] of Object.entries(envs)) {
     say(!!b.vars?.APP_HOST && !!b.vars?.PUBLIC_HOST, `${name} sets APP_HOST and PUBLIC_HOST`);

@@ -140,3 +140,17 @@ The free Supabase plan allows two projects (dev and production), and a third wou
 - **Code change in the cutover commit (RM).** `appEnvForSupabaseUrl` in `src/lib/app-env.ts` returns `"dev"` for the dev ref before it looks at anything else, so UAT would never wear a UAT badge, and `scripts/deploy.mjs` and `scripts/lib/env.mjs` refuse `--env uat` while `UAT_PROJECT_REF` is empty. The UAT Worker needs its own signal for "I am UAT" (a `vars` entry in the `uat` block of `wrangler.jsonc`) that those three places read, and the Drive remap script's allow-list (dev and uat) is already fine. Prove it with a test in the same commit. Do not set `UAT_PROJECT_REF` to the dev ref: that would make the test site read as UAT too.
 - `RELEASE_MAIL_ENV` and `STATUS_ALERT_*` in the `uat` block: not established whether UAT should send them against dev's data; leave them as they are in the `uat` block today.
 - **When a third project is possible:** create it, restore production into it, set `UAT_PROJECT_REF`, run P7 and step 6a, and delete the stopgap signal. Until then this section stands.
+
+## F. The platform front door, `cooperjaidee.org` (`#pltfd`)
+
+**What it is:** the operator console (`/platform`) on the platform's own address, which maps to no shelter. The setting is `PLATFORM_HOST` (`wrangler.jsonc`, production only for now), the third address after `APP_HOST` and `PUBLIC_HOST`; it feeds `serverActions.allowedOrigins` and the upload check, so a button pressed there is accepted.
+
+**Done in the code:** `PLATFORM_HOST` and the two `custom_domain` routes (`cooperjaidee.org`, `www.cooperjaidee.org`) in production's config; the proxy sends any shelter page on that host to `/platform`; `/platform` answers not-found on any other host once the setting is set.
+
+**By hand (Lutan), in this order:**
+1. In Cloudflare, on the `cooperjaidee.org` zone (already registered, no zone to add): **delete any A or CNAME record already on the apex or on `www`**. The deploy creates both addresses and their certificates itself, and refuses to over-write a record that is there (what `#ki6cx` step P4 hit).
+2. Run the production deploy as usual. It creates the two routes. Nothing else to add by hand.
+3. In Supabase (production project), Authentication, URL configuration: add **one** Redirect URL, `https://cooperjaidee.org/auth/callback`.
+4. **Do NOT touch Google.** The consent screen is verified; editing it can put the branding back under review and show shelter staff a raw Supabase address at sign-in (P3).
+
+**Prove it by saving, not by loading:** sign in at `https://cooperjaidee.org`, press *Verify with your authenticator app*, then add a web address to a test shelter. A page that loads proves nothing here: a missing allowed origin refuses every button while every page renders (30 September / 1 October 2026).

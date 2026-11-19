@@ -3,7 +3,7 @@
 //   node scripts/dev-signin.mjs <role> [--port N]     print the snippet that signs the browser in
 //   node scripts/dev-signin.mjs --cards a,b [--port N] [--label x] the same, for a login holding EXACTLY these cards and nothing else.
 //                                                      One login per card set PER PORT (or label): two streams with the same cards do not share a login.
-//   ... add --aal2 to either form: the session is then aal2 (a dev-only step-up, see scripts/lib/dev-aal2.mjs), so /admin/product-admin
+//   ... add --aal2 to either form: the session is then aal2 (a dev-only step-up, see scripts/lib/dev-aal2.mjs), so /platform
 //                                                      and /admin/security can be pressed. The login is NOT given a role or card by it.
 //   node scripts/dev-signin.mjs --remove <role>        delete only that role's login (a roles.key, or a dev_signin_cards_<hash>_<port> key)
 //   node scripts/dev-signin.mjs --remove --cards a,b [--port N]   delete only the login and throwaway role for those cards on that port

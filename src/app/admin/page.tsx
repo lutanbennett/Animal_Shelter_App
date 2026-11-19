@@ -2,12 +2,10 @@ import { Suspense } from "react";
 import { Activity, CalendarClock, Grid3x3, History } from "lucide-react";
 import { DriveStatus } from "./DriveStatus";
 import { CalendarStatus } from "./CalendarStatus";
-import { can } from "@/lib/permissions/can";
 import { canOpen, routeFor } from "@/lib/permissions/routes";
 import { WHO_DOES_WHAT_PATH, opensWhoDoesWhat } from "@/lib/permissions/who-does-what";
 import { requireAnyPageIn } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
-import { isProductAdmin } from "@/lib/auth/product-admin";
 import { SectionTiles, type SectionTile } from "@/components/SectionTiles";
 import {
   ENCLOSURE_ICONS,
@@ -32,9 +30,6 @@ import {
 export default async function AdminPage() {
   const { perms } = await requireAnyPageIn("settings");
   const { t } = await getT();
-  // Product admin is a list of people, not a card (#shmgt): the tile exists only for someone on it.
-  const productAdmin = await isProductAdmin();
-
   const allTiles: SectionTile[] = [
     {
       href: "/admin/enclosures",
@@ -140,15 +135,8 @@ export default async function AdminPage() {
       description: t.admin.landing.tiles.systemStatus,
       icon: Activity,
     },
-    {
-      href: "/admin/product-admin",
-      label: t.nav.productAdmin,
-      description: t.admin.landing.tiles.productAdmin,
-      icon: NAV_ICONS.security,
-    },
   ];
   const tiles = allTiles.filter((tile) => {
-    if (tile.href === "/admin/product-admin") return productAdmin;
     if (tile.href === "/admin/security" || tile.href === "/admin/stocktaking" || tile.href === "/admin/assistant" || tile.href === "/admin/recent-changes") return perms.isAdmin;
     if (tile.href === WHO_DOES_WHAT_PATH) return opensWhoDoesWhat(perms);
     const route = routeFor(tile.href);

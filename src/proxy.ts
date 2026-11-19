@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
 import { originKeyRefuses } from "@/lib/origin-key";
 import { initialLocaleCookie, localeCookieName, localePathHeader } from "@/lib/i18n/locales";
-import { hostRedirect, requestHost } from "@/lib/site-hosts";
+import { hostRedirect, platformRedirect, requestHost } from "@/lib/site-hosts";
 import { isPublicPage, thPathRest } from "@/lib/public-paths";
 
 /**
@@ -38,8 +38,13 @@ export default async function proxy(request: NextRequest) {
   // address, the staff app on the app address, each sending the visitor to the other.
   // Navigations only; a Server Action is a POST and is answered where it was sent.
   if (request.method === "GET" || request.method === "HEAD") {
+    // The platform front door (cooperjaidee.org) maps to no shelter: it serves the console and sign-in only.
+    const reqHost = requestHost((n) => request.headers.get(n));
+    const toPlatform = platformRedirect(reqHost, request.nextUrl.pathname);
+    // Absolute, on the host the visitor used: request.url is the Pi's own address behind the Worker.
+    if (toPlatform) return NextResponse.redirect(`https://${reqHost}${toPlatform}`, 307);
     const to = hostRedirect(
-      requestHost((n) => request.headers.get(n)),
+      reqHost,
       thRest ?? request.nextUrl.pathname,
       { isPublicPage },
     );
