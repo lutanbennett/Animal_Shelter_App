@@ -609,6 +609,14 @@ Know its limits, and say so in the test plan when they bite:
   of its own holding exactly those cards, so no real role is disturbed and no other running stream is signed out. The login is keyed by card set **plus your port** (`dev_signin_cards_<hash>_<port>`, `--label x` to override), so two
   streams holding the same card each get their own login and neither signs the other out. Calling it again from the SAME port re-keys
   that port's login, so only that port's **later** snippet is valid. `--remove --cards a,b --port N` removes that port's login only.
+- **A login on a SECOND shelter: add `--shelter <key|id>`** (`shelters.key`, e.g. `test-shelter-2`; 2026-11-19,
+  `docs/decisions/2026-11-19-dev-shelter-login.md`), to a role (`admin --shelter test-shelter-2 --aal2`) or to `--cards`. The role is
+  made **on that shelter** (key tagged `_s<first 6 of its id>`, so the same card set on two shelters is two roles and two logins; the
+  throwaway Admin is `dev_signin_admin_<port>_s<id6>` and is made only when the shelter has no Admin of its own). **THE LOGIN DOES NOT
+  CHOOSE THE SHELTER; THE DEV SERVER DOES.** `next dev` sends `DEV_SHELTER_ID`, so start the server as
+  `DEV_SHELTER_ID=<that shelter's id> npm run dev -- --port <yours>` (a shell value beats `.env.local`); stop it and start it normally
+  when you are done. `--remove admin --shelter X --port N` / `--remove --cards a,b --shelter X --port N` remove that one only; nothing is
+  left behind. Do not touch `test-shelter-2`'s own rows or other streams' roles there.
 - **Never run `--remove` while other streams are running:** it deletes every login the script has ever made, including their
   live ones.
 - **The snippet holds a live dev session token.** Never paste it into a PR, a test plan or a commit.

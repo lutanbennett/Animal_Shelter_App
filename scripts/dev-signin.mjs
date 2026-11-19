@@ -140,9 +140,22 @@ if (args.includes("--remove")) {
   // a throwaway Admin made by --shelter admin has its own key (see the sign-in half); removing "admin" on a shelter removes that one only
   const roleTarget = target === "admin" && targetShelter ? "dev_signin_admin_" + callerSuffix : target;
   if (target) cardRoles.data = cardRoles.data.filter((r) => r.key === roleTarget);
+  // A throwaway Admin is its shelter's only Admin link, and user_roles_keep_an_admin refuses to drop that one row at a time. Dropping the
+  // role and the link in ONE statement block does not trip it (it is deferred to commit, and by then the role is gone), so do exactly that.
+  for (const r of cardRoles.data.filter((x) => x.key.startsWith("dev_signin_admin_"))) {
+    const res = await fetch(`https://api.supabase.com/v1/projects/${projectRef(env)}/database/query`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${env.SUPABASE_ACCESS_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ query: `delete from public.user_roles where role_id = '${r.id}'; delete from public.role_cards where role_id = '${r.id}'; delete from public.role_permissions where role_id = '${r.id}'; delete from public.roles where id = '${r.id}' and key like 'dev\_signin\_admin\_%';` }),
+    });
+    console.log(`${res.ok ? "removed" : "FAILED"} role ${r.key} and its login link${res.ok ? "" : ": " + (await res.text()).slice(0, 200)}`);
+    if (res.ok) cardRoles.data = cardRoles.data.filter((x) => x.id !== r.id);
+  }
   const wantEmail = target ? loginEmail(target) : null;
   const mine = (await allUsers()).filter((u) => u.email?.startsWith(PREFIX) && u.email.endsWith(DOMAIN) && (!wantEmail || u.email === wantEmail));
   for (const u of mine) {
+    // Archive first: the last-Admin guard (user_roles_keep_an_admin) only counts live rows, and this login is being deleted on purpose.
+    await service.from("user_roles").update({ archived_at: new Date().toISOString() }).eq("user_id", u.id).is("archived_at", null);
     await service.from("user_roles").delete().eq("user_id", u.id);
     if (args.includes("--clear-held")) {
       // "table.col (n row(s)); ..." -> only when every holder is a CLEARABLE table, so nothing real is deleted on the way.
@@ -234,8 +247,12 @@ if (user) {
   if (error) throw error;
   user = data.user;
 }
-await service.from("user_roles").delete().eq("user_id", user.id);
-const { error: giveErr } = targetShelter ? await service.from("user_roles").insert({ user_id: user.id, role_id: roleRow.id }) : await giveRole(service, user.id, role);
+// Keep the row when the login already holds this role: user_roles_keep_an_admin refuses to delete a shelter's only Admin link, so a re-run
+// on a throwaway Admin must not delete-and-reinsert. Every other role the login holds is cleared as before.
+const keepRole = roleRow.id;
+{ const { error: clearErr } = await service.from("user_roles").delete().eq("user_id", user.id).neq("role_id", keepRole); if (clearErr) throw clearErr; }
+const alreadyHeld = (await service.from("user_roles").select("role_id").eq("user_id", user.id).eq("role_id", keepRole)).data?.length > 0;
+const { error: giveErr } = alreadyHeld ? { error: null } : targetShelter ? await service.from("user_roles").insert({ user_id: user.id, role_id: roleRow.id }) : await giveRole(service, user.id, role);
 if (giveErr) throw giveErr;
 
 const jar = new Map();
