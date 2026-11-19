@@ -3,6 +3,8 @@
 //   node scripts/dev-signin.mjs <role> [--port N]     print the snippet that signs the browser in
 //   node scripts/dev-signin.mjs --cards a,b [--port N] [--label x] the same, for a login holding EXACTLY these cards and nothing else.
 //                                                      One login per card set PER PORT (or label): two streams with the same cards do not share a login.
+//   ... add --aal2 to either form: the session is then aal2 (a dev-only step-up, see scripts/lib/dev-aal2.mjs), so /admin/product-admin
+//                                                      and /admin/security can be pressed. The login is NOT given a role or card by it.
 //   node scripts/dev-signin.mjs --remove <role>        delete only that role's login (a roles.key, or a dev_signin_cards_<hash>_<port> key)
 //   node scripts/dev-signin.mjs --remove --cards a,b [--port N]   delete only the login and throwaway role for those cards on that port
 //   node scripts/dev-signin.mjs --remove <role> --clear-held   also delete the test clinic visits / bulk batches that login created, when those are all that hold it
@@ -34,6 +36,7 @@ import { scriptShelterHeaders } from "./lib/shelter-env.mjs";
 import { createHash } from "node:crypto";
 import { giveRole } from "./lib/user-role.mjs";
 import { loadCards } from "./lib/load-cards.mjs";
+import { stepUpToAal2 } from "./lib/dev-aal2.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -214,7 +217,9 @@ const ssr = createServerClient(url, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
 });
 const { error: signErr } = await ssr.auth.signInWithPassword({ email, password });
 if (signErr) throw signErr;
+const wantAal2 = args.includes("--aal2");
+if (wantAal2) await stepUpToAal2({ service, ssr, user, projectRef: projectRef(env) });
 
 const sets = [...jar].map(([n, v]) => `document.cookie=${JSON.stringify(`${n}=${encodeURIComponent(v)}; path=/; max-age=3000; samesite=lax`)}`);
-console.error(`${email} is ${cardKeys ? `holding only the cards ${cardKeys.join(", ")}` : `a ${role}`} on dev. Run this in javascript_tool on http://localhost:${port}, then navigate to /my:`);
+console.error(`${email} is ${wantAal2 ? "at aal2, " : ""}${cardKeys ? `holding only the cards ${cardKeys.join(", ")}` : `a ${role}`} on dev. Run this in javascript_tool on http://localhost:${port}, then navigate to /my:`);
 console.log(`${sets.join(";")};location.href="/my"`);
