@@ -5,14 +5,14 @@ Claude session available**: every command is given in full, with the folder you
 type it in.
 
 **It is a partial runbook on purpose.** It covers the steps that will never be a
-screen. Backlog item `#shmgt` (the shelter management screen) has landed **in
-half**. **Landed (2026-11-18):** a product administrator can open **Settings →
-Product admin** (`/admin/product-admin`) and see every shelter with its hosts, and
-add or remove product administrators. **Not landed:** creating a shelter, setting
-its names and receipt series, its three missing lookup lists, and removing a
-shelter. Those are still terminal scripts or still nothing at all, and every
-**NOT YET POSSIBLE** note below that names `#shmgt` is still true. The screen's
-pictures are listed in `scripts/manual-screenshots.mjs` (see "Screenshots").
+screen, and the screen that now exists. A product administrator opens **Settings →
+Product admin** (`/admin/product-admin`) and can **create a shelter, add and remove
+its web addresses, give it an Admin role and link a login to it**, as well as add
+and remove product administrators. **Still not a screen:** setting a shelter's
+names and receipt series, the group origins list, and removing a shelter. Every
+**NOT YET POSSIBLE** note below is a gap that is still true. The screen's pictures
+are listed in `scripts/manual-screenshots.mjs` (see "Screenshots"). **Every press
+on that screen needs the two-step code (aal2); see "What has not been rehearsed".**
 
 ## Who can do each step
 
@@ -74,30 +74,45 @@ A shelter leaving is a separate section at the end.
 
 ---
 
-## Step 1. Create the shelter and its host  **[TERMINAL]** — NOT YET POSSIBLE
+## Step 1. Create the shelter and its host  **[ADMIN SCREEN]** (product administrator)
 
 **What it is.** A shelter is one row in the `shelters` table (a short lower-case
 `key` such as `<shelter-key>`, and a `name`). Its address is one or more rows in
-`shelter_hosts`, each a full host name such as `<the shelter's host>`. Migration
-`0382` removed every sign-in's right to write either table, on purpose. Only the
-database's own service role may.
+`shelter_hosts`. Migration `0382` removed every sign-in's right to write either
+table, on purpose; the screen writes through narrow database functions that check
+you are a product administrator **and** have passed the two-step code.
 
-**NOT YET POSSIBLE as a step you can follow.** No script and no screen creates
-these two rows today. The Product admin screen that has landed **only lists**
-shelters and hosts; it creates nothing. Backlog item **`#shmgt`** still has to add
-the create route (a database write function, then the screen's button).
-**Until then, this step needs a developer**; there is no
-keystroke-by-keystroke version to give you, because writing it by hand against
-the live database is exactly the kind of thing that should not be improvised.
-When `#shmgt` lands, this step becomes **WILL BECOME A SCREEN**: replace this
-section with the screen and its buttons.
+1. Sign in as a product administrator (your own login, on the list). Click
+   **Settings**, then **Product admin**. Reach it by clicking, not by typing the
+   address.
+2. If the page shows a sentence and a link instead of buttons, follow the link and
+   give the two-step code. The buttons appear only after it.
+3. Under **Create a shelter**, fill **Short name** (the key: lower-case letters and
+   digits with single hyphens, e.g. `happy-paws`; **it cannot be changed
+   afterwards**) and **Shelter name**, then press **Create shelter**. Expected: a
+   line saying it was created, and that it has no web address, Admin role or login
+   yet. Creating it also fills its default site pages, public-figure switches, bill
+   kinds and frequencies (see Step 6).
+4. In the new shelter's row, type its host (for example `<the shelter's host>`)
+   into **Web address** and press **Add address**. Expected: *Address added.* One
+   host belongs to one shelter; to move one, **Remove** it from the first shelter
+   first.
+5. Still in that row, under **Sign-in for this shelter**: press **Give it an Admin
+   role** (expected: *Admin role created. Now link a login to it.*). Then paste the
+   **account id** of a login that already exists and is used by no other shelter
+   into **Login's account id** and press **Link this login as its Admin**. The
+   screen cannot create a login, and nobody is emailed. **Creating that first
+   login is not possible from this screen**, so someone must already have one.
 
-**Two facts that matter now:**
+**Facts that matter now:**
 
 - The platform's front door (the apex) maps to *no* shelter; a host with no row is
   refused. A new host never falls through to another shelter.
 - The shelter's key is used by every script below as `--shelter <key>`. Write it
-  down. Keys are lower case letters, digits, `-` and `_` only.
+  down.
+- The screen cannot show whether a shelter already has its Admin role or login; a
+  refusal says so if a step was already done.
+- A shelter cannot be deleted from the screen (see "A shelter leaving").
 
 ## Step 2. Put the host on Cloudflare  **[LUTAN ONLY]**
 
@@ -214,6 +229,8 @@ time; that needs a second Google account made by you. The proof is backlog
 
 ## Step 5. Connect the calendar  **[TERMINAL]**
 
+**KNOWN FAULT, 2026-11-19: this script stops at start with `ERR_MODULE_NOT_FOUND` (`drive-credentials-crypto`), before reading anything. Until a developer fixes it, this step cannot be followed; nothing is stored when it stops.**
+
 The script is `scripts/connect-shelter-calendar.mjs`. The same three secrets, in
 the same way (but the refresh token is the **calendar** one from Step 3), and optionally the account's address so an Admin can see which
 account is connected:
@@ -241,31 +258,40 @@ Close the window afterwards.
 
 ## Step 6. The shelter's names, receipt series and lookup lists
 
+**What a newly created shelter already has (`0416`).** Creating it on the screen
+fills, with neutral wording and no Lanna text: the eight public site pages (titles
+set, **bodies empty**), the four public-figure switches (on), the 14 bill kinds and
+the 10 frequencies. **You no longer add those by hand.**
+
+**What is NOT filled, and nothing handles it:** `group_origins`,
+`donation_channels`, `site_content`, and **cards** (never: Step 7 is yours). Blood
+test types, immunisation types, procedure types and units are not filled either.
+
 **Names (`0400`).** A shelter's full name and short name are two columns on the
 `shelters` row (`display_name` for pages and PDFs, `short_name` for mail senders
-and subjects). **NOT YET POSSIBLE as a step you can follow:** no screen or script
-sets them. They are set when the shelter is created, which is the part of `#shmgt`
-that has **not** landed (the Product admin screen does not show or edit them); until then a developer sets them. If they are empty the app falls back to
-the original shelter's wording, which would be wrong for a new shelter — so
-**do not open a new shelter to its people until its names are set.**
+and subjects). **NOT YET POSSIBLE as a step you can follow:** the create form sets
+only the key and one name; no screen or script sets these two, so a developer does.
+If they are empty the app falls back to the original shelter's wording, which would
+be wrong for a new shelter, so **do not open a new shelter to its people until its
+names are set.** It waits on a screen for them (no backlog item filed yet).
 
-**Receipt series (`0395`).** `shelters.receipt_series` (capital letters only,
-unique per shelter) and `receipt_issuers` set the prefix and issuer on donation
-receipts. **NOT YET POSSIBLE as a step you can follow**, for the same reason, and
-the same item (`#shmgt`) replaces it. A shelter with no series cannot issue
-receipts.
+**Receipt series (`0395`).** Capital letters only, unique per shelter, plus the
+issuers. The database function `product_admin_set_shelter_receipts(shelter, series,
+issuers)` sets them and creates the receipt counter. **NOT YET POSSIBLE as a step
+you can follow:** nothing on the screen calls it, and it must not be typed against
+the database by hand. A shelter with no series cannot issue receipts. It waits on a
+product-admin form (no backlog item filed yet).
 
-**Lookup lists (`0403`).** Bill kinds, blood test types, immunisation types,
-procedure types, frequencies, units and group origins are **per shelter**; a new
-shelter starts with none, and it must make its own. **[ADMIN SCREEN]** Signed in
-as the shelter's Admin, open the **Admin** area and use these pages, reached by
+**Lookup lists (`0403`).** Blood test types, immunisation types, procedure types and
+units are **per shelter**; a new shelter starts with none. **[ADMIN SCREEN]** Signed
+in as the shelter's Admin, open the **Admin** area and use these pages, reached by
 clicking in from the Admin page (not by typing the address):
 
 - **Blood test types**, **Immunization types**, **Procedure types**, **Units**
-  — each has an **Add** button and a list to edit.
-- Bill kinds, frequencies and group origins have **no screen yet**.
-  **NOT YET POSSIBLE** for those three; a developer adds them. When a screen is
-  added the line goes.
+  each has an **Add** button and a list to edit.
+- **Group origins** have **no screen yet**: **NOT YET POSSIBLE**; a developer adds
+  them. (Bill kinds and frequencies are filled at creation and edited on their own
+  pages.)
 
 ## Step 7. Roles and cards  **[ADMIN SCREEN]**
 
@@ -433,5 +459,19 @@ the day that item is done.
 
 ## What has not been rehearsed
 
-See the decision file `docs/decisions/2026-11-18-shelter-onboarding-runbook.md`
-for what was read, what was run to rehearse it, and what could not be.
+Rehearsal of 2026-11-19 against the test database; the full account is in
+`docs/decisions/2026-11-19-onboarding-rehearsal.md`. **This runbook is NOT yet
+rehearsed end to end.**
+
+- **Not driven at all: every press on the Product admin screen** (create a shelter,
+  add or remove an address, give an Admin role, link a login). They need the
+  two-step code, a development sign-in has none, and standing up an authenticator
+  was out of scope. Steps 1, 6 (first half), 7 and 9 as written come from the
+  screen's own text and the migrations, **not from pressing the buttons.**
+- **Not rehearsed: Step 3 and the secrets of Steps 4 and 5** (a Google account is
+  yours to make), Step 2 (Cloudflare) and Step 8 (the production deploy).
+- **Run for real:** Step 4's script refuses correctly with no secrets (*Missing or
+  malformed: …*). **Step 5's script does not start:** `connect-shelter-calendar.mjs`
+  stops with `ERR_MODULE_NOT_FOUND` for `drive-credentials-crypto` before reading
+  anything, so **Step 5 cannot be followed today and needs a developer** until that
+  is fixed.
