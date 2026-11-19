@@ -15,6 +15,7 @@ import {
   mapShelterHost,
   removeProductAdmin,
   seedShelterDefaults,
+  setShelterNames,
   setShelterReceipts,
   unmapShelterHost,
 } from "./actions";
@@ -34,6 +35,8 @@ export type ShelterRow = {
   has_site_content: boolean;
   drive_status: Status;
   calendar_status: Status;
+  display_name: string | null;
+  short_name: string | null;
 };
 export type PersonRow = { kind: string; shelterId: string | null; userId: string; email: string | null };
 
@@ -71,6 +74,8 @@ export function ProductAdminPanel({
   const [adminEmail, setAdminEmail] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
+  const [nameDrafts, setNameDrafts] = useState<Record<string, { full: string; short: string }>>({});
+  const nameDraft = (s: ShelterRow) => nameDrafts[s.id] ?? { full: s.display_name ?? "", short: s.short_name ?? "" };
   const setReceiptDraft = (id: string, patch: Partial<{ series: string; name: string; address: string }>) =>
     setReceiptDrafts((d) => ({ ...d, [id]: { ...(d[id] ?? { series: "", name: "", address: "" }), ...patch } }));
   const say = (ok: boolean, text: string) => setMsg({ ok, text });
@@ -139,6 +144,43 @@ export function ProductAdminPanel({
                   <span className="font-mono">{s.key}</span> · {p.shelterCreated} {s.created_at.slice(0, 10)}
                 </p>
               </header>
+
+              <form
+                className="flex max-w-xl flex-col gap-2"
+                onSubmit={(ev) => {
+                  ev.preventDefault();
+                  const nd = nameDraft(s);
+                  startTransition(async () => {
+                    const r = await call((id) => setShelterNames(s.id, nd.full, nd.short, id));
+                    say(r.ok, r.ok ? p.namesSet : (r.error ?? ""));
+                  });
+                }}
+              >
+                <h4 className="text-sm font-semibold text-foreground">{p.namesTitle}</h4>
+                <span className="max-w-prose text-xs text-muted">{p.namesNote}</span>
+                {canWrite && (
+                  <>
+                    <label className="flex flex-col gap-1 text-sm">
+                      {p.namesFull}
+                      <input value={nameDraft(s).full} onChange={(e) => setNameDrafts((d) => ({ ...d, [s.id]: { ...nameDraft(s), full: e.target.value } }))} maxLength={120} className="min-h-11 rounded border border-border bg-background px-3 md:min-h-9" autoComplete="off" />
+                    </label>
+                    <label className="flex flex-col gap-1 text-sm">
+                      {p.namesShort}
+                      <input value={nameDraft(s).short} onChange={(e) => setNameDrafts((d) => ({ ...d, [s.id]: { ...nameDraft(s), short: e.target.value } }))} maxLength={60} className="min-h-11 rounded border border-border bg-background px-3 md:min-h-9" autoComplete="off" />
+                    </label>
+                    <div>
+                      <ActionButton icon={ACTION_ICONS.add} variant="primary" compact type="submit" disabled={pending || !nameDraft(s).full.trim() || !nameDraft(s).short.trim()}>
+                        {p.setNames}
+                      </ActionButton>
+                    </div>
+                  </>
+                )}
+                {!canWrite && (
+                  <p className="text-sm text-foreground">
+                    {s.display_name ?? "—"} · {s.short_name ?? "—"}
+                  </p>
+                )}
+              </form>
 
               <ol className="flex flex-col gap-2">
                 {steps.map((st) => (
