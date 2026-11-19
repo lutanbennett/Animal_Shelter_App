@@ -276,27 +276,26 @@ Omit for a stream that runs nothing. The planner's half: do not ask a stream to 
   scratchpad** — never in the foreground.
 - **If a check gives you NO output, establish whether it was killed before concluding it is broken.**
   "No output" is not evidence of a fault.
-- **KNOWN ENVIRONMENT FAULT, SECOND NAMED CASE: `next build` stops after a full compile to show a
-  Next.js advisory** (`SecurityFatalError`, "stopped to show the upgrade recommendation"). It fires
-  because an agent is driving the build and is skipped in CI (`nudge.js` reads `isCI` and
-  `getAgentName()`), so CI never shows it. The advisory (moderate, `unstable_cache` with `"use cache"`)
-  is not reachable here. **`gates.mjs` NOW HANDLES IT ITSELF, SO A SINGLE HONEST RUN SHOULD END
-  `build=0`:** since PR #1671 it re-runs **the build gate only**, once and immediately, when that gate
-  exits non-zero **and** printed `SecurityFatalError`, and reports the second run's own exit code.
-  **THE HALT IS A ONE-SHOT TOKEN VALID FOR FIVE MINUTES, NOT A FIVE-MINUTE WINDOW OF SILENCE** — the
-  receipt in `.next/cache` (`RETRY_TTL` in `nudge.js`) is **spent** by the next build rather than
-  suppressing every build for five minutes. #1671 measured four builds inside five minutes and got
-  **halt, pass, halt**; it also proved a real failure still fails (a deliberate type error gave
-  `typecheck=2 … build=1`, exit 1, no retry). **So if you meet the halt outside `gates.mjs`, re-run
-  `npx next build` — about two minutes — and expect the run after that to halt again.** Nothing is
-  weakened and no environment variable is set: `__NEXT_AGENT_UPGRADE`,
-  `NEXT_PRIVATE_ALLOWED_UPGRADE_RETRIES` and `experimental.agentUpgrade:false` were each assessed and
-  rejected as dishonest. **The retry has ONE run behind it, so record it as untested, and say in your PR
-  if the build gate still ends 1 after it.** Measured:
-  `docs/decisions/2026-11-17-build-halt-gates-retry.md`, correcting
-  `docs/decisions/2026-11-17-next-agent-upgrade-halt.md` on the one-shot point.
-  **Report it in your PR, and do NOT upgrade Next from the build message** — a framework upgrade is its
-  own PR. (The first named case, the Google Fonts fetch failure, fails fetching fonts while CI passes.)
+- **KNOWN ENVIRONMENT FAULT, SECOND NAMED CASE: `next build` can stop after a full compile to show a
+  Next.js advisory** (`SecurityFatalError`, "stopped to show the upgrade recommendation"). It fires because an
+  agent is driving the build; CI skips it, so CI never shows it. The advisory is not reachable here. Since PR #1671
+  `gates.mjs` re-runs **the build gate only**, once, when it exits non-zero **and** printed `SecurityFatalError`,
+  and reports the second run's own exit code; a real failure is not retried (a deliberate type error gave
+  `build=1`). **What is measured:** #1671 got halt, pass, halt on four builds; three further gates runs on
+  2026-11-19 **never halted** (`build=0` x3, 305/63/42 s), so **the retry has never been seen turning a halt into a
+  pass** and is **untested**. Do not claim it works; say in your PR if the build gate ends 1. If you meet the halt
+  outside `gates.mjs`, re-run `npx next build` once. Do not set `__NEXT_AGENT_UPGRADE`,
+  `NEXT_PRIVATE_ALLOWED_UPGRADE_RETRIES` or `experimental.agentUpgrade:false` (each rejected as dishonest), and
+  do **not** upgrade Next from the build message. Records: `docs/decisions/2026-11-17-build-halt-gates-retry.md`,
+  `docs/decisions/2026-11-19-exit-code-after-success.md`.
+- **A NON-ZERO EXIT AFTER COMPLETE OUTPUT MAY BE TEARDOWN NOISE, NOT FAILURE (Windows, Node 24).** If a script
+  printed everything it should and then died with exit 127 and `Assertion failed: !(handle->flags &
+  UV_HANDLE_CLOSING), file srcwinasync.c`, that is `process.exit()` after a `fetch` with the socket still
+  open. Do not file it as a defect on the exit code alone and do not stop trusting exit codes: look for that
+  assertion line, compare the output with what success looks like, and report a pass with the crash noted. No
+  assertion line, or incomplete output, means the exit code is real. Scripts should end `await exitWith(code)`
+  (`scripts/lib/exit.mjs`). Record: `docs/decisions/2026-11-19-exit-code-after-success.md`.
+(The first named case, the Google Fonts fetch failure, fails fetching fonts while CI passes.)
 ```
 
 ---
