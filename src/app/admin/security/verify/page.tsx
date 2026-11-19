@@ -23,7 +23,7 @@ export default async function TwoStepPage() {
     if (!(await isProductAdmin())) await requireAdminUser();
   }
   const level = await getAssuranceLevel();
-  if (level.current === "aal2") redirect(forAdmin ? "/admin/security" : "/admin/product-admin");
+  if (level.current === "aal2") redirect(forAdmin ? "/admin/security" : "/platform");
 
   const { t } = await getT();
   const s = t.admin.security.twoStep;

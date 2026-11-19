@@ -167,6 +167,6 @@ export async function confirmTwoStep(
     return { ok: true };
   });
   // Outside runWriteAction: nothing to catch, and the redirect is the success.
-  if (result.ok) redirect((await hasAdminRole()) ? "/admin/security" : "/admin/product-admin");
+  if (result.ok) redirect((await hasAdminRole()) ? "/admin/security" : "/platform");
   return result;
 }

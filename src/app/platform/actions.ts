@@ -23,22 +23,42 @@ const write = (t: Dictionary): WriteMessages => ({
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export async function addProductAdmin(userId: string, requestId: string | null): Promise<ActionResult> {
+/** An address is one exact login: no wildcards (the database refuses them too, 0417). Returns the cleaned address or null. */
+function cleanEmail(raw: string): string | null {
+  const v = raw.trim();
+  // The database refuses % _ * as well (a wildcard cannot become a search) and answers 22023.
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? v : null;
+}
+
+/** Whether a login has this exact address: one yes/no, product administrator at aal2 only (0417). Never a list, never a near match. */
+export async function loginExists(email: string): Promise<{ ok: boolean; exists?: boolean; error?: string }> {
+  const { t } = await getT();
+  const e = t.admin.productAdmin.errors;
+  if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
+  if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
+  const addr = cleanEmail(email);
+  if (!addr) return { ok: false, error: e.badId };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("product_admin_login_exists", { p_email: addr });
+  if (error) return { ok: false, error: error.code === "42501" ? e.stepUpExpired : e.badId };
+  return { ok: true, exists: data === true };
+}
+
+export async function addProductAdmin(email: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.admin.productAdmin.errors;
   const supabase = await createClient();
   return runWriteAction("productAdmin.add", write(t), { id: requestId, action: "productAdmin.add", db: supabase }, async () => {
     if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
     if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
-    const id = userId.trim();
-    if (!UUID.test(id)) return { ok: false, error: e.badId };
-    const { error } = await supabase.from("product_admins").insert({ user_id: id });
+    const addr = cleanEmail(email);
+    if (!addr) return { ok: false, error: e.badId };
+    const { error } = await supabase.rpc("product_admin_add_by_email", { p_email: addr });
     if (error) {
-      // 23503: no auth.users row has that id (the foreign key to auth.users).
-      if (error.code === "23503") return { ok: false, error: e.unknownAccount };
-      return databaseFailure("productAdmin.add", error, t.common);
+      const msg = shelterError(e, error.code, e.noLoginForAddress, e.noLoginForAddress);
+      return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.add", error, t.common);
     }
-    revalidatePath("/admin/product-admin");
+    revalidatePath("/platform");
     return { ok: true };
   });
 }
@@ -57,7 +77,7 @@ export async function removeProductAdmin(userId: string, requestId: string | nul
     if (!user || user.id === userId) return { ok: false, error: e.lastOne };
     const { error } = await supabase.from("product_admins").delete().eq("user_id", userId);
     if (error) return databaseFailure("productAdmin.remove", error, t.common);
-    revalidatePath("/admin/product-admin");
+    revalidatePath("/platform");
     return { ok: true };
   });
 }
@@ -93,7 +113,7 @@ export async function createShelter(key: string, name: string, requestId: string
       const msg = shelterError(e, error.code, e.shelterExists, e.badShelter);
       return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.createShelter", error, t.common);
     }
-    revalidatePath("/admin/product-admin");
+    revalidatePath("/platform");
     return { ok: true, created: name.trim() };
   });
 }
@@ -117,27 +137,46 @@ export async function createShelterAdminRole(shelterId: string, requestId: strin
       const msg = shelterError(e, error.code, e.adminRoleExists, e.badHost);
       return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.createAdminRole", error, t.common);
     }
-    revalidatePath("/admin/product-admin");
+    revalidatePath("/platform");
     return { ok: true };
   });
 }
 
-export async function linkShelterAdmin(shelterId: string, userId: string, requestId: string | null): Promise<ActionResult> {
+export async function linkShelterAdmin(shelterId: string, email: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.admin.productAdmin.errors;
   const supabase = await createClient();
   return runWriteAction("productAdmin.linkAdmin", write(t), { id: requestId, action: "productAdmin.linkAdmin", db: supabase }, async () => {
     if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
     if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
-    const id = userId.trim();
+    const addr = cleanEmail(email);
     if (!UUID.test(shelterId)) return { ok: false, error: e.badHost };
-    if (!UUID.test(id)) return { ok: false, error: e.badId };
-    const { error } = await supabase.rpc("product_admin_link_shelter_admin", { p_shelter: shelterId, p_user: id });
+    if (!addr) return { ok: false, error: e.badId };
+    const { error } = await supabase.rpc("product_admin_link_shelter_admin_by_email", { p_shelter: shelterId, p_email: addr });
     if (error) {
-      const msg = shelterError(e, error.code, e.loginUnavailable, e.noAdminRoleOrLogin);
+      const msg = shelterError(e, error.code, e.loginUnavailable, e.noLoginForAddress);
       return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.linkAdmin", error, t.common);
     }
-    revalidatePath("/admin/product-admin");
+    revalidatePath("/platform");
+    return { ok: true };
+  });
+}
+
+/** Add a shelter's starting content (seed_shelter_defaults, 0416/0417): idempotent, so a repeat press changes nothing. */
+export async function seedShelterDefaults(shelterId: string, requestId: string | null): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.productAdmin.errors;
+  const supabase = await createClient();
+  return runWriteAction("productAdmin.seedDefaults", write(t), { id: requestId, action: "productAdmin.seedDefaults", db: supabase }, async () => {
+    if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
+    if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
+    if (!UUID.test(shelterId)) return { ok: false, error: e.badHost };
+    const { error } = await supabase.rpc("seed_shelter_defaults", { p_shelter: shelterId });
+    if (error) {
+      const msg = shelterError(e, error.code, e.badHost, e.badHost);
+      return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.seedDefaults", error, t.common);
+    }
+    revalidatePath("/platform");
     return { ok: true };
   });
 }
@@ -155,7 +194,7 @@ export async function mapShelterHost(shelterId: string, host: string, requestId:
       const msg = shelterError(e, error.code, e.hostTaken, e.badHost);
       return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.mapHost", error, t.common);
     }
-    revalidatePath("/admin/product-admin");
+    revalidatePath("/platform");
     return { ok: true };
   });
 }
@@ -172,7 +211,7 @@ export async function unmapShelterHost(host: string, requestId: string | null): 
       const msg = shelterError(e, error.code, e.noSuchHost, e.noSuchHost);
       return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.unmapHost", error, t.common);
     }
-    revalidatePath("/admin/product-admin");
+    revalidatePath("/platform");
     return { ok: true };
   });
 }
