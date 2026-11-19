@@ -14,7 +14,7 @@
 | PR | see the PR this file is on |
 | Tested by / date | Claude, 2026-11-19 |
 | Carries a migration? | yes, 0415 |
-| Tested at SHA | 212744b9f |
+| Tested at SHA | 27bfb8572 |
 
 ## 1. Scope and risk
 
@@ -43,9 +43,13 @@ indistinguishable from one that passed.
 - [x] `node scripts/gates.mjs` ends with one line `gates: typecheck=<N> lint=<N> test=<N> build=<N>`, all 0 (output below)
 
 ```
-=== gates: typecheck exited 0 after 74s
-=== gates: lint exited 0 after 183s
-=== gates: test exited 0 after 60s
+=== gates: typecheck — npm run typecheck
+=== gates: typecheck exited 0 after 67s
+=== gates: lint — npm run lint
+=== gates: lint exited 0 after 210s
+=== gates: test — npm test
+=== gates: test exited 0 after 57s
+=== gates: build — npm run build
 === gates: build exited 0 after 188s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
