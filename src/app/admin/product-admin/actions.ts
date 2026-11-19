@@ -61,3 +61,74 @@ export async function removeProductAdmin(userId: string, requestId: string | nul
     return { ok: true };
   });
 }
+
+/*
+ * Create a shelter, map a web address to it, remove an address (#shmgt, write half; 0414). Same pattern as
+ * above: the checks here are the courtesy and the functions themselves raise for anyone who is not a product
+ * administrator at aal2. They are called through the signed-in client, never the service role, so auth.uid()
+ * and the JWT are the product administrator's. There is no delete or rename of a shelter and no one-step
+ * move of an address, because no function does either.
+ */
+function shelterError(
+  e: Dictionary["admin"]["productAdmin"]["errors"],
+  code: string | undefined,
+  on23505: string,
+  on22023: string,
+): string | null {
+  if (code === "42501") return e.stepUpExpired;
+  if (code === "23505") return on23505;
+  if (code === "22023") return on22023;
+  return null;
+}
+
+export async function createShelter(key: string, name: string, requestId: string | null): Promise<ActionResult<{ created: string }>> {
+  const { t } = await getT();
+  const e = t.admin.productAdmin.errors;
+  const supabase = await createClient();
+  return runWriteAction("productAdmin.createShelter", write(t), { id: requestId, action: "productAdmin.createShelter", db: supabase }, async () => {
+    if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
+    if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
+    const { error } = await supabase.rpc("product_admin_create_shelter", { p_key: key.trim(), p_name: name.trim() });
+    if (error) {
+      const msg = shelterError(e, error.code, e.shelterExists, e.badShelter);
+      return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.createShelter", error, t.common);
+    }
+    revalidatePath("/admin/product-admin");
+    return { ok: true, created: name.trim() };
+  });
+}
+
+export async function mapShelterHost(shelterId: string, host: string, requestId: string | null): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.productAdmin.errors;
+  const supabase = await createClient();
+  return runWriteAction("productAdmin.mapHost", write(t), { id: requestId, action: "productAdmin.mapHost", db: supabase }, async () => {
+    if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
+    if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
+    if (!UUID.test(shelterId)) return { ok: false, error: e.badHost };
+    const { error } = await supabase.rpc("product_admin_map_host", { p_shelter: shelterId, p_host: host.trim() });
+    if (error) {
+      const msg = shelterError(e, error.code, e.hostTaken, e.badHost);
+      return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.mapHost", error, t.common);
+    }
+    revalidatePath("/admin/product-admin");
+    return { ok: true };
+  });
+}
+
+export async function unmapShelterHost(host: string, requestId: string | null): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.productAdmin.errors;
+  const supabase = await createClient();
+  return runWriteAction("productAdmin.unmapHost", write(t), { id: requestId, action: "productAdmin.unmapHost", db: supabase }, async () => {
+    if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
+    if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
+    const { error } = await supabase.rpc("product_admin_unmap_host", { p_host: host });
+    if (error) {
+      const msg = shelterError(e, error.code, e.noSuchHost, e.noSuchHost);
+      return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.unmapHost", error, t.common);
+    }
+    revalidatePath("/admin/product-admin");
+    return { ok: true };
+  });
+}
