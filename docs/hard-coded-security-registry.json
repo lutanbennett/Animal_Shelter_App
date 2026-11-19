@@ -1144,6 +1144,21 @@
         "migration": "0422_product_admin_lookup_audit.sql",
         "item": "policy public.product_admin_lookups.definer_all",
         "reason": "PADMIN list (docs/decisions/2026-11-19-lookup-audit-row.md): lets the definer owner (rls_definer) write the lookup record; not reachable by any login. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0424_product_admin_permit_first_login.sql",
+        "item": "function public.product_admin_permit_first_login definer",
+        "reason": "PADMIN first login (docs/decisions/2026-11-20-padmin-create-login.md): gated by is_product_admin() and aal2, the PADMIN list outside the card system by Lutan's 2026-11-18 decision, and answers only for a shelter whose Admin role has no login yet; it grants nobody anything and records who was permitted which address. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0424_product_admin_permit_first_login.sql",
+        "item": "policy public.product_admin_login_grants.product_admin_login_grants_select",
+        "reason": "PADMIN first login (docs/decisions/2026-11-20-padmin-create-login.md): read only by is_product_admin(), the PADMIN list, outside the card system. Nothing writes through the API. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0424_product_admin_permit_first_login.sql",
+        "item": "policy public.product_admin_login_grants.definer_all",
+        "reason": "PADMIN first login (docs/decisions/2026-11-20-padmin-create-login.md): lets the definer owner (rls_definer) write the grant record; not reachable by any login. Recorded under outsideTheCardSystem.productAdmin, not debt."
       }
     ],
     "stubs": [
