@@ -125,6 +125,7 @@ git -C C:/Development/Animal_Shelter_Backlog push
 node C:/Development/Animal_Shelter_App/scripts/guarded-install.mjs          # npm ci; refuses while a build holds the checkout
 node C:/Development/Animal_Shelter_App/scripts/worktree.mjs clean           # prunes Turbopack cache over 3 GB
 node C:/Development/Animal_Shelter_App/scripts/check-planner-preflight.mjs  # what can this session REACH?
+node C:/Development/Animal_Shelter_App/scripts/check-release-handover.mjs   # advisory: exits 0; if it says STALE, tell Lutan the release manager owes an edition
 ```
 
 **`git merge backlog` conflicts most days and that is normal** — one item per long line, reworded on both
