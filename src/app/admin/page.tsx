@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { Activity, CalendarClock, Grid3x3, History } from "lucide-react";
 import { DriveStatus } from "./DriveStatus";
 import { CalendarStatus } from "./CalendarStatus";
-import { can } from "@/lib/permissions/can";
 import { canOpen, routeFor } from "@/lib/permissions/routes";
 import { WHO_DOES_WHAT_PATH, opensWhoDoesWhat } from "@/lib/permissions/who-does-what";
 import { requireAnyPageIn } from "@/lib/permissions/require";
