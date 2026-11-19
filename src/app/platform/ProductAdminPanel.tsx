@@ -15,6 +15,7 @@ import {
   mapShelterHost,
   removeProductAdmin,
   seedShelterDefaults,
+  setShelterReceipts,
   unmapShelterHost,
 } from "./actions";
 
@@ -71,7 +72,7 @@ export function ProductAdminPanel({
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const setReceiptDraft = (id: string, patch: Partial<{ series: string; name: string; address: string }>) =>
-    setReceiptDrafts((d) => ({ ...d, [id]: { series: "", name: "", address: "", ...d[id], ...patch } }));
+    setReceiptDrafts((d) => ({ ...d, [id]: { ...(d[id] ?? { series: "", name: "", address: "" }), ...patch } }));
   const say = (ok: boolean, text: string) => setMsg({ ok, text });
   const admins = people.filter((x) => x.kind === "product_admin");
   const emailOf = (shelterId: string) => people.find((x) => x.kind === "shelter_admin" && x.shelterId === shelterId)?.email ?? p.noEmail;
