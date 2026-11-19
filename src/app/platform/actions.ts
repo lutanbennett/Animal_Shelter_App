@@ -222,6 +222,27 @@ export async function unmapShelterHost(host: string, requestId: string | null): 
  * receipt countries (TH, US) and carries no registration or statement lines: a receipt must not claim a status nobody has
  * entered (src/lib/donations/issuer.ts), so those stay empty until a person adds them.
  */
+export async function setShelterNames(shelterId: string, displayName: string, shortName: string, requestId: string | null): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.productAdmin.errors;
+  const supabase = await createClient();
+  return runWriteAction("productAdmin.setNames", write(t), { id: requestId, action: "productAdmin.setNames", db: supabase }, async () => {
+    if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
+    if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
+    if (!UUID.test(shelterId)) return { ok: false, error: e.badHost };
+    const full = displayName.trim();
+    const short = shortName.trim();
+    if (full === "" || short === "" || full.length > 120 || short.length > 60) return { ok: false, error: e.badNames };
+    const { error } = await supabase.rpc("product_admin_set_shelter_names", { p_shelter: shelterId, p_display_name: full, p_short_name: short });
+    if (error) {
+      const msg = shelterError(e, error.code, e.badNames, e.badNames);
+      return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.setNames", error, t.common);
+    }
+    revalidatePath("/platform");
+    return { ok: true };
+  });
+}
+
 export async function setShelterReceipts(
   shelterId: string,
   series: string,
