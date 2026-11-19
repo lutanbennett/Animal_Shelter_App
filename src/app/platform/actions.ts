@@ -215,3 +215,38 @@ export async function unmapShelterHost(host: string, requestId: string | null): 
     return { ok: true };
   });
 }
+
+/**
+ * Set a shelter's receipt series and the issuer printed on its receipts (product_admin_set_shelter_receipts, 0416; #rcpfm).
+ * The series is capital letters and cannot change once set (the database answers 23505). The issuer block is the same for both
+ * receipt countries (TH, US) and carries no registration or statement lines: a receipt must not claim a status nobody has
+ * entered (src/lib/donations/issuer.ts), so those stay empty until a person adds them.
+ */
+export async function setShelterReceipts(
+  shelterId: string,
+  series: string,
+  issuerName: string,
+  addressLines: string,
+  requestId: string | null,
+): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.productAdmin.errors;
+  const supabase = await createClient();
+  return runWriteAction("productAdmin.setReceipts", write(t), { id: requestId, action: "productAdmin.setReceipts", db: supabase }, async () => {
+    if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
+    if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
+    if (!UUID.test(shelterId)) return { ok: false, error: e.badHost };
+    const s = series.trim().toUpperCase();
+    const name = issuerName.trim();
+    const lines = addressLines.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    if (!/^[A-Z]+$/.test(s) || name === "" || lines.length === 0) return { ok: false, error: e.badReceipts };
+    const block = { name, addressLines: lines, registrationLines: [], statementLines: [] };
+    const { error } = await supabase.rpc("product_admin_set_shelter_receipts", { p_shelter: shelterId, p_series: s, p_issuers: { TH: block, US: block } });
+    if (error) {
+      const msg = shelterError(e, error.code, e.receiptSeriesTaken, e.badReceipts);
+      return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.setReceipts", error, t.common);
+    }
+    revalidatePath("/platform");
+    return { ok: true };
+  });
+}
