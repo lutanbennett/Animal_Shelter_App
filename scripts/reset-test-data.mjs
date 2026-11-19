@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// exit-debt: fail() is reachable after fetches; needs a restructure (#scimp)
 // Reset the TEST system back to a bare shelter: keep the setup, clear the content.
 //
 // Lutan, 2026-11-07: "Can we clear the test system please, it is so full of test data it is
@@ -55,6 +54,9 @@
 // The whole database half runs in ONE transaction, so the dry run's "after" counts are the ones
 // an --apply would really produce. Re-runnable: a second run finds nothing to do.
 import { loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
+import { bail, runMain } from "./lib/exit.mjs";
+
+async function main() {
 
 const { name: envName, rest: args } = parseEnvArg(process.argv.slice(2));
 const APPLY = args.includes("--apply");
@@ -68,7 +70,7 @@ const UAT_BUCKET = "16DhllkzpM0dqCn0Yy0cErQ7XgvhJpW9J";
 
 const fail = (m) => {
   console.error(`refusing: ${m}`);
-  process.exit(2);
+  bail(2);
 };
 
 if (envName !== "test") fail(`--env ${envName} — this script is for the test system only.`);
@@ -456,3 +458,6 @@ console.log(
     ? "\nDone. The test system is a bare shelter: the setup is there, the content is gone."
     : "\nNothing was changed. Re-run with --apply to commit.",
 );
+}
+
+await runMain(main);

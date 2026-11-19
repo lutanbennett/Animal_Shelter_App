@@ -1,4 +1,3 @@
-// exit-debt: exits follow fetches mid-flow in helpers; needs a restructure (#scimp)
 // Put a person on the product-administrator list (#shmgt, #pdmin), or take them off it.
 //
 //   node scripts/add-product-admin.mjs --env production --email someone@example.com
@@ -41,6 +40,9 @@
 // PADMIN without a verified factor can read the screen and do nothing on it. The dry run says
 // so plainly rather than letting it be discovered on the screen.
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
+import { bail, runMain } from "./lib/exit.mjs";
+
+async function main() {
 
 const { name: envName, rest: args } = parseEnvArg(process.argv.slice(2));
 const valueOf = (flagName) => {
@@ -53,7 +55,7 @@ const KNOWN = new Set(["--email", "--user-id", "--note", "--confirm", "--apply",
 const unknown = args.filter((a) => a.startsWith("--") && !KNOWN.has(a));
 if (unknown.length) {
   console.error(`Unknown flag(s): ${unknown.join(", ")}. Known: ${[...KNOWN].join(", ")}`);
-  process.exit(2);
+  bail(2);
 }
 
 const email = valueOf("--email");
@@ -65,18 +67,18 @@ const list = has("--list");
 
 if (!list && !email && !userIdArg) {
   console.error("Give --email <address> or --user-id <uuid>, or --list to see who is on the list.");
-  process.exit(2);
+  bail(2);
 }
 if (email && userIdArg) {
   console.error("Give --email or --user-id, not both.");
-  process.exit(2);
+  bail(2);
 }
 
 const env = loadEnv(envName);
 const ref = projectRef(env);
 if (!env.SUPABASE_ACCESS_TOKEN) {
   console.error(`No SUPABASE_ACCESS_TOKEN for ${envName}. It is how this script reaches the database; see README, "Environments".`);
-  process.exit(2);
+  bail(2);
 }
 
 const q = (v) => `'${String(v).replace(/'/g, "''")}'`;
@@ -109,7 +111,7 @@ const [{ present: tablePresent } = {}] = await query(
 );
 if (!tablePresent) {
   console.error(`product_admins does not exist on ${envName}: 0411 is not applied there yet. Apply the migrations first.`);
-  process.exit(2);
+  bail(2);
 }
 
 /** Everyone on the list, with the email and authenticator state the dry run reports. */
@@ -130,14 +132,14 @@ if (list) {
   const rows = await readList();
   if (!rows.length) {
     console.log("The product-administrator list is EMPTY, so nobody can open Settings -> Product admin.");
-    process.exit(0);
+    bail(0);
   }
   console.log(`${rows.length} product administrator(s):`);
   for (const r of rows) {
     const canWrite = Number(r.verified_factors) > 0 ? "has an authenticator" : "NO authenticator — can read the screen but not use it";
     console.log(`  ${r.email ?? "(account deleted)"}  ${r.user_id}  ${canWrite}${r.note ? `  note: ${r.note}` : ""}`);
   }
-  process.exit(0);
+  bail(0);
 }
 
 // Resolve the account. An email that matches no account, or more than one, stops here:
@@ -148,11 +150,11 @@ if (email) {
   const matches = await query(`select id, email from auth.users where lower(email) = lower(${q(email)})`);
   if (!matches.length) {
     console.error(`No account on ${envName} has the address ${email}. Check the spelling, or that they have signed in at least once.`);
-    process.exit(2);
+    bail(2);
   }
   if (matches.length > 1) {
     console.error(`${matches.length} accounts on ${envName} have the address ${email}. Pass --user-id <uuid> to say which.`);
-    process.exit(2);
+    bail(2);
   }
   userId = matches[0].id;
   resolvedEmail = matches[0].email;
@@ -160,7 +162,7 @@ if (email) {
   const matches = await query(`select id, email from auth.users where id = ${q(userId)}`);
   if (!matches.length) {
     console.error(`No account on ${envName} has the id ${userId}.`);
-    process.exit(2);
+    bail(2);
   }
   resolvedEmail = matches[0].email;
 }
@@ -178,17 +180,17 @@ console.log(`add-product-admin: the list currently holds ${current.length} perso
 if (remove) {
   if (!already) {
     console.log(`${resolvedEmail} is NOT on the list; nothing to remove.`);
-    process.exit(0);
+    bail(0);
   }
   if (current.length === 1) {
     console.error(
       `Refusing: ${resolvedEmail} is the ONLY product administrator. Removing them would leave the list empty, and an empty list cannot be added to through the app — the next person would need this script again. Add someone else first.`,
     );
-    process.exit(2);
+    bail(2);
   }
 } else if (already) {
   console.log(`${resolvedEmail} is ALREADY a product administrator (added ${already.created_at}). Nothing to do.`);
-  process.exit(0);
+  bail(0);
 }
 
 // The authenticator warning, before the write rather than after it.
@@ -213,7 +215,7 @@ if (!apply) {
   console.log(
     `\nTo do it: node scripts/add-product-admin.mjs --env ${envName} ${email ? `--email ${resolvedEmail}` : `--user-id ${userId}`}${note ? ` --note ${JSON.stringify(note)}` : ""}${remove ? " --remove" : ""} --apply --confirm ${resolvedEmail}`,
   );
-  process.exit(0);
+  bail(0);
 }
 
 // Changing a live list needs the address typed back, the same guard correct-resident.mjs uses.
@@ -222,7 +224,7 @@ if (confirm !== resolvedEmail) {
   console.error(
     `Refusing: --apply also needs --confirm ${resolvedEmail}. Run it without --apply first; the dry run prints the exact line.`,
   );
-  process.exit(2);
+  bail(2);
 }
 
 await query(statement);
@@ -231,10 +233,13 @@ const after = await readList();
 const nowOn = after.some((r) => r.user_id === userId);
 if (remove ? nowOn : !nowOn) {
   console.error(`The write did not take effect: ${resolvedEmail} is ${nowOn ? "still on" : "still off"} the list. Nothing else was changed.`);
-  process.exit(1);
+  bail(1);
 }
 console.log(`add-product-admin: ${remove ? "removed" : "added"} ${resolvedEmail}. The list now holds ${after.length} person/people:`);
 for (const r of after) {
   const canWrite = Number(r.verified_factors) > 0 ? "has an authenticator" : "NO authenticator";
   console.log(`  ${r.email ?? "(account deleted)"}  ${canWrite}`);
 }
+}
+
+await runMain(main);

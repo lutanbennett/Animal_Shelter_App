@@ -1,4 +1,3 @@
-// exit-debt: fail() is called after the pooler fetch; needs a restructure (#scimp)
 // Back up one environment's Supabase database into the shelter's Google
 // Drive. Free-tier Supabase projects have no backups of their own (README
 // "Backups"), so this is production's only safety net.
@@ -82,6 +81,9 @@ import { ENCRYPTED_SUFFIX, encryptBackup, excludeArgs, parseRecipients } from ".
 import { MIN_KEPT, planPrune } from "./lib/backup-prune.mjs";
 import { describeBackupFolder, resolveBackupFolder } from "./lib/backup-folder.mjs";
 import { envFile, loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
+import { bail, runMain } from "./lib/exit.mjs";
+
+async function main() {
 
 const MIN_PG_MAJOR = 17;
 const SCHEMAS = ["public", "private", "auth"];
@@ -165,7 +167,7 @@ console.log(`Wrote ${dumpName}, encrypted for ${recipients.length} recipient(s) 
 
 if (localDir) {
   console.log(`Kept locally in ${localDir}; not uploaded (--local).`);
-  process.exit(0);
+  bail(0);
 }
 
 // --- 2. Upload -------------------------------------------------------------
@@ -226,7 +228,7 @@ if (copyDir) {
 
 function fail(message) {
   console.error(message);
-  process.exit(1);
+  bail(1);
 }
 
 /** Name any plaintext dump left over from before encryption; never delete one unasked. */
@@ -371,3 +373,6 @@ async function ensureBackupsFolder(drive) {
   console.log("Created the Backups folder in Drive.");
   return created.data.id;
 }
+}
+
+await runMain(main);

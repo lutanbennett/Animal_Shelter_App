@@ -1,4 +1,3 @@
-// exit-debt: 25 exits, many after fetches in helpers; needs a restructure (#scimp)
 // Apply supabase/migrations/*.sql to one environment's Supabase project,
 // recording each file in a `schema_migrations` table so the database itself
 // knows what has been applied — no memory notes, no "did I run 0026?".
@@ -66,6 +65,9 @@ import { MIGRATION_NAME, MIGRATIONS_DIR, parseLsTree } from "./lib/migrations.mj
 import { consumerReport, liveRelease } from "./lib/migration-consumers.mjs";
 // Shared with Settings → System status, so the page and --drift agree.
 import { migrationDrift } from "../src/lib/migration-drift.ts";
+import { bail, runMain } from "./lib/exit.mjs";
+
+async function main() {
 
 // `--drift <env>` is shorthand for `--drift --env <env>`.
 const argv = process.argv.slice(2);
@@ -74,7 +76,7 @@ const argv = process.argv.slice(2);
   if (i >= 0 && ENVIRONMENTS.includes(argv[i + 1])) {
     if (argv.includes("--env")) {
       console.error("Give the environment once: --drift <env> or --drift --env <env>, not both.");
-      process.exit(2);
+      bail(2);
     }
     argv.splice(i + 1, 1, "--env", argv[i + 1]);
   }
@@ -89,44 +91,44 @@ const allHistory = args.includes("--all-history");
 const GRANTS_RULE_STARTS_AFTER = 77;
 if (allHistory && (statusOnly || drift || args.includes("--baseline"))) {
   console.error("--all-history goes with an apply or --dry-run, not --status, --drift or --baseline.");
-  process.exit(2);
+  bail(2);
 }
 const baselineIndex = args.indexOf("--baseline");
 const baseline = baselineIndex >= 0 ? args[baselineIndex + 1] : null;
 if (baselineIndex >= 0 && !baseline) {
   console.error("--baseline needs a migration filename, e.g. --baseline 0027_prescriptions.sql");
-  process.exit(2);
+  bail(2);
 }
 const uptoIndex = args.indexOf("--upto");
 const upto = uptoIndex >= 0 ? args[uptoIndex + 1] : null;
 if (uptoIndex >= 0 && (!upto || upto.startsWith("--"))) {
   console.error("--upto needs a migration filename, e.g. --upto 0180_something.sql");
-  process.exit(2);
+  bail(2);
 }
 const forgetIndex = args.indexOf("--forget");
 const forget = forgetIndex >= 0 ? args[forgetIndex + 1] : null;
 if (forgetIndex >= 0 && (!forget || forget.startsWith("--"))) {
   console.error("--forget needs a migration filename, e.g. --forget 0302_old_name.sql");
-  process.exit(2);
+  bail(2);
 }
 if (forget && (statusOnly || drift || dryRun || allHistory || baseline || upto)) {
   console.error("--forget stands alone: give it no other mode flag.");
-  process.exit(2);
+  bail(2);
 }
 if (forget && envName !== "test") {
   console.error(`--forget is for the dev database only (--env test); refusing ${envName}. Nothing was sent to any database.`);
-  process.exit(2);
+  bail(2);
 }
 const isAppliedIndex = args.indexOf("--is-applied");
 const isApplied = isAppliedIndex >= 0 ? args[isAppliedIndex + 1] : null;
 if (isAppliedIndex >= 0 && (!isApplied || isApplied.startsWith("--"))) {
   console.error("--is-applied needs a migration filename, e.g. --is-applied 0365_something.sql");
-  process.exit(2);
+  bail(2);
 }
 const readOnly = statusOnly || drift || isAppliedIndex >= 0;
 if (upto && (readOnly || baseline)) {
   console.error("--upto goes with an apply or --dry-run, not --status, --drift or --baseline.");
-  process.exit(2);
+  bail(2);
 }
 // Environments where a database write is something the shelter lives with.
 const GUARDED = envName === "uat" || envName === "production";
@@ -146,7 +148,7 @@ const fetched = git(["fetch", "origin", "main", "--quiet"]);
 const mainTree = git(["ls-tree", "origin/main", `${MIGRATIONS_DIR}/`]);
 if (!mainTree.ok) {
   console.error(`Could not read origin/main: ${mainTree.err || "git ls-tree failed"}`);
-  process.exit(2);
+  bail(2);
 }
 const mainBlobs = parseLsTree(mainTree.out);
 const mainFiles = [...mainBlobs.keys()].sort();
@@ -176,7 +178,7 @@ if (GUARDED && !readOnly) {
         "\nSchema reaches main before any database. Merge the migration's PR, then run this from the main checkout." +
         "\nNothing was read from or sent to any database.",
     );
-    process.exit(2);
+    bail(2);
   }
 }
 
@@ -189,7 +191,7 @@ if (envName === "test" && !readOnly) {
   const base = git(["merge-base", "HEAD", "origin/main"]);
   if (!fetched.ok || !base.ok) {
     console.error("apply-migrations: test needs origin/main and a merge-base to tell stale files from new ones; could not get them. Nothing was sent to any database.");
-    process.exit(2);
+    bail(2);
   }
   const baseBlobs = parseLsTree(git(["ls-tree", base.out, `${MIGRATIONS_DIR}/`]).out);
   const stale = files.filter((name) => !mainBlobs.has(name) && baseBlobs.has(name));
@@ -199,7 +201,7 @@ if (envName === "test" && !readOnly) {
         stale.join("\n  - ") +
         "\nRun worktree.mjs sync, or apply from a current checkout. Nothing was sent to any database.",
     );
-    process.exit(2);
+    bail(2);
   }
 }
 
@@ -208,7 +210,7 @@ const url = env.NEXT_PUBLIC_SUPABASE_URL;
 const token = env.SUPABASE_ACCESS_TOKEN;
 if (!url || !token) {
   console.error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_ACCESS_TOKEN are required.");
-  process.exit(2);
+  bail(2);
 }
 const projectRef = refOf(env);
 
@@ -285,7 +287,7 @@ function driftReport() {
 if (isApplied) {
   // Read-only question for check-migration-numbers.mjs: is this exact filename recorded in this database?
   console.log(applied.has(isApplied) ? "applied" : "not applied");
-  process.exit(applied.has(isApplied) ? 0 : 1);
+  bail(applied.has(isApplied) ? 0 : 1);
 }
 
 if (drift) {
@@ -298,31 +300,31 @@ if (drift) {
     );
   }
   console.log(gaps ? `Drift: ${envName} and origin/main disagree.` : `No drift: ${envName} matches origin/main.`);
-  process.exit(gaps ? 1 : 0);
+  bail(gaps ? 1 : 0);
 }
 
 if (forget) {
   if (mainBlobs.has(forget)) {
     console.error(`--forget ${forget}: that file IS on origin/main (${mainSha}), so the row is not an orphan. Nothing was deleted.`);
-    process.exit(2);
+    bail(2);
   }
   if (!fetched.ok) {
     console.error("--forget: could not fetch origin/main, so an orphan cannot be proved. Nothing was deleted.");
-    process.exit(2);
+    bail(2);
   }
   if (!applied.has(forget)) {
     console.error(`--forget ${forget}: no such row in schema_migrations. Nothing was deleted.`);
-    process.exit(2);
+    bail(2);
   }
   await query(`delete from schema_migrations where filename = ${literal(forget)};`);
   console.log(`Deleted one schema_migrations row: ${forget} (no file of that name on origin/main ${mainSha}).`);
-  process.exit(0);
+  bail(0);
 }
 
 if (baseline) {
   if (!files.includes(baseline)) {
     console.error(`${baseline} is not in ${MIGRATIONS_DIR}.`);
-    process.exit(2);
+    bail(2);
   }
   const toMark = files.filter((name) => name <= baseline && !applied.has(name));
   if (toMark.length === 0) {
@@ -343,7 +345,7 @@ const allPending = files.filter((name) => !applied.has(name));
 if (upto && !allPending.includes(upto)) {
   const why = applied.has(upto) ? "already applied" : files.includes(upto) ? "not pending" : `not in ${MIGRATIONS_DIR}`;
   console.error(`--upto ${upto}: ${why}. Pending: ${allPending.join(", ") || "none"}. Nothing was applied.`);
-  process.exit(2);
+  bail(2);
 }
 // Earlier pending files go first: there is no applying out of order.
 const pending = upto ? allPending.filter((name) => name <= upto) : allPending;
@@ -355,7 +357,7 @@ if (statusOnly || pending.length === 0) {
     console.log(`  pending: ${name}${mainBlobs.has(name) ? "" : " (not on origin/main)"}`);
   }
   if (statusOnly) driftReport();
-  process.exit(0);
+  bail(0);
 }
 
 // Print-only: warn about files whose declared reader is not live yet. It
@@ -417,7 +419,7 @@ if (grantChecked.length) {
         "\napply-migrations: check-migration-grants refuses the pending file(s) above, so nothing was applied." +
           `\nThe ${envName} database is shared, and what it holds is what every other branch's CI checks against. Fix the file first.`,
       );
-      process.exit(1);
+      bail(1);
     }
     console.log("Dry run continues; a real apply would refuse these files.");
   }
@@ -460,7 +462,7 @@ for (const name of pending) {
       }
     }
     console.error(`Stopped at ${name}; nothing from it was kept. Fix the file and re-run.`);
-    process.exit(1);
+    bail(1);
   }
 }
 
@@ -470,3 +472,6 @@ if (left.length) {
   console.log("--status and --drift will list these as pending. That is expected until they are applied.");
 }
 if (dryRun) console.log("Dry run only — nothing was applied.");
+}
+
+await runMain(main);

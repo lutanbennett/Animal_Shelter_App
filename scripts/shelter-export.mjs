@@ -1,4 +1,3 @@
-// exit-debt: proveIt and fail() exit after queries; needs a restructure (#scimp)
 // Export ONE shelter's data, and nothing of any other shelter's (#sxyw3, part 11 of the tenancy programme).
 // README "Backups" -> "Exporting one shelter". docs/decisions/2026-11-17-per-shelter-export.md.
 //
@@ -23,6 +22,9 @@ import { generateIdentity, identityToRecipient } from "age-encryption";
 import { decryptBackup, encryptBackup, parseRecipients } from "./lib/backup-crypto.mjs";
 import { envFile, loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 import { insertSql, nullRowsSql, planTables, q, selectSql } from "./lib/shelter-export.mjs";
+import { ExitRequest, bail, runMain } from "./lib/exit.mjs";
+
+async function main() {
 
 const { name: envName, rest: args } = parseEnvArg(process.argv.slice(2));
 const val = (f) => { const i = args.indexOf(f); return i < 0 ? null : args[i + 1]; };
@@ -183,6 +185,7 @@ async function proveIt() {
     }
     check(orphans.length === 0, `(c) self-consistent: ${fkRows.length} foreign keys between public tables, 0 child rows without their parent`, `(c) ORPHANS:\n      ${orphans.join("\n      ")}`);
   } catch (e) {
+    if (e instanceof ExitRequest) throw e; // fail() already said why; finally still cleans up
     failures++;
     console.error(`\nStopped: ${e.message}`);
   } finally {
@@ -190,7 +193,7 @@ async function proveIt() {
     rmSync(dir, { recursive: true, force: true });
     console.log(`\nServer stopped and ${dir} deleted${existsSync(dir) ? " - FAILED, delete it by hand" : ""}.`);
   }
-  if (failures) { console.error(`\nPROOF FAILED: ${failures} check(s).`); process.exit(1); }
+  if (failures) { console.error(`\nPROOF FAILED: ${failures} check(s).`); bail(1); }
   console.log("\nPROOF PASSED.");
   console.log("Not proved here: auth.users (the logins) is not part of the export; ", `${authFks} foreign key(s) from public tables point at it.`);
 }
@@ -240,7 +243,7 @@ async function sql(query) {
 
 function fail(message) {
   console.error(message);
-  process.exit(1);
+  bail(1);
 }
 
 function findPgBin() {
@@ -255,3 +258,6 @@ function findPgBin() {
   }
   return fail("PostgreSQL 17 server programs (initdb, pg_ctl, psql) not found. README \"Backups\" says how to get them, or set PG_BIN.");
 }
+}
+
+await runMain(main);

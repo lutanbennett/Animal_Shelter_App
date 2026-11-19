@@ -1,4 +1,3 @@
-// exit-debt: exits follow fetches in the release flow; needs a restructure (#scimp)
 // Build and deploy one environment's Worker.
 //
 //   node scripts/deploy.mjs --env test                # test.lannacare.org
@@ -79,6 +78,9 @@ import { latestRelease, majorReleasesSince, unreleased } from "../src/lib/releas
 import { appEnvForSupabaseUrl } from "../src/lib/app-env.ts";
 import { buildReleaseMail } from "../src/lib/release-mail.ts";
 import { DEFAULT_SHELTER_NAMES } from "../src/lib/shelter-names-default.ts";
+import { bail, runMain } from "./lib/exit.mjs";
+
+async function main() {
 
 const { name: envName, rest } = parseEnvArg(process.argv.slice(2));
 const pushSecrets = rest.includes("--secrets");
@@ -119,7 +121,7 @@ function run(cmd, opts = {}) {
   const r = spawnSync(cmd, { stdio: opts.input ? ["pipe", "inherit", "inherit"] : "inherit", shell: true, ...opts });
   if (r.status !== 0) {
     console.error(`\ndeploy: \`${cmd}\` exited with ${r.status}`);
-    process.exit(r.status ?? 1);
+    bail(r.status ?? 1);
   }
 }
 
@@ -223,7 +225,7 @@ function wrangler(args, opts = {}) {
   });
   if (r.status !== 0) {
     console.error(`\ndeploy: \`wrangler ${args.join(" ")}\` exited with ${r.status}`);
-    process.exit(r.status ?? 1);
+    bail(r.status ?? 1);
   }
 }
 const git = (args) => spawnSync(`git ${args}`, { shell: true, encoding: "utf8" }).stdout.trim();
@@ -232,7 +234,7 @@ const env = loadEnv(envName);
 for (const key of [...BUILD_VARS, ...(pushSecrets ? RUNTIME_SECRETS : [])]) {
   if (!env[key]) {
     console.error(`deploy: ${key} is not set for the ${envName} environment.`);
-    process.exit(2);
+    bail(2);
   }
 }
 
@@ -248,14 +250,14 @@ if (pushSecrets) {
   const devDb = envName === "uat" ? localOnly(sources).filter((n) => /SUPABASE/.test(n)) : [];
   if (devDb.length) {
     console.error(`deploy: uat would push dev's database secret(s) from .env.local: ${devDb.join(", ")}. Put UAT's own in ${envFile(envName)}; ${ALLOW_FLAG} does not apply to these.`);
-    process.exit(2);
+    bail(2);
   }
   const refusal = GUARDED
     ? fallthroughRefusal({ envName, sources, overlayName: envFile(envName), allowed: rest.includes(ALLOW_FLAG) })
     : null;
   if (refusal) {
     console.error(`deploy: ${refusal}`);
-    process.exit(2);
+    bail(2);
   }
 }
 
@@ -266,7 +268,7 @@ if (pushSecrets) {
   const problem = actionsKeyProblem(env[ACTIONS_KEY_VAR]);
   if (problem) {
     console.error(`deploy: ${envName}: ${problem}`);
-    process.exit(2);
+    bail(2);
   }
 }
 
@@ -278,7 +280,7 @@ if (pushSecrets) {
         `calls "${builds}" — the build would wear ${builds}'s badge, not ${envName}'s.` +
         (envName === "uat" ? "\n  UAT has its own project (docs/decisions/2026-11-06-uat-own-database.md): .env.deploy.uat must hold ITS values, not dev's or production's." : ""),
     );
-    process.exit(2);
+    bail(2);
   }
 }
 
@@ -298,7 +300,7 @@ if (pushSecrets) {
         stray.map((s) => `${s.file}: ${s.why}`).join("\n  - ") +
         `\nMove it out of the checkout (mv ${stray[0].file} ..) and deploy again.`,
     );
-    process.exit(2);
+    bail(2);
   }
 }
 
@@ -313,7 +315,7 @@ if (GUARDED) {
   if (behindAhead !== "0\t0") problems.push(`main and origin/main differ (${behindAhead.replace("\t", " behind / ")} ahead)`);
   if (problems.length) {
     console.error(`deploy: ${envName} deploys only from a clean, pushed main:\n  - ` + problems.join("\n  - "));
-    process.exit(2);
+    bail(2);
   }
 }
 
@@ -327,7 +329,7 @@ if (GUARDED) {
   for (const w of verdict.warnings) console.warn(`deploy: WARNING: ${w}`);
   if (verdict.refusal) {
     console.error(`deploy: ${verdict.refusal}`);
-    process.exit(2);
+    bail(2);
   }
 }
 
@@ -337,7 +339,7 @@ if (GUARDED) {
   const problems = releaseProblems({ pkgVersion, latestRelease, unreleased });
   if (problems.length && GUARDED) {
     console.error(`deploy: ${envName} ships only a written-down release:\n  - ` + problems.join("\n  - "));
-    process.exit(2);
+    bail(2);
   }
   for (const p of problems) console.warn(`deploy: warning: ${p}`);
 }
@@ -393,7 +395,7 @@ if (planOnly) {
       : "a major release new to this environment would be mailed to the admins";
   console.log(`deploy: --plan: mail: ${mailPlan}.`);
   console.log("deploy: --plan: stopping here; nothing built, uploaded or deployed.");
-  process.exit(0);
+  bail(0);
 }
 
 // Safe to run beside a live `next dev`: the build type-checks with
@@ -406,12 +408,12 @@ if (!skipBuild) {
     takeTreeLock("build");
   } catch (e) {
     console.error(`deploy: ${e.message}`);
-    process.exit(2);
+    bail(2);
   }
   const damaged = treeProblems();
   if (damaged) {
     console.error(`deploy: ${damaged}`);
-    process.exit(2);
+    bail(2);
   }
   const buildEnv = { ...process.env };
   for (const key of [...BUILD_VARS, ACTIONS_KEY_VAR]) buildEnv[key] = env[key];
@@ -441,7 +443,7 @@ if (!skipBuild) {
   const problem = builtKeyProblem(env[ACTIONS_KEY_VAR]);
   if (problem) {
     console.error(`deploy: ${envName}: ${problem}`);
-    process.exit(2);
+    bail(2);
   }
   console.log(`deploy: Server Actions key ${keyFingerprint(env[ACTIONS_KEY_VAR])} (the Pi's build must print the same)`);
 }
@@ -526,3 +528,6 @@ async function announce() {
   for (const a of result.sent) console.log(`  sent     ${a}`);
   for (const s of result.skipped) console.log(`  skipped  ${s.address}: ${s.reason}`);
 }
+}
+
+await runMain(main);
