@@ -33,7 +33,7 @@ const cfg = readFileSync(new URL("../next.config.ts", import.meta.url), "utf8");
 say(/allowedOrigins:\s*siteAllowedOrigins\(\)/.test(cfg), "next.config.ts allowedOrigins comes from siteAllowedOrigins()");
 for (const [name, block] of Object.entries(config.env ?? {})) {
   const v = block.vars ?? {};
-  const o = siteAllowedOrigins({ APP_HOST: v.APP_HOST, PUBLIC_HOST: v.PUBLIC_HOST });
+  const o = siteAllowedOrigins({ APP_HOST: v.APP_HOST, PUBLIC_HOST: v.PUBLIC_HOST, PLATFORM_HOST: v.PLATFORM_HOST });
   say(o.length > 0, `${name}: allowedOrigins = ${JSON.stringify(o)}`);
 }
 

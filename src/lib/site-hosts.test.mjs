@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { hostRedirect, isSplit, requestHost, siteAllowedOrigins } from "./site-hosts.ts";
+import { hostRedirect, isPlatformHostname, platformRedirect, isSplit, requestHost, siteAllowedOrigins } from "./site-hosts.ts";
 import { isPublicPage } from "./public-paths.ts";
 
 const split = { APP_HOST: "app.example.org", PUBLIC_HOST: "site.example.net" };
@@ -51,4 +51,20 @@ test("requestHost prefers the Worker's header over the rewritten ones, and drops
 test("allowed origins are the two addresses and www of each", () => {
   assert.deepEqual(siteAllowedOrigins(split).sort(), ["app.example.org", "site.example.net", "www.app.example.org", "www.site.example.net"]);
   assert.deepEqual(siteAllowedOrigins({}), []);
+});
+
+const plat = { ...split, PLATFORM_HOST: "cooper.example.com" };
+
+test("the platform host is a third address in the allowed origins, with www", () => {
+  assert.deepEqual(siteAllowedOrigins(plat).sort(), ["app.example.org", "cooper.example.com", "site.example.net", "www.app.example.org", "www.cooper.example.com", "www.site.example.net"]);
+  assert.equal(isPlatformHostname("www.cooper.example.com", plat), true);
+  assert.equal(isPlatformHostname("app.example.org", plat), false);
+  assert.equal(isPlatformHostname("cooper.example.com", split), false);
+});
+
+test("the platform host serves the console and sign-in only; any shelter page goes to the console", () => {
+  for (const p of ["/platform", "/login", "/auth/callback", "/admin/security/verify", "/api/version", "/lca-logo.jpg"]) assert.equal(platformRedirect("cooper.example.com", p, plat), null, p);
+  for (const p of ["/", "/residents", "/my", "/admin", "/admin/product-admin", "/adopt"]) assert.equal(platformRedirect("cooper.example.com", p, plat), "/platform", p);
+  assert.equal(platformRedirect("app.example.org", "/residents", plat), null);
+  assert.equal(platformRedirect("cooper.example.com", "/residents", split), null);
 });
