@@ -98,6 +98,50 @@ export async function createShelter(key: string, name: string, requestId: string
   });
 }
 
+/*
+ * Give a shelter its Admin role and link one existing login to it (#shadm, 0415). Same pattern: signed-in
+ * client, and the functions raise for anyone who is not a product administrator at aal2. The role is given no
+ * cards: Admin is decided by roles.is_admin. A login is only picked by account id, never created here (no
+ * service role). 23505 on the link means already linked OR already has a main role elsewhere: one sentence.
+ */
+export async function createShelterAdminRole(shelterId: string, requestId: string | null): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.productAdmin.errors;
+  const supabase = await createClient();
+  return runWriteAction("productAdmin.createAdminRole", write(t), { id: requestId, action: "productAdmin.createAdminRole", db: supabase }, async () => {
+    if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
+    if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
+    if (!UUID.test(shelterId)) return { ok: false, error: e.badHost };
+    const { error } = await supabase.rpc("product_admin_create_shelter_admin_role", { p_shelter: shelterId });
+    if (error) {
+      const msg = shelterError(e, error.code, e.adminRoleExists, e.badHost);
+      return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.createAdminRole", error, t.common);
+    }
+    revalidatePath("/admin/product-admin");
+    return { ok: true };
+  });
+}
+
+export async function linkShelterAdmin(shelterId: string, userId: string, requestId: string | null): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.productAdmin.errors;
+  const supabase = await createClient();
+  return runWriteAction("productAdmin.linkAdmin", write(t), { id: requestId, action: "productAdmin.linkAdmin", db: supabase }, async () => {
+    if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
+    if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
+    const id = userId.trim();
+    if (!UUID.test(shelterId)) return { ok: false, error: e.badHost };
+    if (!UUID.test(id)) return { ok: false, error: e.badId };
+    const { error } = await supabase.rpc("product_admin_link_shelter_admin", { p_shelter: shelterId, p_user: id });
+    if (error) {
+      const msg = shelterError(e, error.code, e.loginUnavailable, e.noAdminRoleOrLogin);
+      return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.linkAdmin", error, t.common);
+    }
+    revalidatePath("/admin/product-admin");
+    return { ok: true };
+  });
+}
+
 export async function mapShelterHost(shelterId: string, host: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.admin.productAdmin.errors;

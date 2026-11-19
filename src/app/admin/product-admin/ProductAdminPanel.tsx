@@ -6,7 +6,7 @@ import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useWriteCall } from "@/lib/use-write-form";
-import { addProductAdmin, createShelter, mapShelterHost, removeProductAdmin, unmapShelterHost } from "./actions";
+import { addProductAdmin, createShelter, createShelterAdminRole, linkShelterAdmin, mapShelterHost, removeProductAdmin, unmapShelterHost } from "./actions";
 
 export type ShelterRow = { id: string; key: string; name: string; created_at: string; hosts: string[] | null };
 export type PadminRow = { userId: string; createdAt: string };
@@ -39,6 +39,9 @@ export function ProductAdminPanel({
   const createCall = useWriteCall();
   const mapCall = useWriteCall();
   const unmapCall = useWriteCall();
+  const roleCall = useWriteCall();
+  const linkCall = useWriteCall();
+  const [linkDrafts, setLinkDrafts] = useState<Record<string, string>>({});
   const [shelterKey, setShelterKey] = useState("");
   const [shelterName, setShelterName] = useState("");
   const [hostDrafts, setHostDrafts] = useState<Record<string, string>>({});
@@ -100,6 +103,51 @@ export function ProductAdminPanel({
                         p.noHosts
                       )}
                       {canWrite && (
+                        <div className="flex flex-col gap-2 pt-3">
+                          <span className="font-medium text-foreground">{p.adminRoleTitle}</span>
+                          <div>
+                            <ActionButton
+                              icon={ACTION_ICONS.add}
+                              variant="primary"
+                              compact
+                              disabled={pending}
+                              onClick={() =>
+                                startTransition(async () => {
+                                  const r = await roleCall((id) => createShelterAdminRole(s.id, id));
+                                  setShelterMsg(r.ok ? { ok: true, text: p.adminRoleGiven } : { ok: false, text: r.error ?? "" });
+                                })
+                              }
+                            >
+                              {p.giveAdminRole}
+                            </ActionButton>
+                          </div>
+                          <form
+                            className="flex flex-wrap items-center gap-2"
+                            onSubmit={(ev) => {
+                              ev.preventDefault();
+                              startTransition(async () => {
+                                const r = await linkCall((id) => linkShelterAdmin(s.id, linkDrafts[s.id] ?? "", id));
+                                setShelterMsg(r.ok ? { ok: true, text: p.adminLinked } : { ok: false, text: r.error ?? "" });
+                                if (r.ok) setLinkDrafts((d) => ({ ...d, [s.id]: "" }));
+                              });
+                            }}
+                          >
+                            <input
+                              aria-label={p.linkAccountId}
+                              placeholder={p.linkAccountId}
+                              value={linkDrafts[s.id] ?? ""}
+                              onChange={(e) => setLinkDrafts((d) => ({ ...d, [s.id]: e.target.value }))}
+                              className="min-h-11 rounded border border-border bg-background px-3 font-mono md:min-h-9"
+                              autoComplete="off"
+                              spellCheck={false}
+                            />
+                            <ActionButton icon={ACTION_ICONS.add} variant="primary" compact type="submit" disabled={pending || (linkDrafts[s.id] ?? "").trim() === ""}>
+                              {p.linkAdmin}
+                            </ActionButton>
+                          </form>
+                        </div>
+                      )}
+                      {canWrite && (
                         <form
                           className="flex flex-wrap items-center gap-2 pt-2"
                           onSubmit={(ev) => {
@@ -134,6 +182,7 @@ export function ProductAdminPanel({
         )}
         <p className="text-xs text-muted">{p.shelterNote}</p>
         {canWrite && <p className="max-w-prose text-xs text-muted">{p.mapHelp}</p>}
+        {canWrite && <p className="max-w-prose text-xs text-muted">{p.linkHelp}</p>}
         {shelterMsg && (
           <p role="status" className={`text-sm ${shelterMsg.ok ? "text-success" : "text-danger"}`}>
             {shelterMsg.text}
