@@ -81,7 +81,7 @@ it. Everything outside those comments is judged.
 |---|---|
 | Feature | padmin-create-login: a PADMIN creates a new shelter's first Admin login |
 | Backlog item | `docs/backlog.md` → #flogn |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_padmin-create-login` |
+| Branch / worktree | `claude/padmin-create-login` @ `C:\Development\Animal_Shelter_padmin-create-login` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | #1750 |
 | Tested by / date | Claude / 2026-11-20 |
