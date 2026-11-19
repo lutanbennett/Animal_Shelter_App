@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "A second shelter can now keep its photos in its own Google Drive account. A photo added for one shelter goes into that shelter's own Drive folder and is never filed in another shelter's. Nothing changes for Lanna.", admin: true },
   { text: "Settings → Product admin: a product administrator who has verified with their authenticator app can now give a new shelter its Admin role and link a login to it, so someone can sign in to that shelter. The login must already exist (you paste its account id): this screen does not create logins or send invitations, and the screen does not yet show which of the two steps a shelter has had.", admin: true },
 ];
 
