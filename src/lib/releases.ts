@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "Settings → Product admin: a product administrator who has verified with their authenticator app can now create a new shelter and add or remove the web addresses that open it. A new shelter is only a name for now: it still has no Admin role and no first login, which are set up separately, so nobody can use it yet.", admin: true },
 ];
 
 /** Newest first. */

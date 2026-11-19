@@ -6,7 +6,7 @@ import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useWriteCall } from "@/lib/use-write-form";
-import { addProductAdmin, removeProductAdmin } from "./actions";
+import { addProductAdmin, createShelter, mapShelterHost, removeProductAdmin, unmapShelterHost } from "./actions";
 
 export type ShelterRow = { id: string; key: string; name: string; created_at: string; hosts: string[] | null };
 export type PadminRow = { userId: string; createdAt: string };
@@ -36,6 +36,13 @@ export function ProductAdminPanel({
   const p = t.admin.productAdmin;
   const addCall = useWriteCall();
   const removeCall = useWriteCall();
+  const createCall = useWriteCall();
+  const mapCall = useWriteCall();
+  const unmapCall = useWriteCall();
+  const [shelterKey, setShelterKey] = useState("");
+  const [shelterName, setShelterName] = useState("");
+  const [hostDrafts, setHostDrafts] = useState<Record<string, string>>({});
+  const [shelterMsg, setShelterMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [accountId, setAccountId] = useState("");
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
@@ -63,7 +70,62 @@ export function ProductAdminPanel({
                     <td className="px-3 py-2 font-mono">{s.key}</td>
                     <td className="px-3 py-2">{s.name}</td>
                     <td className="px-3 py-2">{s.created_at.slice(0, 10)}</td>
-                    <td className="px-3 py-2 break-all">{s.hosts && s.hosts.length > 0 ? s.hosts.join(", ") : p.noHosts}</td>
+                    <td className="px-3 py-2 break-all">
+                      {s.hosts && s.hosts.length > 0 ? (
+                        <ul className="flex flex-col gap-1">
+                          {s.hosts.map((h) => (
+                            <li key={h} className="flex flex-wrap items-center gap-2">
+                              <span>{h}</span>
+                              {canWrite && (
+                                <ActionButton
+                                  icon={ACTION_ICONS.delete}
+                                  variant="danger"
+                                  compact
+                                  disabled={pending}
+                                  onClick={() => {
+                                    if (!window.confirm(p.unmapConfirm(h))) return;
+                                    startTransition(async () => {
+                                      const r = await unmapCall((id) => unmapShelterHost(h, id));
+                                      setShelterMsg(r.ok ? { ok: true, text: p.unmapped } : { ok: false, text: r.error ?? "" });
+                                    });
+                                  }}
+                                >
+                                  {p.unmapHost}
+                                </ActionButton>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        p.noHosts
+                      )}
+                      {canWrite && (
+                        <form
+                          className="flex flex-wrap items-center gap-2 pt-2"
+                          onSubmit={(ev) => {
+                            ev.preventDefault();
+                            startTransition(async () => {
+                              const r = await mapCall((id) => mapShelterHost(s.id, hostDrafts[s.id] ?? "", id));
+                              setShelterMsg(r.ok ? { ok: true, text: p.mapped } : { ok: false, text: r.error ?? "" });
+                              if (r.ok) setHostDrafts((d) => ({ ...d, [s.id]: "" }));
+                            });
+                          }}
+                        >
+                          <input
+                            aria-label={p.host}
+                            placeholder={p.host}
+                            value={hostDrafts[s.id] ?? ""}
+                            onChange={(e) => setHostDrafts((d) => ({ ...d, [s.id]: e.target.value }))}
+                            className="min-h-11 rounded border border-border bg-background px-3 font-mono md:min-h-9"
+                            autoComplete="off"
+                            spellCheck={false}
+                          />
+                          <ActionButton icon={ACTION_ICONS.add} variant="primary" compact type="submit" disabled={pending || (hostDrafts[s.id] ?? "").trim() === ""}>
+                            {p.mapHost}
+                          </ActionButton>
+                        </form>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -71,6 +133,63 @@ export function ProductAdminPanel({
           </div>
         )}
         <p className="text-xs text-muted">{p.shelterNote}</p>
+        {canWrite && <p className="max-w-prose text-xs text-muted">{p.mapHelp}</p>}
+        {shelterMsg && (
+          <p role="status" className={`text-sm ${shelterMsg.ok ? "text-success" : "text-danger"}`}>
+            {shelterMsg.text}
+          </p>
+        )}
+        {!canWrite && (
+          <p className="max-w-prose rounded-lg border border-border bg-surface p-3 text-sm text-foreground">
+            {p.stepUp}{" "}
+            <Link href={stepUpPath} className="font-medium underline">
+              {p.stepUpLink}
+            </Link>
+          </p>
+        )}
+        {canWrite && (
+          <form
+            className="flex max-w-xl flex-col gap-2 pt-2"
+            onSubmit={(ev) => {
+              ev.preventDefault();
+              startTransition(async () => {
+                const r = await createCall((id) => createShelter(shelterKey, shelterName, id));
+                setShelterMsg(r.ok ? { ok: true, text: p.created(r.created) } : { ok: false, text: r.error ?? "" });
+                if (r.ok) {
+                  setShelterKey("");
+                  setShelterName("");
+                }
+              });
+            }}
+          >
+            <h3 className="text-base font-semibold text-foreground">{p.createTitle}</h3>
+            <p className="text-sm text-muted">{p.createHelp}</p>
+            <label className="flex flex-col gap-1 text-sm">
+              {p.createKey}
+              <input
+                value={shelterKey}
+                onChange={(e) => setShelterKey(e.target.value)}
+                className="min-h-11 rounded border border-border bg-background px-3 font-mono md:min-h-9"
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              {p.createName}
+              <input
+                value={shelterName}
+                onChange={(e) => setShelterName(e.target.value)}
+                className="min-h-11 rounded border border-border bg-background px-3 md:min-h-9"
+                autoComplete="off"
+              />
+            </label>
+            <div>
+              <ActionButton icon={ACTION_ICONS.add} variant="primary" type="submit" disabled={pending || shelterKey.trim() === "" || shelterName.trim() === ""}>
+                {p.create}
+              </ActionButton>
+            </div>
+          </form>
+        )}
       </section>
 
       <section className="flex flex-col gap-2">
