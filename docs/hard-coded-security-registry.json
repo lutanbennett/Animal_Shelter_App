@@ -1031,6 +1031,16 @@
         "reason": "PADMIN list (docs/decisions/2026-11-18-product-admin-list-schema.md): gated by is_product_admin(), a list of people outside the card system, by Lutan's 2026-11-18 decision. Recorded under outsideTheCardSystem.productAdmin, not debt."
       },
       {
+        "migration": "0424_product_admin_set_shelter_names.sql",
+        "item": "function public.product_admin_shelters definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-20-shelter-own-name.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. The body is 0420's plus the shelter's two names; it grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0424_product_admin_set_shelter_names.sql",
+        "item": "function public.product_admin_set_shelter_names definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-20-shelter-own-name.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. It writes only the shelter's display and short name, scoped to that shelter for the transaction; it grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
         "migration": "0414_product_admin_shelter_writes.sql",
         "item": "function public.product_admin_unmap_host definer",
         "reason": "PADMIN list (docs/decisions/2026-11-18-product-admin-list-schema.md): gated by is_product_admin(), a list of people outside the card system, by Lutan's 2026-11-18 decision. Recorded under outsideTheCardSystem.productAdmin, not debt."
