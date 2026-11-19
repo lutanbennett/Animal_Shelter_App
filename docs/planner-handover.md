@@ -1,243 +1,223 @@
-# Planner handover — edition `764`, 2026-11-19
+# Planner handover — edition `765`, 2026-11-19
 
-**This is a DELTA against `763`.** It says what changed, corrects its predecessor, and reports what `763`
+**This is a DELTA against `764`.** It says what changed, corrects its predecessor, and reports what `764`
 left owed. Figures, batch composition and ports live in `.plan-day.md`.
 
 **It outranks nothing.** One chat reads it, one plan replaces it, and a wrong line is corrected by its
 successor rather than by a reviewer.
 
-**IT COVERS THE NINE STREAMS MERGED SINCE `763`, AND SEVEN HAVE FIGURES:** #1717, #1718, #1723, #1724,
-#1725, #1727, #1728, #1729, #1730. **#1721 and #1722 are `0.47.4`'s own two PRs, #1726 is the release
-handover and #1720 is `763` itself; none of the four counts.** **Two of the nine carry no figure and
-NEITHER is a fault** — see "the no-comment cases". **Written at nine, on cadence — and all nine merged
-on the SAME DAY as `763`**, which is the day's real headline.
+**IT COVERS THE ELEVEN STREAMS MERGED SINCE `764`:** #1731, #1733, #1734, #1735, #1736, #1737, #1738,
+#1739, #1740, #1741, #1742. **ALL ELEVEN HAVE FIGURES, and one of them is deliberately NOT a band
+reading** — see the figures table. `764` itself (#1732) is a handover PR and does not count.
+**Written at eleven rather than nine** because three merged while it was being written; #1742
+`platform-console-finish`, the most consequential PR of the day, merged at 16:01Z with this document
+already drafted, and **this paragraph and the figures below were corrected rather than left stale.**
 
 ## FOR YOUR FIRST TURN
 
-1. **Read `.plan-day.md` first.** Gitignored. **There were NINE `/plan-day` runs on 2026-11-19**,
-   because batches merged in ten to twenty minutes each.
+1. **Read `.plan-day.md` first.** Gitignored. There were **eight** `/plan-day` runs on 2026-11-19.
 2. **Read the system date and compare it with this document's.** **Never derive today's date from a
    document** — including this one.
 3. **`worktree.mjs list` will show `onboarding-runbook-steps` as `UNMERGED WORK`.** It is not.
-   `git diff --stat origin/main...claude/onboarding-runbook-steps` is **EMPTY** — PR #1705
-   squash-merged and those five commits are the pre-squash originals. **`done` refuses it and
+   `git diff --stat origin/main...` is **EMPTY** — PR #1705 squash-merged. **`done` refuses it and
    `--force` does not override. LUTAN SAID *"Leave it"*. Do not raise it again.**
 4. **Read the repository AFTER the pull, not before.**
-5. **`onboarding-script-faults` (port 3011) was set up and unmerged when this was written.** Its figure
-   belongs to `765`.
+5. **PRODUCTION NEEDS FOUR MIGRATIONS BEFORE ITS NEXT DEPLOY — SEE THE NEXT SECTION. Do not let a
+   release go out without them.**
 
-## THE RULE THAT CHANGED, AND IT COST A WORKTREE: `gh pr list --state open` BEFORE CREATING ANYTHING
+## THE THING THAT MUST NOT BE MISSED: PRODUCTION OWES `0418` TO `0421`, IN ORDER
 
-**`/plan-day` step 3 says to name every open PR this session did not open — and that read happens AFTER
-the batch is created.** On a day with a live release-manager session that is too late.
+**The operator console already ships live, and its writes FAIL without them.** #1742's own words:
+*"Apply 0418 to 0421 in order before the deploy."* Dev has all four. **This is the first item on the
+next release's list**, ahead of anything else, and it is the planner's to put in front of whoever cuts
+it.
 
-**What happened:** `#pdmin` was agreed by Lutan, created as `product-admin-bootstrap` and briefed in
-full — and was **already done**. The Release Manager session had built it while the brief was being
-written: PR #1723, every check green, and `lutan.bennett2@gmail.com` **already placed on production at
-07:48 UTC**. The redundant worktree, branch and origin branch were cleared before the list went to him,
-and **#1723 was not touched** — it belonged to a live session, and that session merged it.
+**Production is on `0.47.4` and `main` is now ELEVEN streams past it.** `unreleased` is empty and
+`package.json` says `0.47.4`, so **`deploy.mjs` would NOT refuse** — it would put live code under a
+version label whose record does not describe it. **A release must be cut first.**
 
-**It also resolved a contradiction that looked like a stale item.** Asked whose account should be the
-first product administrator, Lutan answered *"I am already setup as a product administrator"* — about
-ten minutes after that script had placed him. **The item's premise was true when filed and false when
-briefed.** Taking his word and writing the uncertainty into the brief as a question was right; **but one
-`gh pr list --state open` would have cost nothing and saved the worktree.** **Add it to the three cheap
-facts allowed before `(a)`.** First time in nine plans, because it is the first time a non-plan session
-built a backlog item.
+## THE aal2 WALL CAME DOWN, AND DRIVING THE SCREEN IMMEDIATELY FOUND SIX BROKEN WRITES
 
-## THE DRIVE HINGE IS ANSWERED, AND IT WAS THE PLANNER'S OWN WORK WITH HIM
+**`764` left the aal2 wall as the planner's question to Lutan. He was asked with three honest options
+and chose a dev-only step-up path.** #1736 built it: `node scripts/dev-signin.mjs <role> --aal2` enrols
+and computes its own TOTP factor. **Measured:** `aal2` in the token, `amr totp+password`.
+**Nothing is enrolled on production, and `scripts/check-dev-aal2-absent.mjs` was run by the planner
+against production AND UAT — both pass**, with six static proofs including *no migration after `0411`
+alters either aal2 policy across 418 files read*.
 
-**`#dscop`'s deliverable 5, which #1717 left unproven and called "the planner's to price", was measured
-against Google in about forty minutes** (#1727,
-`docs/decisions/2026-11-19-drive-file-hinge-proved.md`).
+**THEN #1742 DROVE THE PRESSES AND THAT IS WHERE THE VALUE WAS.** Seven of eight driven at `aal2`
+(the step-up return needs a human to type a code). **Driving found SIX console writes broken for a
+product administrator, which no SQL proof had caught:**
 
-**THE ANSWER IS NO: a file a HUMAN puts into an app-created folder is INVISIBLE to an app holding only
-`drive.file`.** The app's own control file in the same folder read `200`; the uploaded file was never
-returned by any query. **So `#drvcl` must not have a flow that depends on a shelter dropping files where
-the app will find them.**
+- **The mechanism:** the `0392` restrictive `shelter_scope_*` policies read the `x-shelter-id` REQUEST
+  HEADER **and apply to `security definer` owners too**. A product administrator's request names no
+  shelter on the platform host, or a different one on dev. **So Create shelter, Add starting content,
+  Set receipts, Remove address, Give Admin role and Link login were all refused** — and the checklist
+  **read every other shelter as empty**, showing Drive *"not connected"* for a shelter whose sign-in had
+  merely stopped.
+- **Why nothing caught it:** `0416`'s harness ran as the **service role**, which the policies do not
+  bind. **A harness that passes as the service role proves nothing about a request.**
+- **The fix (`0419`-`0421`):** each function scopes its own transaction to the shelter it works on,
+  **after** the existing `is_product_admin()` check, then restores the header. Nobody is granted
+  anything and a product administrator does not become a trusted caller. **Read by the planner before
+  merging, at the stream's own request.**
 
-**TWO CORRECTIONS FELL OUT, AND THE SECOND MATTERS MORE THAN THE ANSWER:**
+**THE LESSON TO CARRY: a proof run as the service role is not a proof of a request.** It is the same
+shape as the Drive hinge — the thing nobody had pressed was the thing that was broken.
 
-- **`drive.file` IS PER CLOUD PROJECT, NOT PER OAUTH CLIENT.** #1717's decision file recorded the
-  opposite, explicitly as an inference. A throwaway client saw **100 files created through the
-  published client**. **Measured false.** So **most of Lanna's existing tree is already accessible**,
-  and route 1 (the app creates the tree) is **cheaper than it looked** — a script counts, because the
-  app creates the file. Route 2 (moved by hand) is the one-way door.
-- **Visibility is per FILE and cascades neither way:** the hand-made root folder answered **`404`**
-  while nine folders inside it answered `200` each. **The app can read inside a folder it cannot read.**
+## A CI TRAP THAT WILL BITE AGAIN: DECLARATIONS ARE PER MIGRATION FILE
 
-**AND A METHOD NOTE WORTH MORE THAN THE FINDING.** The cheap route was to re-consent the **published**
-client to the narrower scope — no console work at all. **It was rejected and should stay rejected.**
-Google does not document what happens to an existing refresh token when the same client re-consents
-narrower, and says incremental authorization is **not supported for installed apps**; that client holds
-dev's live token and `test-shelter-2`'s. **A throwaway Desktop client made the question moot, and
-`check-drive-token.mjs` before and after proved the live grant untouched — which also proves the
-two-client plan works.** **This does NOT license narrowing an existing client's scope.**
+**#1742 went red on `hard-coded-security` while changing no permission at all.** Eight
+`security definer` product-admin functions were re-created by `0418`-`0421`, and
+`docs/hard-coded-security-registry.json` declares a definer **per migration file**, not per function.
+**Re-creating a declared function in a new migration re-declares it, and the check fails until the new
+file has its own entry.**
 
-**Eleven Google pages across two independent passes said nothing about the hinge.** Recorded as *not
-stated* twice before anyone measured. **That is the shape to copy: exhaust the documentation, record the
-silence, then measure.**
+- **It is NOT a sign anything was weakened.** Every one of the eight checks `is_product_admin()` first
+  and raises `42501` otherwise; PADMIN sits outside the card system by Lutan's decision of 2026-11-18.
+- **The remedy is in the check's own message:** declare it under `database.declared` with a reason.
+  `0416` and `0417` set the precedent; #1737 added six the same way.
+- **The stream fixed its own red** (commit *"Declare 0418-0421's product-admin functions…"*). The
+  planner had read the SQL and was about to add the same eight when its guard refused to touch a file
+  that had moved. **Re-read a PR's head before acting on a reading taken minutes earlier.**
 
-## THE aal2 WALL IS NOW THE REAL BLOCKER ON PRODUCT-ADMIN WORK, AND IT HAS STOPPED TWO STREAMS
-
-`/admin/product-admin` is gated on `is_product_admin()` **plus `aal2`**, and a `dev-signin.mjs` session
-is **aal1**. **So no stream can drive that screen on dev at all.**
-
-- **#1723 said so in its own words:** the presses — Add, Remove, create-a-shelter, map-an-address, the
-  step-up return — are *"what four test plans across two releases are waiting on"*, and it could not
-  drive them.
-- **#1729 was briefed to drive them as part of the rehearsal and could not either**, and correctly
-  recorded `pending:` rather than an app fault. Its brief had priced standing up an authenticator as out
-  of band, and that held.
-
-**So four test plans wait on presses nobody can perform, and three more findings from #1729 are screen
-work in the same place:** no screen sets `display_name`/`short_name`, the receipts function
-`product_admin_set_shelter_receipts` has **no caller**, and there is no way to create a first login from
-the screen. **Do not brief a fourth product-admin stream until this is settled — it would hit the same
-wall.** **It is the planner's to put to Lutan**, and the honest options are his own authenticator, a
-dev-only step-up path, or accepting that this screen is verified by him and not by a stream.
-
-## FIGURES — NINE STREAMS, SIX BAND READINGS: THREE INSIDE, TWO UNDER, ONE OVER
+## FIGURES — ELEVEN STREAMS, TEN BAND READINGS, AND ONE THAT IS NOT ONE
 
 | slug | PR | band | actual | verdict |
 |---|---|---|---|---|
-| `drive-scope-decision` | #1717 | 150-185k | **164,967** | **inside** |
-| `cn7gk-upload-proof` | #1718 | 175-205k | **192,150** | **inside** |
-| `product-admin-seed` | #1723 | — | **no comment** | **not a reading — see below** |
-| `new-shelter-rows` | #1724 | 150-185k | **163,052** | **inside** |
-| `fonts-local` | #1725 | 175-215k | **158,653** | **UNDER by ~16k** |
-| `hinge-proof` | #1727 | — | **no comment** | **not a reading — see below** |
-| `shelter-seed-rows` | #1728 | 155-185k | **188,835** | **OVER by ~3.8k** |
-| `onboarding-rehearsal` | #1729 | 170-210k | **168,738** | **under by ~1.3k, at the floor** |
-| `backup-own-client` | #1730 | `unmeasured` | **154,419** | **band does not apply — unplanned, no brief** |
+| `onboarding-script-faults` | #1731 | 145-175k | **146,724** | inside |
+| `release-handover-check` | #1733 | 143-170k | **142,284** | under by 716 |
+| `new-shelter-absent-rows` | #1734 | 150-185k | **185,010** | **over by 10 — at the top** |
+| `exit-code-faults` | #1735 | 150-185k | **160,329** | inside |
+| `dev-aal2-path` | #1736 | 175-210k | **172,705** | under by 2,295 |
+| `product-admin-state-schema` | #1737 | 165-195k | **194,376** | **inside** |
+| `script-fault-sweep` | #1738 | 150-185k | **204,421** | **OVER by 19,421** |
+| `product-admin-console-app` | #1739 | 200-250k | **230,744** | inside |
+| `stocktaking-silent-save` | #1740 | 146-175k | **146,071** | inside, 71 above its floor |
+| `script-exit-debt` | #1741 | 155-190k | **182,558** | **inside** |
+| `platform-console-finish` | #1742 | 180-215k | **278,160** | **NOT A BAND READING — `rescoped=yes`** |
 
-**THE FLOOR, SEVEN READINGS: 86,761 · 86,985 · 87,050 · 87,708 · 87,708 · 87,773 · 90,094.**
-**Six of the seven sit in a 1,012-token band; the seventh is 90,094.** **`763` reported exactly this
-shape — eight in 1,014 tokens with one at 90,375 — so two complete sets on two days agree:** the floor
-is **~86.8–87.8k with a rare excursion near 90k**, not a uniform `~86–90k`. **Recommend narrowing the
-floor row and recording the ~90k cases as rare rather than as the top of a range. The scale rows are
-still not to be shifted with it.**
+**Ten of the eleven matched their band's `@dials` and were `compacted=no rescoped=no finished=yes`.**
 
-### THE NO-COMMENT CASES, AND NEITHER IS MECHANISM A
+**#1742 IS RECORDED, MARKED, AND KEPT OUT OF EVERY REVISION, AND THE REASON IS NOT A TECHNICALITY.**
+Its own comment says `rescoped=yes`, and the job really did change size under it: briefed as
+`migration=none, may need one`, it **wrote four** and, in its own words, *"the eight presses did turn
+into an investigation (three defects)"*. **A figure from a job that grew is evidence about the brief,
+not about the band** — counted in, it would read a screen-finishing stream as under-priced by 63k and
+inflate every later band for work that never needed it. **The planner did not correct this brief
+mid-flight; the stream judged its own rescope and said so, which is the mechanism working.**
+**Its floor (87,854) is still comparable and is counted below.**
 
-**Check this before anyone files a recurrence against `#3qmzt`.**
+**THE FLOOR, ELEVEN READINGS: 86,761 · 86,822 · 87,046 · 87,164 · 87,630 · 87,769 · 87,769 · 87,834 ·
+87,846 · 87,854 · 91,147.** **TEN inside 1,093 tokens; the eleventh is 91,147.** `764` recorded seven
+with one at 90,094; `763` nine
+with one at 90,375. **Three complete days now agree on the SHAPE: a tight band at ~86.8-87.9k with a
+rare excursion near 90-91k, not a uniform `~86-90k`.** **Narrow the floor row and record the excursions
+as rare. DO NOT shift the scale rows with it.** **The excursion is NOT "long session":** #1739 had the
+most messages of the day (143,580) and an ordinary floor, while #1738's 113,274 gave 91,147.
+**Unexplained; recorded rather than theorised.**
 
-- **#1723 was the RELEASE MANAGER session's work.** `#3qmzt`'s own reconciliation already records this
-  shape — *"#1637 was the release-manager session, which posts no `stream-usage:` comment by design"* —
-  so this is the **second** instance of that confusion, not a new fault.
-- **#1727 was the PLANNER's own**, and the omission was deliberate: it had no brief and no band, and the
-  figure would have been this planner window's whole context, **which the band table explicitly cannot
-  see and which would pollute it.** **A planner proof PR is not a stream reading.**
+### `764`'S CORRECTION HELD, DECISIVELY
 
-**So `#3qmzt` still has NO new occurrence**, and it stays what it was retitled to: a standing watch.
+`764` recorded a **failed** revision: a schema half priced below its row on a specification discount came
+in 3.8k over, and the correction drawn was **a specification discounts the DISCOVERY, not the DESIGN.**
+`product-admin-state-schema` was banded **165-195k on that correction, deliberately above** the
+"nothing left to discover" row, and its brief said either result would count. **It came in 194,376 —
+inside, 624 under the top. On the discounted row it would have overrun by ~29k, and it did MORE than its
+brief asked and still landed inside.** **Confirmed on its first test.**
 
-## BAND REVISIONS — ONE FIRED, ONE FAILED, AND THE FAILURE CORRECTS `763`
+### AND A BAND OF MINE MISSED BY 19.4k, THEN THE CORRECTION FIRED THE SAME DAY
 
-**(1) THE `+30k` BROWSER PREMIUM IS FOR *DRIVING* INTERACTIONS, NOT FOR *LOOKING* AT A PAGE.**
-`fonts-local` was banded 175-215k on the ordinary row plus ~30k for browser verification plus a
-two-language premium, and came in at **158,653 — under its own floor by 16k.** Its proof was a visual
-and computed-CSS comparison in two languages with **no control pressed**. **The band table's dearest
-question is "how many live interactions must it drive", and the answer there was none.** **Revision: a
-stream asked to SEE a page in two languages takes the ordinary row plus about 10k, not plus 30k.**
-**Written down before the next reading existed**, and #1729 is consistent: banded 170-210k *with* a
-driving premium, it could not drive, and landed 1.3k under the bottom.
+**`script-fault-sweep` was banded 150-185k off the AUDIT row** — *"the length of the list does not move
+this"* — **and came in 204,421.** **That line is true of an audit and FALSE of a sweep that CONVERTS
+each item:** 33 exit sites read one at a time, 15 edited, two checks built and fixtured, is *reads very
+widely and edits many call sites* (185-250k). **The revision was written into the next stream's brief
+before its reading existed, and `script-exit-debt` came in 182,558 — inside 155-190k.** **Fired.**
+**Revision: a sweep that EDITS is not an audit. Only an untouched read stays on the audit row.**
 
-**(2) `763`'s SPECIFICATION DISCOUNT FOR A SCHEMA HALF DID NOT HOLD, AND THIS IS A CORRECTION.**
-`763` recorded that a handed-over specification *"discounts a SCHEMA half much more than an app half"*.
-`shelter-seed-rows` was banded **155-185k on exactly that reasoning** — its bottom set *below* the
-160-185k row because `#shrow` had handed it the per-table counts, the method, the gate answer and a
-working harness. **It came in at 188,835, OVER the top by 3.8k.** **The discount did not pay for
-establishing six tables' default content from four of Lanna's own migrations, nor for the receipt definer
-function's shape.** **Revision: a specification discounts the DISCOVERY, not the DESIGN. Where a schema
-half must still decide what the right rows ARE, price the design and do not discount it.** `763`'s
-revision is not wrong in general — #1711 and #1713 fired on it — but it was over-applied here, and **a
-revision that fails on its next test is evidence too.**
+### THE `+10k` FOR LOOKING STILL HAS NO VERDICT
 
-**Both predictions were written into briefs before their readings existed, which is the only way a
-revision counts as evidence. Keep doing it.**
+#1734 came in **ten tokens over the top** — neither hit nor miss — **and never drove the one
+interaction its band allowed for.** **Not a confirmation. Still waiting on another looking-not-driving
+stream.**
 
-## WHAT `763` LEFT OWED
+## WHAT `764` LEFT OWED, AND WHAT IS OWED NOW
 
-- **`brief-blocks.md` STILL DESCRIBES THE AGENT BUILD HALT AS LIVE.** Still not rewritten, and `762`
-  and `763` both asked. **It was copied verbatim into four more briefs on 2026-11-19.** It needs a
-  stream and a PR, and nobody has measured enough halts to replace the text with.
-- **Its band-table recommendation (two bottoms nearer 135k) is STILL UNACTED, and the day's figures
-  weaken it further.** Nothing came in below 154,419, and that one has no band. **Still deliberately
-  not edited.**
-- **"A tick is not a title rewrite" RECURRED, THIS TIME AS A MISSING ANSWER RATHER THAN A STALE
-  TITLE.** #1717 shipped a 92-line decision file for `#dscop` and **never touched the item**, so the
-  backlog read as if the scope were undecided, with four things "NOT ESTABLISHED", for three hours.
-  **Corrected on the backlog branch. Fourth day running for this family.**
+- **`brief-blocks.md`'s build-halt block: REWRITTEN, and the hypothesis came back NEGATIVE.** #1735 ran
+  the gates **four times: every one `build=0`, `SecurityFatalError` never appeared.** #1671's measured
+  *halt, pass, halt* did not recur, and **the retry has still never been SEEN converting a halt into a
+  pass**, so the block now says exactly that instead of implying a fix. **Four days owed, now closed.**
+- **`764`'s two filename corrections: DONE** (`0392_per_shelter_restrictive_policies.sql` in four items,
+  and `check-tenancy-catalogue.mjs`). **`764` also said `0395` and `0415` were wrong; they are CORRECT,
+  and that is this edition correcting its predecessor.**
+- **The band-table recommendation about two bottoms nearer 135k is STILL UNACTED and is now clearly
+  wrong**: nothing landed below 142,284 in eleven readings. **Recommend dropping it rather than carrying
+  it a fourth day.**
+- **NEWLY OWED: 46 scripts.** #1741 converted all nine exit-debt scripts, found **`restore-grants`'s
+  `finally` had been skipped on a failing exit**, and tabulated the three dangerous scripts' codes
+  before and after **without running them**. Its widened check **lists 46 unreviewed scripts and does
+  not block** (`--strict-widened` does, deliberately unwired, because turning it on reddens every CI at
+  once). **`#scimp` carries it.**
 
 ## FILED, TICKED AND CORRECTED
 
-**Ticked by streams:** `#pdmin` (#1723), `#fntlc` (#1725), `#shsed` (#1728 — seeds and function only).
-**Not ticked, correctly:** `#shrow` (#1724, absent-row consequences only partly established), `#onbrb`
-(#1729 — Step 3 and Step 4's secrets are Lutan's, so the rehearsal clause is unmet), `#civwx` (#1730,
-code half only, no token minted).
+**Ticked by streams:** `#hndvr` (#1733), `#shrow` (#1734), `#uvcls` (#1735), `#dvaal` (#1736),
+`#padui` (#1739), and `#rcpfm`/`#adrus`/`#padpr` (#1742).
+**Not ticked, correctly, each naming what was left:** `#scimp` (twice — #1738 and #1741),
+`#stcnt` (#1740, second clause blocked), `#pltfd` (#1739 and #1742 — its done-when needs the host to
+answer), and `#padui`'s schema half (#1737 deliberately did not tick).
 
-**Filed by the planner from streams' own reports:** **`#shsed`** (from #1724's deliverable 8 — a new
-shelter is created with exactly one row, and all 115 tables carrying `shelter_id` hold zero; it became a
-stream and shipped as `0416` the same day) and **`#uvcls`**.
+**Filed by the planner from streams' own reports, eleven items:** `#dvaal`, `#scimp`, `#stcnt`,
+`#shnam`, `#lkaud`, `#shnms`, `#rcpfm`, `#adrus`, `#padpr`, `#wbsrw`, `#dvshl`.
 
-**Corrected in place:** **`#dscop`** now records the measured answer, and its open list is down to three
-things — the calendar scope's class, Lutan's Web OAuth client, and whether the Picker recovers a
-human-added file. **`#3qmzt`** is now a standing watch, because its two unexplained PRs had their
-transcripts destroyed by routine tidy-up and its done-when **cannot be met as written**.
+**THREE WORTH READING BEFORE PLANNING ANYTHING:**
 
-**`#uvcls`, AND IT INVERTS A RULE EVERY BRIEF LEANS ON: a Node script on this machine can exit
-NON-ZERO after its work has SUCCEEDED** — `Assertion failed: !(handle->flags & UV_HANDLE_CLOSING),
-file src\win\async.c, line 94`, at teardown. Seen twice in one session: `check-shelter-settings.mjs`
-after printing all three of its results, and an OAuth probe **after minting and saving its token**,
-which the harness reported as `failed with exit code 127`. **`brief-blocks.md` and the gates both say
-to trust the exit code over plausible-looking output. Here the exit code is the liar.** Not fixed; filed.
+- **`#wbsrw`** — **twelve more writes in `src/app/admin/website/actions.ts`, named line by line**, have
+  the silent zero-row shape #1740 just fixed in stocktaking. **Not urgent (`0417` backfilled every
+  shelter) and the fix is proven one folder away.**
+- **`#dvshl`** — **no scripted dev login can hold a role on a SECOND shelter**, so nothing multi-tenant
+  can be *driven* on dev. **It blocked three streams in one day** (#1734, #1737, #1740). It is a new
+  instrument, not a flag.
+- **`#rcpfm`** was filed only after the work that should have closed it did not. **The planner
+  deliberately did not file it while the console stream was in flight, and left a note to check that
+  PR.** It did not land; the note caught it. **Keep doing that rather than filing phantoms.**
 
 ## WHAT IS LEFT FOR CLAUDE AT ALL
 
-**The multi-tenancy programme (`#ykefa`) is ELEVEN OF THIRTEEN PARTS DONE.** Only **Part 12** (`#egq18`,
-the 10 ms measurement — **not a worktree job**, route (a) only, and Lutan said *"Hold it for now"*) and
-**Part 13** (`#34a30`, blocked on Part 12's number) remain, plus the go-live step, which is the release
-manager's and his. **His priorities list was read first and NONE of its seven ranked items was
-streamable** — that is his order running out of buildable work, not a departure from it.
+**His priorities list changed twice today** and now ranks `#gcnst` and `#padui` at 8 and 9. **`#padui`
+was ticked twenty minutes after he ranked it**; what remained on that screen became #1742.
+**`#gcnst` is LUTAN'S HANDS ONLY** — the item says in terms that *"a Claude session cannot close this
+item"*. **The planner's half, offered and not yet taken up:** establish from Google's documentation
+whether renaming a published, brand-verified app triggers a fresh review and how long the old name keeps
+showing — **recorded as not established** — then walk him through it.
 
-**In flight when this was written:** `onboarding-script-faults` (port 3011) —
-`connect-shelter-calendar.mjs` crashes at start with `ERR_MODULE_NOT_FOUND`, which is **Step 5 of
-onboarding**. Cause measured: **a TS module reached from a script is only safe if its own internal
-imports carry extensions.**
-
-**Next, and in this order:** the **aal2 decision** above, because it gates everything else on that
-screen; then `#drvcl`'s screen once Lutan registers the **Web OAuth client** (the hinge no longer blocks
-it); then `#shrow`'s remaining half.
-
-**Everything else is as `763` left it** — his hands, parked, waiting on a person or on data. **`#pl7aq`,
-the public launch, is a date he names: not to be re-asked.**
+**Buildable now:** `#scimp`'s 46, `#wbsrw`'s twelve, `#dvshl`, `#lkaud`, `#shnms`, `#shnam`,
+`#stcnt`'s remaining clause (blocked on `#dvshl`), `#flogn`.
 
 ## PROCESS NOTES
 
-- **`0.47.4` SHIPPED AND IS RECORDED** (#1721 cut, #1722 record, #1726 release handover). **The
-  production Worker deploy is still his.** `#fntlc` fixed the cause of `0.47.3`'s failed deploy: the
-  build no longer fetches five fonts from `fonts.gstatic.com`.
-- **`worktree.mjs done` REFUSES A FOLDER A SESSION IS SITTING IN, and that is correct.** `fonts-local`
-  and `new-shelter-rows` merged and could not be cleared because Lutan's sessions were still open in
-  them. **Their figures were read BEFORE the attempt**, so nothing was at risk. **Never force it.**
-- **`git ls-remote` FAILED ONCE WITH A BARE EXIT 128** mid-`done` — a network blip, not a refusal. It
-  completed on retry and `--force` was not used. **Retry a transient git failure; do not reach for a
-  flag.**
-- **THE DEV DATABASE IS UNCHANGED FROM `763`:** `test-shelter-2` is connected with a second Google
-  account's real credentials, and `proof-b` belongs to other work. **Every brief says both, and says
-  never to run `dev-signin.mjs --remove`.**
+- **TWO NEW CHECKS BLOCK IN CI AS OF TODAY.** #1738 added `check-script-ts-imports.mjs` and
+  `check-script-exits.mjs` to **`npm run lint`**. Every stream must pass them.
+- **`#hndvr`'s check exists and is wired into `/plan-day` step 1** — the release handover is now checked
+  by a script instead of by Lutan asking. It passed every run today.
+- **`worktree.mjs done` DIED PARTWAY ONCE**, printing `Node.js v24.19.0` as its last line: folder and
+  local branch gone, **`origin` branch left behind**, its own verification never run. **Found only by
+  reading the output rather than the exit code.** #1741 converted it but **could not reproduce the
+  crash, so it is NOT proven fixed.** **Verify `done`'s success line; do not assume.**
+- **FILE BACKLOG ITEMS, FOLD THEM INTO `main`, THEN CREATE THE WORKTREES.** Done in the wrong order
+  once today: three worktrees branched from a `main` without their own items and could not have ticked
+  them. Caught before the briefs went out and fixed by merging `origin/main` into each.
+- **`worktree.mjs sync` takes no slug** — it must be run from inside the worktree.
+- **`cooperjaidee.org`: HIS TWO BY-HAND STEPS ARE DONE**, guided in chat. Cloudflare needed nothing (the
+  zone holds **0 of 200 records**, which is the correct state) and the Supabase redirect URL is on the
+  production project. **Only the deploy is left.** **Cloudflare's own Recommendations panel urges adding
+  A/AAAA/CNAME records for the apex and `www` — following it would BREAK the deploy**, which creates
+  both addresses itself and refuses to overwrite an existing record.
+- **An allow rule was added for `check-dev-aal2-absent.mjs --env production` and `--env uat`**, in USER
+  settings, bare and exact-match — the convention every production-touching script follows.
 
 ## INTERRUPTIONS
 
-**ONE, AND IT WAS A FAIR CORRECTION OF THE PLANNER'S WRITING RATHER THAN OF ITS WORK.** Lutan asked
-twice for clearer instructions during the hinge session — *"you need to be clearer in your instructions
-- where do I login to for part 1?"* and *"and what account should I be using"* — because the planner had
-named the console account in one turn and then omitted it from the step-by-step turn that mattered.
-**Three accounts were in play** (`lannaanimalfoundationbwm` owns the Cloud project, `lutan.bennett3` was
-the intended consent account, `lutan.bennett2` is the new product admin) **and instructions for a human
-must name which account does which job, every time.** He also asked for the result *"in simple
-english"*, which was the right ask of a write-up that had been written for a planner.
-
-**No stream was corrected, rescoped or stopped.** He approved the hinge consent as the foundation
-account rather than `bennett3` and **said so immediately**, which made the result stronger rather than
-weaker: that account's Drive is what produced the per-project finding.
+**NONE THAT COST A STREAM.** No stream was corrected, rescoped or stopped, and all ten ran on the dials
+they were briefed at. **Lutan was asked exactly two questions all day** — the aal2 decision bundled with
+a batch confirmation, and the handover's timing — plus one guided walkthrough he asked for himself.
