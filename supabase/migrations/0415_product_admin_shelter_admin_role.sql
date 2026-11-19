@@ -24,8 +24,8 @@ begin
   if (select auth.jwt() ->> 'aal') is distinct from 'aal2' then raise exception 'second step (aal2) required' using errcode = '42501'; end if;
   if not exists (select 1 from public.shelters where id = p_shelter) then raise exception 'no such shelter' using errcode = '22023'; end if;
   if exists (select 1 from public.roles where shelter_id = p_shelter and is_admin) then raise exception 'shelter already has an Admin role' using errcode = '23505'; end if;
-  insert into public.roles (shelter_id, key, name, kind, opens_app, is_admin)
-  values (p_shelter, 'admin', 'Admin', 'fixed', true, true)
+  insert into public.roles (shelter_id, key, name, kind, is_admin)
+  values (p_shelter, 'admin', 'Admin', 'fixed', true)
   returning id into v_id;
   return v_id;
 end;
@@ -41,13 +41,16 @@ declare v_role uuid;
 begin
   if not public.is_product_admin() then raise exception 'product admin only' using errcode = '42501'; end if;
   if (select auth.jwt() ->> 'aal') is distinct from 'aal2' then raise exception 'second step (aal2) required' using errcode = '42501'; end if;
-  if not exists (select 1 from auth.users where id = p_user) then raise exception 'no such login' using errcode = '22023'; end if;
   select id into v_role from public.roles where shelter_id = p_shelter and is_admin;
   if v_role is null then raise exception 'shelter has no Admin role' using errcode = '22023'; end if;
   if exists (select 1 from public.user_roles where user_id = p_user and role_id = v_role) then raise exception 'login already linked to this Admin role' using errcode = '23505'; end if;
   if exists (select 1 from public.user_roles where user_id = p_user and is_main) then raise exception 'login already has a main role' using errcode = '23505'; end if;
-  insert into public.user_roles (user_id, role_id, shelter_id, is_main, granted_by)
-  values (p_user, v_role, p_shelter, true, (select auth.uid()));
+  -- auth.users is not readable by the definer owner, so an unknown login is caught by the foreign key instead.
+  begin
+    insert into public.user_roles (user_id, role_id, shelter_id, is_main, granted_by)
+    values (p_user, v_role, p_shelter, true, (select auth.uid()));
+  exception when foreign_key_violation then raise exception 'no such login' using errcode = '22023';
+  end;
 end;
 $$;
 
