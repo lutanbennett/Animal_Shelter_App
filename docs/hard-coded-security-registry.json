@@ -1019,6 +1019,21 @@
         "migration": "0411_product_admins.sql",
         "item": "function public.product_admin_shelters definer",
         "reason": "PADMIN list (docs/decisions/2026-11-18-product-admin-list-schema.md): gated by is_product_admin(), a list of people outside the card system, by Lutan's 2026-11-18 decision. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0414_product_admin_shelter_writes.sql",
+        "item": "function public.product_admin_create_shelter definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-18-product-admin-list-schema.md): gated by is_product_admin(), a list of people outside the card system, by Lutan's 2026-11-18 decision. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0414_product_admin_shelter_writes.sql",
+        "item": "function public.product_admin_map_host definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-18-product-admin-list-schema.md): gated by is_product_admin(), a list of people outside the card system, by Lutan's 2026-11-18 decision. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0414_product_admin_shelter_writes.sql",
+        "item": "function public.product_admin_unmap_host definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-18-product-admin-list-schema.md): gated by is_product_admin(), a list of people outside the card system, by Lutan's 2026-11-18 decision. Recorded under outsideTheCardSystem.productAdmin, not debt."
       }
     ],
     "stubs": [
