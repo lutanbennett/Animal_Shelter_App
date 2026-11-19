@@ -5,14 +5,21 @@ Claude session available**: every command is given in full, with the folder you
 type it in.
 
 **It is a partial runbook on purpose.** It covers the steps that will never be a
-screen, and the screen that now exists. A product administrator opens **Settings →
-Product admin** (`/admin/product-admin`) and can **create a shelter, add and remove
-its web addresses, give it an Admin role and link a login to it**, as well as add
-and remove product administrators. **Still not a screen:** setting a shelter's
-names and receipt series, the group origins list, and removing a shelter. Every
-**NOT YET POSSIBLE** note below is a gap that is still true. The screen's pictures
-are listed in `scripts/manual-screenshots.mjs` (see "Screenshots"). **Every press
-on that screen needs the two-step code (aal2); see "What has not been rehearsed".**
+screen, and the screen that now exists. A product administrator opens the **Product
+admin** console at `/platform` (its own page on the platform's front door, not inside
+any shelter's Settings) and can **create a shelter, set its names, add and remove
+its web addresses, give it an Admin role, create or link its first Admin login, set
+its receipt letters and add its starting content**, as well as add and remove
+product administrators. **Still not a screen:** the group origins list, connecting a
+shelter's Google Drive and calendar (Steps 4 and 5, scripts), and removing a shelter.
+Every **NOT YET POSSIBLE** note below is a gap that is still true. The screen's
+pictures are listed in `scripts/manual-screenshots.mjs` (see "Screenshots"). **Every
+press on that screen needs the two-step code (aal2); see "What has been rehearsed".**
+
+**Rehearsed on 2026-11-20 (test database), by following it: Steps 1 and 6's
+console half in about five minutes. Two things stop a person finishing alone today:
+Step 7 (the Who does what page fails on a shelter that has only its Admin role) and
+"A shelter leaving" (the export refuses). Both are written in the steps below.**
 
 ## Who can do each step
 
@@ -82,27 +89,46 @@ A shelter leaving is a separate section at the end.
 table, on purpose; the screen writes through narrow database functions that check
 you are a product administrator **and** have passed the two-step code.
 
-1. Sign in as a product administrator (your own login, on the list). Click
-   **Settings**, then **Product admin**. Reach it by clicking, not by typing the
-   address.
-2. If the page shows a sentence and a link instead of buttons, follow the link and
-   give the two-step code. The buttons appear only after it.
-3. Under **Create a shelter**, fill **Short name** (the key: lower-case letters and
-   digits with single hyphens, e.g. `happy-paws`; **it cannot be changed
-   afterwards**) and **Shelter name**, then press **Create shelter**. Expected: a
-   line saying it was created, and that it has no web address, Admin role or login
-   yet. Creating it also fills its default site pages, public-figure switches, bill
-   kinds and frequencies (see Step 6).
-4. In the new shelter's row, type its host (for example `<the shelter's host>`)
-   into **Web address** and press **Add address**. Expected: *Address added.* One
-   host belongs to one shelter; to move one, **Remove** it from the first shelter
-   first.
-5. Still in that row, under **Sign-in for this shelter**: press **Give it an Admin
-   role** (expected: *Admin role created. Now link a login to it.*). Then paste the
-   **account id** of a login that already exists and is used by no other shelter
-   into **Login's account id** and press **Link this login as its Admin**. The
-   screen cannot create a login, and nobody is emailed. **Creating that first
-   login is not possible from this screen**, so someone must already have one.
+1. Sign in as a product administrator (your own login, on the list). Open the
+   console at `https://<the platform's front door>/platform`; on a development copy
+   it is `/platform` on that copy's own address. It is **not** under Settings any
+   more, and the old `/admin/product-admin` address does not exist. A login not on
+   the list gets a page that does not exist; that is correct.
+2. The page can be read without the two-step code, but no button that changes
+   anything shows until you give it: follow the notice at the top and give the code.
+3. Under **Create a shelter** (at the bottom of the page), fill **Short name** (the
+   key: lower-case letters and digits with single hyphens, e.g. `happy-paws`; **it
+   cannot be changed afterwards**) and **Shelter name**, then press **Create
+   shelter**. Expected: a new card for the shelter, with a checklist: *Has a web
+   address*, *Has an Admin role*, *Has an Admin login*, *Receipt numbers set up*,
+   *Starting content added*. **Starting content is already ticked**: creating the
+   shelter fills its default site pages, public-figure switches, bill kinds and
+   frequencies (see Step 6). The first unticked line is marked **Next step** and
+   carries its own control; **the checklist is the order to work in** (points 4 to 8
+   below, in the same order).
+4. **Names.** In the card, fill **Full name** and **Short name** (used on pages and
+   PDFs, and in mail subjects) and press **Save names**. Do this before you open the
+   shelter to anyone: with no names the app falls back to the original shelter's
+   wording.
+5. **Web address.** Type the host (for example `<the shelter's host>`) into **Web
+   address** and press **Add address**; it then shows in the list. One host belongs
+   to one shelter; to move one, **Remove** it from the first shelter first.
+6. **Admin role.** Press **Give it an Admin role**. It gets no cards; Admin has full
+   access by itself.
+7. **Admin login.** Type the email address of the person who will be the shelter's
+   Admin and click outside the box. If a login already has that address and no other
+   shelter uses it, press **Link this login as its Admin**. If none has, the screen
+   says *No login has that email address* and offers **Create a login for this
+   shelter's Admin**: press it, and a login is made with a **temporary password shown
+   once, in the green notice. Copy it then; it cannot be shown again.** Give it to
+   that person privately, never in a file in the repository. Nobody is emailed. Only
+   for a shelter's first Admin.
+8. **Receipt numbers.** Fill **Receipt letters** (capitals; **they cannot be changed
+   once set**, and no other shelter may use the same ones), **Name printed on
+   receipts** and **Address, one line per row**, and press **Set receipt numbers**.
+   One issuer block is written for both receipt countries, with no registration or
+   statement lines (add those later if the shelter needs them). A shelter with no
+   series cannot issue receipts.
 
 **Facts that matter now:**
 
@@ -110,8 +136,10 @@ you are a product administrator **and** have passed the two-step code.
   refused. A new host never falls through to another shelter.
 - The shelter's key is used by every script below as `--shelter <key>`. Write it
   down.
-- The screen cannot show whether a shelter already has its Admin role or login; a
-  refusal says so if a step was already done.
+- The checklist shows what is done and what is next, so you can stop and come back.
+- **The card's Drive and Calendar lines say *"the shelter's own Admin does this in
+  its Settings"*. That is not true yet:** Settings only *shows* the status. The
+  connection is Steps 4 and 5, typed in a terminal.
 - A shelter cannot be deleted from the screen (see "A shelter leaving").
 
 ## Step 2. Put the host on Cloudflare  **[LUTAN ONLY]**
