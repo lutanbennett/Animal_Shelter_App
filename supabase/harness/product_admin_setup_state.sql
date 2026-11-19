@@ -2,10 +2,11 @@
 -- Run: node scripts/run-harness.mjs supabase/harness/product_admin_setup_state.sql   (passes by raising 'HARNESS OK ...')
 begin;
 do $$
-declare u uuid; v uuid; sid uuid; n int; r record; failed boolean; msg text; em text; ex boolean;
+declare u uuid; v uuid; vem text; sid uuid; n int; r record; failed boolean; msg text; em text; ex boolean;
 begin
   select id, email into u, em from auth.users where email is not null order by created_at limit 1;
-  select id into v from auth.users where id <> u and email is not null order by created_at limit 1;
+  select id, email into v, vem from auth.users x where x.id <> u and x.email is not null and not exists (select 1 from public.user_roles ur where ur.user_id = x.id and ur.is_main) order by created_at limit 1;
+  if v is null then raise exception 'HARNESS SKIP: every other login already has a main role'; end if;
   insert into public.product_admins (user_id) values (u) on conflict do nothing;
 
   -- a shelter and a non-PADMIN login
@@ -54,7 +55,7 @@ begin
   begin perform public.product_admin_login_exists('a_b@x.y'); exception when others then failed := true; end;
   if not failed then raise exception 'underscore accepted'; end if;
   -- by-email link and add
-  perform public.product_admin_link_shelter_admin_by_email(sid, (select email from auth.users where id = v));
+  perform public.product_admin_link_shelter_admin_by_email(sid, vem);
   failed := false;
   begin perform public.product_admin_link_shelter_admin_by_email(sid, 'nobody@example.invalid'); exception when others then failed := true; end;
   if not failed then raise exception 'unknown login linked'; end if;
