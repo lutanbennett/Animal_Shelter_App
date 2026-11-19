@@ -1,219 +1,250 @@
-# Planner handover — edition `762`, 2026-11-18
+# Planner handover — edition `763`, 2026-11-19
 
-**This is a DELTA against `761`.** It says what changed, corrects its predecessor, and reports what `761`
+**This is a DELTA against `762`.** It says what changed, corrects its predecessor, and reports what `762`
 left owed. Figures, batch composition and ports live in `.plan-day.md`.
 
 **It outranks nothing.** One chat reads it, one plan replaces it, and a wrong line is corrected by its
 successor rather than by a reviewer.
 
-**IT COVERS THE EIGHT STREAMS MERGED SINCE `761`, AND ALL EIGHT HAVE FIGURES:** #1698, #1699, #1700,
-#1701, #1702, #1703, #1704, #1705. **Three more were set up and had not merged when this was written** —
-`shelter-management-app`, `canary-isolates-protection`, `writer-runs-lint-flag` — **so their figures
-belong to `763`.** **Written at 8 of 9 because Lutan asked for it early.**
+**IT COVERS THE EIGHT STREAMS MERGED SINCE `762`, AND ALL EIGHT HAVE FIGURES:** #1706, #1707, #1709,
+#1710, #1711, #1712, #1713, #1714. **#1708 is `762`'s own handover PR and does not count.** **Three more
+were set up and had not merged when this was written** — `shelter-admin-role-app`, `cn7gk-upload-proof`,
+`drive-scope-decision` — **so their figures belong to `764`.**
+
+**WRITTEN AT 8 OF 9 BECAUSE LUTAN ASKED FOR IT EARLY — AND THAT IS NOW TWICE IN A ROW.** `762` says the
+same thing in its own opening. **So the nine-stream rule has never once fired on its own**, in the two
+editions since it was made. **This is an observation for the next planner, not a decision to re-open:**
+he settled the cadence on 2026-11-18 and it is not to be put to him again. But if a third edition is
+also asked for early, that is data worth showing him rather than a coincidence worth ignoring.
 
 ## FOR YOUR FIRST TURN
 
-1. **Read `.plan-day.md` first.** Gitignored; holds the seventh plan of the day in full, with the detail
-   this edition deliberately only points at.
+1. **Read `.plan-day.md` first.** Gitignored; holds the fourth plan of 2026-11-19 in full, with the
+   detail this edition deliberately only points at. **There were FOUR plans that day** — unusual, and the
+   reason is in "THE DAY WAS NOT A BATCH DAY" below.
 2. **Read the system date and compare it with this document's.** **Never derive today's date from a
    document** — including this one.
-3. **`worktree.mjs list` will show THREE HELD FOLDERS** (`tenancy-canary-red`,
-   `shelter-management-schema`, `onboarding-runbook-steps`). All three are finished, merged and measured;
-   **their sessions are open, so `done` refuses them and `--stop-servers` will not help.** Closing them
-   is Lutan's, then one `done` each or `/clean-streams`.
+3. **`worktree.mjs list` will show `onboarding-runbook-steps` as `UNMERGED WORK`.** It is not.
+   `git diff --stat origin/main...claude/onboarding-runbook-steps` is **EMPTY** — PR #1705 squash-merged
+   and those five commits are the pre-squash originals. **`done` refuses it and `--force` does not
+   override. LUTAN SAID *"Leave it"*. Do not raise it again.**
 4. **Read the repository AFTER the pull, not before.**
-5. **THE CADENCE CHANGED TODAY. Read the next section before anything else.**
+5. **The three streams named above were open when this was written.** Do not read `free` / `0 ahead` /
+   no PR as "never started" — see the planner fault below, which is the second instance in one day.
 
-## THE CADENCE IS NOW NINE MERGED STREAMS, NOT ONE PER PLAN
+## THE DAY WAS NOT A BATCH DAY, AND THE MOST VALUABLE WORK WAS DONE IN THE CHAT
 
-**Lutan, 2026-11-18:** *"this process is getting ridiculuous, why would we want to write a handover after
-just one stream. we should have 3 batches of 3 streams between handovers"*, then, asked whether the unit
-is streams or batches: *"so the rule is 9 streams irrelevent of batches"*.
+**Four `/plan-day` runs, and between them Lutan and the planner did a piece of hand work that had been
+blocking an item for weeks: the two-account Google Drive proof (`#cn7gk`).** It is worth reading as a
+model, because **it cost about an hour and it closed what a stream could not have closed at all** — the
+blocker was an account, not code.
 
-**Shipped as PR #1702.** `SKILL.md` carries **two counters** — the plan's progress, and
-`Streams merged since handover <slug>: <n> of 9` — and **a plan finishing is no longer a trigger.** One
-stream, one PR, one count; an unplanned stream that shipped a PR counts in; a stream counts even if its
-figure is `unmeasured` or excluded. A release's two PRs, the handover's own PR and bot PRs do not.
+**WHAT WAS PROVED, AND IT IS PROVED AGAINST GOOGLE RATHER THAN AGAINST OUR OWN LOGIC:** shelter #2's
+token aimed at Lanna's folder was refused `HTTP 404`, and Lanna's token aimed at shelter #2's folder was
+refused `HTTP 404`. **Google returns *not found* rather than *forbidden*, which is the stronger answer:
+it does not even confirm the other folder exists.** Both runs used `connect-shelter-drive.mjs` without
+`--apply`, aimed at a shelter key that does not exist, so nothing could be written either way.
 
-**WHY IT WAS A DEFECT AND NOT A PREFERENCE:** *"One plan is one handover"* fought rule 7 (*"Nine is a
-target, not a quota"*) — a thin backlog makes a small plan, and a small plan then demanded a handover.
-**The cadence has only ever been sane because HE SUPPRESSED IT BY HAND:** `761` covered two plans and
-twelve streams because he answered *"Not yet"* twice. **A process that depends on the user declining it
-is broken.** Counting batches would be the same mistake in another unit: a batch has been anything from
-one stream to three.
+**THE FINDING THAT REMOVED MOST OF THE EXPECTED WORK: A REFRESH TOKEN BELONGS TO THE PERSON, NOT TO THE
+OAUTH CLIENT.** The second account was connected through the **existing published Desktop client** —
+**no new Cloud project, no new OAuth client, no new consent screen, and no exposure to the 2026-09-25
+fault where a client left in *Testing* expired its tokens after seven days.** It is also what real
+onboarding looks like: the shelter grants OUR app access to THEIR Drive.
 
-**A FRESH CHAT RECOVERS THE COUNT FROM THIS SECTION:** the eight PRs above are covered; count merged
-stream PRs after them with `gh pr list`.
+**`#cn7gk` was retitled** — its title claimed *"nothing writes a `shelter_drive_credentials` row"*, which
+stopped being true that morning — **and what is left is the single word *upload*.**
 
-## THE ONE FAULT THAT HAPPENED THREE TIMES TODAY, AND ALL THREE WERE THE PLANNER'S
+## THE ITEM THAT CHANGED SHAPE THREE TIMES IN AN HOUR, AND WHY ALL THREE ARE RECORDED
 
-**Lutan caught two:** *"Try again"* when the open-item count rose after an item was ticked, and *"you are
-making false claiims again without checking the status"*.
+`#drvcl` (connect a shelter's Drive from a screen) was answered by him three times in one conversation:
+the product-admin console; then *"the shelter director would authorise the token and send me the token ID
+and folder ID and I paste them into the admin console"*; then **"landing straight into the app is even
+better"**.
 
-**THE SHAPE, STATED ONCE: an instrument answered honestly and its answer was read as being about
-something else.**
+**SETTLED: the shelter's own Admin connects Drive from that shelter's own Settings, and the credentials
+go straight into the app. Nothing is shown, copied, emailed or pasted.** Admin only — **Admin already
+sits outside the card system, so this needs no new card and creates no new exception.** The product-admin
+console keeps the status view and a manual paste fallback, *"the exception, never the design"*.
 
-1. **`check-backlog-sections.mjs` with no argument reads `../docs/backlog.md` RESOLVED FROM THE SCRIPT'S
-   OWN LOCATION** — the main checkout. **Run from the backlog worktree it validates a file you did not
-   edit.** Three runs were read as confirming an edit they never saw. **`CLAUDE.md` says so in brackets
-   and it was read past three times. Pass the path, or `--staged`.**
-2. **The canary's HEADER COMMENT** (*"the item's own proof … is owed at Part 5"*) was read as the current
-   state — **six lines below a usage line advertising `--prove-red`, which exists, is implemented, and
-   had been run red on 2026-11-16.** `#cnred` was filed on that misreading and corrected by its own filer
-   before a stream read it.
-3. **The skill file on disk was read as proof a PR had merged**, instead of asking `gh`. The inference
-   was right, **which is what makes it dangerous: a method that is wrong but lucky teaches nothing.**
+**TWO THINGS TO TAKE FROM IT.** First, **the middle shape was rejected on a security argument that should
+not be re-litigated quietly**: the token carries the FULL `drive` scope, so sending it would have put one
+organisation's key into a message neither party controls, once per shelter, for ever. Second — and this
+is the modelling lesson — **the self-service shape is the SIMPLEST to build, not the most complex.** The
+one-time-link design exists solely to tell the app which shelter a consent belongs to; **a director
+signed in to her own shelter already answers that**, so the link, its expiry and every way it could be
+forwarded to the wrong person all disappear. **It deletes a mechanism rather than adding one.**
 
-**AND A FOURTH OF THE SAME FAMILY: THE PLANNER'S OWN ARITHMETIC IS NOT EVIDENCE.** The open-item count
-was reconciled by reasoning three times and was wrong three times; **one `comm` of the two id lists
-settled it at once.** **Extend the project's own rule — *a count without its database is not a reading* —
-to: a check is not a check unless you know which file it read, and a comment is not a status.**
+**The earlier answer is marked SUPERSEDED IN PLACE on the item, not deleted**, so a reader meets both.
 
-## THE LEAK CANARY RAN FOR THE FIRST TIME, AND THEN TOLD US WHAT IT DOES NOT PROVE
+## THE COST THAT NOBODY HAD PRICED, AND IT IS NOW ITS OWN ITEM
 
-**`#ntrun` IS DONE.** Lutan created a **scoped** token (dev project only, Database read-write) as
-`SUPABASE_CANARY_TOKEN`; the planner confirmed the name, dispatched the workflow and read the log. **Run
-44269601418, success, 08:44 UTC — its first successful run ever.** Not vacuous: it planted a second
-shelter's `residents` and `attachments` rows, read **23 anon-reachable objects** as `anon`, made one
-cross-tenant call, found **`0 new leak finding(s)`**, and rolled back. **One scheduled 06:11 UTC run is
-still unproven** — that was a `workflow_dispatch` — so a red nightly against a green dispatch means **the
-schedule, not the token.**
+**`#dscop`, filed on his instruction (*"yes file it"*).** We ask for `https://www.googleapis.com/auth/drive`
+— **the whole of a shelter's Google account.** Google classes that as *restricted*, and a restricted
+scope on a **public, self-service** app is what triggers verification with an annual third-party security
+assessment. **That is a recurring bill against the zero-ongoing-cost rule.** It is also why a brand-new
+account consenting on 2026-11-19 was shown **"Google hasn't verified this app"** and had to click
+**Advanced** — **observed, not inferred.** Lutan clicking past that is fine; **a shelter director being
+asked to click past a security warning, at the moment she decides whether to trust us, is not.**
 
-**THEN PR #1703 ADDED `--prove-red drop-restrictive`, PROVED IT RED (`residents … 19 -> 20`), AND
-REPORTED SOMETHING IT WAS NOT ASKED FOR:** *"`leak-table` (restrictive policy left in) also exits 1, so
-the canary session likely passes `is_trusted_caller()` and this run does not isolate the restrictive
-policy as the protection."* `0392`'s policies read `is_trusted_caller() or shelter_id =
-current_shelter_id()`, **so a trusted caller is let through whether or not the per-shelter clause works.**
+**THE CANDIDATE ANSWER IS `drive.file`** (app-created files only; not restricted, no verification, no
+warning, no cap) **and the hinge is a question nobody has settled: does a file a human places into an
+app-created folder become visible to the app?** If not, "create the folder with the app, then migrate by
+hand" does not work and the migration must run through the app.
 
-**SO THE INSTRUMENT IS PROVED SENSITIVE AND NOT PROVED TO BE TESTING WHAT WE THINK IT TESTS.** Filed as
-**`#cniso`** and briefed. Its new mode also has to grant `anon` SELECT, because `anon` holds no grant on
-`residents` — so even that proof reads *"dropped AND grant present"*, **and the stream said so rather
-than claiming more. That honesty is the most valuable thing any stream produced today.**
+**AND HIS OWN MESSAGE MAY DECIDE IT:** *"As we haven't moved the documents onto lannacareforanimals
+google account yet, we have the opportunity to either create a folder from scratch and then migrate the
+files or decide to run it as a hand crafted option"*. **The strongest objection to the narrow scope was
+that Lanna's tree was hand-made — and that tree does not exist yet. There is a window, and it closes when
+the files move.**
 
-## FIGURES — EIGHT, AND NOT ONE OVERRAN
+**`#dscop` GATES `#drvcl`** and is briefed as a reading stream that changes no code.
+
+## A SECOND CONSENT-SCREEN FINDING, HIS, AND ONLY HE CAN CLOSE IT
+
+**`#gcnst`**, from his own observation at the keyboard: *"it still asks to allow permission to lannacare
+not cooperjaidee"*. The consent screen's app name is `Lanna Care for Animals`; the product was renamed
+**Cooper Jaidee** on 2026-11-14. **It is wider than the step that found it** — the app name shows on
+**every** consent screen the project serves, so a new staff member signing in with Google reads it too.
+
+**WHY NOBODY HAD DONE IT: the only place the work was ever described is inside `#ki6cx`, ticked on
+2026-11-05 — NINE DAYS BEFORE THE NAME WAS CHOSEN** — so it lists the domains and not the name, **and
+nobody re-reads a ticked item.** Console change, his hands. Nobody has established whether renaming a
+brand-verified app re-triggers review; **do not promise a size.**
+
+**AND A CORRECTION TO THE RECORD THAT GOES WITH IT:** the Google accounts stocktake says verification is
+not required *"since your app is not requesting any sensitive or restricted scopes"*. **True of the
+SIGN-IN client; false of the Drive client.** Do not reason about Drive from that line.
+
+## FIGURES — EIGHT, SEVEN VALID, ONE OVER
 
 | slug | PR | band | actual | verdict |
 |---|---|---|---|---|
-| `calendar-per-shelter-readers` | #1698 | 160-200k | **218,782** | **NOT A BAND READING — `rescoped=yes`** |
-| `next-security-upgrade` | #1699 | 145-185k | **142,142** | **under by 2,858** |
-| `scheduled-writers-classify` | #1700 | 145-175k | **147,705** | **inside** |
-| `plan-day-band-floors` | #1701 | 145-165k | **137,674** | **under by 7,326** |
-| `plan-day-handover-cadence` | #1702 | 130-165k | **138,025** | **inside** |
-| `tenancy-canary-red` | #1703 | 140-170k | **143,116** | **inside** |
-| `shelter-management-schema` | #1704 | 170-210k | **166,033** | **under by 3,967** |
-| `onboarding-runbook-steps` | #1705 | 160-200k | **189,723** | **inside** |
+| `canary-isolates-protection` | #1706 | 146-175k | **152,379** | **inside** |
+| `writer-runs-lint-flag` | #1707 | — | **142,405** | **NOT A BAND READING — `rescoped=yes`** |
+| `shelter-management-app` | #1709 | 200-270k | **224,659** | **inside** |
+| `onboarding-runbook-screens` | #1710 | 150-185k | **152,630** | **inside, at the band floor** |
+| `shelter-write-schema` | #1711 | 165-190k | **162,234** | **under by ~3k** |
+| `canary-plain-run-trust` | #1712 | 145-175k | **154,934** | **inside** |
+| `shelter-admin-role-schema` | #1713 | 165-195k | **159,175** | **under by ~6k** |
+| `shelter-write-app` | #1714 | 145-175k | **178,482** | **OVER by ~3.5k** |
 
-**Seven valid readings: four inside, three under, NONE over** — against five overruns in `761`'s twelve.
-**#1698 is excluded on its own report, and nothing says what the rescope was**: one question if anyone
-talks to that session, not a guess.
+**Seven valid readings: four inside, two under, one over.** **#1707 is excluded on its own report and its
+PR body never says what the rescope was** — one question if anyone talks to that session, never a guess.
 
-**A READING NUANCE THAT WOULD OTHERWISE LOSE FIGURES: the comment prints `model=claude-sonnet-5-5` while
-the band says `@sonnet-5-5`.** Full id against short name, **not a dials mismatch.** They count.
+**THE FLOOR, EIGHT FIGURES: 86,759 · 86,761 · 87,050 · 87,474 · 87,482 · 87,482 · 87,482 · 87,773.** A
+**1,014-token spread**, entirely inside `~86–90k`. **No edit owed, and the scale rows are still not to be
+shifted with it.**
 
-**THE FLOOR, EIGHT FIGURES: 86,514 · 86,738 · 86,759 · 86,983 · 87,238 · 87,462 · 87,771 · 90,127.**
-**`~86–90k` still describes the data**, new low 86,514, top edge 90,127. **No edit owed, and the scale
-rows are still not to be shifted with it.**
+## TWO BAND REVISIONS, IN OPPOSITE DIRECTIONS, AND ONE WAS A PREDICTION THAT FIRED
 
-## THE BAND TABLE WAS CHANGED ONCE TODAY AND IS STILL WRONG AT THE BOTTOM
+**(1) THE PERMISSIONS-SCHEMA `+30k of proof` PREMIUM FALLS TO ABOUT `+20k` — BUT ONLY WHEN A HARNESS
+PATTERN ALREADY EXISTS TO COPY.** This was written down as a prediction *before* the second reading
+existed (*"if it also lands near 160k…"*) and **it fired**: #1711 at 162,234 and #1713 at 159,175, both
+under bands carrying the full premium. **The condition travels with the revision** — a permissions schema
+PR with no harness to copy is not covered by it. **This refines `762`'s own restatement** (that the
+premium is about *unsettled* permissions, not permissions) rather than contradicting it: settled design
+and a copyable harness are two different discounts and both were present.
 
-**PR #1701 raised `Quick win` to 143-170k and `Schema PR, nothing left to discover` to 143-165k** on
-sixteen figures, soundly: nothing had come in under 143,281. Basis in `reference.md`; `SKILL.md` gained
-zero lines.
+**(2) THE SPECIFICATION DISCOUNT WAS OVER-CLAIMED FOR AN APP HALF.** #1714 was banded at the bottom of
+its row because its schema half handed it a full specification — and it came in **over**. The discount
+did not pay for mapping SQLSTATEs to readable sentences **in two languages**, a release note, and a
+browser attempt. **A specification discounts a SCHEMA half much more than an APP half.**
+**`shelter-admin-role-app` is banded 155-190k as the deliberate re-test and had not reported when this
+was written.**
 
-**THEN ITS OWN FIGURE CAME IN AT 137,674 — the lowest of the day — AND TWO MORE FOLLOWED BELOW 143k**
-(#1702 at 138,025, #1699 at 142,142). **The claim that bookkeeping alone costs 145-155k is false as a
-lower bound.** **RECOMMENDATION, DELIBERATELY NOT AN EDIT: those two bottoms belong nearer 135k.** Not
-done, because **two changes to the same rows in one day is thrashing** and the second would come from the
-same reasoning as the first. **Three readings against sixteen: weigh it.**
+## WHAT `762` LEFT OWED — read this before you act on its recommendations
 
-**AND ONE PREMIUM NEEDS RESTATING RATHER THAN SHAVING.** #1704 came in **under** a band carrying the
-*"+30k of proof"* for a permissions schema PR. The proof was cheap **because the access design was settled
-by him in two sentences before the brief was written.** **So that premium is about UNSETTLED permissions,
-not permissions.**
+- **ITS BAND-TABLE RECOMMENDATION IS STILL UNACTED, AND THE DAY'S EIGHT FIGURES WEAKEN IT.** `762`
+  recommended moving two bottoms nearer 135k on three readings below 143k. **Nothing on 2026-11-19 came
+  in below 142,405, and that one is excluded.** So the case has not grown. **Still deliberately not
+  edited** — two changes to the same rows from the same reasoning is thrashing.
+- **`brief-blocks.md` STILL DESCRIBES THE AGENT BUILD HALT AS LIVE**, and `762` asked for it to be
+  rewritten on more than one day's readings. **Not done, and the planner copied that block verbatim into
+  two briefs on 2026-11-19** — so the stale text is still propagating. **It is a `SKILL.md`-family edit,
+  which means a stream and a PR.**
+- **"A TICK IS NOT A TITLE REWRITE" RECURRED, IN A NEW COSTUME: THE PLANNER'S OWN.** `762` reported it
+  three times from streams. On 2026-11-19 the planner had to retitle **`#cn7gk`** (its title still said a
+  shelter *cannot* connect its own Google account, hours after one did) and **`#drvcl`** (its title named
+  the product-admin screen, which had become the fallback). **Both were caught by re-reading the title
+  alone after changing the item — the step the skill asks for and that keeps being skipped.** `762`'s
+  suggestion to move it into `brief-blocks.md` stands, and would not have caught either of these,
+  **because these were the planner's, not a stream's.**
 
-## PART 12: ROUTE (b) IS DEAD, AND NOTHING WAS CREATED IN HIS ACCOUNT
+## THE PLANNER FAULT OF THE DAY, AND IT HAPPENED TWICE
 
-Lutan agreed to the throwaway `workers.dev` probe; **reading the render path first ruled it out.** The
-three reasons are on `#egq18` in full — the short version: **a secret-less Worker sends no `x-shelter-id`,
-and no shelter means no rows**, so the probe would time a page that read nothing; it would also need a
-`shelter_hosts` row written into dev; and **`/privacy` is not static text** although
-`src/lib/public-paths.ts:16` says so, so a credential-less render reports a flatteringly low number.
-**Route (a), the test Worker once the outside tester has finished, is the only route to a real figure and
-the timing is his.** `#34a30` Part 13 stays blocked on the number. **Two traps recorded on the item: bust
-the 600 s edge cache per request, and local machine load cannot contaminate this reading** — it is counted
-inside Cloudflare's isolate, so the Lighthouse rule does not apply.
+**The shape: a reading taken minutes ago was treated as the present.**
 
-## MULTI-TENANCY: ELEVEN OF THIRTEEN, AND THE MANAGEMENT SCREEN IS IN FLIGHT
+1. **In the morning**, *"it's merged"* was read against a stale `list_sessions` snapshot and the planner
+   asked twice more about a folder. **Cost: three turns.** The cure written down then — settle state from
+   `gh`, `worktree.mjs` or a call made in the same turn — **held for the rest of the day.**
+2. **In the evening it came back in a new form.** `worktree.mjs list` said `free` / `0 ahead`, no PR
+   existed, and a `list_sessions` call returned seven rows without the stream's session. The planner was
+   about to report that `shelter-admin-role-app` had **never been opened**. **It had been.**
+   `include_archived: true` returned it at once, active minutes earlier. **What actually settled it was
+   the worktree itself: an untracked `docs/test-plans/shelter-admin-role-app.md`, which only a session
+   writes.**
 
-**He asked where the remaining programme work was, and he was right to: this edition's predecessor folded
-it into a list of exclusions.** Audited from `#ykefa`'s own parts list: **Parts 1-11 all ticked. Open:
-`#egq18` Part 12 and `#34a30` Part 13 only.**
-
-**THE PRESENTATION LESSON: when a programme he tracks has items left, NAME IT AND COUNT ITS PARTS**, even
-when every remaining part is someone else's. **A correct list of exclusions is not an answer to "where is
-the big thing".**
-
-**`#shmgt` AND `#onbrb` WERE FILED BY THE BACKLOG MANAGER SESSION MID-CONVERSATION** — **the backlog can
-move under a conversation without the planner doing anything.** `#shmgt`'s schema half shipped (`0411`,
-`0412`) with a real specification, **and he settled where the screen lives: INSIDE the app's admin
-area**, chosen from three shapes. The app half is in flight.
+**THE RULE, AND IT EXTENDS `762`'s "a comment is not a status":** `free` + `0 ahead` + no PR is a
+**snapshot, never a verdict**, and **one `list_sessions` call is not a census.** **Look in the folder
+before saying nobody has been there.** Caught before it reached him, which is the only reason it cost
+nothing.
 
 ## FILED, TICKED AND CORRECTED
 
-**Ticked:** `#ntrun`, `#k2vd9`, `#ukncl`, `#nxsec`, `#cnred`, `#calsh`. **Filed:** `#cniso`, `#swrun`,
-`#dcmds`; `#shmgt` and `#onbrb` by the Backlog manager. **Corrected before briefing, each caught by
-opening a file rather than by a check:** `#cnred` (the planner's own wrong headline), `#onbrb` (the Drive
-step CAN be documented — `connect-shelter-drive.mjs` shipped), `#nxsec` (named a guard file that does not
-exist; it is `scripts/check-next-cache-apis.mjs`).
+**Ticked by streams:** `#shmgt` (by #1714, correctly — its create-and-map half shipped), `#cnutr` (by
+#1712, which answered it with option (c): the nightly now runs a trusted pass **and** an `--untrusted`
+pass, two rolled-back calls of about two seconds, **and nothing stopped being asserted**).
 
-**`#k2vd9` CLOSED BY HIS ANSWER WITH NO CODE CHANGE, AND IT IS THE DAY'S CHEAPEST WIN.** Asked what the
-accountant uploads: ***"they are entered one at a time"*** — **so there is no machine format to
-establish**, the item's own second done-branch, and **the shipped screens already say the ID is shown
-*"so it can be typed in"***. The Excel template behind the e-Donation login **exists but she does not use
-it**: nobody chases it, and the Thai read of manual v2 is no longer owed.
+**Filed by the planner from streams' own reports, none of which filed them itself — correctly:**
+`#shadm` (a created shelter had no Admin role and no login, so nobody could sign in to it — it became a
+stream the same day and shipped as `0415`/#1713), `#drvcl`, `#shrow` (what else a brand-new shelter needs
+before it *works* as against merely being signable-into — **not established, and #1713 said so rather
+than guessing**).
+
+**Filed by the planner from his own words:** `#gcnst`, `#dscop`.
+
+**Corrected in place:** `#onbrb`'s done-when named `docs/shelter-onboarding.md`, **which has never
+existed** — it is `docs/shelter-onboarding-runbook.md`.
+
+**PROVED AND WORTH KNOWING: `0415`'s harness output was `cards=0 is_admin=true has_permission=true`** —
+the Admin role it creates **holds no cards and still has full access**, which is exactly what
+`roles.is_admin` means and the thing most worth proving rather than asserting.
 
 ## WHAT IS LEFT FOR CLAUDE AT ALL
 
-**In flight:** `#shmgt` app half, `#cniso`, `#swrun`. **Next:** `#dcmds` (XS — **fold it with `#onbrb`'s
-second half rather than spending a stream floor on two lines**), plus whatever the three in flight report.
-**`#cn7gk`, his second Google account, now unlocks TWO things:** the two-account Drive proof and
-`#onbrb`'s deferred half. **`#onbrb`'s PR listed what it could not write** — creating the shelter and host
-rows, names (`0400`), receipt series (`0395`), three lookup screens, and removing a shelter after export —
-**which may deserve items once the screen lands.**
+**In flight (figures belong to `764`):** `shelter-admin-role-app` (`#shadm`'s screen half — the last gap
+in onboarding a shelter), `cn7gk-upload-proof` (`#cn7gk`'s one remaining word), `drive-scope-decision`
+(`#dscop`).
 
-**Everything else is his hands** (`#pirow`, `#rqv5c`, `#civwx`, `#kxksr`, `#gvnrr`, `#aaqtl`, `#mzu7v`,
-`#z04wr`, `#chpap`, `#uao7r`, `#8dfud`, `#z7d6h`, `#egq18`'s route (a)), **parked by his own answer**
-(`#00e3u`, `#vkswg`, `#el9zw`), **waiting on a person** (`#y1dqu`, `#u2bo6`, `#s0jgi`, `#1o5tk`),
-**waiting on data** (`#9b0vq`), **blocked** (`#34a30`) or **frozen** (`#3qmzt`). **`#pl7aq`, the public
-launch, is a date he names: not to be re-asked.**
+**Next, and in this order because of the gate:** `#dscop` answers → **`#drvcl`'s screen**, which also
+needs a **Web OAuth client with a redirect URI per environment host** that only Lutan can register (the
+Desktop/loopback client cannot serve a hosted page). Then `#shrow`, and `#onbrb`'s end-to-end rehearsal,
+**which is finally unblocked** now that the write half has landed.
+
+**Everything else is as `762` left it** — his hands, parked by his own answer, waiting on a person,
+waiting on data, blocked or frozen. **`#pl7aq`, the public launch, is a date he names: not to be
+re-asked.**
 
 ## PROCESS NOTES
 
-- **THE AGENT BUILD HALT IS DEAD AT ITS CAUSE.** PR #1699 took Next `16.4.2` → `16.4.6` by an explicit
-  pinned install; **five streams since report `build=0` with no `SecurityFatalError`.**
-  **`brief-blocks.md` still describes it as live — rewrite it on more than today's readings.**
-- **AND THE FINDING THAT CAME WITH IT: `next upgrade --agent=security` LAUNCHES AN AI AGENT**, runs
-  `@next/codemod` and asks it to set `experimental.agentUpgrade` — **the flag already rejected as
-  dishonest.** The stream read the command first and chose the explicit install. **A tool's suggested
-  remedy is not advice**, and this is the clearest instance the project has.
-- **A TICK IS NOT A TITLE REWRITE, AND IT HAPPENED THREE TIMES TODAY** (`#nxsec`, `#cnred`, and once
-  more), each leaving a ticked item whose title said the opposite, each fixed behind the stream. **Every
-  brief says it and it has not taken. Consider moving it into `brief-blocks.md`.**
-- **`worktree.mjs new` FAILED TWICE IN A LOOP with stderr redirected away, so the reason was invisible.**
-  **Run them one at a time with visible output** — three for three twice since. **The redirect was the
-  real fault.**
-- **PRODUCTION WAS READ ONCE, READ-ONLY, FROM THE MAIN CHECKOUT BARE.** It closed `#ukncl`'s second
-  database (`purge-write-requests` now reads `[DELETEONLY]`, three functions still honestly
-  `CANNOT BE DETERMINED`) and one of `#pirow`'s two done-when clauses. **Twelve definer functions print
-  `SENDS NO SHELTER`, none called by a cron job** — a hazard only for a service-role caller with no
-  `scriptShelterHeaders`, **which is what the Pi might be.** Detail on both items.
-- **THE ID CHECKER CAUGHT THE PLANNER:** a four-character id was refused by the pre-commit hook because
-  ids are `[a-z0-9]{5}`. **An instrument catching the planner is the right way round.**
+- **A HEREDOC WRITING A LONG DOCUMENT FAILED TWICE** (`unexpected EOF while looking for matching '`) on
+  apostrophes and backticks in prose. **Use the Write tool for prose, and keep heredocs for code.** The
+  second failure wasted a turn on a lesson already learned in the same session.
+- **`worktree.mjs done` CAN EXCEED THE FOREGROUND TIMEOUT** and finish in the background (deleting
+  `node_modules`). It did on 2026-11-19 and exited 0. **Re-read `worktree.mjs list` before relying on a
+  `done` you did not see finish.**
+- **THE DEV DATABASE GAINED A SECOND CONNECTED SHELTER, `test-shelter-2`**, with real Drive credentials
+  for a second Google account. `check-shelter-settings.mjs --env test` was **green afterwards**, so it
+  makes no check noisy. **There is also a `proof-b` from another stream's proof; it was deliberately not
+  borrowed.** Every brief in the batch says both.
+- **THE PUBLIC-REPOSITORY RULE BIT A NEW SURFACE:** this day's work involved real Drive folder ids and a
+  real account address. **Briefs now say explicitly that no folder id goes into a committed file** —
+  meaning in the repo, value in the Desktop notes.
 
 ## INTERRUPTIONS
 
-**THREE, ALL COSTS OF THE BRIEFING PROCESS AND NONE OF ANY STREAM.** (1) *"Why don't we have any of the
-remaining multi tennancy work in here"* — a presentation fault. (2) *"Try again"* on the open-item count
-— uncovered the `check-backlog-sections` directory fault. (3) *"you are making false claiims again without
-checking the status"* — an inference about a merge. **No stream was corrected, rescoped or stopped, and
-every state in the seventh plan was read from `gh`, `list_sessions` or a file passed by path.**
+**ONE, AND IT WAS THE PLANNER'S** — the morning's *"What are you waiting on, it's merged"*, three turns,
+charged to the planner for reading a stale snapshot. **No stream was corrected, rescoped or stopped.**
+The rest of the day's messages from him were direction, not correction: three changes to the plan
+(*"Next batch"*, *"yes file it"*, and `#drvcl`'s final shape), each recorded on its item rather than
+argued with.
