@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { entersApp, type Permissions } from "@/lib/permissions/can";
-import { isPublicSiteOff } from "@/lib/public-site";
 import { NO_ACCESS_PATH } from "./next-path";
 
 export { NO_ACCESS_PATH };
@@ -11,10 +10,11 @@ export { NO_ACCESS_PATH };
  * which is right for them and only them. What decides whether someone is in the app is the role's own
  * cards: entersApp() (docs/decisions/2026-10-04-medical-jobs-app.md), never a list of role names.
  *
- * While the website is off (PUBLIC_SITE "off", src/lib/public-site.ts) nobody is sent to "/": everyone gets
- * the no-access page. "/" would only send a signed-in login on again, and before this an edge redirect
- * from "/" to /home looped exactly this login (#br3f3).
+ * While a shelter's website is off (src/lib/public-site.ts) "/" shows no website to anyone: the proxy sends a login
+ * whose cards open nothing on to the no-access page (it knows the shelter's state from the request header, and this
+ * function is synchronous so cannot read it). That is one more redirect than before #wbsof and cannot loop: it only
+ * ever lands on /no-access, never back on "/" (#br3f3).
  */
 export function refuseFor(perms: Permissions | null | undefined): never {
-  redirect(entersApp(perms) || isPublicSiteOff() ? NO_ACCESS_PATH : "/");
+  redirect(entersApp(perms) ? NO_ACCESS_PATH : "/");
 }

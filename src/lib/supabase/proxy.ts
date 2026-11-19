@@ -11,7 +11,7 @@ import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
 import { DEFAULT_SIGNED_IN_PATH, NO_ACCESS_PATH, safeNextPath } from "@/lib/auth/next-path";
 import { isPublicPath as isPublicPathname, isWebsitePageWhenOff } from "@/lib/public-paths";
 import { ADOPTER_PATH, loadAdopterScope } from "@/lib/adopter/scope";
-import { isPublicSiteLocked, isPublicSiteOff } from "@/lib/public-site";
+import { PUBLIC_SITE_HEADER, isPublicSiteLocked, isPublicSiteOff, publicSiteStateFor } from "@/lib/public-site";
 
 /**
  * Refreshes the Supabase auth cookie on every request (required so server
@@ -55,10 +55,11 @@ export async function updateSession(request: NextRequest, rewriteTo?: URL) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const locked = isPublicSiteLocked();
+  const site = publicSiteStateFor(request.headers.get(PUBLIC_SITE_HEADER));
+  const locked = isPublicSiteLocked(site);
   // "off" is locked and more: no website for a signed-in login either
   // (src/lib/public-site.ts, #br3f3).
-  const off = isPublicSiteOff();
+  const off = isPublicSiteOff(site);
   const isPublicPath = isPublicPathname(request.nextUrl.pathname, locked);
 
   // Signed out: to /login, remembering where they were going so the
@@ -95,7 +96,7 @@ export async function updateSession(request: NextRequest, rewriteTo?: URL) {
     }
     const next = safeNextPath(request.nextUrl.searchParams.get("next"));
     return noindex(
-      NextResponse.redirect(new URL(signedInLandingPath(role, next), request.nextUrl.origin)),
+      NextResponse.redirect(new URL(signedInLandingPath(role, next, site), request.nextUrl.origin)),
       locked,
     );
   }
@@ -108,7 +109,7 @@ export async function updateSession(request: NextRequest, rewriteTo?: URL) {
   if (user && off && request.nextUrl.pathname === "/") {
     const role = await loadSessionRole(supabase);
     const url = request.nextUrl.clone();
-    url.pathname = signedInLandingPath(role, null);
+    url.pathname = signedInLandingPath(role, null, site);
     url.search = "";
     return noindex(withCookies(NextResponse.redirect(url), response), locked);
   }

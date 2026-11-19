@@ -27,11 +27,34 @@
  */
 export type PublicSiteState = "open" | "locked" | "off";
 
-export function publicSiteState(): PublicSiteState {
-  const value = process.env.PUBLIC_SITE;
-  if (value === "off") return "off";
-  if (value === "locked") return "locked";
-  return "open";
+/**
+ * PER SHELTER (#wbsof, docs/decisions/2026-11-20-public-site-per-shelter.md). A request's state is the MORE CLOSED of
+ * two: the deployment floor above (PUBLIC_SITE, one value for the whole Worker) and the shelter's own setting
+ * (shelters.public_site, looked up by the Worker with the host and forwarded as PUBLIC_SITE_HEADER). A shelter can only
+ * make its own site more closed than the floor, never less: off on the test Worker means every shelter is off,
+ * whatever its column says. Reading the header is in public-site-request.ts; this file stays pure.
+ */
+export const PUBLIC_SITE_HEADER = "x-public-site";
+
+const RANK: Record<PublicSiteState, number> = { open: 0, locked: 1, off: 2 };
+
+function parse(value: string | null | undefined): PublicSiteState | null {
+  return value === "off" || value === "locked" || value === "open" ? value : null;
+}
+
+/** The deployment-wide floor: PUBLIC_SITE, "open" when unset. */
+export function deploymentSiteState(floor: string | undefined = process.env.PUBLIC_SITE): PublicSiteState {
+  return parse(floor) ?? "open";
+}
+
+/** The state for one shelter's value. Nothing or garbage from the shelter means only the floor applies. */
+export function publicSiteStateFor(
+  shelterValue: string | null | undefined,
+  floorValue: string | undefined = process.env.PUBLIC_SITE,
+): PublicSiteState {
+  const floor = deploymentSiteState(floorValue);
+  const own = parse(shelterValue);
+  return own && RANK[own] > RANK[floor] ? own : floor;
 }
 
 /**
@@ -40,11 +63,11 @@ export function publicSiteState(): PublicSiteState {
  * robots.txt, the sitemap, the noindex header, the landing page) behaves the
  * same in both.
  */
-export function isPublicSiteLocked(): boolean {
-  return publicSiteState() !== "open";
+export function isPublicSiteLocked(state: PublicSiteState): boolean {
+  return state !== "open";
 }
 
-/** Nobody — signed in or not — is shown a website page on this deployment. */
-export function isPublicSiteOff(): boolean {
-  return publicSiteState() === "off";
+/** Nobody — signed in or not — is shown a website page on this shelter. */
+export function isPublicSiteOff(state: PublicSiteState): boolean {
+  return state === "off";
 }

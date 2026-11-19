@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { entersApp, parsePermissions } from "@/lib/permissions/can";
 import { isPublicPath } from "@/lib/public-paths";
-import { isPublicSiteOff } from "@/lib/public-site";
+import { isPublicSiteOff, type PublicSiteState } from "@/lib/public-site";
 import { DEFAULT_SIGNED_IN_PATH, NO_ACCESS_PATH } from "./next-path";
 
 /**
@@ -30,9 +30,9 @@ export async function loadSessionRole(supabase: SupabaseClient): Promise<Session
  * While the website is off (src/lib/public-site.ts) there is no public page
  * to land on, so a login whose cards open nothing lands on /no-access.
  */
-export function signedInLandingPath(role: SessionRole | null, next: string | null): string {
+export function signedInLandingPath(role: SessionRole | null, next: string | null, site: PublicSiteState): string {
   if (role?.entersApp) return next ?? DEFAULT_SIGNED_IN_PATH;
-  if (isPublicSiteOff()) return NO_ACCESS_PATH;
+  if (isPublicSiteOff(site)) return NO_ACCESS_PATH;
   if (next && isPublicPath(new URL(next, "http://x").pathname)) return next;
   return "/";
 }

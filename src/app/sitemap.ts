@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { isPublicSiteLocked } from "@/lib/public-site";
+import { getPublicSiteState } from "@/lib/public-site-request";
 import { hiddenPagesOf, isPageHidden, sitemapPages } from "@/lib/public-pages";
 import { loadSiteContent } from "@/lib/site/content";
 import { hasPublicShopLinks } from "@/lib/shop/shop-links";
@@ -29,7 +30,7 @@ export const dynamic = "force-dynamic";
  * is a migration, which this change deliberately does not carry.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  if (isPublicSiteLocked()) return [];
+  if (isPublicSiteLocked(await getPublicSiteState())) return [];
   const [origin, supabase] = await Promise.all([getSiteOrigin(), createClient()]);
   if (!origin) return [];
   const abs = (path: string) => new URL(path, origin).toString();

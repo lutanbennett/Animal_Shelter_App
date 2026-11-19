@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
+import { getPublicSiteState } from "@/lib/public-site-request";
 import { safeNextPath } from "@/lib/auth/next-path";
 import { PASSWORD_CHANGE_PATH } from "@/lib/auth/password-change";
 import { ADOPTER_PATH, loadAdopterScope } from "@/lib/adopter/scope";
@@ -57,6 +58,6 @@ export async function GET(request: NextRequest) {
   // but a password-recovery link's ?next= is the change-password page,
   // which every account may use, so that is honoured for anyone.
   const next = safeNextPath(searchParams.get("next"));
-  const landing = next?.startsWith(PASSWORD_CHANGE_PATH) ? next : signedInLandingPath(role, next);
+  const landing = next?.startsWith(PASSWORD_CHANGE_PATH) ? next : signedInLandingPath(role, next, await getPublicSiteState());
   return NextResponse.redirect(`${origin}${landing}`);
 }
