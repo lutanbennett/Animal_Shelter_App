@@ -80,10 +80,10 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 ## 7. Documentation
 
-- [ ] Backlog item ticked
+- [x] Backlog item ticked
 - [x] Decision file `docs/decisions/2026-11-19-website-silent-writes.md`
 - [x] README still accurate
-- [ ] **Release notes.** unreleased gained an admin line in src/lib/releases.ts
+- [x] **Release notes.** unreleased gained an admin line in src/lib/releases.ts
 - [x] Commit messages say why
 - [x] Claims were measured: the line-by-line account of the twelve is in the decision file
 
