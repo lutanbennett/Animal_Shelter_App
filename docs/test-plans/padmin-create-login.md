@@ -79,14 +79,14 @@ it. Everything outside those comments is judged.
 
 | | |
 |---|---|
-| Feature | |
-| Backlog item | `docs/backlog.md` → |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Feature | padmin-create-login: a PADMIN creates a new shelter's first Admin login |
+| Backlog item | `docs/backlog.md` → #flogn |
+| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_padmin-create-login` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
-| PR | |
-| Tested by / date | |
-| Carries a migration? | yes / no |
-| Tested at SHA | |
+| PR | #1750 |
+| Tested by / date | Claude / 2026-11-20 |
+| Carries a migration? | yes: 0425 |
+| Tested at SHA | 294612708 |
 
 ## 1. Scope and risk
 
@@ -112,7 +112,15 @@ because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [ ] `node scripts/gates.mjs` ends with one line; GATESPLACEHOLDER
+- [x] `node scripts/gates.mjs` ends with `gates: typecheck=0 lint=0 test=0 build=0`
+
+```
+=== gates: typecheck exited 0 after 11s
+=== gates: lint exited 0 after 206s
+=== gates: test exited 0 after 59s
+=== gates: build exited 0 after 106s
+gates: typecheck=0 lint=0 test=0 build=0
+```
 - [ ] CI green on the PR (runs the same four gates, among its other checks). **This one cannot be true in the commit that creates the PR**, so write it `n/a: not yet — the PR does not exist at this commit` and **leave it there.** Changed 2026-10-20: ticking it in a follow-up commit used to be the rule, and that commit **invalidated its own evidence** — a new HEAD means a new run, so every PR in this repository paid two full CI cycles to transcribe a result GitHub already records permanently against the commit. A tick here attests to nothing a reader can check better by looking at the PR. **What must still happen, and is a merge step rather than a checklist line: before merging, read the run for your current HEAD (`gh run view <id> --json status,conclusion,headSha`) and confirm its `headSha` matches.** Merging on an older run's strength merges a commit whose CI never finished. **Do not pre-tick this line either** — a green you have not seen is the exact failure this checklist exists to prevent — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
@@ -241,7 +249,7 @@ correct when written. **UAT is deployed on every release since 2026-11-08**
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| | | | |
+| - | - | - | none | - |
 
 ## Left for manual verification
 
@@ -265,7 +273,7 @@ section 8's.
 
 | # | What to check | Where |
 |---|---|---|
-| | | |
+| 1 | The new login's first sign-in and forced password change; the console at phone width | the dev console, or production after release |
 
 ## Sign-off
 
@@ -282,7 +290,7 @@ driven rather than assumed. Signed by whoever ran them — Claude may sign this.
 - [x] Everything in this checklist that could be verified without human eyes was run, not assumed
 - [x] Nothing is ticked that was not actually executed
 
-Automated checks by: <name>  Date: <yyyy-mm-dd>
+Automated checks by: Claude  Date: 2026-11-20
 
 ### Manual verification
 
@@ -318,7 +326,7 @@ illegible one is a red people learn to ignore.
 
 - [ ] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <reason>` on the signature below — there is nothing for a person to look at, so nothing is being signed for. If the list is not empty, only the person who looked may tick it — n/a: not applicable
 
-Manual verification by: <name>  Date: <yyyy-mm-dd>
+Manual verification by: pending: the new login's first sign-in and a phone-width look at the console
 
 ### Result
 
@@ -326,6 +334,6 @@ Manual verification by: <name>  Date: <yyyy-mm-dd>
 - [x] Checklist pasted into the PR
 - [ ] Handed to the production release manager — pending: nothing ships until a release
 
-Result: <pass | pass with accepted defects | fail>
+Result: pass
 
-Release manager acknowledgement: <name>  Date: <yyyy-mm-dd>
+Release manager acknowledgement: pending: nothing ships until a release
