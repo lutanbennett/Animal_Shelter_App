@@ -15,6 +15,22 @@ export const ALLOWED = {
       "a re-owned role reads 0 rows. Stays owned by postgres and takes the tenant filter by hand in its join to user_roles " +
       "(multi-tenancy spike, 'What fought back' 2).",
   },
+  "function:public.product_admin_login_exists": {
+    reason:
+      "reads auth.users, which a re-owned role is refused (42501), so it stays owned by postgres, as login_display_name does. Gated by is_product_admin() and aal2 (docs/decisions/2026-11-19-product-admin-state-schema.md).",
+  },
+  "function:public.product_admin_people": {
+    reason:
+      "reads auth.users, which a re-owned role is refused (42501), so it stays owned by postgres, as login_display_name does. Gated by is_product_admin() and aal2 (docs/decisions/2026-11-19-product-admin-state-schema.md).",
+  },
+  "function:public.product_admin_link_shelter_admin_by_email": {
+    reason:
+      "reads auth.users, which a re-owned role is refused (42501), so it stays owned by postgres, as login_display_name does. Gated by is_product_admin() and aal2 (docs/decisions/2026-11-19-product-admin-state-schema.md).",
+  },
+  "function:public.product_admin_add_by_email": {
+    reason:
+      "reads auth.users, which a re-owned role is refused (42501), so it stays owned by postgres, as login_display_name does. Gated by is_product_admin() and aal2 (docs/decisions/2026-11-19-product-admin-state-schema.md).",
+  },
   "function:public.login_display_name": {
     reason:
       "reads auth.users (RLS on, no policy; postgres cannot add one), so a re-owned role reads 0 rows. Stays owned by postgres; " +
