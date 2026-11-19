@@ -49,16 +49,17 @@ output with what success looks like for that script; (3) if both match, report t
 
 ## The build halt, measured three more times
 
-`node scripts/gates.mjs`, three runs in a row in this worktree, each to a file:
+`node scripts/gates.mjs`, three runs in a row in this worktree, each to a file, then a fourth after merging `origin/main` (the finishing run):
 
 | run | typecheck | lint | test | build | build time | `SecurityFatalError` seen | retry fired |
 |---|---|---|---|---|---|---|---|
 | 1 | 0 | 0 | 0 | 0 | 305 s (cold) | no | no |
 | 2 | 0 | 0 | 0 | 0 | 63 s | no | no |
 | 3 | 0 | 0 | 0 | 0 | 42 s | no | no |
+| 4 (after sync) | 0 | 0 | 0 | 0 | 53 s | no | no |
 
-**Result: 0 of 3 halted, so the retry was never exercised.** With #1671's four builds (halt, pass, halt, and its
+**Result: 0 of 4 halted, so the retry was never exercised.** With #1671's four builds (halt, pass, halt, and its
 deliberate-type-error run) the retry still has **one real halt behind it and no measured retry-then-pass**.
-These runs **disagree with the old block's expectation** that builds alternate with a halt: three back-to-back runs
+These runs **disagree with the old block's expectation** that builds alternate with a halt: four runs
 never halted. Not established why (the receipt TTL, a cache, or the advisory being shown only on some builds). So the
-claim "a single honest run should end `build=0`" held 3 of 3 here, and "the retry is enough" remains **untested**.
+claim "a single honest run should end `build=0`" held 4 of 4 here, and "the retry is enough" remains **untested**.
