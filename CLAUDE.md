@@ -570,7 +570,7 @@ reported "no signed-in session"; the fix is a script, not a request to anyone. F
 write a single `pending: no signed-in session` line, because that line is now a fault, not a state.
 
 1. Start your dev server on your own port (`preview_start` with `name: "dev"`).
-2. `node scripts/dev-signin.mjs <role> --port <your port>` — `<role>` is a `roles.key` (`admin`,
+2. `node scripts/dev-signin.mjs <role> --port <your port>` (add **`--aal2`** to get an aal2 session on dev, so the pages below that demand the second step can be pressed; `docs/decisions/2026-11-19-dev-aal2-path.md`) — `<role>` is a `roles.key` (`admin`,
    `management`, `doctor`, `volunteer`, `second_in_command`, `head_of_medical`, …; `staff` is retired).
    It keeps one disposable login per role on the dev project (`dev-signin-<role>@example.invalid`),
    gives it a fresh random password it never prints, and prints a one-line snippet.
