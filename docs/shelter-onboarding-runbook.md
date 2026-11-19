@@ -246,6 +246,11 @@ Then run the same command with `--apply` added at the end. Expected:
 | `That folder is in the trash` / `That id is a file, not a folder` | Wrong id. | Copy the id again. |
 | `No shelter keyed "<key>" here` | The key does not exist in that environment (Step 1 not done). | Check the key. Nothing was stored. |
 
+A harmless yellow *MODULE_TYPELESS_PACKAGE_JSON* warning prints first (Node
+reparsing a file); ignore it. (Rehearsed 2026-11-20 with no secrets set: both this
+script and Step 5's stop with *Missing or malformed: OAuth client id, OAuth client
+secret, refresh token* and store nothing.)
+
 Afterwards: **close the PowerShell window** so the secrets are gone. The app's
 Drive status on the admin page then shows the shelter's own account.
 
@@ -282,7 +287,7 @@ Use a calendar of the shelter's own.
 
 Close the window afterwards.
 
-## Step 6. The shelter's names, receipt series and lookup lists
+## Step 6. The shelter's names, receipt series and lookup lists **[ADMIN SCREEN]**
 
 **What a newly created shelter already has (`0416`).** Creating it on the screen
 fills, with neutral wording and no Lanna text: the eight public site pages (titles
@@ -293,20 +298,13 @@ the 10 frequencies. **You no longer add those by hand.**
 `donation_channels`, `site_content`, and **cards** (never: Step 7 is yours). Blood
 test types, immunisation types, procedure types and units are not filled either.
 
-**Names (`0400`).** A shelter's full name and short name are two columns on the
-`shelters` row (`display_name` for pages and PDFs, `short_name` for mail senders
-and subjects). **NOT YET POSSIBLE as a step you can follow:** the create form sets
-only the key and one name; no screen or script sets these two, so a developer does.
-If they are empty the app falls back to the original shelter's wording, which would
-be wrong for a new shelter, so **do not open a new shelter to its people until its
-names are set.** It waits on a screen for them (no backlog item filed yet).
-
-**Receipt series (`0395`).** Capital letters only, unique per shelter, plus the
-issuers. The database function `product_admin_set_shelter_receipts(shelter, series,
-issuers)` sets them and creates the receipt counter. **NOT YET POSSIBLE as a step
-you can follow:** nothing on the screen calls it, and it must not be typed against
-the database by hand. A shelter with no series cannot issue receipts. It waits on a
-product-admin form (no backlog item filed yet).
+**Names (`0400`) and receipt series (`0395`) are set on the console, in Step 1
+(points 4 and 8).** Nothing is typed against the database. If the names are empty
+the app falls back to the original shelter's wording, so **do not open a new shelter
+to its people until they are set.** After saving, the sign-in page's title shows the
+shelter's name. **The header's small badge still reads "LCA" on every shelter** (it
+is a fixed word in the app's text, not the shelter's short name); that is a known
+gap, not a mistake in your steps.
 
 **Lookup lists (`0403`).** Blood test types, immunisation types, procedure types and
 units are **per shelter**; a new shelter starts with none. **[ADMIN SCREEN]** Signed
@@ -315,8 +313,10 @@ clicking in from the Admin page (not by typing the address):
 
 - **Blood test types**, **Immunization types**, **Procedure types**, **Units**
   each has an **Add** button and a list to edit.
+  (Rehearsed 2026-11-20: the four tiles are on a new shelter's Settings page;
+  the **Add** presses were not driven.)
 - **Group origins** have **no screen yet**: **NOT YET POSSIBLE**; a developer adds
-  them. (Bill kinds and frequencies are filled at creation and edited on their own
+  them (checked 2026-11-20: Settings has no tile for them). (Bill kinds and frequencies are filled at creation and edited on their own
   pages.)
 
 ## Step 7. Roles and cards  **[ADMIN SCREEN]**
@@ -334,6 +334,14 @@ exception except Admin, who always has everything.
 
 The screen lets you give and take away cards one at a time; do one, check it,
 then the next.
+
+**NOT POSSIBLE ON A BRAND-NEW SHELTER TODAY (rehearsed 2026-11-20).** The shelter's
+only role is its Admin, which this page does not list, and the page then stops with
+*Who does what: invalid input syntax for type uuid: ""* instead of offering **New
+role**. So the first role cannot be made from the screen, and a developer must make
+it or fix the page (`src/app/admin/who-does-what/page.tsx`, which queries with an
+empty role id when the shelter has no listed role). Until that is fixed, this step
+cannot be finished by you alone.
 
 ## Step 8. Deploy  **[LUTAN ONLY]** for production
 
@@ -353,20 +361,23 @@ project that is not that environment's own.
 
 ## Step 9. Check it  **[ADMIN SCREEN]**
 
-1. Open `https://<the shelter's host>`. Expected: the shelter's own sign-in page.
-2. Sign in as its Admin. Expected: the header shows the shelter's own name.
-3. Open the Admin page. Expected: the Drive and calendar statuses name the
-   **shelter's own** Google account.
+1. Open `https://<the shelter's host>`. Expected: the shelter's own sign-in page
+   (rehearsed: the page title is the shelter's full name).
+2. Sign in as its Admin. Expected: the signed-in header shows the Admin's email and
+   *Admin*. **The small badge on the left still reads "LCA"** (known gap, see Step
+   6); the shelter's name is in the page title, not that badge.
+3. Open the Settings page. Expected: the Drive and calendar statuses name the
+   **shelter's own** Google account. Before Steps 4 and 5 it says *This shelter has
+   not connected a Google Drive account yet* (rehearsed 2026-11-20).
 4. Upload a test photo to a resident. Expected: it appears in the shelter's own
    Drive folder.
 5. Sign in on another shelter's host. Expected: **nothing** of the new shelter is
    visible, and the reverse.
 6. **As a product administrator** (someone on that list, not just a shelter
-   Admin): open **Settings**, click **Product admin**. Expected: the new shelter is
-   listed with its key and its host. A login not on the list gets a page that does
-   not exist; that is correct. Add and Remove for administrators appear only after
-   the two-step code; without it the page shows a sentence and a link instead.
-   The page shows hosts only: names and the receipt series are **not** shown there.
+   Admin): open the console (`/platform`, Step 1). Expected: the new shelter is
+   listed with its key, its names, its host and a fully ticked checklist (the
+   receipt letters themselves are not shown once set). A login not on the list gets
+   a page that does not exist; that is correct.
 
 Anything you add while testing is real data in that shelter. Use a test shelter
 on test, not a live one.
@@ -450,30 +461,43 @@ node scripts/decrypt-backup.mjs C:\Temp\<shelter-key>-export\<the file>.sql.age 
 
    Delete the decrypted file when you are done.
 
+**THE EXPORT REFUSES TODAY (rehearsed 2026-11-20).** On a test database with a
+rehearsal shelter, it stopped with *Not exporting; the registry does not cover every
+table* naming `product_admin_login_grants`, `product_admin_lookups` and
+`product_admins` (tables added by the product-admin work, never recorded in the
+export's registry). That is the refusal in item 3 above, and it needs a developer to
+record those three tables; do not force it. (The shelter's own `--bogus` flags are
+also refused by name, which is correct.) Until then the shelter-leaving export
+cannot be done by you alone. The encrypted-file step itself was not reached, and the
+public key was not available on the rehearsal machine, so item 2 stopped first with
+*Exports are always encrypted, and no age recipient given*.
+
 Giving the file to the shelter, and removing the shelter's rows and host from the
 live database afterwards, are **NOT YET POSSIBLE** as steps you can follow: there
 is no script that removes a shelter. `#shmgt` is where that belongs, and the
-Product admin screen that has landed does not remove one.
+console does not remove one. **A rehearsal shelter therefore stays on the database
+for good**: a shelter that owns any row cannot be deleted, by design. Name test
+shelters so nobody mistakes them for real ones.
 
 ---
 
 ## Screenshots
 
-**There are no pictures in this document yet, on purpose**: a pasted picture of a
-screen goes out of date.
+**There are no pictures in this document, on purpose**: a pasted picture of a
+screen goes out of date. The pictures are declared in `scripts/manual-screenshots.mjs`,
+the script that re-captures the user manual's images from a running copy of the
+app, and are produced by its next full re-run, which is done once when a batch of
+features is finished, not per change:
 
-The Product admin screen's picture, `runbook-product-admin`, is now declared in
-`scripts/manual-screenshots.mjs`, the script that re-captures the user manual's
-images from a running copy of the app. It has **not been captured yet**: the next
-full manual re-run produces `public/manual/runbook-product-admin.png`. Capture it
-signed in as someone on the product-administrator list (anyone else sees no page).
+- `runbook-product-admin`: the console at `/platform` (Step 1), captured signed in
+  as someone on the product-administrator list. On a development copy a sign-in
+  can be given the two-step code (`node scripts/dev-signin.mjs <role> --shelter
+  <key> --aal2`), so the buttons can be photographed too.
+- `runbook-settings-lookups`: a shelter's Settings page, with the Drive and
+  calendar status and the lookup-list tiles (Steps 6 and 9).
+- `runbook-who-does-what`: the roles and cards page (Step 7).
 
-**Which states can be photographed.** On a development copy a sign-in has no
-authenticator, so only the two-step-**not**-done view can be captured: the
-shelters with their hosts, the administrator list, and the sentence with the
-step-up link. **Add and Remove, their refusals, and the page after the code cannot
-be photographed there**, so this document describes them in words only. Where this
-document says "NOT YET POSSIBLE", trust that over any old picture.
+Where this document says "NOT YET POSSIBLE", trust that over any old picture.
 
 ## Keeping this document true
 
@@ -483,20 +507,25 @@ request**, and delete any "NOT YET POSSIBLE" note whose backlog item you have
 just closed. Any note that names an item (`#shmgt`, `#cn7gk`) stops being true
 the day that item is done.
 
-## What has not been rehearsed
+## What has been rehearsed
 
-Rehearsal of 2026-11-19 against the test database; the full account is in
-`docs/decisions/2026-11-19-onboarding-rehearsal.md`. **This runbook is NOT yet
-rehearsed end to end.**
+Rehearsal of **2026-11-20** on the test database, by following this document; the
+full log is `docs/decisions/2026-11-20-onboarding-rehearsal.md`. (An earlier,
+partial pass on 2026-11-19 could not press the console: it is superseded.)
 
-- **Not driven at all: every press on the Product admin screen** (create a shelter,
-  add or remove an address, give an Admin role, link a login). They need the
-  two-step code, a development sign-in has none, and standing up an authenticator
-  was out of scope. Steps 1, 6 (first half), 7 and 9 as written come from the
-  screen's own text and the migrations, **not from pressing the buttons.**
-- **Not rehearsed: Step 3 and the secrets of Steps 4 and 5** (a Google account is
-  yours to make), Step 2 (Cloudflare) and Step 8 (the production deploy).
-- **Run for real:** Step 4's script refuses correctly with no secrets (*Missing or
-  malformed: …*). Step 5's script refuses the same way (*Missing or malformed:
-  calendar id, …*); it used to stop at start with `ERR_MODULE_NOT_FOUND`, fixed
-  2026-11-19 (`docs/decisions/2026-11-19-script-ts-import-resolution.md`).
+- **Driven by pressing: Step 1 in full** (create, names, address, Admin role,
+  create-a-login, receipts) on a rehearsal shelter; **Step 6's console half;
+  Step 9 items 1 to 3 and 6**; Step 4 and Step 5 as far as their refusals.
+- **Time: about five minutes** of clock for everything on the console (Steps 1
+  and 6), measured from timestamps. The parts anyone can do are the console and the
+  scripts; the parts only you can do are Step 2 (Cloudflare), Step 3 (the Google
+  account and its tokens) and Step 8 (the production deploy). Those were not
+  timed: a Google account and a Cloudflare change are your own time, not ours.
+- **Stopped by a fault, not by a missing step: Step 7** (Who does what fails on a
+  shelter with only its Admin role) **and the shelter-leaving export** (the
+  registry misses three tables). Both are written in their steps above.
+- **Not rehearsed, and who must do it:** Step 2 (Cloudflare) and Step 8
+  (production deploy) are yours; Step 3 and the secrets of Steps 4 and 5 need a
+  Google account you create; Step 9 items 4 and 5 (a photo reaching the shelter's
+  own Drive; nothing leaking between two hosts) need Steps 4 and 8 first; the
+  temporary password sign-in of the created Admin was not pressed.
