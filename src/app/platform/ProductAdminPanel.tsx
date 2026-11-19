@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { ActionButton } from "@/components/ActionButton";
+import { TemporaryPasswordNotice } from "@/components/TemporaryPasswordNotice";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useWriteCall } from "@/lib/use-write-form";
@@ -69,6 +70,7 @@ export function ProductAdminPanel({
   const [found, setFound] = useState<Record<string, boolean | null>>({});
   const [receiptDrafts, setReceiptDrafts] = useState<Record<string, { series: string; name: string; address: string }>>({});
   const [adminEmail, setAdminEmail] = useState("");
+  const [newLogin, setNewLogin] = useState<{ email: string; password: string } | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const setReceiptDraft = (id: string, patch: Partial<{ series: string; name: string; address: string }>) =>
@@ -112,6 +114,7 @@ export function ProductAdminPanel({
   return (
     <div className="flex flex-col gap-8">
       {!canWrite && stepUpNotice}
+      {newLogin && <TemporaryPasswordNotice email={newLogin.email} password={newLogin.password} />}
       {msg && (
         <p role="status" className={`text-sm ${msg.ok ? "text-success" : "text-danger"}`}>
           {msg.text}
@@ -197,7 +200,32 @@ export function ProductAdminPanel({
                             {p.linkAdmin}
                           </ActionButton>
                         </div>
-                        {found[s.id] === false && <span className="text-sm text-danger">{p.errors.noLoginForAddress}</span>}
+                        {found[s.id] === false && (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-sm text-danger">{p.errors.noLoginForAddress}</span>
+                            <ActionButton
+                              icon={ACTION_ICONS.add}
+                              variant="secondary"
+                              compact
+                              type="button"
+                              disabled={pending || draft.trim() === ""}
+                              onClick={() =>
+                                startTransition(async () => {
+                                  const r = await call((id) => createShelterAdminLogin(s.id, draft, id));
+                                  say(r.ok, r.ok ? p.loginCreated : (r.error ?? ""));
+                                  if (r.ok) {
+                                    setNewLogin({ email: r.email, password: r.temporaryPassword });
+                                    setEmailDrafts((d) => ({ ...d, [s.id]: "" }));
+                                    setFound((f) => ({ ...f, [s.id]: null }));
+                                  }
+                                })
+                              }
+                            >
+                              {p.createLogin}
+                            </ActionButton>
+                          </div>
+                        )}
+                        {found[s.id] === false && <span className="max-w-prose text-xs text-muted">{p.createLoginHelp}</span>}
                         <span className="max-w-prose text-xs text-muted">{p.linkHelp}</span>
                       </form>
                     )}
