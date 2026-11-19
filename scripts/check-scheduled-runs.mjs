@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// exit-ok: every child process is a *Sync call and nothing opens a socket, so no handle is open at process.exit
 /**
  * ASSERTION: for each scheduled GitHub workflow listed in WATCHED, the most recent run triggered by the
  * schedule concluded `success` AND started less than MAX_AGE_HOURS ago. Exits 1 otherwise.

@@ -38,6 +38,9 @@ import { createHash } from "node:crypto";
 import { giveRole } from "./lib/user-role.mjs";
 import { loadCards } from "./lib/load-cards.mjs";
 import { stepUpToAal2 } from "./lib/dev-aal2.mjs";
+import { bail, runMain } from "./lib/exit.mjs";
+
+async function main() {
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -181,7 +184,7 @@ if (args.includes("--remove")) {
     console.log(`${error ? "FAILED" : "removed"} role ${r.key}${error ? `: ${error.message}` : ""}`);
   }
   if (!mine.length && !cardRoles.data.length) console.log("nothing to remove");
-  process.exit(0);
+  bail(0);
 }
 
 const portIdx = args.indexOf("--port");
@@ -272,3 +275,5 @@ const sets = [...jar].map(([n, v]) => `document.cookie=${JSON.stringify(`${n}=${
 console.error(`${email} is ${wantAal2 ? "at aal2, " : ""}${cardKeys ? `holding only the cards ${cardKeys.join(", ")}` : `a ${role}`} on dev${targetShelter ? ` (shelter ${targetShelter.key})` : ""}. Run this in javascript_tool on http://localhost:${port}, then navigate to /my:`);
 if (targetShelter) console.error(`The browser reads the shelter from the dev server, not the login: start it as  DEV_SHELTER_ID=${targetShelter.id} node scripts/worktree.mjs dev  (the shell value beats .env.local). Port ${port} is otherwise on the default shelter.`);
 console.log(`${sets.join(";")};location.href="/my"`);
+}
+await runMain(main);

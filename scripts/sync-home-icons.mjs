@@ -20,6 +20,9 @@ import { build } from "esbuild";
 import sharp from "sharp";
 import { google } from "googleapis";
 import { loadEnv, parseEnvArg } from "./lib/env.mjs";
+import { bail, runMain } from "./lib/exit.mjs";
+
+async function main() {
 
 const root = process.cwd();
 const { name: envName, rest: args } = parseEnvArg(process.argv.slice(2));
@@ -71,7 +74,7 @@ if (localDir) {
     writeFileSync(join(localDir, f.folder, f.name), f.png);
   }
   console.log(`Wrote them to ${localDir}. Nothing was sent to Drive.`);
-  process.exit(0);
+  bail(0);
 }
 
 const env = loadEnv(envName);
@@ -170,5 +173,7 @@ console.log(`Done: ${files.length} images checked against Drive → ${HOME_ICONS
 
 function fail(msg) {
   console.error(msg);
-  process.exit(1);
+  bail(1);
 }
+}
+await runMain(main);

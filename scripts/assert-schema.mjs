@@ -15,17 +15,20 @@ import { spawnSync } from "node:child_process";
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 import { appliedMigrations } from "./lib/deploy-schema.mjs";
 import { assertSchema } from "./lib/release-guards.mjs";
+import { bail, runMain } from "./lib/exit.mjs";
+
+async function main() {
 
 const { name: envName, rest } = parseEnvArg(process.argv.slice(2));
 if (envName === "test") {
   console.log("assert-schema: test is not asked.");
-  process.exit(0);
+  bail(0);
 }
 const refAt = rest.indexOf("--ref");
 const ref = refAt >= 0 ? rest[refAt + 1] : "origin/main";
 if (!ref) {
   console.error("assert-schema: --ref needs a commit.");
-  process.exit(2);
+  bail(2);
 }
 const gitRun = (args) => {
   const r = spawnSync("git", args, { encoding: "utf8", env: { ...process.env, MSYS_NO_PATHCONV: "1" } });
@@ -43,6 +46,8 @@ const verdict = assertSchema({
 });
 if (!verdict.ok) {
   console.error(`assert-schema: REFUSED. ${verdict.message}`);
-  process.exit(2);
+  bail(2);
 }
 console.log(`assert-schema: ${verdict.message} (${ref} @ ${gitRun(["rev-parse", "--short", ref]).trim()})`);
+}
+await runMain(main);

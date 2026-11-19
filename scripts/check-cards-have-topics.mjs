@@ -1,3 +1,4 @@
+// exit-ok: its awaits are local dynamic imports / in-memory work, no network or socket is ever opened before process.exit
 // Does any card open no manual topic? (Lutan, 2026-11-09: the Volunteer manual had no Reels topic, and 15 of 56 cards
 // opened nothing at all.) This is the reverse of scripts/acceptance-matrix.mjs, which fails when a topic names an
 // activity no card grants. A card is "opened" by a topic when cardsOfTopic() lists it, so a topic that names the

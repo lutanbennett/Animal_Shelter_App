@@ -1,3 +1,4 @@
+// exit-ok: its awaits are local dynamic imports / in-memory work, no network or socket is ever opened before process.exit
 // The card walkthrough (docs/card-walkthrough.md) is generated from cards.ts, and this fails when it is not trustworthy:
 //   - a card has no steps beyond the boilerplate (open the page) — a card whose steps read "open it and check it works" is worth nothing;
 //   - docs/card-walkthrough.md differs from what scripts/gen-card-walkthrough.mjs would write now (a card was added or changed);

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// exit-ok: every child process is a *Sync call and nothing opens a socket, so no handle is open at process.exit
 /**
  * An OPEN backlog item's title must stay readable: short, and free of its own history.
  *

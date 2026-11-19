@@ -1,3 +1,4 @@
+// exit-ok: every child process is a *Sync call and nothing opens a socket, so no handle is open at process.exit
 // The Pi's release guard: refuse to deploy a commit that is not a
 // written-down release, or whose database is missing a migration it carries.
 // Runs from scripts/pi/deploy-pi.sh once the checkout is at the commit to be

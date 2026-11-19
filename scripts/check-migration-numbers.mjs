@@ -1,3 +1,4 @@
+// exit-ok: every child process is a *Sync call and nothing opens a socket, so no handle is open at process.exit
 // Enforces CLAUDE.md's migration numbering: a new file under
 // supabase/migrations/ is numbered exactly one past the highest on origin/main
 // (two new files: the next two), and no two files share a number. Raised after

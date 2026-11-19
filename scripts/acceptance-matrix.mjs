@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// exit-ok: its awaits are local dynamic imports and an in-memory react-pdf render; no network or socket is opened before process.exit
 // Generates the acceptance matrix — the checklist the shelter signs to say the
 // system does what they need — from what already exists, so it stays true as
 // features land instead of rotting as a typed list would.

@@ -1,3 +1,4 @@
+// exit-ok: every child process is a *Sync call and nothing opens a socket, so no handle is open at process.exit
 // `npm ci` that refuses to run while a build is using this checkout's
 // node_modules (and the reverse: deploy.mjs refuses while this runs).
 //

@@ -1,3 +1,4 @@
+// exit-ok: every child process is a *Sync call and nothing opens a socket, so no handle is open at process.exit
 // Fails when a createAdminClient() call in src/ is not recorded in docs/service-role-sites-registry.json, or a record
 // no longer matches a call. Part 7 of the tenancy programme (#ps6ms): the canary diff works through database roles and
 // cannot see a service-role call, so this is the check that can. Reads files only; no network, no token.

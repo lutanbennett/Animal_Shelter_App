@@ -1,3 +1,4 @@
+// exit-ok: the failed-listen exit has no server open; the child-exit exit deliberately stops the stand-in HTTP server it is serving, and the script makes no fetch
 // A stand-in language model for a DEV session, so the assistant can be run end to end with no Ollama.
 //
 //   node scripts/dev-assistant-model.mjs                 serve the stand-in on http://localhost:11500/v1

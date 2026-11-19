@@ -23,6 +23,9 @@ import http from "node:http";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { bail, runMain } from "./lib/exit.mjs";
+
+async function main() {
 
 // Console output can be buffered when this script runs as a background/
 // redirected process on Windows, so also mirror key output to a status file
@@ -36,7 +39,7 @@ const forCalendar = process.argv.includes("--calendar");
 const forBackup = process.argv.includes("--backup");
 if (forCalendar && forBackup) {
   console.error("Give --calendar or --backup, not both: each mints a different token.");
-  process.exit(1);
+  bail(1);
 }
 
 // --backup uses the backup's own client so its token can never be written into the app's setting by a
@@ -52,7 +55,7 @@ if (!clientId || !clientSecret) {
       "Set them in .env.local first, then run:\n" +
       `  node --env-file=.env.local scripts/google-oauth-setup.mjs${forBackup ? " --backup" : ""}`,
   );
-  process.exit(1);
+  bail(1);
 }
 
 // --calendar mints the shelter calendar's own token (calendar.events only), kept apart from the Drive one
@@ -90,7 +93,7 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(400, { "Content-Type": "text/plain" }).end(`OAuth error: ${error}`);
     console.error(`\nOAuth error: ${error}`);
     server.close();
-    process.exit(1);
+    bail(1);
   }
 
   if (!code) {
@@ -134,3 +137,5 @@ server.listen(PORT, () => {
   console.log(`\nWaiting for consent redirect on ${redirectUri} ...`);
   writeStatus({ state: "waiting", authUrl });
 });
+}
+await runMain(main);

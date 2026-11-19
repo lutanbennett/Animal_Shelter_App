@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// exit-ok: every child process is a *Sync call and nothing opens a socket, so no handle is open at process.exit; its awaits are local dynamic imports
 // Cuts a release: moves `unreleased` in src/lib/releases.ts into a new entry at
 // the top of `releases`, empties `unreleased`, and bumps package.json and the two version fields at the head of
 // package-lock.json (top level and root package, #jhd8s) — then,

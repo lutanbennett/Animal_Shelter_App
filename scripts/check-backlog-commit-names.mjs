@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// exit-ok: every child process is a *Sync call and nothing opens a socket, so no handle is open at process.exit
 /**
  * A commit on the `backlog` branch must NAME every backlog item it changes.
  *

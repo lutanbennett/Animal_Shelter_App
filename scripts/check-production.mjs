@@ -1,3 +1,4 @@
+// exit-ok: every process.exit (usage, listing) runs before the first runCheck request; the failing path sets process.exitCode and lets node finish
 // READ-ONLY answers about the live database, from a fixed list of named checks. Nothing is changed, and no SQL can be
 // passed in: see scripts/lib/readonly-checks.mjs for how that is guaranteed.
 //

@@ -1,3 +1,4 @@
+// exit-ok: every process.exit runs before the browser opens or after a failed launch (no browser, no socket); a printed PDF is closed in finally
 // Builds the card report: one section per card, in the order Lutan asked for (2026-10-25): the card's name, what it
 // is for, what it gives access to (pages, tables and forms), the major restrictions, then a recommendation.
 //

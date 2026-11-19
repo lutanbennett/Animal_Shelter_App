@@ -1,3 +1,4 @@
+// exit-ok: its awaits are local dynamic imports / in-memory work, no network or socket is ever opened before process.exit
 // Pure check of src/lib/site/links.ts: what becomes a link and what is refused.
 //   node scripts/check-site-links.mjs     (from the repo root; no database)
 import { pathToFileURL } from "node:url";

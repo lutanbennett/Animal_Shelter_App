@@ -1,3 +1,4 @@
+// exit-ok: every child process is a *Sync call and nothing opens a socket, so no handle is open at process.exit
 // `npm run opennext:build` under the checkout's tree lock, so a bare build and a
 // guarded `npm ci` (scripts/guarded-install.mjs) cannot overlap. When deploy.mjs
 // runs it, deploy already holds the lock and this runs under it (TREE_LOCK_PID).

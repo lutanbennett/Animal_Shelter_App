@@ -1,3 +1,4 @@
+// exit-ok: every child process is a *Sync call and nothing opens a socket, so no handle is open at process.exit
 // Part 8 of the tenancy programme (#b4cmn), second half: no NEW file in src/ or worker/ may name Lanna.
 // A shelter's name is read through shelterNames() (src/lib/shelter-settings.ts). A file that still names Lanna must be
 // recorded in docs/shelter-settings-registry.json under lannaLiteralFiles with a reason; the manual (src/lib/manual/)

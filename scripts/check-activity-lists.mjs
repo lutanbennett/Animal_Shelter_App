@@ -1,3 +1,4 @@
+// exit-ok: reads files only (`.exec(` is a regex); no handle is open at process.exit
 // Forbids a hard-coded list of activities in an activity-based control (Lutan, 2026-10-23;
 // docs/decisions/2026-10-24-activity-lists-from-cards-only.md). A power comes from a card, and
 // src/lib/permissions/cards.ts is the one place that says which. A screen, check or test that

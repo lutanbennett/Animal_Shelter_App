@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// exit-ok: its awaits are local dynamic imports / in-memory work, no network or socket is ever opened before process.exit
 /**
  * Pins the three things the 2026-10-03 staff dry run (F-02, F-03, F-04) found
  * wrong, at the hour they went wrong rather than at noon:
