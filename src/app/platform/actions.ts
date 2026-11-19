@@ -7,6 +7,7 @@ import { isProductAdmin } from "@/lib/auth/product-admin";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { createClient } from "@/lib/supabase/server";
+import { createAuthLogin, deleteAuthLogin } from "@/lib/platform/create-login";
 
 /*
  * Add and remove a product administrator (#shmgt). The checks here are the courtesy: the database is the
@@ -160,6 +161,52 @@ export async function linkShelterAdmin(shelterId: string, email: string, request
     revalidatePath("/platform");
     return { ok: true };
   });
+}
+
+/*
+ * Create a shelter's FIRST login and link it as its Admin (#flogn, 0425). The database is the gate: product_admin_permit_first_login
+ * (signed-in client, PADMIN and aal2) answers only for a shelter whose Admin role has no login yet and an address no login has, and records it.
+ * Only after that does the service role create the login, with a temporary password shown once (stored replay: a refusal). Admin gets no cards.
+ * If the link fails the new login is deleted again, so nothing orphaned is left.
+ */
+export async function createShelterAdminLogin(
+  shelterId: string,
+  email: string,
+  requestId: string | null,
+): Promise<ActionResult<{ temporaryPassword: string; email: string }>> {
+  const { t } = await getT();
+  const e = t.admin.productAdmin.errors;
+  const supabase = await createClient();
+  return runWriteAction(
+    "productAdmin.createAdminLogin",
+    write(t),
+    { id: requestId, action: "productAdmin.createAdminLogin", db: supabase },
+    async () => {
+      if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
+      if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
+      const addr = cleanEmail(email);
+      if (!UUID.test(shelterId)) return { ok: false, error: e.badHost };
+      if (!addr) return { ok: false, error: e.badId };
+      const permit = await supabase.rpc("product_admin_permit_first_login", { p_shelter: shelterId, p_email: addr });
+      if (permit.error) {
+        const msg = shelterError(e, permit.error.code, e.firstLoginRefused, e.firstLoginRefused);
+        return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.createAdminLogin", permit.error, t.common);
+      }
+      const created = await createAuthLogin(addr);
+      if ("error" in created) {
+        if (created.error.code === "email_exists") return { ok: false, error: e.firstLoginRefused };
+        return databaseFailure("productAdmin.createAdminLogin", new Error("createUser failed: " + (created.error.code ?? "unknown")), t.common);
+      }
+      const linked = await supabase.rpc("product_admin_link_shelter_admin_by_email", { p_shelter: shelterId, p_email: addr });
+      if (linked.error) {
+        await deleteAuthLogin(created.id);
+        return databaseFailure("productAdmin.createAdminLogin", linked.error, t.common);
+      }
+      revalidatePath("/platform");
+      return { ok: true, temporaryPassword: created.temporaryPassword, email: addr };
+    },
+    { storedAs: () => ({ ok: false, error: e.secretShownOnce }) },
+  );
 }
 
 /** Add a shelter's starting content (seed_shelter_defaults, 0416/0417): idempotent, so a repeat press changes nothing. */
