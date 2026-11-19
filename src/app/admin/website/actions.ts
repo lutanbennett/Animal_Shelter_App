@@ -11,20 +11,13 @@ import {
 import { writeRequestIdFrom } from "@/lib/write-requests";
 import { mapLinkLeadsSomewhere } from "@/lib/contacts/map-preview";
 import { createClient } from "@/lib/supabase/server";
-import {
-  MAX_UPLOAD_BYTES,
-  WEBSITE_IMAGE_MIME_TYPES,
-} from "@/lib/uploads/limits";
+import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
 import { dbRefusal } from "@/lib/db-refusal";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { isContactChannel } from "@/lib/site/channels";
-import {
-  PAGE_PHOTO_SLUGS,
-  isSitePageSlug,
-  type SitePageSlug,
-} from "@/lib/site/pages";
+import { PAGE_PHOTO_SLUGS, isSitePageSlug, type SitePageSlug } from "@/lib/site/pages";
 import { parseBahtAmount, todayIso } from "@/lib/format";
 import {
   checkFacebookUrl,
@@ -56,8 +49,7 @@ import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { hideableEntries } from "@/lib/public-pages";
 
-export type SiteContentFormState =
-  ActionResult<{ success: string }> | undefined;
+export type SiteContentFormState = ActionResult<{ success: string }> | undefined;
 
 const refuse = (error: string): ActionRefusal => ({ ok: false, error });
 
@@ -95,54 +87,37 @@ function revalidateWebsitePages() {
  * and records the change in Recent changes. Visitors see it within about ten minutes (the
  * edge cache); there is no purge on save (docs/decisions/2026-10-25-hiding-public-pages.md).
  */
-export async function setPublicPageHidden(
-  entry: string,
-  hide: boolean,
-  requestId: string,
-): Promise<ActionResult> {
+export async function setPublicPageHidden(entry: string, hide: boolean, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.setPublicPageHidden",
-    write(t),
-    { id: requestId, action: "website.setPublicPageHidden", db: supabase },
-    async () => {
-      if (!can(await loadPermissions(), "website.content"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
-      if (!hideableEntries().includes(entry))
-        return refuse(t.admin.website.visibility.errors.unknown);
+  return runWriteAction("website.setPublicPageHidden", write(t), { id: requestId, action: "website.setPublicPageHidden", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!hideableEntries().includes(entry)) return refuse(t.admin.website.visibility.errors.unknown);
 
-      const { data, error: readError } = await supabase
-        .from("site_content")
-        .select("hidden_public_pages")
-        .eq("id", true)
-        .limit(1)
-        .returns<{ hidden_public_pages: string[] }[]>();
-      if (readError) return refuse(readError.message);
-      const current = data?.[0]?.hidden_public_pages ?? [];
-      const next = hide
-        ? [...new Set([...current, entry])]
-        : current.filter((e) => e !== entry);
+    const { data, error: readError } = await supabase
+      .from("site_content")
+      .select("hidden_public_pages")
+      .eq("id", true)
+      .limit(1)
+      .returns<{ hidden_public_pages: string[] }[]>();
+    if (readError) return refuse(readError.message);
+    const current = data?.[0]?.hidden_public_pages ?? [];
+    const next = hide ? [...new Set([...current, entry])] : current.filter((e) => e !== entry);
 
-      if (next.length !== current.length) {
-        const { data, error } = await supabase
-          .from("site_content")
-          .update({ hidden_public_pages: next })
-          .eq("id", true)
-          .select("id");
-        if (error) return refuse(error.message);
-        if (!data?.length) return refuse(t.admin.website.noRow);
-      }
+    if (next.length !== current.length) {
+      const { data, error } = await supabase.from("site_content").update({ hidden_public_pages: next }).eq("id", true).select("id");
+      if (error) return refuse(error.message);
+      if (!data?.length) return refuse(t.admin.website.noRow);
+    }
 
-      revalidateWebsitePages();
-      revalidatePath("/about");
-      revalidatePath("/campaigns");
-      revalidatePath("/friends");
-      revalidatePath("/services/sterilisation");
-      revalidatePath("/sitemap.xml");
-      return { ok: true };
-    },
-  );
+    revalidateWebsitePages();
+    revalidatePath("/about");
+    revalidatePath("/campaigns");
+    revalidatePath("/friends");
+    revalidatePath("/services/sterilisation");
+    revalidatePath("/sitemap.xml");
+    return { ok: true };
+  });
 }
 
 /**
@@ -158,31 +133,25 @@ export async function unpublishProject(
 ): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.unpublishProject",
-    write(t),
-    { id: requestId, action: "website.unpublishProject", db: supabase },
-    async () => {
-      if (!can(await loadPermissions(), "website.content"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
+  return runWriteAction("website.unpublishProject", write(t), { id: requestId, action: "website.unpublishProject", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
-      const { data, error } = await supabase
-        .from("project_folders")
-        .update({ is_public: false })
-        .eq("id", folderId)
-        .select("id")
-        .returns<{ id: string }[]>();
+    const { data, error } = await supabase
+      .from("project_folders")
+      .update({ is_public: false })
+      .eq("id", folderId)
+      .select("id")
+      .returns<{ id: string }[]>();
 
-      if (error) return refuse(error.message);
-      if (!data?.length) return refuse(t.admin.website.published.notFound);
+    if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.admin.website.published.notFound);
 
-      revalidateWebsitePages();
-      revalidatePath("/our-work");
-      revalidatePath(`/our-work/${folderId}`);
-      revalidatePath(`/projects/${folderId}`);
-      return { ok: true, success: t.admin.website.published.removed };
-    },
-  );
+    revalidateWebsitePages();
+    revalidatePath("/our-work");
+    revalidatePath(`/our-work/${folderId}`);
+    revalidatePath(`/projects/${folderId}`);
+    return { ok: true, success: t.admin.website.published.removed };
+  });
 }
 
 /**
@@ -194,121 +163,100 @@ async function siteContentPatch(
   formData: FormData,
   t: Awaited<ReturnType<typeof getT>>["t"],
 ): Promise<{ patch: Record<string, unknown> } | { error: string }> {
-  const text = (name: string) =>
-    (formData.get(name) as string | null)?.trim() ?? "";
-  const optional = (name: string) => text(name) || null;
+    const text = (name: string) => (formData.get(name) as string | null)?.trim() ?? "";
+    const optional = (name: string) => text(name) || null;
 
-  // The form checks these as they are typed; this is the same rule again
-  // for a request that skipped the form. The database's own check (0080)
-  // is looser on purpose — see src/lib/links/validate.ts. The WhatsApp
-  // check also turns "+66 81 234 5678" into the digits 0092 stores.
-  const s = t.admin.website.settings;
-  const links = [
-    ["facebook_url", s.facebookUrl, checkFacebookUrl, FACEBOOK_HOSTS],
-    ["instagram_url", s.instagramUrl, checkInstagramUrl, INSTAGRAM_HOSTS],
-    ["x_url", s.xUrl, checkXUrl, X_HOSTS],
-    ["messenger_url", s.messengerUrl, checkMessengerUrl, MESSENGER_HOSTS],
-    // Any https host: maps.app.goo.gl and google.com/maps both appear.
-    [
-      "contact_map_url",
-      s.contactMapUrl,
-      (v: string) => checkHttpsUrl(v),
-      undefined,
-    ],
-  ] as const;
-  const checked: Record<string, string | null> = {};
-  for (const [name, label, check, hosts] of links) {
-    const result = check(text(name));
-    if (!result.ok)
-      return {
-        error: `${label}: ${linkErrorText(t.linkErrors, result, hosts)}`,
-      };
-    checked[name] = result.url;
-  }
-  // A map link that 404s at Google (a retired goo.gl link, a typo in a
-  // short link) is refused here rather than published in the footer.
-  if (
-    checked.contact_map_url &&
-    !(await mapLinkLeadsSomewhere(checked.contact_map_url))
-  ) {
-    return { error: `${s.contactMapUrl}: ${s.contactMapUrlDead}` };
-  }
-  const whatsapp = checkWhatsAppNumber(text("whatsapp_number"));
-  if (!whatsapp.ok)
-    return { error: `${s.whatsappNumber}: ${t.linkErrors.whatsappNumber}` };
-
-  // The picker's whole order, comma-separated. Unknown names are dropped
-  // and repeats collapsed; whether a channel has a value is not checked
-  // here, so clearing a link never makes this save fail (0111).
-  const preferred = [
-    ...new Set(
-      text("preferred_channels")
-        .split(",")
-        .map((c) => c.trim())
-        .filter(isContactChannel),
-    ),
-  ];
-
-  // "Where your gift goes" (0237): all or nothing, so the Donate page never
-  // shows half a table. Blank everywhere clears it.
-  const giftFields = ["food", "vet", "sterilisation", "running"] as const;
-  const giftRaw = giftFields.map((k) => text(`gift_split_${k}`));
-  const giftYear = text("gift_split_year");
-  const giftUnit = text("gift_split_unit");
-  const giftAny = Boolean(giftYear || giftRaw.some(Boolean));
-  let gift: Record<string, number | string | null> = {
-    gift_split_year: null,
-    gift_split_unit: null,
-    gift_split_food: null,
-    gift_split_vet: null,
-    gift_split_sterilisation: null,
-    gift_split_running: null,
-  };
-  if (giftAny) {
-    const year = Number(giftYear);
-    const amounts = giftRaw.map((v) => Number(v.replace(/,/g, "")));
-    if (
-      !Number.isInteger(year) ||
-      year < 2000 ||
-      year > 2100 ||
-      (giftUnit !== "percent" && giftUnit !== "baht") ||
-      giftRaw.some((v) => !v) ||
-      amounts.some((n) => !Number.isFinite(n) || n < 0) ||
-      (giftUnit === "percent" && amounts.some((n) => n > 100))
-    ) {
-      return { error: s.giftSplitInvalid };
+    // The form checks these as they are typed; this is the same rule again
+    // for a request that skipped the form. The database's own check (0080)
+    // is looser on purpose — see src/lib/links/validate.ts. The WhatsApp
+    // check also turns "+66 81 234 5678" into the digits 0092 stores.
+    const s = t.admin.website.settings;
+    const links = [
+      ["facebook_url", s.facebookUrl, checkFacebookUrl, FACEBOOK_HOSTS],
+      ["instagram_url", s.instagramUrl, checkInstagramUrl, INSTAGRAM_HOSTS],
+      ["x_url", s.xUrl, checkXUrl, X_HOSTS],
+      ["messenger_url", s.messengerUrl, checkMessengerUrl, MESSENGER_HOSTS],
+      // Any https host: maps.app.goo.gl and google.com/maps both appear.
+      ["contact_map_url", s.contactMapUrl, (v: string) => checkHttpsUrl(v), undefined],
+    ] as const;
+    const checked: Record<string, string | null> = {};
+    for (const [name, label, check, hosts] of links) {
+      const result = check(text(name));
+      if (!result.ok) return { error: `${label}: ${linkErrorText(t.linkErrors, result, hosts)}` };
+      checked[name] = result.url;
     }
-    gift = {
-      gift_split_year: year,
-      gift_split_unit: giftUnit,
-      gift_split_food: amounts[0],
-      gift_split_vet: amounts[1],
-      gift_split_sterilisation: amounts[2],
-      gift_split_running: amounts[3],
-    };
-  }
+    // A map link that 404s at Google (a retired goo.gl link, a typo in a
+    // short link) is refused here rather than published in the footer.
+    if (checked.contact_map_url && !(await mapLinkLeadsSomewhere(checked.contact_map_url))) {
+      return { error: `${s.contactMapUrl}: ${s.contactMapUrlDead}` };
+    }
+    const whatsapp = checkWhatsAppNumber(text("whatsapp_number"));
+    if (!whatsapp.ok) return { error: `${s.whatsappNumber}: ${t.linkErrors.whatsappNumber}` };
 
-  return {
-    patch: {
-      tagline: text("tagline"),
-      tagline_th: optional("tagline_th"),
-      hero_alt: text("hero_alt"),
-      hero_alt_th: optional("hero_alt_th"),
-      visiting_hours: optional("visiting_hours"),
-      visiting_hours_th: optional("visiting_hours_th"),
-      contact_email: optional("contact_email"),
-      contact_address: optional("contact_address"),
-      contact_address_th: optional("contact_address_th"),
-      registration_text: optional("registration_text"),
-      registration_text_th: optional("registration_text_th"),
-      ...gift,
-      contact_phone: optional("contact_phone"),
-      contact_line: optional("contact_line"),
-      preferred_channels: preferred,
-      ...checked,
-      whatsapp_number: whatsapp.number,
-    },
-  };
+    // The picker's whole order, comma-separated. Unknown names are dropped
+    // and repeats collapsed; whether a channel has a value is not checked
+    // here, so clearing a link never makes this save fail (0111).
+    const preferred = [
+      ...new Set(text("preferred_channels").split(",").map((c) => c.trim()).filter(isContactChannel)),
+    ];
+
+    // "Where your gift goes" (0237): all or nothing, so the Donate page never
+    // shows half a table. Blank everywhere clears it.
+    const giftFields = ["food", "vet", "sterilisation", "running"] as const;
+    const giftRaw = giftFields.map((k) => text(`gift_split_${k}`));
+    const giftYear = text("gift_split_year");
+    const giftUnit = text("gift_split_unit");
+    const giftAny = Boolean(giftYear || giftRaw.some(Boolean));
+    let gift: Record<string, number | string | null> = {
+      gift_split_year: null,
+      gift_split_unit: null,
+      gift_split_food: null,
+      gift_split_vet: null,
+      gift_split_sterilisation: null,
+      gift_split_running: null,
+    };
+    if (giftAny) {
+      const year = Number(giftYear);
+      const amounts = giftRaw.map((v) => Number(v.replace(/,/g, "")));
+      if (
+        !Number.isInteger(year) || year < 2000 || year > 2100 ||
+        (giftUnit !== "percent" && giftUnit !== "baht") ||
+        giftRaw.some((v) => !v) || amounts.some((n) => !Number.isFinite(n) || n < 0) ||
+        (giftUnit === "percent" && amounts.some((n) => n > 100))
+      ) {
+        return { error: s.giftSplitInvalid };
+      }
+      gift = {
+        gift_split_year: year,
+        gift_split_unit: giftUnit,
+        gift_split_food: amounts[0],
+        gift_split_vet: amounts[1],
+        gift_split_sterilisation: amounts[2],
+        gift_split_running: amounts[3],
+      };
+    }
+
+    return {
+      patch: {
+        tagline: text("tagline"),
+        tagline_th: optional("tagline_th"),
+        hero_alt: text("hero_alt"),
+        hero_alt_th: optional("hero_alt_th"),
+        visiting_hours: optional("visiting_hours"),
+        visiting_hours_th: optional("visiting_hours_th"),
+        contact_email: optional("contact_email"),
+        contact_address: optional("contact_address"),
+        contact_address_th: optional("contact_address_th"),
+        registration_text: optional("registration_text"),
+        registration_text_th: optional("registration_text_th"),
+        ...gift,
+        contact_phone: optional("contact_phone"),
+        contact_line: optional("contact_line"),
+        preferred_channels: preferred,
+        ...checked,
+        whatsapp_number: whatsapp.number,
+      },
+    };
 }
 
 export async function updateSiteContent(
@@ -317,42 +265,31 @@ export async function updateSiteContent(
 ): Promise<SiteContentFormState> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.updateSiteContent",
-    write(t),
-    {
-      id: writeRequestIdFrom(formData),
-      action: "website.updateSiteContent",
-      db: supabase,
-    },
-    async () => {
-      if (!can(await loadPermissions(), "website.content"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
+  return runWriteAction("website.updateSiteContent", write(t), { id: writeRequestIdFrom(formData), action: "website.updateSiteContent", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
-      const built = await siteContentPatch(formData, t);
-      if ("error" in built) return refuse(built.error);
+    const built = await siteContentPatch(formData, t);
+    if ("error" in built) return refuse(built.error);
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      const { data, error } = await supabase
-        .from("site_content")
-        .update({
-          ...built.patch,
-          updated_at: new Date().toISOString(),
-          updated_by: user?.id ?? null,
-        })
-        .eq("id", true)
-        .select("id");
+    const { data, error } = await supabase
+      .from("site_content")
+      .update({
+        ...built.patch,
+        updated_at: new Date().toISOString(),
+        updated_by: user?.id ?? null,
+      })
+      .eq("id", true).select("id");
 
-      if (error) return refuse(error.message);
-      if (!data?.length) return refuse(t.admin.website.noRow);
+    if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.admin.website.noRow);
 
-      revalidateWebsitePages();
-      return { ok: true, success: t.common.saved };
-    },
-  );
+    revalidateWebsitePages();
+    return { ok: true, success: t.common.saved };
+  });
 }
 
 /**
@@ -366,28 +303,16 @@ export async function createSiteContentRow(
 ): Promise<SiteContentFormState> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.createSiteContentRow",
-    write(t),
-    {
-      id: writeRequestIdFrom(formData),
-      action: "website.createSiteContentRow",
-      db: supabase,
-    },
-    async () => {
-      if (!can(await loadPermissions(), "website.content"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
+  return runWriteAction("website.createSiteContentRow", write(t), { id: writeRequestIdFrom(formData), action: "website.createSiteContentRow", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
-      const { error } = await supabase
-        .from("site_content")
-        .insert({ id: true });
-      // 23505: someone else created it a moment ago. The goal is met, so say saved.
-      if (error && error.code !== "23505") return refuse(error.message);
+    const { error } = await supabase.from("site_content").insert({ id: true });
+    // 23505: someone else created it a moment ago. The goal is met, so say saved.
+    if (error && error.code !== "23505") return refuse(error.message);
 
-      revalidateWebsitePages();
-      return { ok: true, success: t.common.saved };
-    },
-  );
+    revalidateWebsitePages();
+    return { ok: true, success: t.common.saved };
+  });
 }
 
 /**
@@ -401,29 +326,19 @@ export async function proposeSiteContent(
 ): Promise<SiteContentFormState> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.proposeSiteContent",
-    write(t),
-    {
-      id: writeRequestIdFrom(formData),
-      action: "website.proposeSiteContent",
-      db: supabase,
-    },
-    async () => {
-      if (!can(await loadPermissions(), "website.propose"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
-      const built = await siteContentPatch(formData, t);
-      if ("error" in built) return refuse(built.error);
-      const { error } = await supabase.rpc("propose_website_draft", {
-        p_target: "site_content",
-        p_row_key: "site",
-        p_patch: built.patch,
-      });
-      if (error) return dbRefusal("website.proposeSiteContent", error, t);
-      revalidatePath("/photos/approve");
-      return { ok: true, success: t.admin.website.pages.proposed };
-    },
-  );
+  return runWriteAction("website.proposeSiteContent", write(t), { id: writeRequestIdFrom(formData), action: "website.proposeSiteContent", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.propose")) return refuse(t.admin.security.errors.adminAccessRequired);
+    const built = await siteContentPatch(formData, t);
+    if ("error" in built) return refuse(built.error);
+    const { error } = await supabase.rpc("propose_website_draft", {
+      p_target: "site_content",
+      p_row_key: "site",
+      p_patch: built.patch,
+    });
+    if (error) return dbRefusal("website.proposeSiteContent", error, t);
+    revalidatePath("/photos/approve");
+    return { ok: true, success: t.admin.website.pages.proposed };
+  });
 }
 
 /**
@@ -442,47 +357,34 @@ export async function updateClinicVisitEstimate(
 ): Promise<SiteContentFormState> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.updateClinicVisitEstimate",
-    write(t),
-    {
-      id: writeRequestIdFrom(formData),
-      action: "website.updateClinicVisitEstimate",
-      db: supabase,
-    },
-    async () => {
-      if (!can(await loadPermissions(), "website.content"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
+  return runWriteAction("website.updateClinicVisitEstimate", write(t), { id: writeRequestIdFrom(formData), action: "website.updateClinicVisitEstimate", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
-      const estimate = parseBahtAmount(
-        formData.get("clinicVisitEstimate") as string | null,
-      );
-      if (!estimate.ok) return refuse(t.admin.website.vetVisit.invalid);
+    const estimate = parseBahtAmount(formData.get("clinicVisitEstimate") as string | null);
+    if (!estimate.ok) return refuse(t.admin.website.vetVisit.invalid);
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      const { data, error } = await supabase
-        .from("site_content")
-        .update({
-          clinic_visit_estimate: estimate.value,
-          updated_at: new Date().toISOString(),
-          updated_by: user?.id ?? null,
-        })
-        .eq("id", true)
-        .select("id");
+    const { data, error } = await supabase
+      .from("site_content")
+      .update({
+        clinic_visit_estimate: estimate.value,
+        updated_at: new Date().toISOString(),
+        updated_by: user?.id ?? null,
+      })
+      .eq("id", true).select("id");
 
-      if (error) return refuse(error.message);
-      if (!data?.length) return refuse(t.admin.website.noRow);
+    if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.admin.website.noRow);
 
-      revalidatePath("/admin/website");
-      // The forecast page reads this figure (next branch); it is not on any
-      // public page, so revalidateWebsitePages() is deliberately not called.
-      revalidatePath("/management/cashflow");
-      return { ok: true, success: t.common.saved };
-    },
-  );
+    revalidatePath("/admin/website");
+    // The forecast page reads this figure (next branch); it is not on any
+    // public page, so revalidateWebsitePages() is deliberately not called.
+    revalidatePath("/management/cashflow");
+    return { ok: true, success: t.common.saved };
+  });
 }
 
 /**
@@ -497,44 +399,33 @@ export async function updateSitePage(
 ): Promise<SiteContentFormState> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.updateSitePage",
-    write(t),
-    {
-      id: writeRequestIdFrom(formData),
-      action: "website.updateSitePage",
-      db: supabase,
-    },
-    async () => {
-      if (!can(await loadPermissions(), "website.content"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
-      if (!isSitePageSlug(slug))
-        return refuse(t.admin.website.pages.unknownPage);
+  return runWriteAction("website.updateSitePage", write(t), { id: writeRequestIdFrom(formData), action: "website.updateSitePage", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!isSitePageSlug(slug)) return refuse(t.admin.website.pages.unknownPage);
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      const title = (formData.get("title") as string | null)?.trim() ?? "";
-      if (!title) return refuse(t.admin.website.pages.titleRequired);
+    const title = (formData.get("title") as string | null)?.trim() ?? "";
+    if (!title) return refuse(t.admin.website.pages.titleRequired);
 
-      const { error } = await supabase
-        .from("site_pages")
-        .update({
-          title,
-          body: (formData.get("body") as string | null)?.trim() ?? "",
-          updated_at: new Date().toISOString(),
-          updated_by: user?.id ?? null,
-        })
-        .eq("slug", slug);
+    const { error } = await supabase
+      .from("site_pages")
+      .update({
+        title,
+        body: (formData.get("body") as string | null)?.trim() ?? "",
+        updated_at: new Date().toISOString(),
+        updated_by: user?.id ?? null,
+      })
+      .eq("slug", slug);
 
-      if (error) return refuse(error.message);
+    if (error) return refuse(error.message);
 
-      revalidateWebsitePages();
-      revalidatePath("/management/translations");
-      return { ok: true, success: t.common.saved };
-    },
-  );
+    revalidateWebsitePages();
+    revalidatePath("/management/translations");
+    return { ok: true, success: t.common.saved };
+  });
 }
 
 /**
@@ -549,34 +440,20 @@ export async function proposeSitePage(
 ): Promise<SiteContentFormState> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.proposeSitePage",
-    write(t),
-    {
-      id: writeRequestIdFrom(formData),
-      action: "website.proposeSitePage",
-      db: supabase,
-    },
-    async () => {
-      if (!can(await loadPermissions(), "website.propose"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
-      if (!isSitePageSlug(slug))
-        return refuse(t.admin.website.pages.unknownPage);
-      const title = (formData.get("title") as string | null)?.trim() ?? "";
-      if (!title) return refuse(t.admin.website.pages.titleRequired);
-      const { error } = await supabase.rpc("propose_website_draft", {
-        p_target: "site_pages",
-        p_row_key: slug,
-        p_patch: {
-          title,
-          body: (formData.get("body") as string | null)?.trim() ?? "",
-        },
-      });
-      if (error) return dbRefusal("website.proposeSitePage", error, t);
-      revalidatePath("/photos/approve");
-      return { ok: true, success: t.admin.website.pages.proposed };
-    },
-  );
+  return runWriteAction("website.proposeSitePage", write(t), { id: writeRequestIdFrom(formData), action: "website.proposeSitePage", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.propose")) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!isSitePageSlug(slug)) return refuse(t.admin.website.pages.unknownPage);
+    const title = (formData.get("title") as string | null)?.trim() ?? "";
+    if (!title) return refuse(t.admin.website.pages.titleRequired);
+    const { error } = await supabase.rpc("propose_website_draft", {
+      p_target: "site_pages",
+      p_row_key: slug,
+      p_patch: { title, body: (formData.get("body") as string | null)?.trim() ?? "" },
+    });
+    if (error) return dbRefusal("website.proposeSitePage", error, t);
+    revalidatePath("/photos/approve");
+    return { ok: true, success: t.admin.website.pages.proposed };
+  });
 }
 
 /**
@@ -591,51 +468,45 @@ export async function setFeaturedResident(
 ): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.setFeaturedResident",
-    write(t),
-    { id: requestId, action: "website.setFeaturedResident", db: supabase },
-    async () => {
-      if (!can(await loadPermissions(), "website.content"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
+  return runWriteAction("website.setFeaturedResident", write(t), { id: requestId, action: "website.setFeaturedResident", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
-      if (residentId) {
-        const { data: visible, error: lookupError } = await supabase
-          .from("public_resident_profiles")
-          .select("id")
-          .eq("id", residentId)
-          .limit(1)
-          .returns<{ id: string }[]>();
-        if (lookupError) return refuse(lookupError.message);
-        if (!visible?.length) return refuse(t.admin.website.featured.notPublic);
-      }
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    if (residentId) {
+      const { data: visible, error: lookupError } = await supabase
+        .from("public_resident_profiles")
+        .select("id")
+        .eq("id", residentId)
+        .limit(1)
+        .returns<{ id: string }[]>();
+      if (lookupError) return refuse(lookupError.message);
+      if (!visible?.length) return refuse(t.admin.website.featured.notPublic);
+    }
 
-      const { data, error } = await supabase
-        .from("site_content")
-        .update({
-          featured_resident_id: residentId,
-          updated_at: new Date().toISOString(),
-          updated_by: user?.id ?? null,
-        })
-        .eq("id", true)
-        .select("id");
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      if (error) return refuse(error.message);
-      if (!data?.length) return refuse(t.admin.website.noRow);
+    const { data, error } = await supabase
+      .from("site_content")
+      .update({
+        featured_resident_id: residentId,
+        updated_at: new Date().toISOString(),
+        updated_by: user?.id ?? null,
+      })
+      .eq("id", true).select("id");
 
-      revalidateWebsitePages();
-      return {
-        ok: true,
-        success: residentId
-          ? t.admin.website.featured.updated
-          : t.admin.website.featured.cleared,
-      };
-    },
-  );
+    if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.admin.website.noRow);
+
+    revalidateWebsitePages();
+    return {
+      ok: true,
+      success: residentId
+        ? t.admin.website.featured.updated
+        : t.admin.website.featured.cleared,
+    };
+  });
 }
 
 async function uploadToWebsiteFolder(file: File) {
@@ -652,9 +523,7 @@ async function uploadToWebsiteFolder(file: File) {
   // A zero-filled "mid3.jpg" became the hero on 2026-09-25 (file-signature.ts).
   const mimeType = await checkFileSignature(file, WEBSITE_IMAGE_MIME_TYPES);
   if (!mimeType) {
-    throw new Error(
-      t.uploads.notReadable(file.name, formatNames(WEBSITE_IMAGE_MIME_TYPES)),
-    );
+    throw new Error(t.uploads.notReadable(file.name, formatNames(WEBSITE_IMAGE_MIME_TYPES)));
   }
 
   const rootId = await driveRootFolderId();
@@ -694,207 +563,153 @@ async function trashInDrive(fileId: string) {
   }
 }
 
-export async function uploadHeroPhoto(
-  formData: FormData,
-): Promise<ActionResult<{ success: string }>> {
+export async function uploadHeroPhoto(formData: FormData): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.uploadHeroPhoto",
-    write(t),
-    {
-      id: writeRequestIdFrom(formData),
-      action: "website.uploadHeroPhoto",
-      db: supabase,
-    },
-    async () => {
-      if (!can(await loadPermissions(), "website.gallery"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
+  return runWriteAction("website.uploadHeroPhoto", write(t), { id: writeRequestIdFrom(formData), action: "website.uploadHeroPhoto", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.gallery")) return refuse(t.admin.security.errors.adminAccessRequired);
 
-      const file = formData.get("file");
-      if (!(file instanceof File) || file.size === 0) {
-        return refuse(t.admin.website.errors.noFile);
-      }
+    const file = formData.get("file");
+    if (!(file instanceof File) || file.size === 0) {
+      return refuse(t.admin.website.errors.noFile);
+    }
 
-      // No description is asked here: the hero reads its alt text from site_content.hero_alt (Home page tab, website.content),
-      // which this form never sent, so asking for one made Replace photo refuse every time.
+    // No description is asked here: the hero reads its alt text from site_content.hero_alt (Home page tab, website.content),
+    // which this form never sent, so asking for one made Replace photo refuse every time.
 
-      let driveFileId: string;
-      try {
-        driveFileId = await uploadToWebsiteFolder(file);
-      } catch (err) {
-        return refuse(
-          await driveErrorMessage(err, t.admin.website.errors.uploadFailed),
-        );
-      }
+    let driveFileId: string;
+    try {
+      driveFileId = await uploadToWebsiteFolder(file);
+    } catch (err) {
+      return refuse(await driveErrorMessage(err, t.admin.website.errors.uploadFailed));
+    }
 
-      const { data: current } = await supabase
-        .from("site_content")
-        .select("hero_drive_file_id")
-        .eq("id", true)
-        .limit(1)
-        .returns<{ hero_drive_file_id: string | null }[]>();
+    const { data: current } = await supabase
+      .from("site_content")
+      .select("hero_drive_file_id")
+      .eq("id", true)
+      .limit(1)
+      .returns<{ hero_drive_file_id: string | null }[]>();
 
-      // A function, not a direct update: it asks website.gallery itself (0274), so the card is the only gate.
-      const { error } = await supabase.rpc("set_hero_photo", {
-        p_drive_file_id: driveFileId,
-      });
+    // A function, not a direct update: it asks website.gallery itself (0274), so the card is the only gate.
+    const { error } = await supabase.rpc("set_hero_photo", { p_drive_file_id: driveFileId });
 
-      if (error) return dbRefusal("website.setHeroPhoto", error, t);
+    if (error) return dbRefusal("website.setHeroPhoto", error, t);
 
-      const previousFileId = current?.[0]?.hero_drive_file_id;
-      if (previousFileId) await trashInDrive(previousFileId);
+    const previousFileId = current?.[0]?.hero_drive_file_id;
+    if (previousFileId) await trashInDrive(previousFileId);
 
-      revalidateWebsitePages();
-      return { ok: true, success: t.admin.website.hero.updated };
-    },
-  );
+    revalidateWebsitePages();
+    return { ok: true, success: t.admin.website.hero.updated };
+  });
 }
 
-export async function removeHeroPhoto(
-  requestId: string,
-): Promise<ActionResult> {
+export async function removeHeroPhoto(requestId: string): Promise<ActionResult> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.removeHeroPhoto",
-    write(t),
-    { id: requestId, action: "website.removeHeroPhoto", db: supabase },
-    async () => {
-      if (!can(await loadPermissions(), "website.gallery"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
+  return runWriteAction("website.removeHeroPhoto", write(t), { id: requestId, action: "website.removeHeroPhoto", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.gallery")) return refuse(t.admin.security.errors.adminAccessRequired);
 
-      const { data: current } = await supabase
-        .from("site_content")
-        .select("hero_drive_file_id")
-        .eq("id", true)
-        .limit(1)
-        .returns<{ hero_drive_file_id: string | null }[]>();
+    const { data: current } = await supabase
+      .from("site_content")
+      .select("hero_drive_file_id")
+      .eq("id", true)
+      .limit(1)
+      .returns<{ hero_drive_file_id: string | null }[]>();
 
-      const { error } = await supabase.rpc("set_hero_photo", {
-        p_drive_file_id: null,
-      });
+    const { error } = await supabase.rpc("set_hero_photo", { p_drive_file_id: null });
 
-      if (error) return dbRefusal("website.setHeroPhoto", error, t);
+    if (error) return dbRefusal("website.setHeroPhoto", error, t);
 
-      const previousFileId = current?.[0]?.hero_drive_file_id;
-      if (previousFileId) await trashInDrive(previousFileId);
+    const previousFileId = current?.[0]?.hero_drive_file_id;
+    if (previousFileId) await trashInDrive(previousFileId);
 
-      revalidateWebsitePages();
-      return { ok: true };
-    },
-  );
+    revalidateWebsitePages();
+    return { ok: true };
+  });
 }
 
-export async function uploadGalleryPhoto(
-  formData: FormData,
-): Promise<ActionResult<{ success: string }>> {
+export async function uploadGalleryPhoto(formData: FormData): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.uploadGalleryPhoto",
-    write(t),
-    {
-      id: writeRequestIdFrom(formData),
-      action: "website.uploadGalleryPhoto",
-      db: supabase,
-    },
-    async () => {
-      if (!can(await loadPermissions(), "website.gallery"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
+  return runWriteAction("website.uploadGalleryPhoto", write(t), { id: writeRequestIdFrom(formData), action: "website.uploadGalleryPhoto", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.gallery")) return refuse(t.admin.security.errors.adminAccessRequired);
 
-      const file = formData.get("file");
-      if (!(file instanceof File) || file.size === 0) {
-        return refuse(t.admin.website.errors.noFile);
-      }
+    const file = formData.get("file");
+    if (!(file instanceof File) || file.size === 0) {
+      return refuse(t.admin.website.errors.noFile);
+    }
 
-      // A public photo needs a description for visitors who cannot see it (Lutan, 2026-10-26: "Yes ask for alt text").
-      const alt = String(formData.get("alt") ?? "")
-        .trim()
-        .slice(0, 300);
-      const altTh = String(formData.get("alt_th") ?? "")
-        .trim()
-        .slice(0, 300);
-      if (!alt) return refuse(t.admin.website.gallery.altRequired);
+    // A public photo needs a description for visitors who cannot see it (Lutan, 2026-10-26: "Yes ask for alt text").
+    const alt = String(formData.get("alt") ?? "").trim().slice(0, 300);
+    const altTh = String(formData.get("alt_th") ?? "").trim().slice(0, 300);
+    if (!alt) return refuse(t.admin.website.gallery.altRequired);
 
-      let driveFileId: string;
-      try {
-        driveFileId = await uploadToWebsiteFolder(file);
-      } catch (err) {
-        return refuse(
-          await driveErrorMessage(err, t.admin.website.errors.uploadFailed),
-        );
-      }
+    let driveFileId: string;
+    try {
+      driveFileId = await uploadToWebsiteFolder(file);
+    } catch (err) {
+      return refuse(await driveErrorMessage(err, t.admin.website.errors.uploadFailed));
+    }
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      const { data: maxRow } = await supabase
-        .from("site_content_photos")
-        .select("sort_order")
-        .order("sort_order", { ascending: false })
-        .limit(1)
-        .returns<{ sort_order: number }[]>();
+    const { data: maxRow } = await supabase
+      .from("site_content_photos")
+      .select("sort_order")
+      .order("sort_order", { ascending: false })
+      .limit(1)
+      .returns<{ sort_order: number }[]>();
 
-      const nextSortOrder = (maxRow?.[0]?.sort_order ?? -1) + 1;
+    const nextSortOrder = (maxRow?.[0]?.sort_order ?? -1) + 1;
 
-      const { error } = await supabase.from("site_content_photos").insert({
-        drive_file_id: driveFileId,
-        alt,
-        alt_th: altTh || null,
-        sort_order: nextSortOrder,
-        created_by: user?.id ?? null,
-      });
+    const { error } = await supabase.from("site_content_photos").insert({
+      drive_file_id: driveFileId,
+      alt,
+      alt_th: altTh || null,
+      sort_order: nextSortOrder,
+      created_by: user?.id ?? null,
+    });
 
-      if (error) return refuse(error.message);
+    if (error) return refuse(error.message);
 
-      revalidateWebsitePages();
-      return { ok: true, success: t.admin.website.gallery.photoAdded };
-    },
-  );
+    revalidateWebsitePages();
+    return { ok: true, success: t.admin.website.gallery.photoAdded };
+  });
 }
 
-export async function deleteGalleryPhoto(
-  photoId: string,
-  requestId: string,
-): Promise<ActionResult> {
+export async function deleteGalleryPhoto(photoId: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.deleteGalleryPhoto",
-    write(t),
-    { id: requestId, action: "website.deleteGalleryPhoto", db: supabase },
-    async () => {
-      if (!can(await loadPermissions(), "website.gallery"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
+  return runWriteAction("website.deleteGalleryPhoto", write(t), { id: requestId, action: "website.deleteGalleryPhoto", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.gallery")) return refuse(t.admin.security.errors.adminAccessRequired);
 
-      const { data: photo } = await supabase
-        .from("site_content_photos")
-        .select("drive_file_id")
-        .eq("id", photoId)
-        .limit(1)
-        .returns<{ drive_file_id: string }[]>();
+    const { data: photo } = await supabase
+      .from("site_content_photos")
+      .select("drive_file_id")
+      .eq("id", photoId)
+      .limit(1)
+      .returns<{ drive_file_id: string }[]>();
 
-      // A refused delete under RLS matches no row without an error; don't trash
-      // the Drive file unless the row really went.
-      const { data: deletedRows, error } = await supabase
-        .from("site_content_photos")
-        .delete()
-        .eq("id", photoId)
-        .select("id");
+    // A refused delete under RLS matches no row without an error; don't trash
+    // the Drive file unless the row really went.
+    const { data: deletedRows, error } = await supabase
+      .from("site_content_photos")
+      .delete()
+      .eq("id", photoId)
+      .select("id");
 
-      if (error) return refuse(error.message);
-      if (deletedRows?.length !== 1)
-        return refuse(t.common.notAllowedToDeleteFile);
+    if (error) return refuse(error.message);
+    if (deletedRows?.length !== 1) return refuse(t.common.notAllowedToDeleteFile);
 
-      const driveFileId = photo?.[0]?.drive_file_id;
-      if (driveFileId) await trashInDrive(driveFileId);
+    const driveFileId = photo?.[0]?.drive_file_id;
+    if (driveFileId) await trashInDrive(driveFileId);
 
-      revalidateWebsitePages();
-      return { ok: true };
-    },
-  );
+    revalidateWebsitePages();
+    return { ok: true };
+  });
 }
 
 export async function moveGalleryPhoto(
@@ -904,51 +719,42 @@ export async function moveGalleryPhoto(
 ): Promise<ActionResult> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.moveGalleryPhoto",
-    write(t),
-    { id: requestId, action: "website.moveGalleryPhoto", db: supabase },
-    async () => {
-      if (!can(await loadPermissions(), "website.gallery"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
+  return runWriteAction("website.moveGalleryPhoto", write(t), { id: requestId, action: "website.moveGalleryPhoto", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.gallery")) return refuse(t.admin.security.errors.adminAccessRequired);
 
-      const { data: photos } = await supabase
+    const { data: photos } = await supabase
+      .from("site_content_photos")
+      .select("id, sort_order")
+      .order("sort_order", { ascending: true })
+      .returns<{ id: string; sort_order: number }[]>();
+
+    if (!photos) return { ok: true };
+
+    const index = photos.findIndex((p) => p.id === photoId);
+    const swapWith = direction === "up" ? index - 1 : index + 1;
+    if (index === -1 || swapWith < 0 || swapWith >= photos.length) return { ok: true };
+
+    const a = photos[index];
+    const b = photos[swapWith];
+
+    const [{ error: errorA }, { error: errorB }] = await Promise.all([
+      supabase
         .from("site_content_photos")
-        .select("id, sort_order")
-        .order("sort_order", { ascending: true })
-        .returns<{ id: string; sort_order: number }[]>();
+        .update({ sort_order: b.sort_order })
+        .eq("id", a.id),
+      supabase
+        .from("site_content_photos")
+        .update({ sort_order: a.sort_order })
+        .eq("id", b.id),
+    ]);
 
-      if (!photos) return { ok: true };
+    if (errorA || errorB) {
+      return refuse(errorA?.message ?? errorB?.message ?? t.common.failedToReorder);
+    }
 
-      const index = photos.findIndex((p) => p.id === photoId);
-      const swapWith = direction === "up" ? index - 1 : index + 1;
-      if (index === -1 || swapWith < 0 || swapWith >= photos.length)
-        return { ok: true };
-
-      const a = photos[index];
-      const b = photos[swapWith];
-
-      const [{ error: errorA }, { error: errorB }] = await Promise.all([
-        supabase
-          .from("site_content_photos")
-          .update({ sort_order: b.sort_order })
-          .eq("id", a.id),
-        supabase
-          .from("site_content_photos")
-          .update({ sort_order: a.sort_order })
-          .eq("id", b.id),
-      ]);
-
-      if (errorA || errorB) {
-        return refuse(
-          errorA?.message ?? errorB?.message ?? t.common.failedToReorder,
-        );
-      }
-
-      revalidateWebsitePages();
-      return { ok: true };
-    },
-  );
+    revalidateWebsitePages();
+    return { ok: true };
+  });
 }
 
 /**
@@ -964,86 +770,63 @@ export async function updateImpactBaseline(
 ): Promise<SiteContentFormState> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.updateImpactBaseline",
-    write(t),
-    {
-      id: writeRequestIdFrom(formData),
-      action: "website.updateImpactBaseline",
-      db: supabase,
-    },
-    async () => {
-      if (!can(await loadPermissions(), "website.content"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
+  return runWriteAction("website.updateImpactBaseline", write(t), { id: writeRequestIdFrom(formData), action: "website.updateImpactBaseline", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
-      const text = (name: string) =>
-        (formData.get(name) as string | null)?.trim() ?? "";
-      const key = text("key");
-      const rawCount = text("baseline_count");
-      const rawDate = text("baseline_date");
-      const rawYear = text("since_year");
-      const i = t.admin.website.impact;
+    const text = (name: string) => (formData.get(name) as string | null)?.trim() ?? "";
+    const key = text("key");
+    const rawCount = text("baseline_count");
+    const rawDate = text("baseline_date");
+    const rawYear = text("since_year");
+    const i = t.admin.website.impact;
 
-      // The year is the Director's: blank stays null, and nothing here ever fills one in.
-      let sinceYear: number | null = null;
-      if (rawYear) {
-        if (!/^\d{4}$/.test(rawYear)) return refuse(i.invalidYear);
-        sinceYear = Number(rawYear);
-        if (sinceYear < 1990 || sinceYear > 2100) return refuse(i.invalidYear);
+    // The year is the Director's: blank stays null, and nothing here ever fills one in.
+    let sinceYear: number | null = null;
+    if (rawYear) {
+      if (!/^\d{4}$/.test(rawYear)) return refuse(i.invalidYear);
+      sinceYear = Number(rawYear);
+      if (sinceYear < 1990 || sinceYear > 2100) return refuse(i.invalidYear);
+    }
+
+    if (!rawCount && !rawDate) {
+      // Cleared: both null, which the table's pair check requires together.
+    } else if (!rawCount || !rawDate) {
+      return refuse(i.bothOrNeither);
+    }
+
+    let count: number | null = null;
+    if (rawCount) {
+      if (!/^\d{1,9}$/.test(rawCount)) return refuse(i.invalidCount);
+      count = Number(rawCount);
+    }
+    let date: string | null = null;
+    if (rawDate) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(rawDate) || Number.isNaN(Date.parse(rawDate))) {
+        return refuse(i.invalidDate);
       }
+      // A baseline "to the future" would hide adoptions from the live count.
+      if (rawDate > todayIso()) return refuse(i.futureDate);
+      date = rawDate;
+    }
 
-      if (!rawCount && !rawDate) {
-        // Cleared: both null, which the table's pair check requires together.
-      } else if (!rawCount || !rawDate) {
-        return refuse(i.bothOrNeither);
-      }
+    const { data, error } = await supabase
+      .from("impact_baselines")
+      .update({ baseline_count: count, baseline_date: date, since_year: sinceYear })
+      .eq("key", key)
+      .select("key")
+      .returns<{ key: string }[]>();
 
-      let count: number | null = null;
-      if (rawCount) {
-        if (!/^\d{1,9}$/.test(rawCount)) return refuse(i.invalidCount);
-        count = Number(rawCount);
-      }
-      let date: string | null = null;
-      if (rawDate) {
-        if (
-          !/^\d{4}-\d{2}-\d{2}$/.test(rawDate) ||
-          Number.isNaN(Date.parse(rawDate))
-        ) {
-          return refuse(i.invalidDate);
-        }
-        // A baseline "to the future" would hide adoptions from the live count.
-        if (rawDate > todayIso()) return refuse(i.futureDate);
-        date = rawDate;
-      }
+    if (error) return refuse(error.message);
+    if (!data?.length) return refuse(i.notFound);
 
-      const { data, error } = await supabase
-        .from("impact_baselines")
-        .update({
-          baseline_count: count,
-          baseline_date: date,
-          since_year: sinceYear,
-        })
-        .eq("key", key)
-        .select("key")
-        .returns<{ key: string }[]>();
-
-      if (error) return refuse(error.message);
-      if (!data?.length) return refuse(i.notFound);
-
-      revalidatePath("/admin/website");
-      revalidatePath("/");
-      return { ok: true, success: t.common.saved };
-    },
-  );
+    revalidatePath("/admin/website");
+    revalidatePath("/");
+    return { ok: true, success: t.common.saved };
+  });
 }
 
 /** The four live counts on the homepage band (public_stat_switches, 0328). */
-const LIVE_STAT_KEYS = [
-  "in_care",
-  "adopted_this_year",
-  "in_foster",
-  "in_treatment",
-] as const;
+const LIVE_STAT_KEYS = ["in_care", "adopted_this_year", "in_foster", "in_treatment"] as const;
 
 /**
  * Switch one statistic on or off the public homepage (0328). A lifetime figure is a column on its
@@ -1059,40 +842,21 @@ export async function setStatisticShown(
 ): Promise<ActionResult> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.setStatisticShown",
-    write(t),
-    { id: requestId, action: "website.setStatisticShown", db: supabase },
-    async () => {
-      if (!can(await loadPermissions(), "website.content"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
-      if (
-        kind === "live" &&
-        !(LIVE_STAT_KEYS as readonly string[]).includes(key)
-      ) {
-        return refuse(t.admin.website.impact.notFound);
-      }
-      const { data, error } =
-        kind === "live"
-          ? await supabase
-              .from("public_stat_switches")
-              .update({ show_on_website: shown })
-              .eq("key", key)
-              .select("key")
-              .returns<{ key: string }[]>()
-          : await supabase
-              .from("impact_baselines")
-              .update({ show_on_website: shown })
-              .eq("key", key)
-              .select("key")
-              .returns<{ key: string }[]>();
-      if (error) return refuse(error.message);
-      if (!data?.length) return refuse(t.admin.website.impact.notFound);
-      revalidatePath("/admin/website");
-      revalidatePath("/");
-      return { ok: true };
-    },
-  );
+  return runWriteAction("website.setStatisticShown", write(t), { id: requestId, action: "website.setStatisticShown", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (kind === "live" && !(LIVE_STAT_KEYS as readonly string[]).includes(key)) {
+      return refuse(t.admin.website.impact.notFound);
+    }
+    const { data, error } =
+      kind === "live"
+        ? await supabase.from("public_stat_switches").update({ show_on_website: shown }).eq("key", key).select("key").returns<{ key: string }[]>()
+        : await supabase.from("impact_baselines").update({ show_on_website: shown }).eq("key", key).select("key").returns<{ key: string }[]>();
+    if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.admin.website.impact.notFound);
+    revalidatePath("/admin/website");
+    revalidatePath("/");
+    return { ok: true };
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -1125,277 +889,198 @@ export async function saveDonationChannel(
 ): Promise<SiteContentFormState> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.saveDonationChannel",
-    write(t),
-    {
-      id: writeRequestIdFrom(formData),
-      action: "website.saveDonationChannel",
-      db: supabase,
-    },
-    async () => {
-      if (!can(await loadPermissions(), "website.content"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
-      const d = t.admin.website.donate;
+  return runWriteAction("website.saveDonationChannel", write(t), { id: writeRequestIdFrom(formData), action: "website.saveDonationChannel", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    const d = t.admin.website.donate;
 
-      const text = (name: string) =>
-        (formData.get(name) as string | null)?.trim() ?? "";
-      const id = text("id");
-      const way = text("way");
-      if (!isDonationWay(way)) return refuse(d.errors.unknownWay);
+    const text = (name: string) => (formData.get(name) as string | null)?.trim() ?? "";
+    const id = text("id");
+    const way = text("way");
+    if (!isDonationWay(way)) return refuse(d.errors.unknownWay);
 
-      const label = text("label");
-      if (!label) return refuse(d.errors.labelRequired);
+    const label = text("label");
+    if (!label) return refuse(d.errors.labelRequired);
 
-      const fields: Record<string, string | null> = {
-        url: null,
-        bank_name: null,
-        account_name: null,
-        account_number: null,
-        promptpay_id: null,
-      };
-      for (const name of WAY_FIELDS[way]) fields[name] = text(name) || null;
+    const fields: Record<string, string | null> = {
+      url: null,
+      bank_name: null,
+      account_name: null,
+      account_number: null,
+      promptpay_id: null,
+    };
+    for (const name of WAY_FIELDS[way]) fields[name] = text(name) || null;
 
-      if (WAY_FIELDS[way].includes("url")) {
-        if (fields.url === null) return refuse(d.errors.linkRequired);
-        const check = checkDonationUrl(way, fields.url);
-        if (!check.ok) {
-          const domains = DONATION_DOMAINS[way];
-          return refuse(
-            linkErrorText(
-              t.linkErrors,
-              check,
-              domains ? [domains] : undefined,
-            ) ?? d.errors.linkRequired,
-          );
-        }
-        fields.url = check.url;
+    if (WAY_FIELDS[way].includes("url")) {
+      if (fields.url === null) return refuse(d.errors.linkRequired);
+      const check = checkDonationUrl(way, fields.url);
+      if (!check.ok) {
+        const domains = DONATION_DOMAINS[way];
+        return refuse(
+          linkErrorText(t.linkErrors, check, domains ? [domains] : undefined) ?? d.errors.linkRequired,
+        );
       }
-      if (way === "bank_transfer" && !fields.account_number)
-        return refuse(d.errors.accountRequired);
-      if (way === "promptpay" && !fields.promptpay_id)
-        return refuse(d.errors.promptpayRequired);
+      fields.url = check.url;
+    }
+    if (way === "bank_transfer" && !fields.account_number) return refuse(d.errors.accountRequired);
+    if (way === "promptpay" && !fields.promptpay_id) return refuse(d.errors.promptpayRequired);
 
-      const row = { way, label, note: text("note") || null, ...fields };
+    const row = { way, label, note: text("note") || null, ...fields };
 
-      if (id) {
-        const { data, error } = await supabase
-          .from("donation_channels")
-          .update(row)
-          .eq("id", id)
-          .eq("way", way)
-          .select("id")
-          .returns<{ id: string }[]>();
-        if (error) return refuse(error.message);
-        if (!data?.length) return refuse(d.errors.notFound);
-      } else {
-        const { data: last, error: readError } = await supabase
-          .from("donation_channels")
-          .select("sort_order")
-          .order("sort_order", { ascending: false })
-          .limit(1)
-          .returns<{ sort_order: number }[]>();
-        if (readError) return refuse(readError.message);
-        const { error } = await supabase
-          .from("donation_channels")
-          .insert({ ...row, sort_order: (last?.[0]?.sort_order ?? 0) + 1 });
-        if (error) return refuse(error.message);
-        revalidateDonate();
-        return { ok: true, success: d.addedNamed(label) };
-      }
-
-      revalidateDonate();
-      return { ok: true, success: t.common.saved };
-    },
-  );
-}
-
-/** Show or hide a way on /donate. Hiding keeps everything typed. */
-export async function setDonationChannelShown(
-  id: string,
-  shown: boolean,
-  requestId: string,
-): Promise<ActionResult> {
-  const { t } = await getT();
-  const supabase = await createClient();
-  return runWriteAction(
-    "website.setDonationChannelShown",
-    write(t),
-    { id: requestId, action: "website.setDonationChannelShown", db: supabase },
-    async () => {
-      if (!can(await loadPermissions(), "website.content"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
+    if (id) {
       const { data, error } = await supabase
         .from("donation_channels")
-        .update({ shown })
+        .update(row)
         .eq("id", id)
+        .eq("way", way)
         .select("id")
         .returns<{ id: string }[]>();
       if (error) return refuse(error.message);
-      if (!data?.length) return refuse(t.admin.website.donate.errors.notFound);
+      if (!data?.length) return refuse(d.errors.notFound);
+    } else {
+      const { data: last, error: readError } = await supabase
+        .from("donation_channels")
+        .select("sort_order")
+        .order("sort_order", { ascending: false })
+        .limit(1)
+        .returns<{ sort_order: number }[]>();
+      if (readError) return refuse(readError.message);
+      const { error } = await supabase
+        .from("donation_channels")
+        .insert({ ...row, sort_order: (last?.[0]?.sort_order ?? 0) + 1 });
+      if (error) return refuse(error.message);
       revalidateDonate();
-      return { ok: true };
-    },
-  );
+      return { ok: true, success: d.addedNamed(label) };
+    }
+
+    revalidateDonate();
+    return { ok: true, success: t.common.saved };
+  });
+}
+
+/** Show or hide a way on /donate. Hiding keeps everything typed. */
+export async function setDonationChannelShown(id: string, shown: boolean, requestId: string): Promise<ActionResult> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction("website.setDonationChannelShown", write(t), { id: requestId, action: "website.setDonationChannelShown", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    const { data, error } = await supabase
+      .from("donation_channels")
+      .update({ shown })
+      .eq("id", id)
+      .select("id")
+      .returns<{ id: string }[]>();
+    if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.admin.website.donate.errors.notFound);
+    revalidateDonate();
+    return { ok: true };
+  });
 }
 
 /** Move a way one place up or down; the order is renumbered so equal numbers never stick. */
-export async function moveDonationChannel(
-  id: string,
-  direction: "up" | "down",
-  requestId: string,
-): Promise<ActionResult> {
+export async function moveDonationChannel(id: string, direction: "up" | "down", requestId: string): Promise<ActionResult> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.moveDonationChannel",
-    write(t),
-    { id: requestId, action: "website.moveDonationChannel", db: supabase },
-    async () => {
-      if (!can(await loadPermissions(), "website.content"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
-      const { data, error } = await supabase
+  return runWriteAction("website.moveDonationChannel", write(t), { id: requestId, action: "website.moveDonationChannel", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    const { data, error } = await supabase
+      .from("donation_channels")
+      .select("id, sort_order")
+      .order("sort_order")
+      .order("created_at")
+      .returns<{ id: string; sort_order: number }[]>();
+    if (error) return refuse(error.message);
+    const ids = (data ?? []).map((r) => r.id);
+    const from = ids.indexOf(id);
+    if (from === -1) return refuse(t.admin.website.donate.errors.notFound);
+    const to = direction === "up" ? from - 1 : from + 1;
+    if (to < 0 || to >= ids.length) return { ok: true };
+    [ids[from], ids[to]] = [ids[to], ids[from]];
+    for (const [index, rowId] of ids.entries()) {
+      const { error: updateError } = await supabase
         .from("donation_channels")
-        .select("id, sort_order")
-        .order("sort_order")
-        .order("created_at")
-        .returns<{ id: string; sort_order: number }[]>();
-      if (error) return refuse(error.message);
-      const ids = (data ?? []).map((r) => r.id);
-      const from = ids.indexOf(id);
-      if (from === -1) return refuse(t.admin.website.donate.errors.notFound);
-      const to = direction === "up" ? from - 1 : from + 1;
-      if (to < 0 || to >= ids.length) return { ok: true };
-      [ids[from], ids[to]] = [ids[to], ids[from]];
-      for (const [index, rowId] of ids.entries()) {
-        const { error: updateError } = await supabase
-          .from("donation_channels")
-          .update({ sort_order: index + 1 })
-          .eq("id", rowId);
-        if (updateError) return refuse(updateError.message);
-      }
-      revalidateDonate();
-      return { ok: true };
-    },
-  );
+        .update({ sort_order: index + 1 })
+        .eq("id", rowId);
+      if (updateError) return refuse(updateError.message);
+    }
+    revalidateDonate();
+    return { ok: true };
+  });
 }
 
-export async function deleteDonationChannel(
-  id: string,
-  requestId: string,
-): Promise<ActionResult> {
+export async function deleteDonationChannel(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.deleteDonationChannel",
-    write(t),
-    { id: requestId, action: "website.deleteDonationChannel", db: supabase },
-    async () => {
-      if (!can(await loadPermissions(), "website.content"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
-      const { data: current } = await supabase
-        .from("donation_channels")
-        .select("qr_drive_file_id")
-        .eq("id", id)
-        .limit(1)
-        .returns<{ qr_drive_file_id: string | null }[]>();
-      const { error } = await supabase
-        .from("donation_channels")
-        .delete()
-        .eq("id", id);
-      if (error) return refuse(error.message);
-      const qr = current?.[0]?.qr_drive_file_id;
-      if (qr) await trashInDrive(qr);
-      revalidateDonate();
-      return { ok: true };
-    },
-  );
+  return runWriteAction("website.deleteDonationChannel", write(t), { id: requestId, action: "website.deleteDonationChannel", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    const { data: current } = await supabase
+      .from("donation_channels")
+      .select("qr_drive_file_id")
+      .eq("id", id)
+      .limit(1)
+      .returns<{ qr_drive_file_id: string | null }[]>();
+    const { error } = await supabase.from("donation_channels").delete().eq("id", id);
+    if (error) return refuse(error.message);
+    const qr = current?.[0]?.qr_drive_file_id;
+    if (qr) await trashInDrive(qr);
+    revalidateDonate();
+    return { ok: true };
+  });
 }
 
 /** The PromptPay QR picture for a PromptPay way. Replaces the old one (to Drive's trash). */
-export async function uploadDonationQr(
-  formData: FormData,
-): Promise<ActionResult<{ success: string }>> {
+export async function uploadDonationQr(formData: FormData): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.uploadDonationQr",
-    write(t),
-    {
-      id: writeRequestIdFrom(formData),
-      action: "website.uploadDonationQr",
-      db: supabase,
-    },
-    async () => {
-      if (!can(await loadPermissions(), "website.content"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
-      const id = (formData.get("id") as string | null)?.trim() ?? "";
-      const file = formData.get("file");
-      if (!(file instanceof File) || file.size === 0)
-        return refuse(t.admin.website.errors.noFile);
+  return runWriteAction("website.uploadDonationQr", write(t), { id: writeRequestIdFrom(formData), action: "website.uploadDonationQr", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    const id = (formData.get("id") as string | null)?.trim() ?? "";
+    const file = formData.get("file");
+    if (!(file instanceof File) || file.size === 0) return refuse(t.admin.website.errors.noFile);
 
-      const { data: current } = await supabase
-        .from("donation_channels")
-        .select("way, qr_drive_file_id")
-        .eq("id", id)
-        .limit(1)
-        .returns<{ way: string; qr_drive_file_id: string | null }[]>();
-      if (!current?.length)
-        return refuse(t.admin.website.donate.errors.notFound);
-      if (current[0].way !== "promptpay")
-        return refuse(t.admin.website.donate.errors.qrPromptpayOnly);
+    const { data: current } = await supabase
+      .from("donation_channels")
+      .select("way, qr_drive_file_id")
+      .eq("id", id)
+      .limit(1)
+      .returns<{ way: string; qr_drive_file_id: string | null }[]>();
+    if (!current?.length) return refuse(t.admin.website.donate.errors.notFound);
+    if (current[0].way !== "promptpay") return refuse(t.admin.website.donate.errors.qrPromptpayOnly);
 
-      let driveFileId: string;
-      try {
-        driveFileId = await uploadToWebsiteFolder(file);
-      } catch (err) {
-        return refuse(
-          await driveErrorMessage(err, t.admin.website.errors.uploadFailed),
-        );
-      }
-      const { error } = await supabase
-        .from("donation_channels")
-        .update({ qr_drive_file_id: driveFileId })
-        .eq("id", id);
-      if (error) return refuse(error.message);
-      if (current[0].qr_drive_file_id)
-        await trashInDrive(current[0].qr_drive_file_id);
-      revalidateDonate();
-      return { ok: true, success: t.admin.website.donate.qrUpdated };
-    },
-  );
+    let driveFileId: string;
+    try {
+      driveFileId = await uploadToWebsiteFolder(file);
+    } catch (err) {
+      return refuse(await driveErrorMessage(err, t.admin.website.errors.uploadFailed));
+    }
+    const { error } = await supabase
+      .from("donation_channels")
+      .update({ qr_drive_file_id: driveFileId })
+      .eq("id", id);
+    if (error) return refuse(error.message);
+    if (current[0].qr_drive_file_id) await trashInDrive(current[0].qr_drive_file_id);
+    revalidateDonate();
+    return { ok: true, success: t.admin.website.donate.qrUpdated };
+  });
 }
 
-export async function removeDonationQr(
-  id: string,
-  requestId: string,
-): Promise<ActionResult> {
+export async function removeDonationQr(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.removeDonationQr",
-    write(t),
-    { id: requestId, action: "website.removeDonationQr", db: supabase },
-    async () => {
-      if (!can(await loadPermissions(), "website.content"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
-      const { data: current } = await supabase
-        .from("donation_channels")
-        .select("qr_drive_file_id")
-        .eq("id", id)
-        .limit(1)
-        .returns<{ qr_drive_file_id: string | null }[]>();
-      const { error } = await supabase
-        .from("donation_channels")
-        .update({ qr_drive_file_id: null })
-        .eq("id", id);
-      if (error) return refuse(error.message);
-      const qr = current?.[0]?.qr_drive_file_id;
-      if (qr) await trashInDrive(qr);
-      revalidateDonate();
-      return { ok: true };
-    },
-  );
+  return runWriteAction("website.removeDonationQr", write(t), { id: requestId, action: "website.removeDonationQr", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    const { data: current } = await supabase
+      .from("donation_channels")
+      .select("qr_drive_file_id")
+      .eq("id", id)
+      .limit(1)
+      .returns<{ qr_drive_file_id: string | null }[]>();
+    const { error } = await supabase.from("donation_channels").update({ qr_drive_file_id: null }).eq("id", id);
+    if (error) return refuse(error.message);
+    const qr = current?.[0]?.qr_drive_file_id;
+    if (qr) await trashInDrive(qr);
+    revalidateDonate();
+    return { ok: true };
+  });
 }
 
 /**
@@ -1405,147 +1090,99 @@ export async function removeDonationQr(
  */
 const PAGE_PHOTO_PAGES: readonly string[] = PAGE_PHOTO_SLUGS;
 
-export async function uploadPagePhoto(
-  page: string,
-  formData: FormData,
-): Promise<ActionResult<{ success: string }>> {
+export async function uploadPagePhoto(page: string, formData: FormData): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.uploadPagePhoto",
-    write(t),
-    {
-      id: writeRequestIdFrom(formData),
-      action: "website.uploadPagePhoto",
-      db: supabase,
-    },
-    async () => {
-      if (!can(await loadPermissions(), "website.content"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
-      if (!PAGE_PHOTO_PAGES.includes(page))
-        return refuse(t.common.somethingWentWrong("page-photo"));
+  return runWriteAction("website.uploadPagePhoto", write(t), { id: writeRequestIdFrom(formData), action: "website.uploadPagePhoto", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!PAGE_PHOTO_PAGES.includes(page)) return refuse(t.common.somethingWentWrong("page-photo"));
 
-      const file = formData.get("file");
-      if (!(file instanceof File) || file.size === 0) {
-        return refuse(t.admin.website.errors.noFile);
-      }
+    const file = formData.get("file");
+    if (!(file instanceof File) || file.size === 0) {
+      return refuse(t.admin.website.errors.noFile);
+    }
 
-      let driveFileId: string;
-      try {
-        driveFileId = await uploadToWebsiteFolder(file);
-      } catch (err) {
-        return refuse(
-          await driveErrorMessage(err, t.admin.website.errors.uploadFailed),
-        );
-      }
+    let driveFileId: string;
+    try {
+      driveFileId = await uploadToWebsiteFolder(file);
+    } catch (err) {
+      return refuse(await driveErrorMessage(err, t.admin.website.errors.uploadFailed));
+    }
 
-      const column = `${page}_photo_drive_file_id`;
-      const { data: current } = await supabase
-        .from("site_content")
-        .select(column)
-        .eq("id", true)
-        .limit(1)
-        .returns<Record<string, string | null>[]>();
+    const column = `${page}_photo_drive_file_id`;
+    const { data: current } = await supabase
+      .from("site_content")
+      .select(column)
+      .eq("id", true)
+      .limit(1)
+      .returns<Record<string, string | null>[]>();
 
-      const { data, error } = await supabase
-        .from("site_content")
-        .update({ [column]: driveFileId })
-        .eq("id", true)
-        .select("id");
+    const { data, error } = await supabase
+      .from("site_content")
+      .update({ [column]: driveFileId })
+      .eq("id", true).select("id");
 
-      if (error) return refuse(error.message);
-      if (!data?.length) return refuse(t.admin.website.noRow);
+    if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.admin.website.noRow);
 
-      const previousFileId = current?.[0]?.[column];
-      if (previousFileId) await trashInDrive(previousFileId);
+    const previousFileId = current?.[0]?.[column];
+    if (previousFileId) await trashInDrive(previousFileId);
 
-      revalidateWebsitePages();
-      return { ok: true, success: t.admin.website.pagePhotos.updated };
-    },
-  );
+    revalidateWebsitePages();
+    return { ok: true, success: t.admin.website.pagePhotos.updated };
+  });
 }
 
-export async function removePagePhoto(
-  page: string,
-  requestId: string,
-): Promise<ActionResult> {
+export async function removePagePhoto(page: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.removePagePhoto",
-    write(t),
-    { id: requestId, action: "website.removePagePhoto", db: supabase },
-    async () => {
-      if (!can(await loadPermissions(), "website.content"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
-      if (!PAGE_PHOTO_PAGES.includes(page))
-        return refuse(t.common.somethingWentWrong("page-photo"));
+  return runWriteAction("website.removePagePhoto", write(t), { id: requestId, action: "website.removePagePhoto", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!PAGE_PHOTO_PAGES.includes(page)) return refuse(t.common.somethingWentWrong("page-photo"));
 
-      const column = `${page}_photo_drive_file_id`;
-      const { data: current } = await supabase
-        .from("site_content")
-        .select(column)
-        .eq("id", true)
-        .limit(1)
-        .returns<Record<string, string | null>[]>();
+    const column = `${page}_photo_drive_file_id`;
+    const { data: current } = await supabase
+      .from("site_content")
+      .select(column)
+      .eq("id", true)
+      .limit(1)
+      .returns<Record<string, string | null>[]>();
 
-      const { data, error } = await supabase
-        .from("site_content")
-        .update({ [column]: null })
-        .eq("id", true)
-        .select("id");
+    const { data, error } = await supabase
+      .from("site_content")
+      .update({ [column]: null })
+      .eq("id", true).select("id");
 
-      if (error) return refuse(error.message);
-      if (!data?.length) return refuse(t.admin.website.noRow);
+    if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.admin.website.noRow);
 
-      const previousFileId = current?.[0]?.[column];
-      if (previousFileId) await trashInDrive(previousFileId);
+    const previousFileId = current?.[0]?.[column];
+    if (previousFileId) await trashInDrive(previousFileId);
 
-      revalidateWebsitePages();
-      return { ok: true };
-    },
-  );
+    revalidateWebsitePages();
+    return { ok: true };
+  });
 }
 
-export async function savePagePhotoAlt(
-  page: string,
-  formData: FormData,
-): Promise<ActionResult<{ success: string }>> {
+export async function savePagePhotoAlt(page: string, formData: FormData): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
-    "website.savePagePhotoAlt",
-    write(t),
-    {
-      id: writeRequestIdFrom(formData),
-      action: "website.savePagePhotoAlt",
-      db: supabase,
-    },
-    async () => {
-      if (!can(await loadPermissions(), "website.content"))
-        return refuse(t.admin.security.errors.adminAccessRequired);
-      if (!PAGE_PHOTO_PAGES.includes(page))
-        return refuse(t.common.somethingWentWrong("page-photo"));
+  return runWriteAction("website.savePagePhotoAlt", write(t), { id: writeRequestIdFrom(formData), action: "website.savePagePhotoAlt", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!PAGE_PHOTO_PAGES.includes(page)) return refuse(t.common.somethingWentWrong("page-photo"));
 
-      const clean = (name: string) => {
-        const v = String(formData.get(name) ?? "")
-          .trim()
-          .slice(0, 300);
-        return v === "" ? null : v;
-      };
-      const { data, error } = await supabase
-        .from("site_content")
-        .update({
-          [`${page}_photo_alt`]: clean("alt"),
-          [`${page}_photo_alt_th`]: clean("alt_th"),
-        })
-        .eq("id", true)
-        .select("id");
-      if (error) return refuse(error.message);
-      if (!data?.length) return refuse(t.admin.website.noRow);
+    const clean = (name: string) => {
+      const v = String(formData.get(name) ?? "").trim().slice(0, 300);
+      return v === "" ? null : v;
+    };
+    const { data, error } = await supabase
+      .from("site_content")
+      .update({ [`${page}_photo_alt`]: clean("alt"), [`${page}_photo_alt_th`]: clean("alt_th") })
+      .eq("id", true).select("id");
+    if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.admin.website.noRow);
 
-      revalidateWebsitePages();
-      return { ok: true, success: t.common.saved };
-    },
-  );
+    revalidateWebsitePages();
+    return { ok: true, success: t.common.saved };
+  });
 }
