@@ -621,8 +621,13 @@ that folder and the status tile reads it, so `Backups/` can sit outside the
 photo tree, shared with one person (decisions/2026-10-02-backup-encryption-rollout.md).
 The upload prefers its own Google token (`BACKUP_GOOGLE_OAUTH_CLIENT_ID`, `_CLIENT_SECRET`,
 `_REFRESH_TOKEN`); without it `backup.mjs` stops before the dump unless `--shared-drive-token` is
-given, which uses the app's token with a warning. The Pi's cron line carries that flag (set 2026-10-13)
-(docs/pi-hosting.md, "Backups on this Pi"). A lost private
+given, which uses the app's token with a warning. **To mint the backup's token:** put the backup client's
+`BACKUP_GOOGLE_OAUTH_CLIENT_ID` and `_CLIENT_SECRET` in `.env.local`, run
+`node --env-file=.env.local scripts/google-oauth-setup.mjs --backup` and paste the printed
+`BACKUP_GOOGLE_OAUTH_REFRESH_TOKEN` into the Pi's `.env.deploy.production`. The flag refuses if the two client
+variables are unset, and never reads the app's pair. Once all three are set the cron line drops
+`--shared-drive-token`; until then the Pi's line carries it (docs/pi-hosting.md, "Backups on this Pi";
+docs/decisions/2026-11-19-backups-own-client.md). A lost private
 key means every encrypted backup is unreadable, so keep a second copy of it
 somewhere as safe as the first. To change the key later, install the new
 public key and keep the old private key for as long as any backup made with it
@@ -653,7 +658,8 @@ Pi's cron job (daily at 03:00 Thailand time since 2026-10-12; it was Sundays bef
 (`docs/pi-hosting.md`):
 
 ```bash
-0 3 * * * cd $HOME/Animal_Shelter_App && node scripts/backup.mjs --env production --shared-drive-token --keep-days 14 --local-copy $HOME/backups/lannacare >> $HOME/backups/backup.log 2>&1
+# Until the backup's own token is set on the Pi, add --shared-drive-token after --env production.
+0 3 * * * cd $HOME/Animal_Shelter_App && node scripts/backup.mjs --env production --keep-days 14 --local-copy $HOME/backups/lannacare >> $HOME/backups/backup.log 2>&1
 ```
 
 Drive stays the off-site copy: the Pi is in the same house as the origin it
