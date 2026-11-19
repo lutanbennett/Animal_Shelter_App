@@ -6,16 +6,16 @@ left owed. Figures, batch composition and ports live in `.plan-day.md`.
 **It outranks nothing.** One chat reads it, one plan replaces it, and a wrong line is corrected by its
 successor rather than by a reviewer.
 
-**IT COVERS THE EIGHT STREAMS MERGED SINCE `762`, AND ALL EIGHT HAVE FIGURES:** #1706, #1707, #1709,
-#1710, #1711, #1712, #1713, #1714. **#1708 is `762`'s own handover PR and does not count.** **Three more
-were set up and had not merged when this was written** — `shelter-admin-role-app`, `cn7gk-upload-proof`,
-`drive-scope-decision` — **so their figures belong to `764`.**
+**IT COVERS THE NINE STREAMS MERGED SINCE `762`, AND ALL NINE HAVE FIGURES:** #1706, #1707, #1709,
+#1710, #1711, #1712, #1713, #1714, #1716. **#1708 is `762`'s own handover PR and #1715 is a release cut;
+neither counts.** **Two more were open and unmerged when this was written** — `cn7gk-upload-proof`
+(#1718) and `drive-scope-decision` (#1717) — **so their figures belong to `764`.**
 
-**WRITTEN AT 8 OF 9 BECAUSE LUTAN ASKED FOR IT EARLY — AND THAT IS NOW TWICE IN A ROW.** `762` says the
-same thing in its own opening. **So the nine-stream rule has never once fired on its own**, in the two
-editions since it was made. **This is an observation for the next planner, not a decision to re-open:**
-he settled the cadence on 2026-11-18 and it is not to be put to him again. But if a third edition is
-also asked for early, that is data worth showing him rather than a coincidence worth ignoring.
+**IT LANDS ON CADENCE, BUT ONLY JUST.** Lutan asked for it at **8 of 9**; #1716 merged while it was
+being written, taking it to nine. `762` was genuinely written early and says so in its own opening, so
+the nine-stream rule has now fired on its own exactly once. **The cadence is settled and not to be put to
+him again.** But the planner nearly published *"written early"* as a fact about a document that was not,
+and **only a session listing read in the same turn caught it** — the same shape as the fault below.
 
 ## FOR YOUR FIRST TURN
 
@@ -54,68 +54,44 @@ onboarding looks like: the shelter grants OUR app access to THEIR Drive.
 **`#cn7gk` was retitled** — its title claimed *"nothing writes a `shelter_drive_credentials` row"*, which
 stopped being true that morning — **and what is left is the single word *upload*.**
 
-## THE ITEM THAT CHANGED SHAPE THREE TIMES IN AN HOUR, AND WHY ALL THREE ARE RECORDED
+## THREE DECISIONS HE MADE THAT DAY — ALL RECORDED IN FULL ON THEIR OWN ITEMS
 
-`#drvcl` (connect a shelter's Drive from a screen) was answered by him three times in one conversation:
-the product-admin console; then *"the shelter director would authorise the token and send me the token ID
-and folder ID and I paste them into the admin console"*; then **"landing straight into the app is even
-better"**.
+**Read the items, not this summary.** Each carries his words, the shapes rejected and the reasoning;
+what follows is only the one thing per item that a planner needs before briefing it.
 
-**SETTLED: the shelter's own Admin connects Drive from that shelter's own Settings, and the credentials
-go straight into the app. Nothing is shown, copied, emailed or pasted.** Admin only — **Admin already
-sits outside the card system, so this needs no new card and creates no new exception.** The product-admin
-console keeps the status view and a manual paste fallback, *"the exception, never the design"*.
+**`#drvcl` — settled after changing shape THREE TIMES in an hour** (product-admin console → the
+director sends him the token → **"landing straight into the app is even better"**). **The shelter's own
+Admin connects Drive from that shelter's own Settings, credentials landing straight in the app; Admin
+only, so no new card and no new exception.** The middle shape was rejected because the token carries the
+FULL `drive` scope — sending it would put one organisation's key in a message neither party controls,
+once per shelter, for ever — and **that argument is not to be re-litigated quietly.** **The modelling
+lesson worth carrying beyond this item: the self-service shape is the SIMPLEST to build.** A one-time
+link exists only to tell the app which shelter a consent is for, and a director signed in to her own
+shelter already answers that. **It deletes a mechanism rather than adding one.** Earlier answer
+**superseded in place**, not deleted.
 
-**TWO THINGS TO TAKE FROM IT.** First, **the middle shape was rejected on a security argument that should
-not be re-litigated quietly**: the token carries the FULL `drive` scope, so sending it would have put one
-organisation's key into a message neither party controls, once per shelter, for ever. Second — and this
-is the modelling lesson — **the self-service shape is the SIMPLEST to build, not the most complex.** The
-one-time-link design exists solely to tell the app which shelter a consent belongs to; **a director
-signed in to her own shelter already answers that**, so the link, its expiry and every way it could be
-forwarded to the wrong person all disappear. **It deletes a mechanism rather than adding one.**
+**`#dscop` — filed on his instruction, and it GATES `#drvcl`.** We ask for the full `auth/drive` scope,
+which Google classes as *restricted*; a restricted scope on a **public, self-service** app triggers
+verification with an **annual third-party security assessment** — a recurring bill against the
+zero-ongoing-cost rule — and is why a new account consenting was shown **"Google hasn't verified this
+app"** (observed, not inferred). The candidate answer is `drive.file`. **The hinge nobody has settled:
+does a file a human places into an app-created folder become visible to the app?** **And his own message
+may decide it** — the shelter's documents have **not** moved to its Google account yet, *"so we have the
+opportunity to either create a folder from scratch and then migrate the files or decide to run it as a
+hand crafted option"*. **There is a window and it closes when the files move.**
 
-**The earlier answer is marked SUPERSEDED IN PLACE on the item, not deleted**, so a reader meets both.
+**`#gcnst` — his own observation, and only he can close it.** The consent screen still names the product
+`Lanna Care for Animals`; it was renamed Cooper Jaidee on 2026-11-14. **It shows on every consent screen
+the project serves**, so new staff signing in with Google read it too. **Nobody had done it because the
+only place the work was described is inside `#ki6cx`, ticked NINE DAYS BEFORE THE NAME WAS CHOSEN** — so
+it lists the domains and not the name, **and nobody re-reads a ticked item.** Nobody has established
+whether renaming a brand-verified app re-triggers review: **do not promise a size.**
 
-## THE COST THAT NOBODY HAD PRICED, AND IT IS NOW ITS OWN ITEM
+**AND A CORRECTION TO THE RECORD, WHICH MATTERS BEYOND THESE THREE:** the Google accounts stocktake says
+verification is not required *"since your app is not requesting any sensitive or restricted scopes"*.
+**True of the SIGN-IN client; false of the Drive client.** Do not reason about Drive from that line.
 
-**`#dscop`, filed on his instruction (*"yes file it"*).** We ask for `https://www.googleapis.com/auth/drive`
-— **the whole of a shelter's Google account.** Google classes that as *restricted*, and a restricted
-scope on a **public, self-service** app is what triggers verification with an annual third-party security
-assessment. **That is a recurring bill against the zero-ongoing-cost rule.** It is also why a brand-new
-account consenting on 2026-11-19 was shown **"Google hasn't verified this app"** and had to click
-**Advanced** — **observed, not inferred.** Lutan clicking past that is fine; **a shelter director being
-asked to click past a security warning, at the moment she decides whether to trust us, is not.**
-
-**THE CANDIDATE ANSWER IS `drive.file`** (app-created files only; not restricted, no verification, no
-warning, no cap) **and the hinge is a question nobody has settled: does a file a human places into an
-app-created folder become visible to the app?** If not, "create the folder with the app, then migrate by
-hand" does not work and the migration must run through the app.
-
-**AND HIS OWN MESSAGE MAY DECIDE IT:** *"As we haven't moved the documents onto lannacareforanimals
-google account yet, we have the opportunity to either create a folder from scratch and then migrate the
-files or decide to run it as a hand crafted option"*. **The strongest objection to the narrow scope was
-that Lanna's tree was hand-made — and that tree does not exist yet. There is a window, and it closes when
-the files move.**
-
-**`#dscop` GATES `#drvcl`** and is briefed as a reading stream that changes no code.
-
-## A SECOND CONSENT-SCREEN FINDING, HIS, AND ONLY HE CAN CLOSE IT
-
-**`#gcnst`**, from his own observation at the keyboard: *"it still asks to allow permission to lannacare
-not cooperjaidee"*. The consent screen's app name is `Lanna Care for Animals`; the product was renamed
-**Cooper Jaidee** on 2026-11-14. **It is wider than the step that found it** — the app name shows on
-**every** consent screen the project serves, so a new staff member signing in with Google reads it too.
-
-**WHY NOBODY HAD DONE IT: the only place the work was ever described is inside `#ki6cx`, ticked on
-2026-11-05 — NINE DAYS BEFORE THE NAME WAS CHOSEN** — so it lists the domains and not the name, **and
-nobody re-reads a ticked item.** Console change, his hands. Nobody has established whether renaming a
-brand-verified app re-triggers review; **do not promise a size.**
-
-**AND A CORRECTION TO THE RECORD THAT GOES WITH IT:** the Google accounts stocktake says verification is
-not required *"since your app is not requesting any sensitive or restricted scopes"*. **True of the
-SIGN-IN client; false of the Drive client.** Do not reason about Drive from that line.
-
-## FIGURES — EIGHT, SEVEN VALID, ONE OVER
+## FIGURES — NINE, EIGHT VALID, ONE OVER
 
 | slug | PR | band | actual | verdict |
 |---|---|---|---|---|
@@ -127,13 +103,17 @@ SIGN-IN client; false of the Drive client.** Do not reason about Drive from that
 | `canary-plain-run-trust` | #1712 | 145-175k | **154,934** | **inside** |
 | `shelter-admin-role-schema` | #1713 | 165-195k | **159,175** | **under by ~6k** |
 | `shelter-write-app` | #1714 | 145-175k | **178,482** | **OVER by ~3.5k** |
+| `shelter-admin-role-app` | #1716 | 155-190k | **163,891** | **inside** |
 
-**Seven valid readings: four inside, two under, one over.** **#1707 is excluded on its own report and its
+**Eight valid readings: five inside, two under, one over.** **#1707 is excluded on its own report and its
 PR body never says what the rescope was** — one question if anyone talks to that session, never a guess.
 
-**THE FLOOR, EIGHT FIGURES: 86,759 · 86,761 · 87,050 · 87,474 · 87,482 · 87,482 · 87,482 · 87,773.** A
-**1,014-token spread**, entirely inside `~86–90k`. **No edit owed, and the scale rows are still not to be
-shifted with it.**
+**THE FLOOR, NINE FIGURES: 86,759 · 86,761 · 87,050 · 87,474 · 87,482 · 87,482 · 87,482 · 87,773 ·
+90,375.** **Eight of the nine sit in a 1,014-token band; the ninth, #1716's, is 90,375 — just OUTSIDE the
+stated `~86–90k`**, and it is the highest floor the project has recorded (`762`'s top edge was 90,127,
+also an outlier). **No edit owed on one reading**, but two consecutive top-edge outliers is the shape of
+a range that is drifting, so **re-measure rather than carry `~86–90k` forward unexamined.** **The scale
+rows are still not to be shifted with it.**
 
 ## TWO BAND REVISIONS, IN OPPOSITE DIRECTIONS, AND ONE WAS A PREDICTION THAT FIRED
 
@@ -149,8 +129,13 @@ and a copyable harness are two different discounts and both were present.
 its row because its schema half handed it a full specification — and it came in **over**. The discount
 did not pay for mapping SQLSTATEs to readable sentences **in two languages**, a release note, and a
 browser attempt. **A specification discounts a SCHEMA half much more than an APP half.**
-**`shelter-admin-role-app` is banded 155-190k as the deliberate re-test and had not reported when this
-was written.**
+
+**AND THE RE-TEST FIRED, WHICH IS WHY THIS ONE IS A REVISION RATHER THAN A HUNCH.**
+`shelter-admin-role-app` was banded **155-190k** on exactly that correction — the same shape of work as
+#1714, an app half built on a handed-over specification, priced above the row it would otherwise have
+taken. **It came in at 163,891, inside.** **Two predictions written before their readings existed, both
+fired on the same day.** Keep writing them down before the number arrives: a revision that was recorded
+in advance is evidence, and the same revision applied afterwards is a story.
 
 ## WHAT `762` LEFT OWED — read this before you act on its recommendations
 
@@ -212,9 +197,13 @@ the Admin role it creates **holds no cards and still has full access**, which is
 
 ## WHAT IS LEFT FOR CLAUDE AT ALL
 
-**In flight (figures belong to `764`):** `shelter-admin-role-app` (`#shadm`'s screen half — the last gap
-in onboarding a shelter), `cn7gk-upload-proof` (`#cn7gk`'s one remaining word), `drive-scope-decision`
-(`#dscop`).
+**Shipped as this edition was written: `#shadm`'s screen half (#1716)** — the product-admin screen can
+now give a created shelter its Admin role and link a login, **which closes the last gap in onboarding a
+shelter**: before it, the screen could create a shelter and the database could give one an Admin role,
+and nothing joined the two.
+
+**In flight (figures belong to `764`):** `cn7gk-upload-proof` (#1718 — `#cn7gk`'s one remaining word)
+and `drive-scope-decision` (#1717 — `#dscop`).
 
 **Next, and in this order because of the gate:** `#dscop` answers → **`#drvcl`'s screen**, which also
 needs a **Web OAuth client with a redirect URI per environment host** that only Lutan can register (the
@@ -227,19 +216,16 @@ re-asked.**
 
 ## PROCESS NOTES
 
-- **A HEREDOC WRITING A LONG DOCUMENT FAILED TWICE** (`unexpected EOF while looking for matching '`) on
-  apostrophes and backticks in prose. **Use the Write tool for prose, and keep heredocs for code.** The
-  second failure wasted a turn on a lesson already learned in the same session.
 - **`worktree.mjs done` CAN EXCEED THE FOREGROUND TIMEOUT** and finish in the background (deleting
   `node_modules`). It did on 2026-11-19 and exited 0. **Re-read `worktree.mjs list` before relying on a
   `done` you did not see finish.**
 - **THE DEV DATABASE GAINED A SECOND CONNECTED SHELTER, `test-shelter-2`**, with real Drive credentials
-  for a second Google account. `check-shelter-settings.mjs --env test` was **green afterwards**, so it
-  makes no check noisy. **There is also a `proof-b` from another stream's proof; it was deliberately not
-  borrowed.** Every brief in the batch says both.
-- **THE PUBLIC-REPOSITORY RULE BIT A NEW SURFACE:** this day's work involved real Drive folder ids and a
-  real account address. **Briefs now say explicitly that no folder id goes into a committed file** —
-  meaning in the repo, value in the Desktop notes.
+  for a second Google account; `check-shelter-settings.mjs --env test` was **green afterwards**. There is
+  also a `proof-b` from another stream's proof, **deliberately not borrowed.** Every brief says both.
+- **THE PUBLIC-REPOSITORY RULE BIT A NEW SURFACE:** real Drive folder ids and a real account address.
+  **Briefs now say explicitly that no folder id goes into a committed file** — meaning in the repo, value
+  in the Desktop notes. **Prose goes in with the Write tool, not a heredoc**: two heredocs died on
+  apostrophes in one session.
 
 ## INTERRUPTIONS
 
