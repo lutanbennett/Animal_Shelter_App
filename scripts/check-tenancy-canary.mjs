@@ -3,7 +3,7 @@
 // Also makes a cross-tenant call for every anon-executable function that takes an id: shelter B's id must look exactly like
 // an id that does not exist.
 //
-//   node scripts/check-tenancy-canary.mjs [--env test|uat|production] [--strict] [--prove-red leak-table|leak-attachments|drop-restrictive]
+//   node scripts/check-tenancy-canary.mjs [--env test|uat|production] [--strict] [--untrusted] [--prove-red leak-table|leak-attachments|drop-restrictive]
 //
 // Conventions copied from check-tenancy-catalogue.mjs: report-only (exit 0) by default, exit 1 only under --strict,
 // exit 2 when it could not read at all.
@@ -33,6 +33,8 @@ import { exitWith } from "./lib/exit.mjs";
 const argv = process.argv.slice(2);
 const { name: envName } = parseEnvArg(argv);
 const strict = argv.includes("--strict");
+// --untrusted: read as PostgREST really sends it (jwt claims role=anon), so is_trusted_caller() is false and the 0392 per-shelter clause decides. Without it: the TRUSTED pass.
+const untrusted = argv.includes("--untrusted");
 const pi = argv.indexOf("--prove-red");
 const proveRed = pi >= 0 ? argv[pi + 1] : null;
 const SABOTAGE = {
@@ -75,6 +77,7 @@ declare
   planted jsonb := '[]'::jsonb; objs jsonb := '[]'::jsonb; fns jsonb := '[]'::jsonb; src record;
   cols text; lanna uuid; probe jsonb;
 begin
+  ${untrusted ? `execute ${lit("select set_config('request.jwt.claims', '{\"role\":\"anon\"}', true)")};` : ""}
   ${pre}
   -- the caller is a visitor to Lanna, as the Worker would send it: with no header every shelter-scoped view reads empty before and after, and the diff proves nothing
   select id into lanna from shelters where key = 'lanna';
@@ -223,6 +226,7 @@ async function main() {
   const findings = [];
   const known = [];
   const unstable = Object.keys(data.base1).filter((k) => data.base1[k] !== data.base2[k]);
+  console.log(`Pass: ${untrusted ? "UNTRUSTED (the 0392 per-shelter clause decides)" : "TRUSTED (the path service-role callers take)"}`);
   console.log(`Project ${ref}${proveRed ? `; SABOTAGED (${proveRed}), a red result is the expected one` : ""}`);
   console.log(`Read-as probe: ${JSON.stringify(data.probe)}`);
   console.log(`Planted (rolled back, nothing left behind): ${JSON.stringify(data.planted)}`);
@@ -243,7 +247,7 @@ async function main() {
   }
   for (const f of findings) console.log(`FAIL  ${f}`);
   console.log(`\n${findings.length} new leak finding(s), ${known.length} known (Part 5), ${unstable.length} unstable object(s).`);
-  console.log("LIMITS: cannot see service-role calls (Part 7); cannot run on the pull-request path (a write-capable token on a public repo); reads as the anon database role WITHOUT jwt claims, so is_trusted_caller() is true for it and the plain run does not exercise 0392 shelter_scope_* restrictive policies at all: it shows nothing leaks across shelters through anon today and that a new row is noticed. Only --prove-red untrusted-keep-restrictive (green) against untrusted-drop-restrictive (red) isolates the restrictive policy, for residents.");
+  console.log("LIMITS: cannot see service-role calls (Part 7); cannot run on the pull-request path (a write-capable token on a public repo); reads as the anon database role WITHOUT jwt claims, so is_trusted_caller() is true for it and a run WITHOUT --untrusted is the TRUSTED pass and does not exercise 0392 shelter_scope_* restrictive policies, so the nightly runs BOTH passes (plain, then --untrusted); decided in docs/decisions/2026-11-19-canary-plain-run-trust.md. --prove-red untrusted-keep-restrictive (green) against untrusted-drop-restrictive (red) proves the untrusted pass sees the restrictive policy, for residents.");
   console.log(strict ? "STRICT: exiting 1 on any finding." : "REPORT-ONLY: this does not fail the build.");
   return exitWith(strict && findings.length ? 1 : 0);
 }
