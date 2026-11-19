@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Geist, Geist_Mono, Noto_Sans_Thai, Source_Sans_3 } from "next/font/google";
+import localFont from "next/font/local";
 import { AppHeader } from "./AppHeader";
 import { NavPane } from "./NavPane";
 import { MobileNavProvider } from "./MobileNavContext";
@@ -17,35 +17,51 @@ import { EARLY_SUBMIT_GUARD } from "@/lib/early-submit-guard";
 import { shelterNames } from "@/lib/shelter-settings";
 import "./globals.css";
 
-const geistSans = Geist({
+const geistSans = localFont({
+  src: "../../public/fonts/geist-latin-wght-normal.woff2",
   variable: "--font-geist-sans",
-  subsets: ["latin"],
+  weight: "100 900",
+  style: "normal",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+  src: "../../public/fonts/geist-mono-latin-wght-normal.woff2",
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: "100 900",
+  style: "normal",
+  display: "swap",
 });
 
-const notoSansThai = Noto_Sans_Thai({
+// Thai subset only: every font stack in globals.css puts a Latin family first,
+// so this face is only ever asked for Thai characters.
+const notoSansThai = localFont({
+  src: "../../public/fonts/noto-sans-thai-thai-wght-normal.woff2",
   variable: "--font-noto-thai",
-  subsets: ["thai", "latin"],
+  weight: "100 900",
+  style: "normal",
+  display: "swap",
 });
 
 // The public site's type (globals.css, "Public site"): Fraunces headings
 // over Source Sans 3. Declared here because the tokens sit on :root, but
 // not preloaded — the app's pages never use them, and a browser only
 // downloads a face once text on the page asks for it.
-const fraunces = Fraunces({
+const fraunces = localFont({
+  src: "../../public/fonts/fraunces-latin-opsz-normal.woff2",
   variable: "--font-fraunces",
-  subsets: ["latin"],
-  axes: ["opsz"],
+  weight: "100 900",
+  style: "normal",
+  display: "swap",
   preload: false,
 });
 
-const sourceSans = Source_Sans_3({
+const sourceSans = localFont({
+  src: "../../public/fonts/source-sans-3-latin-wght-normal.woff2",
   variable: "--font-source-sans",
-  subsets: ["latin"],
+  weight: "200 900",
+  style: "normal",
+  display: "swap",
   preload: false,
 });
 
