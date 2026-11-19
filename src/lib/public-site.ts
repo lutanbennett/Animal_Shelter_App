@@ -43,16 +43,16 @@ function parse(value: string | null | undefined): PublicSiteState | null {
 }
 
 /** The deployment-wide floor: PUBLIC_SITE, "open" when unset. */
-export function deploymentSiteState(env: Record<string, string | undefined> = process.env): PublicSiteState {
-  return parse(env.PUBLIC_SITE) ?? "open";
+export function deploymentSiteState(floor: string | undefined = process.env.PUBLIC_SITE): PublicSiteState {
+  return parse(floor) ?? "open";
 }
 
 /** The state for one shelter's value. Nothing or garbage from the shelter means only the floor applies. */
 export function publicSiteStateFor(
   shelterValue: string | null | undefined,
-  env: Record<string, string | undefined> = process.env,
+  floorValue: string | undefined = process.env.PUBLIC_SITE,
 ): PublicSiteState {
-  const floor = deploymentSiteState(env);
+  const floor = deploymentSiteState(floorValue);
   const own = parse(shelterValue);
   return own && RANK[own] > RANK[floor] ? own : floor;
 }

@@ -5,7 +5,7 @@ import { signedInLandingPath } from "./auth/app-access.ts";
 
 // The deployment floor (PUBLIC_SITE, #br3f3) and the shelter's own state (#wbsof, docs/decisions/2026-11-20-public-site-per-shelter.md):
 // a request gets the MORE CLOSED of the two.
-const floor = (v) => ({ PUBLIC_SITE: v });
+const floor = (v) => v;
 
 test("unset, empty or unknown floor is open", () => {
   for (const v of [undefined, "", "open", "LOCKED", "Off", "yes"]) {

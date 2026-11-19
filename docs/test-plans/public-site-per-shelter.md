@@ -216,7 +216,7 @@ Manual verification by: pending: the two-shelter check on the test Worker
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR — pending: pasted when the PR is opened
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — pending: release manager reads it before deploy
 
 Result: pass with accepted defects
 
