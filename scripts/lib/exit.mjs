@@ -32,3 +32,37 @@ export async function exitWith(code = 0) {
     // a closed pipe must not change the verdict
   }
 }
+
+// For a script whose exits sit in helpers (`fail()` called from anywhere), where
+// `return code` cannot reach them: a helper calls `bail(code)` instead of
+// `process.exit(code)`, and the script's entry point runs inside `runMain`,
+// which turns the throw back into `await exitWith(code)`.
+//
+// Contract: `bail` must not be called inside a `try` whose `catch` swallows
+// errors (it would be swallowed with them); rethrow ExitRequest if you must.
+// Any other error escaping main prints its stack and exits 1, as node would.
+export class ExitRequest extends Error {
+  constructor(code) {
+    super(`exit ${code}`);
+    this.code = code;
+  }
+}
+
+export function bail(code = 1) {
+  throw new ExitRequest(code);
+}
+
+export async function runMain(main) {
+  let code = 0;
+  try {
+    const r = await main();
+    if (typeof r === "number") code = r;
+  } catch (e) {
+    if (e instanceof ExitRequest) code = e.code;
+    else {
+      console.error(e?.stack ?? e);
+      code = 1;
+    }
+  }
+  await exitWith(code);
+}

@@ -48,6 +48,7 @@ import { existsSync, copyFileSync, mkdirSync, readFileSync, readdirSync, renameS
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { bail, runMain } from "./lib/exit.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, "..");
@@ -122,7 +123,7 @@ function run(cmd, args, cwd) {
 
 function fail(msg) {
   console.error(`worktree: ${msg}`);
-  process.exit(1);
+  bail(1);
 }
 
 /**
@@ -981,6 +982,7 @@ function cmdClean(args) {
 // ---------------------------------------------------------------- main
 
 const [cmd, ...rest] = process.argv.slice(2);
+await runMain(() => {
 switch (cmd) {
   case "new": cmdNew(rest); break;
   case "dev": cmdDev(); break;
@@ -994,6 +996,7 @@ switch (cmd) {
     const lines = readFileSync(fileURLToPath(import.meta.url), "utf8").split("\n");
     const end = lines.findIndex((l) => l.startsWith("import "));
     console.log(lines.slice(1, end - 1).map((l) => l.replace(/^\/\/ ?/, "")).join("\n"));
-    process.exit(cmd ? 1 : 0);
+    return cmd ? 1 : 0;
   }
 }
+});
