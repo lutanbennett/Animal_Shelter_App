@@ -440,7 +440,7 @@ on the Pi" rule no longer holds, so:
   `.env.deploy.production`, so the token the app uses for photos (on the Worker, the Pi and the
   laptop) cannot also trash or empty the backups. Without them the script stops before the dump
   with a plain message; it never quietly uses the app's token. `--shared-drive-token` is the
-  explicit, warned-about way back to the shared token. **To mint it (Lutan, at a browser):**
+  explicit, warned-about way back to the shared token.
   **Interim, decided by Lutan 2026-10-13: the Pi's cron line carries `--shared-drive-token`** (live crontab edited by hand 2026-10-13, previous one saved at `~/backups/crontab.before-2026-10-13.bak`; it is inert on the pre-#600 code and takes effect on the next pull, so nobody needs to redo it), so
   backups keep running on the app's token and the warning shows in `backup.log`. The identities
   are NOT separate yet: the app's token can still delete backups. The split waits for production's
@@ -452,6 +452,7 @@ on the Pi" rule no longer holds, so:
      The consenting account is the separation; a folder inside one account cannot be hidden from that account's own token.
   3. On the Pi, add `BACKUP_GOOGLE_OAUTH_CLIENT_ID`, `_CLIENT_SECRET`, `_REFRESH_TOKEN` and a
      `BACKUP_DRIVE_FOLDER_ID` (a folder in the *new* account's Drive) to `.env.deploy.production`.
+  **Superseded 2026-11-19:** the backup gets its own Google client, not a second account on the shared one (`docs/decisions/2026-11-19-backups-own-client.md`). Mint with `node --env-file=.env.local scripts/google-oauth-setup.mjs --backup` (reads `BACKUP_GOOGLE_OAUTH_CLIENT_ID`/`_SECRET`, prints `BACKUP_GOOGLE_OAUTH_REFRESH_TOKEN`). Once all three are in `.env.deploy.production`, **drop `--shared-drive-token` from the cron line**. If any is missing afterwards, `backup.mjs` stops before the dump with a message naming the missing names; it does not fall back to the app's token silently. The older steps, kept for the record:
   4. Remove `--shared-drive-token` from the cron line, run one backup by hand, check the file lands in the new folder and the warning is gone.
 - The Tunnel is outbound-only and `next start` listens on `127.0.0.1` only, so nothing
   is exposed to the internet directly. The exposure is a compromised app, not an open port.
