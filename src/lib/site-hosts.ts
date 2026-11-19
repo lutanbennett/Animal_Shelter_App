@@ -39,6 +39,27 @@ export function publicHost(env: Record<string, string | undefined> = process.env
   return clean(env.PUBLIC_HOST);
 }
 
+/**
+ * The environment variables that name an address this system answers on, and
+ * therefore exactly the ones `siteHosts()` below reads.
+ *
+ * **It is a list because two other places must carry these values to where
+ * `siteHosts()` can see them, and both were easy to forget.** `allowedOrigins`
+ * is baked at BUILD time, while `wrangler.jsonc` `vars` are RUNTIME values, so
+ * a host declared only in wrangler.jsonc never reaches the bundle at all:
+ *
+ *  - `scripts/deploy.mjs` pins each of these into the Worker build's env, and
+ *  - `scripts/lib/runtime-config.mjs` declares each one `source: "wrangler"`,
+ *    which is how `scripts/pi/write-env.mjs` copies it to the Pi.
+ *
+ * `PLATFORM_HOST` was added here and to wrangler.jsonc and missed in BOTH of
+ * those (`#plhbd`), so every Server Action on `cooperjaidee.org` was refused
+ * while every page rendered — the failure `docs/domain-checklist.md` section F
+ * predicts, and tells you to prove by SAVING rather than by loading.
+ * `site-hosts.test.mjs` now fails if a name here is missing from either place.
+ */
+export const SITE_HOST_VARS = ["APP_HOST", "PUBLIC_HOST", "PLATFORM_HOST"] as const;
+
 /** The configured hosts, plus `www.` of each: the apex and www answer together. */
 export function siteHosts(env: Record<string, string | undefined> = process.env): string[] {
   const hosts = [appHost(env), publicHost(env), platformHost(env)].filter((h): h is string => !!h);

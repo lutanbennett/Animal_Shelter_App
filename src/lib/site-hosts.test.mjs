@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { hostRedirect, isPlatformHostname, platformRedirect, isSplit, requestHost, siteAllowedOrigins } from "./site-hosts.ts";
+import { hostRedirect, isPlatformHostname, platformRedirect, isSplit, requestHost, siteAllowedOrigins, SITE_HOST_VARS } from "./site-hosts.ts";
 import { isPublicPage } from "./public-paths.ts";
 
 const split = { APP_HOST: "app.example.org", PUBLIC_HOST: "site.example.net" };
@@ -67,4 +67,39 @@ test("the platform host serves the console and sign-in only; any shelter page go
   for (const p of ["/", "/residents", "/my", "/admin", "/admin/product-admin", "/adopt"]) assert.equal(platformRedirect("cooper.example.com", p, plat), "/platform", p);
   assert.equal(platformRedirect("app.example.org", "/residents", plat), null);
   assert.equal(platformRedirect("cooper.example.com", "/residents", split), null);
+});
+
+// The tests above prove siteHosts()/siteAllowedOrigins() handle a platform host
+// correctly — and they ALL PASSED while production was broken (#plhbd), because
+// they hand the env straight to the function. What nothing covered was whether
+// the value ever REACHES it: `allowedOrigins` is baked at BUILD time, while
+// wrangler.jsonc `vars` are RUNTIME values, so a host has to be carried across
+// in two places. Both were missed. These two tests cover the carrying.
+test("every address variable is copied to the Pi (scripts/pi/write-env.mjs reads PI_WRANGLER_VARS)", async () => {
+  const { PI_WRANGLER_VARS } = await import("../../scripts/lib/runtime-config.mjs");
+  for (const name of SITE_HOST_VARS) {
+    assert.ok(
+      PI_WRANGLER_VARS.includes(name),
+      `${name} is in SITE_HOST_VARS but has no \`source: "wrangler"\` entry in scripts/lib/runtime-config.mjs, ` +
+        `so scripts/pi/write-env.mjs will not copy it and the Pi's build bakes an allowedOrigins without it. ` +
+        `Every Server Action on that address is then refused while every page renders.`,
+    );
+  }
+});
+
+test("every address variable is pinned into the Worker build (scripts/deploy.mjs)", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const src = await readFile(new URL("../../scripts/deploy.mjs", import.meta.url), "utf8");
+  assert.match(
+    src,
+    /for \(const key of SITE_HOST_VARS\) buildEnv\[key\] = wranglerVars\[key\]/,
+    "scripts/deploy.mjs must pin the addresses by looping over SITE_HOST_VARS. A line per host is how PLATFORM_HOST was missed (#plhbd).",
+  );
+  for (const name of SITE_HOST_VARS) {
+    assert.doesNotMatch(
+      src,
+      new RegExp(`buildEnv\.${name}\s*=`),
+      `scripts/deploy.mjs assigns ${name} by name. Use the SITE_HOST_VARS loop so the next address cannot be forgotten.`,
+    );
+  }
 });

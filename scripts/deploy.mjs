@@ -78,6 +78,7 @@ import { latestRelease, majorReleasesSince, unreleased } from "../src/lib/releas
 import { appEnvForSupabaseUrl } from "../src/lib/app-env.ts";
 import { buildReleaseMail } from "../src/lib/release-mail.ts";
 import { DEFAULT_SHELTER_NAMES } from "../src/lib/shelter-names-default.ts";
+import { SITE_HOST_VARS } from "../src/lib/site-hosts.ts";
 import { bail, runMain } from "./lib/exit.mjs";
 
 async function main() {
@@ -417,12 +418,18 @@ if (!skipBuild) {
   }
   const buildEnv = { ...process.env };
   for (const key of [...BUILD_VARS, ACTIONS_KEY_VAR]) buildEnv[key] = env[key];
-  // The two addresses from wrangler.jsonc (src/lib/site-hosts.ts): next.config.ts
-  // builds serverActions.allowedOrigins from them. Pinned, not inherited, so
-  // no shell or env file can put another host in the bundle.
+  // EVERY address from wrangler.jsonc (SITE_HOST_VARS in src/lib/site-hosts.ts):
+  // next.config.ts builds serverActions.allowedOrigins from them. Pinned, not
+  // inherited, so no shell or env file can put another host in the bundle.
+  //
+  // A LOOP, NOT A LINE EACH, and that is the whole point: this read "the two
+  // addresses" and assigned exactly two, so when PLATFORM_HOST was added to
+  // site-hosts.ts and wrangler.jsonc it was silently left out of the build
+  // (#plhbd). wrangler.jsonc `vars` are RUNTIME values, so a host that is not
+  // pinned here never reaches the bundle, and every Server Action on it is
+  // refused while every page still renders.
   const wranglerVars = readWranglerConfig().env?.[envName]?.vars ?? {};
-  buildEnv.APP_HOST = wranglerVars.APP_HOST;
-  buildEnv.PUBLIC_HOST = wranglerVars.PUBLIC_HOST;
+  for (const key of SITE_HOST_VARS) buildEnv[key] = wranglerVars[key];
   delete buildEnv.NEXT_PUBLIC_SITE_URL;
   run("npm run opennext:build", { env: buildEnv });
   run("node scripts/strip-baked-env.mjs");
