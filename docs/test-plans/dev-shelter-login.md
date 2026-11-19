@@ -10,14 +10,14 @@
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3001` |
 | PR | pending: opened after this plan |
 | Tested by / date | Claude / 2026-11-19 |
-| Carries a migration? | yes: 0422 |
+| Carries a migration? | yes: 0423 |
 | Tested at SHA | 46f38e3bd |
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what the backlog item asked for: a `--shelter` flag on the dev sign-in script so a login can hold a role on a second shelter, plus 0422 fixing the last-Admin guard that broke once two shelters had an Admin
-- [x] Files/areas touched listed: `scripts/dev-signin.mjs`, `supabase/migrations/0422_keep_an_admin_per_shelter.sql`, `CLAUDE.md`, `docs/decisions/2026-11-19-dev-shelter-login.md`, `docs/backlog.md`
-- [x] Cards affected identified: none change. 0422 keeps the guard's intent (never drop a shelter's last live Admin link); admin and the public are unaffected
+- [x] Change is described in one sentence, and it matches what the backlog item asked for: a `--shelter` flag on the dev sign-in script so a login can hold a role on a second shelter, plus 0423 fixing the last-Admin guard that broke once two shelters had an Admin
+- [x] Files/areas touched listed: `scripts/dev-signin.mjs`, `supabase/migrations/0423_keep_an_admin_per_shelter.sql`, `CLAUDE.md`, `docs/decisions/2026-11-19-dev-shelter-login.md`, `docs/backlog.md`
+- [x] Cards affected identified: none change. 0423 keeps the guard's intent (never drop a shelter's last live Admin link); admin and the public are unaffected
 - [x] Out of scope written down: no app code changed (`stocktaking/actions.ts` untouched); the `errors.noRow` refusal was not seen because `test-shelter-2` has a `site_content` row
 
 ## 2. Automated gates
@@ -39,13 +39,13 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 - [x] Migration number is one above the highest on `main` (0421), checked by `check-migration-numbers.mjs`
 - [x] `node scripts/apply-migrations.mjs --status` reviewed before applying (423 applied, 1 pending)
-- [x] `node scripts/apply-migrations.mjs --dry-run` reviewed (`0422 … ok`)
+- [x] `node scripts/apply-migrations.mjs --dry-run` reviewed (`0423 … ok`)
 - [x] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations`
 - [x] File is re-runnable (`create or replace function`)
 - [x] Existing rows still read correctly after the change: `user_roles` reads and the stocktaking page unchanged
 - [x] Constraints and defaults exercised against real rows: with two shelters holding an Admin, a `user_roles` delete of a card-role login row now succeeds (it failed before with "more than one row returned"), and deleting a sole Admin link row by row is still refused with "no active admin"
 - [ ] Down-migration — n/a: replaces a broken function body with a working one; restoring the old body would restore the fault
-- [ ] Production apply plan — pending: the release manager applies 0422 to production with the release (`--status --env production` first); production has one shelter, so the old guard still works there and the order is not critical
+- [ ] Production apply plan — pending: the release manager applies 0423 to production with the release (`--status --env production` first); production has one shelter, so the old guard still works there and the order is not critical
 
 ## 4. Functional checks
 
@@ -118,17 +118,17 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [ ] Both a migration and code that reads it — n/a: only a script that reads nothing new
 - [ ] `--env production --dry-run` — deferred: release manager
 - [ ] Destructive migration backup — n/a: replaces a function body only
-- [ ] Apply plan — deferred: release manager applies 0422, before or after the deploy
+- [ ] Apply plan — deferred: release manager applies 0423, before or after the deploy
 
 ### Rollback
 
-- [ ] Rollback position — n/a: function body only; leaving 0422 applied is safe
+- [ ] Rollback position — n/a: function body only; leaving 0423 applied is safe
 
 ## Defects found
 
 | # | Severity | What | Status |
 |---|---|---|---|
-| 1 | high (dev) | `user_roles_keep_an_admin` found Admin by name; every `user_roles` delete failed once two shelters had an Admin | fixed: 0422 |
+| 1 | high (dev) | `user_roles_keep_an_admin` found Admin by name; every `user_roles` delete failed once two shelters had an Admin | fixed: 0423 |
 
 ## Left for manual verification
 

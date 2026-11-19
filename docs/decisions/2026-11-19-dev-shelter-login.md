@@ -11,7 +11,7 @@ change. `scripts/dev-signin.mjs --shelter <key|id>`:
 - **Removal:** `--remove <role|--cards a,b> --shelter X --port N` removes that key and that login only. `--remove` with no argument is unchanged.
 - **The browser's shelter comes from the dev server, not the login** (`DEV_SHELTER_ID`, `src/lib/supabase/shelter-header.ts`). The script says so.
 
-**Deliverable 6: a migration was needed, `0422`.** `user_roles_keep_an_admin` (0132) found Admin by `key = 'admin'`. With two shelters holding an
+**Deliverable 6: a migration was needed, `0423`.** `user_roles_keep_an_admin` (0132) found Admin by `key = 'admin'`. With two shelters holding an
 Admin role that subquery returns two rows, and **every delete or update on `user_roles` failed** ("more than one row returned by a
 subquery"), for every role on every shelter, so no stream could re-sign-in or remove a login. It now asks the row's own role (`is_admin`).
 Applied to dev. Same intent: never drop a shelter's last live Admin link.
