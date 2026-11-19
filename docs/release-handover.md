@@ -1,150 +1,165 @@
-# Release handover — written 2026-11-18 after `0.47.2`
+# Release handover — written 2026-11-19 after `0.47.3` and `0.47.4`
 
 A **delta**. The durable rules are in `docs/release-procedure.md` and the two releases' own records are
-`docs/releases/2026-11-16-0-47-1.md` and `docs/releases/2026-11-18-0-47-2.md`. **All three outrank
+`docs/releases/2026-11-19-0-47-3.md` and `docs/releases/2026-11-19-0-47-4.md`. **All three outrank
 this file.**
 
-**This edition covers TWO releases, because `0.47.1` never wrote one.** That is the first fault not to
-repeat: rule 3 of *The paperwork has a time budget too* says the record and the handover are **one
-PR**, and on `0.47.1` only the record was written. Nothing caught it — there is no check for a stale
-handover — and it surfaced on `0.47.2` only because Lutan asked outright whether the handover was
-done. **If you are reading this after a release you ran, write the next edition in the record's PR.**
+**This edition covers TWO releases, and it is the SECOND edition running to say that.** The previous
+one opened by naming the same fault on `0.47.1` and warning *"if you are reading this after a release
+you ran, write the next edition in the record's PR"* — and then `0.47.3` and `0.47.4` both shipped
+without one. **Both times it surfaced only because Lutan asked outright.** Three occurrences, every
+one caught by him and never by us. Nothing checks for a stale handover; `#hndvr` now asks for a check
+that would. **Until it exists, this is on you: write it in the record's PR.**
 
 ## START HERE
 
-Production is `lannacareforanimals.org`, now on **`0.47.2`** — a **minor release that mailed nobody**.
-`test.lannacare.org` and `uat.lannacare.org` serve `0.47.2` too. All three Pi clones **and all three
-Workers** were built from `854891267`, and all three hosts answer `x-lanna-served-by: pi`.
+Production is `lannacareforanimals.org`, now on **`0.47.4`** — a **minor release that mailed nobody**.
+`test.lannacare.org` and `uat.lannacare.org` serve `0.47.4` too. All three Pi clones **and all three
+Workers** were built from `a50122039`, and all three hosts answer `x-lanna-served-by: pi`.
 
-**Production holds every migration on `main`: 408 applied, 0 pending, 0 drift either way.** It had
-been eighteen behind. UAT is the same. Test's database (dev) was already current.
+**Production holds every migration on `main`: 416 applied, 0 pending, 0 drift either way.** UAT is the
+same. Test's database (dev) was already current.
 
 **Re-measure before trusting any of this**, and read **both** endpoints on all three hosts:
-`/api/releases/current` reports the **Worker's** version whatever the Pi serves, which is what
-exposed `0.47.0`'s UAT gap.
+`/api/releases/current` reports the **Worker's** version whatever the Pi serves. That is not theory —
+it is how `0.47.3`'s half-finished state was visible at all.
 
 ## What the two releases were
 
-**`0.47.1` (2026-11-16, minor, no mail).** 27 PRs, nine migrations `0381`–`0389`: tax-deductible
-donations, lazy Shelter Friends maps, the sold-out merchandise badge.
+**`0.47.3`** (minor, no mail): 35 PRs, eight migrations `0408`–`0415` — Product admin gaining
+create-a-shelter and address mapping, per-shelter calendar credentials, writer-run visibility.
+**Its production Worker was never deployed.**
 
-**`0.47.2` (2026-11-18, minor, no mail).** 38 PRs, eighteen migrations `0390`–`0407` — **the
-multi-tenancy groundwork the whole board was waiting on.** It rewrote about 4,600 existing production
-rows to stamp `shelter_id`, and `0397` then made the column `NOT NULL`.
+**`0.47.4`** (minor, no mail): 5 PRs, **no migrations at all**, the first since `0.47.0` — a second
+shelter's own Google Drive (`#cn7gk`, proved end to end) and a new shelter's Admin role and first
+login. **Its production deploy closed `0.47.3`'s leftover**, `0.47.2` → `0.47.4` in one command.
 
-## Five things that are different for you now
+## The fault that cost `0.47.3` its production Worker
 
-1. **Cloudflare deploys use an API token, not wrangler's OAuth login.** `.env.deploy.production` and
-   `.env.deploy.uat` each hold `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit, Account Settings: Read,
-   Workers Routes: Edit on both zones; no expiry). Every deploy prints a `deploy: wrangler auth:` line
-   naming the layer it came from. **Test deliberately has no token and prints `wrangler's own OAuth
-   login` — correct, not a fault.** Built after an OAuth token expired mid-upload and gave Lutan a
-   `401 Authentication error [code: 10000]`, costing him a second run.
-   `docs/decisions/2026-11-16-deploy-cloudflare-api-token.md`.
-2. **The Worker deploy order is test → UAT → production**, reversed on `0.47.1` so Lutan's goes last
-   and nothing of ours starts a build under it. **`#uatwk` is closed** — `0.47.0`'s headline warning.
-3. **`scripts/check-release-order.mjs` exists and you must run it before any apply.** Some migrations
-   must reach a database only *after* the code that makes them safe — the opposite of the usual
-   direction, which no `-- consumer:` header can express. Today the registry holds `0392`, whose
-   per-shelter policies blank the public site if no `x-shelter-id` arrives. It refuses unless
-   `--worker-deployed <sha>` names a commit where `worker/shelter.mjs` and `worker/index.mjs` match
-   `origin/main`.
-4. **`scripts/check-scheduled-writers.mjs --env production` is now part of a release.** It reads the
-   live `cron.job` list and every writing function. On `0.47.2` it found the nightly tax-ID purge
-   would have started erroring silently at 03:41 under `0397` — and that **`0397` itself fixes it**.
-5. **`npm run audit:register` is the audit that counts**, not `audit:prod` (which exits 1 on
-   registered advisories). One high is registered and unreachable: `GHSA-5j98-mcp5-4vw2` (`glob`). The
-   two **moderate** Next.js cache advisories are judged unreachable and now **held so by a CI check**,
-   `check-next-cache-apis.mjs`.
+Lutan's deploy is **last** and it is **his**, which makes it the step most exposed to `main` moving
+underneath it. `0.47.3` took three attempts across the better part of an hour; a feature stream merged
+into that gap; and the next attempt was refused:
 
-## The Next.js advisory halt will interrupt you, in three places
+```
+deploy: production deploys only from a clean, pushed main:
+  - main and origin/main differ (1 behind / 0 ahead)
+```
 
-Next 16.4.2 stops a **completed** build with a `SecurityFatalError` notice. The build is not broken
-and the project is deliberately staying on 16.4.2
-(`docs/decisions/2026-11-17-next-agent-upgrade-halt.md`).
+**Both refusals are correct and neither has an override** — read in the source, not from the message:
+`releaseProblems()` (`scripts/lib/release-guards.mjs:24`) refuses while `unreleased` has notes, and the
+clean-pushed-main guard (`scripts/deploy.mjs:304–316`) is a bare `exit 2`. Once a stream merges **the
+tree stops being a written-down release and there is nothing to retry.** Do not look for another path.
 
-- **`gates.mjs`** — handled: it recognises the halt and re-runs the build once.
-- **`next dev`** — prints `Ready`, then halts. Retry; it came up in ~1s.
-- **A deploy in Lutan's terminal** — an **interactive** "Upgrade now / Skip" menu. **Tell him Skip,
-  never Upgrade now**: upgrading mid-deploy would ship an ungated dependency bump to production. If
-  the command then exits, re-run it; the second attempt is the one that counts.
+**Say this out loud when his deploy fails once: the window is closing.** The procedure already moved
+UAT *ahead* of his command for this reason (`#uatwk`, `0.47.0`); `0.47.3` is the first time it reached
+production. **Deferring was safe only because those migrations were purely additive**, so `0.47.2`'s
+code ran correctly against the newer schema — **check that every time; `0.47.2`'s own record says the
+opposite about its eighteen.**
 
-**It ends at `Running TypeScript ...` with no further output, which looks exactly like a hang.** On
-`0.47.2` this cost two round trips with Lutan.
+## IPv6: the fault behind six failed steps, now measured
 
-## Four traps this release paid for, none of which any check catches
+The deploy machine prefers IPv6 and **has no IPv6 address at all**. DNS still answers with one, so a
+client that takes the first address and does not fall back stalls until its own timeout.
 
-- **Git Bash lies about line endings.** `grep -c $'\r'` answered **0** and `od -c` showed only `\n` for
-  a file Node read as CRLF — the MSYS tools strip CR in text mode. Editing `src/lib/releases.ts` on
-  that assumption nearly shipped a broken release file. **Detect the ending inside the script**, then
-  check the diff is the size you expect.
-- **`pgrep -f "deploy-pi.sh"` matches its own ssh command string**, so a waiter built on it never
-  reports the build finished. Use `pgrep -af "deploy-pi[.]sh"`.
-- **The terminal panel can show a stale view.** It showed a frozen `Running TypeScript` line while the
-  deploy was in fact bundling, and that produced a wrong "it has exited" report. **The process table
-  is the instrument**: `Get-CimInstance Win32_Process`, and ask whether anything holds the checkout.
-- **A launcher `ssh` returning is not the Pi build ending.** Confirm with the self-excluding `pgrep`
-  before starting the next one. The Pi has 4 GiB and the OOM killer takes one of two concurrent builds.
+| | Font fetch | Cloudflare API |
+|---|---|---|
+| **IPv6 preferred** (`0.47.3`, first half of `0.47.4`) | 3 failures | 2 failures |
+| **IPv4 preferred** | **0** | **0** |
 
-Still true: **`python` is the Store stub** (use `node -e`), **bash heredocs with nested quotes fail**
-(use the Write tool), **Lutan's log is UTF-16** (`tr -d '\000'` before `grep`).
+**Why every diagnosis came back clean, and this is the general lesson:** `curl` and Node both do Happy
+Eyeballs and silently fall back, so seventeen successful fetches of the exact failing URL "proved" the
+network was fine — twice. **Turbopack fetches Google Fonts in its own Rust client, which does not fall
+back**, and `wrangler` behaves the same against Cloudflare's API. **A reachability test run with a
+forgiving client is not a reachability test**; `curl -4` against `curl -6` settles it in ten seconds.
 
-## `lanna-pi.local` failed again; the mesh worked
+**The fix, which Lutan runs elevated and reverts afterwards** — `netsh interface ipv6 set prefixpolicy
+::ffff:0:0/96 45 4`, and `… 35 4` to restore. **It is reverted now, so assume the fault is live.**
 
-The home-network name timed out for the whole of `0.47.2` and **all three Pi builds ran over
-`lanna-pi-mesh`**. Read the served headers before concluding anything about the Pi: three `pi`
-answers mean the box is healthy and your path is broken. Already in the runbook — follow it rather
-than rediscovering it. **Do not put the mesh to Lutan as a question.**
+**One refinement on `0.47.3`'s record, which was too confident:** the font half is **intermittent** —
+it succeeded four times running even with IPv6 preferred, including in a fresh worktree where the
+fonts genuinely had to be downloaded — while the **Cloudflare half is what the preference reliably
+breaks.** Same cause, different severity.
 
-**The power alarm is quieter, re-read rather than repeated.** The Pi has been **up 5 days 17 hours,
-booted 2026-11-12 15:04** — no reboot since. And `journalctl --list-boots` now lists three boots, so
-the journal **is** persistent, contrary to the note carried since `0.44.2`.
+**`#fntlc` is the permanent fix**: serve the five Google fonts (`Fraunces`, `Geist`, `Geist_Mono`,
+`Noto_Sans_Thai`, `Source_Sans_3`) from the repository with `next/font/local`, so no build ever needs
+the network. Until then, expect to ask him for the `netsh` line before his deploy.
 
-## Two things NOT to re-derive
+## The Next.js advisory halt is GONE — delete it from your expectations
 
-**An empty `unreleased` does not mean "no release".** `cut-release.mjs` **refuses** to cut with an
-empty list and has no override. On `0.47.2` all 38 PRs answered the release-notes line `n/a` and the
-list was empty — a real state, not an error. **Both options went to Lutan** (publish one plain note,
-or deploy under the old version) and **he chose the note**. Do not invent a note to get past the
-refusal without asking, and do not assume the answer repeats.
+The previous edition gave it a section and told you it would interrupt you in three places. On
+`16.4.6` (PR #1699) **it did not occur once** across two releases: the gates builds, six Pi builds and
+six Worker builds, all first time. Treat the old warning as history. `brief-blocks.md` still describes
+it as live and should be rewritten.
 
-**When a cut ADDS a note, `--verify` needs a hand-built base** (`origin/main`'s file plus exactly the
-notes you added), or the count assertion fails on a count that is correct. The runbook has the
-recipe; try plain `origin/main` first. Third release running.
+## Product administrators now exist
+
+**Lutan is the first product administrator on production** (2026-11-19), placed by
+`scripts/add-product-admin.mjs` — dry run by default, `--apply` plus `--confirm <address>`, idempotent,
+and it **refuses to remove the last one** because an empty list cannot be added to through the app.
+`0411` seeds nobody on purpose, so the first row must come from outside RLS; nothing did that until
+now, which is why the screen shipped **live and unreachable** in `0.47.3` and gained a second
+unreachable capability in `0.47.4`.
+
+**He has since driven it**, closing presses four test plans had left `pending:` across two releases —
+**and it found the next blocker:** a PADMIN can **link** an existing login but cannot **create or
+invite** one, so a shelter still cannot be onboarded end to end. That is `#flogn`.
+
+## Traps still live, and the new ones
+
+- **The harness's completion notification reports the WRAPPER's exit code, not the work's.** Both
+  failed Worker deploys were reported `completed (exit code 0)` while `EXIT=1` sat in the output. Write
+  `cmd > log 2>&1; echo "EXIT=$?"` and **read that line**, never the notification.
+- **A command is not verified until it is verified as the person will paste it.** The `netsh` line went
+  to Lutan with a trailing backslash from a code block and failed on *"The parameter is incorrect"*.
+- **A launcher `ssh` returning is not the Pi build starting**, and **silence is not a stall.** One UAT
+  build was reported away and had never run (the clone's HEAD proved it; read the log's byte count);
+  a Worker build sat on one line for five minutes while `node.exe` burned 253 seconds of CPU
+  (`Get-CimInstance Win32_Process` is the instrument).
+- **`check-shelter-settings.mjs` counts shelters WITH SETTINGS, not shelters** — it answered
+  `1 shelter(s)` while production held two. Read `public.shelters` when you mean shelters.
+
+Still true: **Git Bash lies about line endings**, **`python` is the Store stub**, **bash heredocs with
+nested quotes fail** (use the Write tool), **`pgrep -f "deploy-pi.sh"` matches its own ssh**.
+
+## The Pi: the mesh is the route, and it can drop too
+
+`lanna-pi.local` timed out throughout both releases; **all six Pi builds ran over `lanna-pi-mesh`**,
+as the runbook already says. **New this time: Meshnet itself dropped**, so both routes failed together
+for several minutes — the laptop had `NordLynx` and `NordWhisper` tunnels up, which alone explains the
+home route failing, and Lutan restored Meshnet when asked. **That is the only case where the Pi is
+genuinely unreachable and it is worth asking him about**; everything else is the runbook's three-`pi`
+check, which held throughout (the box was up 6 days, load 0.00).
 
 ## What is still open
 
-- **`#shtci` is unblocked and is the clearest next job.** `claude/shared-tables-production` holds
-  **one commit, on no PR**, held because production was eleven migrations behind. It no longer is. The
-  standing instruction is *"merge it in or straight after the release that applies `0390`–`0400`, then
-  `gh workflow run tenancy-shared-tables.yml`"*. **Lutan chose on 2026-11-18 to leave this to the
-  planner, not the release manager.** Its backlog entry may still read as blocked — if so, that is a
-  false block of the kind `CLAUDE.md` warns about.
-- **Thirteen person-checks**, listed by name in `0.47.2`'s record under *What is not tested*. **Five
-  are the same thing**: a browser click-through of the new per-shelter policies, needing a login
-  Claude does not have. The database half was proved thoroughly — strict tenancy lint clean at 125 of
-  125 tables on production and UAT, `role-cells` byte-identical, and the public site proved un-blanked
-  against two controls.
-- **The Thai sign-off, fifth release running.** `0.47.2` converted both dictionaries so text takes a
-  shelter's own name; a test asserts Lanna's output is byte-for-byte unchanged, but
-  `dictionary-shelter-prose` has no bilingual signature. **Still the project's largest standing gap**
-  (`#y1dqu`). Likewise **a signed-in look at production**, which Claude cannot do: the public site is
-  `locked` and it has no account there.
-- Carried forward unclosed: the **Cloudflare rate-limit rule** (`#8t3rk`), the **foundation document
-  store**'s two steps, the **PromptPay id and QR**, and **`SUPABASE_CANARY_TOKEN`** (a nightly check
-  needs it; no deploy does).
+- **`#flogn` — the clearest next job, and it needs HIS decision first.** A PADMIN cannot create or
+  invite a shelter's first login. **Do not reach for widening `security.createUser`**: a shelter's own
+  Admin can grant themselves that card, which would hand every Admin the ability to mint logins.
+- **`#fntlc`** — local fonts, above. **`#pdmin` is CLOSED**; do not re-raise it.
+- **The Thai sign-off, SEVENTH release running** (`#y1dqu`); both releases added strings. **Still the
+  largest standing gap.** Likewise **a signed-in look at production**, which Claude cannot do: the
+  public site is `locked` and it has no account there.
+- **`sync-home-icons.mjs --env production` has not run for two releases** — cosmetic, the Drive folder
+  only. Carried forward unclosed: the per-shelter policy click-throughs, `/admin/security` with a real
+  code, the **Cloudflare rate-limit rule** (`#8t3rk`), the **PromptPay id**, the e-Donation screens.
 
 ## Now routine — stop treating these as open
 
-- **`table-policy-commands` is closed**, not overtaken — `0.47.1` settled it on production.
-- **On a no-mail release the deploy's own `no major release new to <env>, so no email` line is the
-  measurement.** Do **not** pass `--no-mail` to production to be safe: it *suppresses* that line. UAT
-  takes it by its own rule. On a release that does mail, read the message itself.
-- **The UAT apply, the Pi's six sudo rules and reading the backup from Drive** are all settled and in
-  the runbook. **One sentence from Lutan settles major, mail and the gaps.** Nine releases running.
+- **`#shtci` is closed**, and `#uatwk` and `table-policy-commands` before it. **`#swrun`'s production
+  step is done**: `0413` is on, and the strict tenancy lint went `125 of 125` → `128 of 128` with
+  **0 flagged either side** — measure it that way, before and after, not after alone.
+- **`deploy.mjs --plan`'s mail line is cosmetically wrong.** It says *"a major release … would be
+  mailed"* on every release that is not `--no-mail` or UAT, never reading the `major` flag
+  (`scripts/deploy.mjs:389`). **The real deploy is correct**; its `no major release new to <env>, so no
+  email` line is the measurement. Do **not** pass `--no-mail` to production to be safe — it suppresses
+  that line. And **`check-deferred-notes.mjs` ignores the range you give it** (8 candidates for a 5-PR
+  release); under-listing is the fault it prevents, so read the extras rather than narrowing it.
+- **One sentence from Lutan settles major, mail and the gaps.** Eleven releases running. **But ask
+  about the mail when he has not said**: *"lets try a new release"* settles neither.
 
 ## The two touches that are his by rule, and stay his
 
-**Major versus minor**, and the **production Worker deploy**. `0.47.2` cost him **four** touches
-against a target of two: the deploy, a re-run after the advisory halt, and two reports of an apparent
-stall — one of which was my misreading of a stale terminal panel, not his machine.
+**Major versus minor**, and the **production Worker deploy**. Against a target of two touches,
+`0.47.3` cost him **four and still did not finish**, and `0.47.4` cost **three** — the deploy, the
+`netsh` change, and restoring Meshnet. Every one of the extras was the machine's network, not the
+software.
