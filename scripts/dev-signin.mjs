@@ -3,6 +3,7 @@
 //   node scripts/dev-signin.mjs <role> [--port N]     print the snippet that signs the browser in
 //   node scripts/dev-signin.mjs --cards a,b [--port N] [--label x] the same, for a login holding EXACTLY these cards and nothing else.
 //                                                      One login per card set PER PORT (or label): two streams with the same cards do not share a login.
+//   ... add --shelter <key|id> to either form: the role (and login) is on that shelter instead of the default one
 //   ... add --aal2 to either form: the session is then aal2 (a dev-only step-up, see scripts/lib/dev-aal2.mjs), so /platform
 //                                                      and /admin/security can be pressed. The login is NOT given a role or card by it.
 //   node scripts/dev-signin.mjs --remove <role>        delete only that role's login (a roles.key, or a dev_signin_cards_<hash>_<port> key)
@@ -44,9 +45,27 @@ const env = loadEnv("test");
 if (projectRef(env) !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${projectRef(env)} is not the dev project`);
 
 const url = env.NEXT_PUBLIC_SUPABASE_URL;
+// --shelter <key|id> (#dvshl): the login's role lives on THAT shelter instead of the default one DEV_SHELTER_ID names.
+const shelterOpt = (() => {
+  const i = process.argv.indexOf("--shelter");
+  if (i < 0) return null;
+  const v = process.argv[i + 1];
+  if (!v || v.startsWith("--")) throw new Error("--shelter needs a shelter key or id (shelters.key, e.g. test-shelter-2)");
+  return v;
+})();
+let targetShelter = null; // { id, key } when --shelter is given
+if (shelterOpt) {
+  const bare = createClient(url, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { autoRefreshToken: false, persistSession: false } });
+  const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(shelterOpt);
+  const { data, error } = await bare.from("shelters").select("id, key").eq(isId ? "id" : "key", shelterOpt).maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error(`no shelter with key or id "${shelterOpt}"`);
+  targetShelter = data;
+}
 const service = createClient(url, env.SUPABASE_SERVICE_ROLE_KEY, {
   // The shelter header makes every row this script writes take the dev shelter (0390 default), so the per-shelter policies (0392) can see it.
-  global: { headers: scriptShelterHeaders(env) },
+  // With --shelter it names the target shelter instead, so nothing the script writes lands on the default one.
+  global: { headers: targetShelter ? { "x-shelter-id": targetShelter.id } : scriptShelterHeaders(env) },
   auth: { autoRefreshToken: false, persistSession: false },
 });
 const PREFIX = "dev-signin-";
@@ -100,10 +119,10 @@ const args = process.argv.slice(2);
 const optVal = (name) => { const i = args.indexOf(name); return i >= 0 && args[i + 1] && !args[i + 1].startsWith("--") ? args[i + 1] : null; };
 const labelArg = optVal("--label");
 const callerPort = optVal("--port") ?? (() => { try { return readFileSync(join(root, ".port"), "utf8").trim(); } catch { return null; } })();
-const callerSuffix = (labelArg ?? callerPort ?? "").replace(/[^A-Za-z0-9]/g, "").slice(0, 16);
+const callerSuffix = (labelArg ?? callerPort ?? "").replace(/[^A-Za-z0-9]/g, "").slice(0, 16) + (targetShelter ? "_s" + targetShelter.id.slice(0, 6) : "");
 if (args.includes("--label") && !labelArg) throw new Error("--label needs a value");
 const cardRoleKey = (list) => CARD_ROLE_PREFIX + createHash("sha1").update([...new Set(list)].sort().join(",")).digest("hex").slice(0, 8) + (callerSuffix ? "_" + callerSuffix : "");
-const loginEmail = (role) => `${PREFIX}${role.startsWith(CARD_ROLE_PREFIX) ? role.slice(CARD_ROLE_PREFIX.length) : role}${DOMAIN}`.replace(/_/g, "-");
+const loginEmail = (role) => `${PREFIX}${role.startsWith(CARD_ROLE_PREFIX) ? role.slice(CARD_ROLE_PREFIX.length) : role}${targetShelter && !role.startsWith(CARD_ROLE_PREFIX) ? "-s" + targetShelter.id.slice(0, 6) : ""}${DOMAIN}`.replace(/_/g, "-");
 if (args.includes("--remove")) {
   // Other streams share this project and hold their own logins: removing is always by name, never a blanket sweep by default.
   const rmIdx = args.indexOf("--remove");
@@ -154,7 +173,7 @@ const portIdx = args.indexOf("--port");
 const cardsIdx = args.indexOf("--cards");
 const cardsArg = cardsIdx >= 0 ? args[cardsIdx + 1] : null;
 if (cardsIdx >= 0 && (!cardsArg || cardsArg.startsWith("--"))) throw new Error("--cards needs a comma-separated list of card keys");
-const positional = args.find((a, i) => !a.startsWith("--") && i !== (portIdx >= 0 ? portIdx + 1 : -1) && i !== (cardsIdx >= 0 ? cardsIdx + 1 : -1) && i !== (args.indexOf("--label") >= 0 ? args.indexOf("--label") + 1 : -1));
+const positional = args.find((a, i) => !a.startsWith("--") && i !== (portIdx >= 0 ? portIdx + 1 : -1) && i !== (cardsIdx >= 0 ? cardsIdx + 1 : -1) && i !== (args.indexOf("--label") >= 0 ? args.indexOf("--label") + 1 : -1) && i !== (args.indexOf("--shelter") >= 0 ? args.indexOf("--shelter") + 1 : -1));
 let role = positional;
 if (cardsArg && positional) throw new Error("give a role or --cards, not both");
 if (!role && !cardsArg) throw new Error("usage: node scripts/dev-signin.mjs <role> [--port N]   |   --cards a,b [--port N]   |   --remove");
@@ -170,7 +189,7 @@ if (cardsArg) {
   role = cardRoleKey(cardKeys);
   // The cards decide what the login can do. The role columns that once scoped it (opens_app, scope_*) were dropped by 0264.
   const { error: upErr } = await service.from("roles").upsert(
-    { key: role, name: `Dev sign-in: ${cardKeys.join(", ")}`.slice(0, 120), kind: "custom", home_path: "/home" },
+    { key: role, name: `Dev sign-in: ${cardKeys.join(", ")}`.slice(0, 120), kind: "custom", home_path: "/home", ...(targetShelter ? { shelter_id: targetShelter.id } : {}) },
     // No ignoreDuplicates: a throwaway role made by an older run (who_and_where) is corrected on the next run.
     // TWO COLUMNS, AND DO NOT "TIDY" IT BACK TO "key". 0387 replaced roles' `unique (key)` with
     // `roles_shelter_key_key unique nulls not distinct (shelter_id, key)`, so a conflict target of
@@ -188,7 +207,9 @@ if (cardsArg) {
   if (setErr) throw setErr;
 }
 
-const { data: roleRow, error: roleErr } = await service.from("roles").select("id").eq("key", role).maybeSingle();
+let roleQ = service.from("roles").select("id").eq("key", role);
+if (targetShelter) roleQ = roleQ.eq("shelter_id", targetShelter.id);
+const { data: roleRow, error: roleErr } = await roleQ.maybeSingle();
 if (roleErr) throw roleErr;
 if (!roleRow) throw new Error(`no role with key "${role}"`);
 
@@ -204,7 +225,7 @@ if (user) {
   user = data.user;
 }
 await service.from("user_roles").delete().eq("user_id", user.id);
-const { error: giveErr } = await giveRole(service, user.id, role);
+const { error: giveErr } = targetShelter ? await service.from("user_roles").insert({ user_id: user.id, role_id: roleRow.id }) : await giveRole(service, user.id, role);
 if (giveErr) throw giveErr;
 
 const jar = new Map();
@@ -221,5 +242,6 @@ const wantAal2 = args.includes("--aal2");
 if (wantAal2) await stepUpToAal2({ service, ssr, user, projectRef: projectRef(env) });
 
 const sets = [...jar].map(([n, v]) => `document.cookie=${JSON.stringify(`${n}=${encodeURIComponent(v)}; path=/; max-age=3000; samesite=lax`)}`);
-console.error(`${email} is ${wantAal2 ? "at aal2, " : ""}${cardKeys ? `holding only the cards ${cardKeys.join(", ")}` : `a ${role}`} on dev. Run this in javascript_tool on http://localhost:${port}, then navigate to /my:`);
+console.error(`${email} is ${wantAal2 ? "at aal2, " : ""}${cardKeys ? `holding only the cards ${cardKeys.join(", ")}` : `a ${role}`} on dev${targetShelter ? ` (shelter ${targetShelter.key})` : ""}. Run this in javascript_tool on http://localhost:${port}, then navigate to /my:`);
+if (targetShelter) console.error(`The browser reads the shelter from the dev server, not the login: start it as  DEV_SHELTER_ID=${targetShelter.id} node scripts/worktree.mjs dev  (the shell value beats .env.local). Port ${port} is otherwise on the default shelter.`);
 console.log(`${sets.join(";")};location.href="/my"`);
