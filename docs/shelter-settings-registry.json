@@ -8,8 +8,12 @@
   ],
   "lannaLiteralFiles": [
     {
+      "file": "src/lib/google/fallback-shelter-key.ts",
+      "reason": "FALLBACK_SHELTER_KEY, an import-free leaf so operator scripts can load it under plain Node: the shelters.key of the one shelter allowed to fall back to the environment variables, plus comments. A database key, not output."
+    },
+    {
       "file": "src/lib/google/shelter-drive-decide.ts",
-      "reason": "FALLBACK_SHELTER_KEY moved here from shelter-drive-credentials.ts so tests can load it: the shelters.key of the one shelter allowed to fall back to the environment variables, plus comments. A database key, not output."
+      "reason": "Comments naming Lanna as the fallback shelter; the key itself now lives in fallback-shelter-key.ts and is re-exported here. No output varies."
     },
     {
       "file": "src/lib/google/shelter-drive-credentials.ts",

@@ -229,8 +229,6 @@ time; that needs a second Google account made by you. The proof is backlog
 
 ## Step 5. Connect the calendar  **[TERMINAL]**
 
-**KNOWN FAULT, 2026-11-19: this script stops at start with `ERR_MODULE_NOT_FOUND` (`drive-credentials-crypto`), before reading anything. Until a developer fixes it, this step cannot be followed; nothing is stored when it stops.**
-
 The script is `scripts/connect-shelter-calendar.mjs`. The same three secrets, in
 the same way (but the refresh token is the **calendar** one from Step 3), and optionally the account's address so an Admin can see which
 account is connected:
@@ -471,7 +469,6 @@ rehearsed end to end.**
 - **Not rehearsed: Step 3 and the secrets of Steps 4 and 5** (a Google account is
   yours to make), Step 2 (Cloudflare) and Step 8 (the production deploy).
 - **Run for real:** Step 4's script refuses correctly with no secrets (*Missing or
-  malformed: …*). **Step 5's script does not start:** `connect-shelter-calendar.mjs`
-  stops with `ERR_MODULE_NOT_FOUND` for `drive-credentials-crypto` before reading
-  anything, so **Step 5 cannot be followed today and needs a developer** until that
-  is fixed.
+  malformed: …*). Step 5's script refuses the same way (*Missing or malformed:
+  calendar id, …*); it used to stop at start with `ERR_MODULE_NOT_FOUND`, fixed
+  2026-11-19 (`docs/decisions/2026-11-19-script-ts-import-resolution.md`).
