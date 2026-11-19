@@ -1,3 +1,4 @@
+// exit-ok: the await is an in-memory decrypt of a local file; no socket is opened
 // Decrypt a backup made by scripts/backup.mjs, for a restore or a rehearsal.
 //
 //   node scripts/decrypt-backup.mjs lannacare-production-<ts>.dump.age --identity C:\path\to\key.txt

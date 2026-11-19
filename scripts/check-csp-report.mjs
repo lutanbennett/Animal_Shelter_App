@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// exit-ok: awaits an in-memory handler on Request/Response objects; no socket is opened
 /**
  * Checks the CSP report endpoint (worker/csp-report.mjs) and the headers that
  * point at it. Reports come from any browser on the internet, so the cases

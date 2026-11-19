@@ -1,3 +1,4 @@
+// exit-ok: its awaits are local dynamic imports / in-memory work, no network or socket is ever opened before process.exit
 // Checks the medication list's due-day rule against fixed days, on the real
 // source file (not a copy), under the shelter's own clock and under UTC.
 //

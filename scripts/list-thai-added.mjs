@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// exit-ok: its usage exit runs before any await; the awaits are local dynamic imports and git reads
 /**
  * The worklist for a Thai read: every string that needs a person to look at it again
  * since a given date or commit, English and Thai side by side.

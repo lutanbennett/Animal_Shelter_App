@@ -1,3 +1,4 @@
+// exit-ok: its awaits are local dynamic imports / in-memory work, no network or socket is ever opened before process.exit
 // Proves the grid's prerequisite rules (src/lib/permissions/prerequisites.ts) refuse what they must and
 // allow what they must, with no database: `node scripts/check-prerequisites.mjs`.
 import { join } from "node:path";

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// exit-ok: every child process is a *Sync call and nothing opens a socket, so no handle is open at process.exit
 // Proves deploy-pi.sh runs the script it just checked out, not the one bash had open.
 // Builds a throwaway origin + clone with stubbed build/service commands, ships a changed
 // deploy-pi.sh, runs the OLD copy against it and looks at what ran.

@@ -1,3 +1,4 @@
+// exit-ok: reads files only (`.exec(` is a regex); no handle is open at process.exit
 // Fails when app code selects a column of a table that no migration creates.
 //
 //   node scripts/check-roles-columns.mjs [--table roles] [--table other ...]

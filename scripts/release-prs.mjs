@@ -1,3 +1,4 @@
+// exit-ok: every child process is a *Sync call and nothing opens a socket, so no handle is open at process.exit (gh is run through spawnSync)
 // Lists the PRs in a release, and refuses to answer when its sources disagree.
 //
 //   node scripts/release-prs.mjs <since-sha> [<until-ref>=HEAD]

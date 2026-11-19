@@ -1,3 +1,4 @@
+// exit-ok: every child process is a *Sync call and nothing opens a socket, so no handle is open at process.exit
 // The PR `audit` job's command: `npm audit` for production dependencies, read through docs/advisory-register.json.
 //
 //   node scripts/audit-register.mjs        (npm run audit:register)

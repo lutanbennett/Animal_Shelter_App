@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// exit-ok: every child process is a *Sync call and nothing opens a socket, so no handle is open at process.exit
 // Lists, for the release about to be cut, every PR whose test plan answered the release-notes
 // line `n/a:` — so the cutter sees which notes may now be owed, whether or not `unreleased` is
 // empty. docs/release-procedure.md step 4; docs/decisions/2026-10-28-release-note-guard.md.

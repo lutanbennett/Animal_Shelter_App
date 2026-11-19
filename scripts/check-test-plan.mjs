@@ -1,3 +1,4 @@
+// exit-ok: every child process is a *Sync call and nothing opens a socket, so no handle is open at process.exit (its one await is a dynamic import of node:fs)
 // Enforces CLAUDE.md's "no merge without a signed-off test checklist".
 //
 // A PR must add or update a completed docs/test-plans/<feature>.md. There are no

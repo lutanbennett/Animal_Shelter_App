@@ -1,3 +1,4 @@
+// exit-ok: every child process is a *Sync call and nothing opens a socket, so no handle is open at process.exit
 // A migration added on this branch must not create a policy that names a role. The standing rule is that a
 // policy asks *what may you do* (a permission cell), not *who are you*; 0157_map_rooms (#422) shipped
 // `current_user_role() in ('admin', 'management')` and nothing noticed, because scripts/check-policy-role-names.mjs

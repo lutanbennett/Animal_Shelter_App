@@ -1,3 +1,4 @@
+// exit-ok: reads files only (`await confirm(` is text it searches for; `.exec(` is a regex)
 // Fails when `await confirm(` sits inside a `startTransition(` callback in src/.
 // The confirm dialog's state update joins the transition, the transition waits for
 // the click, the dialog never commits: the whole app (nav included) freezes.
