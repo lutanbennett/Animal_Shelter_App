@@ -70,18 +70,26 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  {
-    text: "The product-administrator console has moved off Settings onto the platform's own address, and the old page and its Settings tile are gone. The new address needs its own set-up first — the Cloudflare records and one Supabase redirect URL — before it will open.",
-    admin: true,
-  },
-  {
-    text: "Six things on the product-administrator console that were refused with a misleading message about the second step now work: creating a shelter, adding its starting content, setting its receipt numbers, removing an address, giving a shelter its Admin role, and linking its first Admin login. The set-up checklist also shows each shelter's real addresses and pages instead of reporting none.",
-    admin: true,
-  },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.47.5",
+    date: "2026-11-19",
+    title: "The operator console on its own address, and its writes fixed",
+    major: false,
+    notes: [
+      {
+        text: "The product-administrator console has moved off Settings onto the platform's own address, and the old page and its Settings tile are gone. The new address needs its own set-up first — the Cloudflare records and one Supabase redirect URL — before it will open.",
+        admin: true,
+      },
+      {
+        text: "Six things on the product-administrator console that were refused with a misleading message about the second step now work: creating a shelter, adding its starting content, setting its receipt numbers, removing an address, giving a shelter its Admin role, and linking its first Admin login. The set-up checklist also shows each shelter's real addresses and pages instead of reporting none.",
+        admin: true,
+      },
+    ],
+  },
   {
     version: "0.47.4",
     date: "2026-11-19",
