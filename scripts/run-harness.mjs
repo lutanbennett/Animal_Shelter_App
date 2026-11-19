@@ -1,3 +1,4 @@
+// exit-ok: its only process.exit is a top-level usage check before the fetch
 // Runs one begin…rollback SQL harness against the dev database and prints the result.
 // A harness ends by raising an exception, so success is the message it chooses.
 // Usage: node scripts/run-harness.mjs supabase/harness/<file>.sql

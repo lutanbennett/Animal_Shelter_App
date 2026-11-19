@@ -1,3 +1,4 @@
+// exit-ok: its only process.exit is a top-level source check before the first fetch
 // Publish on an adoption update must survive a save: write the three publish values, read them back.
 // 0.43.0 shipped saveAdoptionUpdate validating share_publicly / public_story / public_first_name and then
 // never sending them (docs/decisions/2026-11-05-adoption-publish-never-written.md), and returned { ok: true }.

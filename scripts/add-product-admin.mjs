@@ -1,3 +1,4 @@
+// exit-debt: exits follow fetches mid-flow in helpers; needs a restructure (#scimp)
 // Put a person on the product-administrator list (#shmgt, #pdmin), or take them off it.
 //
 //   node scripts/add-product-admin.mjs --env production --email someone@example.com
