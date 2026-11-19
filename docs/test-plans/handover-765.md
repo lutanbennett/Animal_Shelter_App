@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| Feature | Planner handover edition `765` — the ten streams merged since `764`, written on Lutan's instruction once the count reached nine |
+| Feature | Planner handover edition `765` — the eleven streams merged since `764`, written on Lutan's instruction once the count reached nine |
 | Backlog item | none. A handover is process bookkeeping, not a backlog item; `CLAUDE.md` covers it under "Every PR merges on green" |
 | Branch / worktree | `claude/handover-765` @ `C:\Development\Animal_Shelter_handover-765` |
 | Dev server | not started — this PR replaces one document and no code |
@@ -38,6 +38,8 @@ gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 The build gate ended `0` on a single run, so the `SecurityFatalError` halt did not fire and `gates.mjs`'s retry was not exercised — **a fifth consecutive clean build**, after the four #1735 measured. `lint` now runs `check-script-ts-imports.mjs` and `check-script-exits.mjs`, both added to it today, and both passed.
+
+**Stated rather than glossed: the gates ran at `ac648059e`, and `docs/planner-handover.md` was edited afterwards.** PR #1742 merged at 16:01Z while this plan was being filled in, so the document was corrected from "ten streams, #1742 in flight" to "eleven streams", its figure was added and marked as **not a band reading** (`rescoped=yes`), and the floor line was recounted. **The gates were not re-run, because no gate reads this file**: `typecheck`, `test` and `build` do not compile `docs/`, and `lint`'s script checks read `docs/backlog.md`, `scripts/` and `src/`, none of which changed. **CI runs on the final head and is the authority on that claim.**
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 

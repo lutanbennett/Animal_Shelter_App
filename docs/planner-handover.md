@@ -6,11 +6,12 @@ left owed. Figures, batch composition and ports live in `.plan-day.md`.
 **It outranks nothing.** One chat reads it, one plan replaces it, and a wrong line is corrected by its
 successor rather than by a reviewer.
 
-**IT COVERS THE TEN STREAMS MERGED SINCE `764`:** #1731, #1733, #1734, #1735, #1736, #1737, #1738,
-#1739, #1740, #1741. **ALL TEN HAVE FIGURES.** **#1742 `platform-console-finish` was OPEN with CI
-running when this was written** — it is the most consequential PR of the day, its content is below, and
-**its figure is read next morning.** `764` itself (#1732) is a handover PR and does not count.
-**Written at ten rather than nine** because two merged within a minute of each other.
+**IT COVERS THE ELEVEN STREAMS MERGED SINCE `764`:** #1731, #1733, #1734, #1735, #1736, #1737, #1738,
+#1739, #1740, #1741, #1742. **ALL ELEVEN HAVE FIGURES, and one of them is deliberately NOT a band
+reading** — see the figures table. `764` itself (#1732) is a handover PR and does not count.
+**Written at eleven rather than nine** because three merged while it was being written; #1742
+`platform-console-finish`, the most consequential PR of the day, merged at 16:01Z with this document
+already drafted, and **this paragraph and the figures below were corrected rather than left stale.**
 
 ## FOR YOUR FIRST TURN
 
@@ -80,7 +81,7 @@ file has its own entry.**
   planner had read the SQL and was about to add the same eight when its guard refused to touch a file
   that had moved. **Re-read a PR's head before acting on a reading taken minutes earlier.**
 
-## FIGURES — TEN READINGS, EIGHT INSIDE, ONE OVER, ONE UNDER
+## FIGURES — ELEVEN STREAMS, TEN BAND READINGS, AND ONE THAT IS NOT ONE
 
 | slug | PR | band | actual | verdict |
 |---|---|---|---|---|
@@ -94,11 +95,22 @@ file has its own entry.**
 | `product-admin-console-app` | #1739 | 200-250k | **230,744** | inside |
 | `stocktaking-silent-save` | #1740 | 146-175k | **146,071** | inside, 71 above its floor |
 | `script-exit-debt` | #1741 | 155-190k | **182,558** | **inside** |
+| `platform-console-finish` | #1742 | 180-215k | **278,160** | **NOT A BAND READING — `rescoped=yes`** |
 
-**All ten matched their band's `@dials` and were `compacted=no rescoped=no finished=yes`.**
+**Ten of the eleven matched their band's `@dials` and were `compacted=no rescoped=no finished=yes`.**
 
-**THE FLOOR: 86,761 · 86,822 · 87,046 · 87,164 · 87,630 · 87,769 · 87,769 · 87,834 · 87,846 · 91,147.**
-**Nine inside 1,085 tokens; the tenth is 91,147.** `764` recorded seven with one at 90,094; `763` nine
+**#1742 IS RECORDED, MARKED, AND KEPT OUT OF EVERY REVISION, AND THE REASON IS NOT A TECHNICALITY.**
+Its own comment says `rescoped=yes`, and the job really did change size under it: briefed as
+`migration=none, may need one`, it **wrote four** and, in its own words, *"the eight presses did turn
+into an investigation (three defects)"*. **A figure from a job that grew is evidence about the brief,
+not about the band** — counted in, it would read a screen-finishing stream as under-priced by 63k and
+inflate every later band for work that never needed it. **The planner did not correct this brief
+mid-flight; the stream judged its own rescope and said so, which is the mechanism working.**
+**Its floor (87,854) is still comparable and is counted below.**
+
+**THE FLOOR, ELEVEN READINGS: 86,761 · 86,822 · 87,046 · 87,164 · 87,630 · 87,769 · 87,769 · 87,834 ·
+87,846 · 87,854 · 91,147.** **TEN inside 1,093 tokens; the eleventh is 91,147.** `764` recorded seven
+with one at 90,094; `763` nine
 with one at 90,375. **Three complete days now agree on the SHAPE: a tight band at ~86.8-87.9k with a
 rare excursion near 90-91k, not a uniform `~86-90k`.** **Narrow the floor row and record the excursions
 as rare. DO NOT shift the scale rows with it.** **The excursion is NOT "long session":** #1739 had the
@@ -139,7 +151,7 @@ stream.**
   and `check-tenancy-catalogue.mjs`). **`764` also said `0395` and `0415` were wrong; they are CORRECT,
   and that is this edition correcting its predecessor.**
 - **The band-table recommendation about two bottoms nearer 135k is STILL UNACTED and is now clearly
-  wrong**: nothing landed below 142,284 in ten readings. **Recommend dropping it rather than carrying
+  wrong**: nothing landed below 142,284 in eleven readings. **Recommend dropping it rather than carrying
   it a fourth day.**
 - **NEWLY OWED: 46 scripts.** #1741 converted all nine exit-debt scripts, found **`restore-grants`'s
   `finally` had been skipped on a failing exit**, and tabulated the three dangerous scripts' codes
@@ -150,7 +162,7 @@ stream.**
 ## FILED, TICKED AND CORRECTED
 
 **Ticked by streams:** `#hndvr` (#1733), `#shrow` (#1734), `#uvcls` (#1735), `#dvaal` (#1736),
-`#padui` (#1739), and `#rcpfm`/`#adrus`/`#padpr` on #1742's branch.
+`#padui` (#1739), and `#rcpfm`/`#adrus`/`#padpr` (#1742).
 **Not ticked, correctly, each naming what was left:** `#scimp` (twice — #1738 and #1741),
 `#stcnt` (#1740, second clause blocked), `#pltfd` (#1739 and #1742 — its done-when needs the host to
 answer), and `#padui`'s schema half (#1737 deliberately did not tick).
