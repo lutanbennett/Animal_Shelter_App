@@ -19,6 +19,7 @@ import path from "node:path";
 import { pipeline } from "node:stream/promises";
 import { Readable } from "node:stream";
 import { plan, isWorthRetrying } from "./drive-export.mjs";
+import { exitWith } from "../lib/exit.mjs";
 
 const arg = (n, d) => {
   const i = process.argv.indexOf(n);
@@ -216,4 +217,4 @@ fs.writeFileSync(
   JSON.stringify({ lastAttempt: started, lastSuccess: ok ? new Date().toISOString() : prevOk, result: ok ? "ok" : "failed", detail: fatal || JSON.stringify(counts), counts }) + "\n",
 );
 console.log(`drive-mirror ${ok ? "ok" : "FAILED"}: ${fatal || JSON.stringify(counts)}`);
-process.exit(ok ? 0 : 1);
+await exitWith(ok ? 0 : 1);

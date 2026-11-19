@@ -15,6 +15,7 @@
 // Re-runnable: an item already without the permission is skipped, and a delete that 404s counts as done.
 // Never prints a token, secret or refresh token.
 import { loadEnv } from "./lib/env.mjs";
+import { exitWith } from "./lib/exit.mjs";
 
 const argv = process.argv.slice(2);
 const flag = (n) => argv.includes(n);
@@ -186,4 +187,4 @@ if (WRITE) {
 }
 console.log(`  failed:        ${failed.length}`);
 for (const f of failed) console.log(`    ${f}`);
-if (failed.length) process.exit(1);
+if (failed.length) await exitWith(1);

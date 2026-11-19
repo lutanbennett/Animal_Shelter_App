@@ -12,6 +12,7 @@
 import { fetchBytes } from "../lib/served-bytes.mjs";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { exitWith } from "../lib/exit.mjs";
 
 const args = process.argv.slice(2);
 const opt = (name, fallback) => {
@@ -25,13 +26,13 @@ if (!url) {
   process.exit(2);
 }
 
-function fail(lines) {
+async function fail(lines) {
   console.error("check-assets: FAILED — the served stylesheet is not the one just built.");
   for (const l of lines) console.error("  " + l);
   console.error("  This is what a poisoned Cloudflare cache looks like: the app renders with no styling.");
   console.error("  Fix: Cloudflare dashboard → Caching → Configuration → Purge Everything, then run this again");
   console.error("  (docs/release-procedure.md, 'Purge the Cloudflare cache').");
-  process.exit(1);
+  await exitWith(1);
 }
 
 const page = await fetch(url, { redirect: "follow", headers: { "user-agent": "deploy-check-assets" } });
@@ -40,7 +41,7 @@ const base = page.url;
 const hrefs = [...html.matchAll(/<link[^>]+href="([^"]*\/_next\/static\/[^"]+\.css)[^"]*"/g)].map((m) => m[1]);
 const unique = [...new Set(hrefs)];
 if (unique.length === 0) {
-  fail([`fetched ${base} (HTTP ${page.status}, ${html.length} bytes) and found no /_next/static/*.css link in it`, "expected at least one stylesheet; the page may be an error or a login redirect"]);
+  await fail([`fetched ${base} (HTTP ${page.status}, ${html.length} bytes) and found no /_next/static/*.css link in it`, "expected at least one stylesheet; the page may be an error or a login redirect"]);
 }
 
 const problems = [];
@@ -60,4 +61,4 @@ for (const href of unique) {
     console.log(`check-assets: ok ${assetUrl.pathname} — ${got.length} bytes, identical to the build (CF-Cache-Status: ${cache})`);
   }
 }
-if (problems.length) fail(problems);
+if (problems.length) await fail(problems);
