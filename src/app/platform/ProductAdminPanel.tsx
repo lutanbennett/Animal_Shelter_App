@@ -15,6 +15,7 @@ import {
   mapShelterHost,
   removeProductAdmin,
   seedShelterDefaults,
+  setShelterReceipts,
   unmapShelterHost,
 } from "./actions";
 
@@ -66,9 +67,12 @@ export function ProductAdminPanel({
   const [hostDrafts, setHostDrafts] = useState<Record<string, string>>({});
   const [emailDrafts, setEmailDrafts] = useState<Record<string, string>>({});
   const [found, setFound] = useState<Record<string, boolean | null>>({});
+  const [receiptDrafts, setReceiptDrafts] = useState<Record<string, { series: string; name: string; address: string }>>({});
   const [adminEmail, setAdminEmail] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
+  const setReceiptDraft = (id: string, patch: Partial<{ series: string; name: string; address: string }>) =>
+    setReceiptDrafts((d) => ({ ...d, [id]: { ...(d[id] ?? { series: "", name: "", address: "" }), ...patch } }));
   const say = (ok: boolean, text: string) => setMsg({ ok, text });
   const admins = people.filter((x) => x.kind === "product_admin");
   const emailOf = (shelterId: string) => people.find((x) => x.kind === "shelter_admin" && x.shelterId === shelterId)?.email ?? p.noEmail;
@@ -197,7 +201,49 @@ export function ProductAdminPanel({
                         <span className="max-w-prose text-xs text-muted">{p.linkHelp}</span>
                       </form>
                     )}
-                    {st.key === "receipts" && !st.done && st.key === next && <span className="max-w-prose text-xs text-muted">{p.receiptsNote}</span>}
+                    {st.key === "receipts" && !st.done && st.key === next && (
+                      <form
+                        className="flex max-w-xl flex-col gap-2"
+                        onSubmit={(ev) => {
+                          ev.preventDefault();
+                          const rd = receiptDrafts[s.id] ?? { series: "", name: "", address: "" };
+                          startTransition(async () => {
+                            const r = await call((id) => setShelterReceipts(s.id, rd.series, rd.name, rd.address, id));
+                            say(r.ok, r.ok ? p.receiptsSet : (r.error ?? ""));
+                            if (r.ok) setReceiptDraft(s.id, { series: "", name: "", address: "" });
+                          });
+                        }}
+                      >
+                        <span className="max-w-prose text-xs text-muted">{p.receiptsNote}</span>
+                        {canWrite && (
+                          <>
+                            <label className="flex flex-col gap-1 text-sm">
+                              {p.receiptsSeries}
+                              <input value={receiptDrafts[s.id]?.series ?? ""} onChange={(e) => setReceiptDraft(s.id, { series: e.target.value })} className="min-h-11 rounded border border-border bg-background px-3 md:min-h-9 font-mono uppercase" autoComplete="off" spellCheck={false} />
+                            </label>
+                            <label className="flex flex-col gap-1 text-sm">
+                              {p.receiptsName}
+                              <input value={receiptDrafts[s.id]?.name ?? ""} onChange={(e) => setReceiptDraft(s.id, { name: e.target.value })} className="min-h-11 rounded border border-border bg-background px-3 md:min-h-9" autoComplete="off" />
+                            </label>
+                            <label className="flex flex-col gap-1 text-sm">
+                              {p.receiptsAddress}
+                              <textarea rows={3} value={receiptDrafts[s.id]?.address ?? ""} onChange={(e) => setReceiptDraft(s.id, { address: e.target.value })} className="rounded border border-border bg-background px-3 py-2" />
+                            </label>
+                            <div>
+                              <ActionButton
+                                icon={ACTION_ICONS.add}
+                                variant="primary"
+                                compact
+                                type="submit"
+                                disabled={pending || !(receiptDrafts[s.id]?.series ?? "").trim() || !(receiptDrafts[s.id]?.name ?? "").trim() || !(receiptDrafts[s.id]?.address ?? "").trim()}
+                              >
+                                {p.setReceipts}
+                              </ActionButton>
+                            </div>
+                          </>
+                        )}
+                      </form>
+                    )}
                     {st.key === "defaults" && !st.done && canWrite && (
                       <div>
                         <ActionButton

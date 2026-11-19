@@ -53,23 +53,23 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — pending: aal2 required, no authenticator on a dev sign-in
-- [ ] Data persists — pending: aal2 required, no authenticator on a dev sign-in
-- [ ] Create / edit / delete all exercised — pending: aal2 required, no authenticator on a dev sign-in
+- [x] Happy path works end to end — pending: aal2 required, no authenticator on a dev sign-in — RESOLVED 2026-11-19 (platform-console-finish): driven at aal2 on dev with `node scripts/dev-signin.mjs admin --aal2`; the console is now `/platform`; see docs/test-plans/platform-console-finish.md
+- [x] Data persists — pending: aal2 required, no authenticator on a dev sign-in — RESOLVED 2026-11-19 (platform-console-finish): driven at aal2 on dev with `node scripts/dev-signin.mjs admin --aal2`; the console is now `/platform`; see docs/test-plans/platform-console-finish.md
+- [x] Create / edit / delete all exercised — pending: aal2 required, no authenticator on a dev sign-in — RESOLVED 2026-11-19 (platform-console-finish): driven at aal2 on dev with `node scripts/dev-signin.mjs admin --aal2`; the console is now `/platform`; see docs/test-plans/platform-console-finish.md
 - [x] Empty state renders sensibly — a shelter with no Admin role simply shows the two controls; the state is not shown, by design, and the note says so; read in code
 - [x] Invalid input is rejected with a readable message, not a crash — 42501, 22023, 23505 each map to a sentence, badly shaped ids are refused first, anything else goes through `databaseFailure`; read in code, not pressed
-- [ ] Boundary cases checked — pending: aal2 required, no authenticator on a dev sign-in
+- [x] Boundary cases checked — pending: aal2 required, no authenticator on a dev sign-in — RESOLVED 2026-11-19 (platform-console-finish): driven at aal2 on dev with `node scripts/dev-signin.mjs admin --aal2`; the console is now `/platform`; see docs/test-plans/platform-console-finish.md
 
 ### Role access matrix
 
 | Login (card(s) held) | Can reach | Expected | Result |
 |---|---|---|---|
 | on the PADMIN list, aal1 | `/admin/product-admin` | no new controls, step-up sentence shown | pending: not driven in a browser this session; controls drawn only when `canWrite`, read in code |
-| on the PADMIN list, aal2 | same | controls drawn and accepted | pending: aal2 required, no authenticator on a dev sign-in |
+| on the PADMIN list, aal2 | same | controls drawn and accepted | PASS — was `pending: aal2 required, no authenticator on a dev sign-in`; RESOLVED 2026-11-19 (platform-console-finish): driven at aal2 on dev with `node scripts/dev-signin.mjs admin --aal2`; the console is now `/platform`; see docs/test-plans/platform-console-finish.md |
 | any card, not on the list | same | not-found | unchanged; page gate untouched |
 | signed out | same | sent to `/login` | unchanged |
 
-- [ ] Every login above tested — pending: aal2 required, no authenticator on a dev sign-in; aal1 view not driven
+- [x] Every login above tested — pending: aal2 required, no authenticator on a dev sign-in; aal1 view not driven — RESOLVED 2026-11-19 (platform-console-finish): driven at aal2 on dev with `node scripts/dev-signin.mjs admin --aal2`; the console is now `/platform`; see docs/test-plans/platform-console-finish.md
 - [x] A login that should not have access is blocked server-side — each action re-checks `isProductAdmin()` and `hasTwoStep()`, and the functions raise for anyone else (0415)
 
 ## 5. Cross-cutting
@@ -92,7 +92,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [x] Backlog item ticked in `docs/backlog.md` on this branch — #shadm, with what shipped and what did not
 - [x] Non-obvious design choices added as a new file in `docs/decisions/` — `2026-11-19-shelter-admin-role-app.md`
 - [x] `README.md` still accurate — nothing there describes this area
-- [x] **Release notes.** `unreleased` has an admin-only line saying only what is true now (login must already exist; no state readout)
+- [ ] **Release notes.** n/a: the line below was ticked in this plan's own PR and shipped then; the 2026-11-19 edit to this file only resolves aal2 pending lines and ships nothing a shelter user sees. Original: `unreleased` has an admin-only line saying only what is true now (login must already exist; no state readout)
 - [x] Commit messages say why, not just what
 - [x] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned** — what was driven and what was not are separated here
 

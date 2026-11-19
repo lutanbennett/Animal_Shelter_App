@@ -1089,6 +1089,46 @@
         "migration": "0416_seed_new_shelter_defaults.sql",
         "item": "function public.product_admin_create_shelter definer",
         "reason": "PADMIN list (docs/decisions/2026-11-19-seed-a-new-shelter.md): gated by is_product_admin(), a list of people outside the card system, by Lutan's 2026-11-18 decision. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0418_login_lookup_allows_underscore.sql",
+        "item": "function public.product_admin_login_exists definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-19-platform-console-finish.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. The body is the earlier one plus a transaction-local scope to the shelter it works on; it grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0419_product_admin_writes_scope_their_shelter.sql",
+        "item": "function public.seed_shelter_defaults definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-19-platform-console-finish.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. The body is the earlier one plus a transaction-local scope to the shelter it works on; it grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0419_product_admin_writes_scope_their_shelter.sql",
+        "item": "function public.product_admin_set_shelter_receipts definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-19-platform-console-finish.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. The body is the earlier one plus a transaction-local scope to the shelter it works on; it grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0419_product_admin_writes_scope_their_shelter.sql",
+        "item": "function public.product_admin_create_shelter definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-19-platform-console-finish.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. The body is the earlier one plus a transaction-local scope to the shelter it works on; it grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0420_product_admin_shelters_read_each_shelter.sql",
+        "item": "function public.product_admin_shelters definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-19-platform-console-finish.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. The body is the earlier one plus a transaction-local scope to the shelter it works on; it grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0421_product_admin_hosts_and_admin_role_scope.sql",
+        "item": "function public.product_admin_unmap_host definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-19-platform-console-finish.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. The body is the earlier one plus a transaction-local scope to the shelter it works on; it grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0421_product_admin_hosts_and_admin_role_scope.sql",
+        "item": "function public.product_admin_create_shelter_admin_role definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-19-platform-console-finish.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. The body is the earlier one plus a transaction-local scope to the shelter it works on; it grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0421_product_admin_hosts_and_admin_role_scope.sql",
+        "item": "function public.product_admin_link_shelter_admin definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-19-platform-console-finish.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. The body is the earlier one plus a transaction-local scope to the shelter it works on; it grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
       }
     ],
     "stubs": [

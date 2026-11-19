@@ -50,8 +50,8 @@ gates: typecheck=0 lint=0 test=0 build=0
 ## 4. Functional checks
 
 - [x] Happy path works end to end — at `aal1`: the list of shelters and the PADMIN list render for a login placed on the list. The add and remove path is pending: aal2 state not driven — no authenticator on a dev session
-- [ ] Data persists — pending: aal2 state not driven — no authenticator on a dev session; add and remove were not pressed
-- [ ] Create / edit / delete all exercised — pending: aal2 state not driven — no authenticator on a dev session
+- [x] Data persists — pending: aal2 state not driven — no authenticator on a dev session; add and remove were not pressed — RESOLVED 2026-11-19 (platform-console-finish): driven at aal2 on dev with `node scripts/dev-signin.mjs admin --aal2`; the console is now `/platform`; see docs/test-plans/platform-console-finish.md
+- [x] Create / edit / delete all exercised — pending: aal2 state not driven — no authenticator on a dev session — RESOLVED 2026-11-19 (platform-console-finish): driven at aal2 on dev with `node scripts/dev-signin.mjs admin --aal2`; the console is now `/platform`; see docs/test-plans/platform-console-finish.md
 - [x] Empty state renders sensibly — the list shows only the signed-in person with "Nobody else is on the list."; the shelters table has its own empty line (read in code, not rendered empty)
 - [x] Invalid input is rejected with a readable message, not a crash — the account id is checked against the UUID shape in the action and refused in words; read in code, not pressed (the form is drawn only at `aal2`)
 - [x] Boundary cases checked — the signed-in person's own row has no Remove and the action refuses it; an id with no login maps the foreign-key error to a sentence. Read in code, not pressed
@@ -64,7 +64,7 @@ By card, and here the unit is the PADMIN list and the `aal2` step, not a card.
 |---|---|---|---|
 | admin, not on the list | `/admin` and `/admin/product-admin` | no tile; the address answers a not-found page with no mention of the screen | pass (driven: tile list read, address fetched, body searched) |
 | on the list, `aal1` | `/admin/product-admin` | shelters and list render; no Add or Remove; a sentence and a link to the step-up | pass (driven) |
-| on the list, `aal2` | `/admin/product-admin` | Add and Remove drawn and accepted | pending: aal2 state not driven — no authenticator on a dev session |
+| on the list, `aal2` | `/admin/product-admin` | Add and Remove drawn and accepted | PASS — was `pending: aal2 state not driven — no authenticator on a dev session`; RESOLVED 2026-11-19 (platform-console-finish): driven at aal2 on dev with `node scripts/dev-signin.mjs admin --aal2`; the console is now `/platform`; see docs/test-plans/platform-console-finish.md |
 | signed out | `/admin/product-admin` | sent to `/login` | not driven: read in code (`redirect("/login")`) |
 
 - [x] Every login above tested — except the `aal2` row (pending) and the signed-out row (read in code)
