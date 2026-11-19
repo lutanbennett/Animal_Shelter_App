@@ -3,6 +3,7 @@
 //   node scripts/dev-signin.mjs <role> [--port N]     print the snippet that signs the browser in
 //   node scripts/dev-signin.mjs --cards a,b [--port N] [--label x] the same, for a login holding EXACTLY these cards and nothing else.
 //                                                      One login per card set PER PORT (or label): two streams with the same cards do not share a login.
+//   ... add --shelter <key|id> to either form: the role (and login) is on that shelter instead of the default one
 //   ... add --aal2 to either form: the session is then aal2 (a dev-only step-up, see scripts/lib/dev-aal2.mjs), so /platform
 //                                                      and /admin/security can be pressed. The login is NOT given a role or card by it.
 //   node scripts/dev-signin.mjs --remove <role>        delete only that role's login (a roles.key, or a dev_signin_cards_<hash>_<port> key)
@@ -44,9 +45,27 @@ const env = loadEnv("test");
 if (projectRef(env) !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${projectRef(env)} is not the dev project`);
 
 const url = env.NEXT_PUBLIC_SUPABASE_URL;
+// --shelter <key|id> (#dvshl): the login's role lives on THAT shelter instead of the default one DEV_SHELTER_ID names.
+const shelterOpt = (() => {
+  const i = process.argv.indexOf("--shelter");
+  if (i < 0) return null;
+  const v = process.argv[i + 1];
+  if (!v || v.startsWith("--")) throw new Error("--shelter needs a shelter key or id (shelters.key, e.g. test-shelter-2)");
+  return v;
+})();
+let targetShelter = null; // { id, key } when --shelter is given
+if (shelterOpt) {
+  const bare = createClient(url, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { autoRefreshToken: false, persistSession: false } });
+  const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(shelterOpt);
+  const { data, error } = await bare.from("shelters").select("id, key").eq(isId ? "id" : "key", shelterOpt).maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error(`no shelter with key or id "${shelterOpt}"`);
+  targetShelter = data;
+}
 const service = createClient(url, env.SUPABASE_SERVICE_ROLE_KEY, {
   // The shelter header makes every row this script writes take the dev shelter (0390 default), so the per-shelter policies (0392) can see it.
-  global: { headers: scriptShelterHeaders(env) },
+  // With --shelter it names the target shelter instead, so nothing the script writes lands on the default one.
+  global: { headers: targetShelter ? { "x-shelter-id": targetShelter.id } : scriptShelterHeaders(env) },
   auth: { autoRefreshToken: false, persistSession: false },
 });
 const PREFIX = "dev-signin-";
@@ -100,10 +119,10 @@ const args = process.argv.slice(2);
 const optVal = (name) => { const i = args.indexOf(name); return i >= 0 && args[i + 1] && !args[i + 1].startsWith("--") ? args[i + 1] : null; };
 const labelArg = optVal("--label");
 const callerPort = optVal("--port") ?? (() => { try { return readFileSync(join(root, ".port"), "utf8").trim(); } catch { return null; } })();
-const callerSuffix = (labelArg ?? callerPort ?? "").replace(/[^A-Za-z0-9]/g, "").slice(0, 16);
+const callerSuffix = (labelArg ?? callerPort ?? "").replace(/[^A-Za-z0-9]/g, "").slice(0, 16) + (targetShelter ? "_s" + targetShelter.id.slice(0, 6) : "");
 if (args.includes("--label") && !labelArg) throw new Error("--label needs a value");
 const cardRoleKey = (list) => CARD_ROLE_PREFIX + createHash("sha1").update([...new Set(list)].sort().join(",")).digest("hex").slice(0, 8) + (callerSuffix ? "_" + callerSuffix : "");
-const loginEmail = (role) => `${PREFIX}${role.startsWith(CARD_ROLE_PREFIX) ? role.slice(CARD_ROLE_PREFIX.length) : role}${DOMAIN}`.replace(/_/g, "-");
+const loginEmail = (role) => `${PREFIX}${role.startsWith(CARD_ROLE_PREFIX) ? role.slice(CARD_ROLE_PREFIX.length) : role}${targetShelter && !role.startsWith(CARD_ROLE_PREFIX) ? "-s" + targetShelter.id.slice(0, 6) : ""}${DOMAIN}`.replace(/_/g, "-");
 if (args.includes("--remove")) {
   // Other streams share this project and hold their own logins: removing is always by name, never a blanket sweep by default.
   const rmIdx = args.indexOf("--remove");
@@ -116,12 +135,27 @@ if (args.includes("--remove")) {
     target = cardRoleKey(list);
   } else if (named && named !== "all") target = named;
   else if (!named) throw new Error("--remove needs a role, --cards a,b, or the word all (all signs every other stream out)");
-  const cardRoles = await service.from("roles").select("id, key").like("key", `${CARD_ROLE_PREFIX}%`);
+  const cardRoles = await service.from("roles").select("id, key").or(`key.like.${CARD_ROLE_PREFIX}%,key.like.dev_signin_admin_%`);
   if (cardRoles.error) throw cardRoles.error;
-  if (target) cardRoles.data = cardRoles.data.filter((r) => r.key === target);
+  // a throwaway Admin made by --shelter admin has its own key (see the sign-in half); removing "admin" on a shelter removes that one only
+  const roleTarget = target === "admin" && targetShelter ? "dev_signin_admin_" + callerSuffix : target;
+  if (target) cardRoles.data = cardRoles.data.filter((r) => r.key === roleTarget);
+  // A throwaway Admin is its shelter's only Admin link, and user_roles_keep_an_admin refuses to drop that one row at a time. Dropping the
+  // role and the link in ONE statement block does not trip it (it is deferred to commit, and by then the role is gone), so do exactly that.
+  for (const r of cardRoles.data.filter((x) => x.key.startsWith("dev_signin_admin_"))) {
+    const res = await fetch(`https://api.supabase.com/v1/projects/${projectRef(env)}/database/query`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${env.SUPABASE_ACCESS_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ query: `delete from public.user_roles where role_id = '${r.id}'; delete from public.role_cards where role_id = '${r.id}'; delete from public.role_permissions where role_id = '${r.id}'; delete from public.roles where id = '${r.id}' and key like 'dev\_signin\_admin\_%';` }),
+    });
+    console.log(`${res.ok ? "removed" : "FAILED"} role ${r.key} and its login link${res.ok ? "" : ": " + (await res.text()).slice(0, 200)}`);
+    if (res.ok) cardRoles.data = cardRoles.data.filter((x) => x.id !== r.id);
+  }
   const wantEmail = target ? loginEmail(target) : null;
   const mine = (await allUsers()).filter((u) => u.email?.startsWith(PREFIX) && u.email.endsWith(DOMAIN) && (!wantEmail || u.email === wantEmail));
   for (const u of mine) {
+    // Archive first: the last-Admin guard (user_roles_keep_an_admin) only counts live rows, and this login is being deleted on purpose.
+    await service.from("user_roles").update({ archived_at: new Date().toISOString() }).eq("user_id", u.id).is("archived_at", null);
     await service.from("user_roles").delete().eq("user_id", u.id);
     if (args.includes("--clear-held")) {
       // "table.col (n row(s)); ..." -> only when every holder is a CLEARABLE table, so nothing real is deleted on the way.
@@ -154,7 +188,7 @@ const portIdx = args.indexOf("--port");
 const cardsIdx = args.indexOf("--cards");
 const cardsArg = cardsIdx >= 0 ? args[cardsIdx + 1] : null;
 if (cardsIdx >= 0 && (!cardsArg || cardsArg.startsWith("--"))) throw new Error("--cards needs a comma-separated list of card keys");
-const positional = args.find((a, i) => !a.startsWith("--") && i !== (portIdx >= 0 ? portIdx + 1 : -1) && i !== (cardsIdx >= 0 ? cardsIdx + 1 : -1) && i !== (args.indexOf("--label") >= 0 ? args.indexOf("--label") + 1 : -1));
+const positional = args.find((a, i) => !a.startsWith("--") && i !== (portIdx >= 0 ? portIdx + 1 : -1) && i !== (cardsIdx >= 0 ? cardsIdx + 1 : -1) && i !== (args.indexOf("--label") >= 0 ? args.indexOf("--label") + 1 : -1) && i !== (args.indexOf("--shelter") >= 0 ? args.indexOf("--shelter") + 1 : -1));
 let role = positional;
 if (cardsArg && positional) throw new Error("give a role or --cards, not both");
 if (!role && !cardsArg) throw new Error("usage: node scripts/dev-signin.mjs <role> [--port N]   |   --cards a,b [--port N]   |   --remove");
@@ -170,7 +204,7 @@ if (cardsArg) {
   role = cardRoleKey(cardKeys);
   // The cards decide what the login can do. The role columns that once scoped it (opens_app, scope_*) were dropped by 0264.
   const { error: upErr } = await service.from("roles").upsert(
-    { key: role, name: `Dev sign-in: ${cardKeys.join(", ")}`.slice(0, 120), kind: "custom", home_path: "/home" },
+    { key: role, name: `Dev sign-in: ${cardKeys.join(", ")}`.slice(0, 120), kind: "custom", home_path: "/home", ...(targetShelter ? { shelter_id: targetShelter.id } : {}) },
     // No ignoreDuplicates: a throwaway role made by an older run (who_and_where) is corrected on the next run.
     // TWO COLUMNS, AND DO NOT "TIDY" IT BACK TO "key". 0387 replaced roles' `unique (key)` with
     // `roles_shelter_key_key unique nulls not distinct (shelter_id, key)`, so a conflict target of
@@ -188,7 +222,17 @@ if (cardsArg) {
   if (setErr) throw setErr;
 }
 
-const { data: roleRow, error: roleErr } = await service.from("roles").select("id").eq("key", role).maybeSingle();
+let roleQ = service.from("roles").select("id").eq("key", role);
+if (targetShelter) roleQ = roleQ.eq("shelter_id", targetShelter.id);
+let { data: roleRow, error: roleErr } = await roleQ.maybeSingle();
+if (!roleErr && !roleRow && targetShelter && role === "admin") {
+  // A bare shelter has no Admin role (roles are per shelter since 0401, one is_admin per shelter since 0387). Make a throwaway one
+  // whose key carries the port and shelter, so --remove --shelter removes it and nothing real on the shelter is touched.
+  const adminKey = "dev_signin_admin_" + callerSuffix;
+  const up = await service.from("roles").upsert({ key: adminKey, name: "Dev sign-in: admin", kind: "custom", home_path: "/home", is_admin: true, shelter_id: targetShelter.id }, { onConflict: "shelter_id,key" });
+  if (up.error) throw up.error;
+  ({ data: roleRow, error: roleErr } = await service.from("roles").select("id").eq("key", adminKey).eq("shelter_id", targetShelter.id).maybeSingle());
+}
 if (roleErr) throw roleErr;
 if (!roleRow) throw new Error(`no role with key "${role}"`);
 
@@ -203,8 +247,12 @@ if (user) {
   if (error) throw error;
   user = data.user;
 }
-await service.from("user_roles").delete().eq("user_id", user.id);
-const { error: giveErr } = await giveRole(service, user.id, role);
+// Keep the row when the login already holds this role: user_roles_keep_an_admin refuses to delete a shelter's only Admin link, so a re-run
+// on a throwaway Admin must not delete-and-reinsert. Every other role the login holds is cleared as before.
+const keepRole = roleRow.id;
+{ const { error: clearErr } = await service.from("user_roles").delete().eq("user_id", user.id).neq("role_id", keepRole); if (clearErr) throw clearErr; }
+const alreadyHeld = (await service.from("user_roles").select("role_id").eq("user_id", user.id).eq("role_id", keepRole)).data?.length > 0;
+const { error: giveErr } = alreadyHeld ? { error: null } : targetShelter ? await service.from("user_roles").insert({ user_id: user.id, role_id: roleRow.id }) : await giveRole(service, user.id, role);
 if (giveErr) throw giveErr;
 
 const jar = new Map();
@@ -221,5 +269,6 @@ const wantAal2 = args.includes("--aal2");
 if (wantAal2) await stepUpToAal2({ service, ssr, user, projectRef: projectRef(env) });
 
 const sets = [...jar].map(([n, v]) => `document.cookie=${JSON.stringify(`${n}=${encodeURIComponent(v)}; path=/; max-age=3000; samesite=lax`)}`);
-console.error(`${email} is ${wantAal2 ? "at aal2, " : ""}${cardKeys ? `holding only the cards ${cardKeys.join(", ")}` : `a ${role}`} on dev. Run this in javascript_tool on http://localhost:${port}, then navigate to /my:`);
+console.error(`${email} is ${wantAal2 ? "at aal2, " : ""}${cardKeys ? `holding only the cards ${cardKeys.join(", ")}` : `a ${role}`} on dev${targetShelter ? ` (shelter ${targetShelter.key})` : ""}. Run this in javascript_tool on http://localhost:${port}, then navigate to /my:`);
+if (targetShelter) console.error(`The browser reads the shelter from the dev server, not the login: start it as  DEV_SHELTER_ID=${targetShelter.id} node scripts/worktree.mjs dev  (the shell value beats .env.local). Port ${port} is otherwise on the default shelter.`);
 console.log(`${sets.join(";")};location.href="/my"`);
