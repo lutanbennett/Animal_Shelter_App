@@ -1,4 +1,3 @@
-// exit-debt: fail() and the final exit follow the pooler fetch; convert (#scimp)
 // After a restore, put the database's privileges back to exactly what the backup recorded,
 // then prove it. The why and the how are in scripts/lib/restore-grants.mjs (#rg7pv).
 //
@@ -31,6 +30,9 @@ import { dirname, join } from "node:path";
 import { decryptBackup } from "./lib/backup-crypto.mjs";
 import { loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
 import { aclTocLines, archiveObjects, compareAcls, GRANT_SCHEMAS, resetSql } from "./lib/restore-grants.mjs";
+import { bail, runMain } from "./lib/exit.mjs";
+
+async function main() {
 
 const { name: envName, rest: args } = parseEnvArg(process.argv.slice(2));
 const usingEnv = process.argv.includes("--env");
@@ -128,7 +130,7 @@ try {
   archive = null;
   rmSync(tmp, { recursive: true, force: true });
 }
-process.exit(failed ? 1 : 0);
+bail(failed ? 1 : 0);
 
 // --- helpers ----------------------------------------------------------------------------
 
@@ -141,7 +143,7 @@ function report(label, list) {
 
 function fail(message) {
   console.error(message);
-  process.exit(1);
+  bail(1);
 }
 
 function valueOf(flag) {
@@ -200,3 +202,6 @@ function findPgBin() {
   }
   return fail("PostgreSQL 17+ client tools (pg_restore, pg_dump, psql) not found; set PG_BIN (README \"Backups\").");
 }
+}
+
+await runMain(main);

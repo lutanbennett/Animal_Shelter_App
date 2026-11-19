@@ -1,4 +1,3 @@
-// exit-debt: exits follow fetches mid-flow; needs a restructure (#scimp)
 // Cut one resident's placement history back to "Intake, then fostered" —
 // written for Panda, whose AppSheet history came across with placements
 // that never happened (docs/data-migration.md; confirmed with the shelter
@@ -40,6 +39,9 @@
 // after a successful run is a no-op.
 
 import { loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
+import { bail, runMain } from "./lib/exit.mjs";
+
+async function main() {
 
 // Placement days are read in the shelter's timezone: the migrated rows are
 // stamped 00:00+07 (the retired AppSheet import), so a 1 June placement is 31 May in
@@ -52,7 +54,7 @@ const url = env.NEXT_PUBLIC_SUPABASE_URL;
 const token = env.SUPABASE_ACCESS_TOKEN;
 if (!url || !token) {
   console.error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_ACCESS_TOKEN are required.");
-  process.exit(2);
+  bail(2);
 }
 const projectRef = refOf(env);
 
@@ -62,7 +64,7 @@ const flag = (name, fallback = null) => {
   const value = args[i + 1];
   if (!value || value.startsWith("--")) {
     console.error(`${name} needs a value.`);
-    process.exit(2);
+    bail(2);
   }
   return value;
 };
@@ -84,11 +86,11 @@ const fosterArg = flag("--foster");
 
 if (!/^\d{4}-\d{2}-\d{2}$/.test(fosterDateArg)) {
   console.error("--foster-date must be YYYY-MM-DD.");
-  process.exit(2);
+  bail(2);
 }
 if (apply && dryRun) {
   console.error("--apply and --dry-run are mutually exclusive.");
-  process.exit(2);
+  bail(2);
 }
 
 const q = (value) => {
@@ -119,7 +121,7 @@ async function query(statement) {
 
 const die = (message) => {
   console.error(`\n${message}`);
-  process.exit(1);
+  bail(1);
 };
 
 // ---------------------------------------------------------------------------
@@ -147,7 +149,7 @@ if (residents.length === 0) die(`No resident matches ${residentArg}.`);
 if (residents.length > 1) {
   console.error("More than one resident matches — re-run with --resident <code>:");
   for (const r of residents) console.error(`  ${r.resident_code}  ${r.name}`);
-  process.exit(1);
+  bail(1);
 }
 const resident = residents[0];
 console.log(`Resident: ${resident.resident_code} ${resident.name} — currently ${resident.current_status}.\n`);
@@ -167,7 +169,7 @@ const resolveEnclosure = (name) => {
   if (found.length > 1) {
     console.error(`More than one enclosure is named ${name}:`);
     for (const e of found) console.error(`  ${e.zone} / ${e.name}`);
-    process.exit(1);
+    bail(1);
   }
   return found[0];
 };
@@ -264,7 +266,7 @@ if (fosterArg) {
           "the row gets the right zone, enclosure and carer, then run this again.",
       );
     }
-    process.exit(1);
+    bail(1);
   }
   if (fosters.length > 1) {
     console.error(
@@ -272,7 +274,7 @@ if (fosterArg) {
         `"${carerArg}" — pick one with --foster <uuid>:`,
     );
     for (const r of fosters) console.error(`  ${r.id}  ${r.start_day}  carer ${r.carer}`);
-    process.exit(1);
+    bail(1);
   }
   foster = fosters[0];
 }
@@ -322,12 +324,12 @@ if (previousNeedsFix) {
 
 if (!doomed.length && !intakeNeedsEnd && !fosterNeedsOpen && !rewriteFoster) {
   console.log("\nNothing to do — the history already reads Intake then Foster.");
-  process.exit(0);
+  bail(0);
 }
 
 if (!apply && !dryRun) {
   console.log("\nReport only. Re-run with --dry-run to rehearse it, or --apply to commit.");
-  process.exit(0);
+  bail(0);
 }
 
 // ---------------------------------------------------------------------------
@@ -422,7 +424,7 @@ try {
   console.log("FAILED");
   console.error(error.message);
   console.error("Nothing was changed.");
-  process.exit(1);
+  bail(1);
 }
 
 if (dryRun) {
@@ -433,3 +435,6 @@ if (dryRun) {
       `${foster.start_day}, then fostered to ${foster.carer}.`,
   );
 }
+}
+
+await runMain(main);

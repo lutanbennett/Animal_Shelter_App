@@ -1,4 +1,3 @@
-// exit-debt: exit follows fetchProbe calls inside main; convert to exitWith (#scimp)
 // The resident record's section pages, captured so two builds can be compared byte for byte.
 // Written for the resident-page-split refactor (one file per section): "no behaviour change" is
 // proved by running this on the old code and on the new and diffing, not asserted.
@@ -22,6 +21,9 @@ import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { giveRole } from "./lib/user-role.mjs";
+import { bail, runMain } from "./lib/exit.mjs";
+
+async function main() {
 
 const args = process.argv.slice(2);
 const flag = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : null);
@@ -55,7 +57,7 @@ if (args.includes("--compare")) {
     }
   }
   console.log(`${keys.size} probes, ${diffs} differences`);
-  process.exit(diffs === 0 && keys.size > 0 ? 0 : 1);
+  bail(diffs === 0 && keys.size > 0 ? 0 : 1);
 }
 
 const root = process.cwd();
@@ -150,3 +152,6 @@ try {
 } finally {
   for (const id of made) await service.auth.admin.deleteUser(id);
 }
+}
+
+await runMain(main);
