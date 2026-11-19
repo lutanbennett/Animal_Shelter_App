@@ -1,3 +1,4 @@
+// exit-debt: fail() and the final exit follow the pooler fetch; convert (#scimp)
 // After a restore, put the database's privileges back to exactly what the backup recorded,
 // then prove it. The why and the how are in scripts/lib/restore-grants.mjs (#rg7pv).
 //

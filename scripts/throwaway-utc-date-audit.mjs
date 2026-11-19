@@ -10,6 +10,7 @@
 // Connects the way scripts/apply-migrations.mjs does: Management API query
 // endpoint, SUPABASE_ACCESS_TOKEN, project ref from NEXT_PUBLIC_SUPABASE_URL.
 import { loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
+import { exitWith } from "./lib/exit.mjs";
 
 const { name: envName, rest: args } = parseEnvArg(process.argv.slice(2));
 const env = loadEnv(envName);
@@ -43,19 +44,20 @@ async function query(sql) {
 
 console.error(`Environment: ${envName} — project ${projectRef}`);
 
+async function main() {
 if (args.includes("--list-projects")) {
   const res = await fetch("https://api.supabase.com/v1/projects", {
     headers: { Authorization: `Bearer ${token}` },
   });
   const projects = await res.json();
   for (const p of projects) console.log(`${p.id}  ${p.name}  (${p.region}, created ${p.created_at})`);
-  process.exit(0);
+  return 0;
 }
 
 const sqlIndex = args.indexOf("--sql");
 if (sqlIndex >= 0) {
   console.log(JSON.stringify(await query(args[sqlIndex + 1]), null, 2));
-  process.exit(0);
+  return 0;
 }
 
 // Every date column whose row carries a timestamptz written at the same
@@ -169,3 +171,7 @@ out.deceased_cascade = await query(`
 console.error(`  deceased cascade: ${out.deceased_cascade.length} prescription(s) closed a day early`);
 
 console.log(JSON.stringify(out, null, 2));
+return 0;
+}
+
+await exitWith(await main());

@@ -1,3 +1,4 @@
+// exit-ok: every process.exit precedes the database section; none after the marked line
 // Remove a resident that was entered twice, keeping the original.
 //
 //   node scripts/correct-resident.mjs --env production --remove R-0208 --keep R-0063

@@ -1,3 +1,4 @@
+// exit-debt: proveIt and fail() exit after queries; needs a restructure (#scimp)
 // Export ONE shelter's data, and nothing of any other shelter's (#sxyw3, part 11 of the tenancy programme).
 // README "Backups" -> "Exporting one shelter". docs/decisions/2026-11-17-per-shelter-export.md.
 //

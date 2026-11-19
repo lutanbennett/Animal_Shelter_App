@@ -1,3 +1,4 @@
+// exit-debt: exit follows fetchProbe calls inside main; convert to exitWith (#scimp)
 // The resident record's section pages, captured so two builds can be compared byte for byte.
 // Written for the resident-page-split refactor (one file per section): "no behaviour change" is
 // proved by running this on the old code and on the new and diffing, not asserted.

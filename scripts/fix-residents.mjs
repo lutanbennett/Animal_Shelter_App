@@ -1,3 +1,4 @@
+// exit-ok: every process.exit precedes the database section; none after the marked line
 // Correct residents' names, Thai names and enclosures from a small file.
 //
 //   node scripts/fix-residents.mjs --file corrections.json

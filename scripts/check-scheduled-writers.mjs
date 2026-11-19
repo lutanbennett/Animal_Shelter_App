@@ -13,6 +13,7 @@
 // heading, never folded into "ok". It cannot see the Pi, production, or a writer that is not in the database.
 // Exit 0 always for a reading; exit 1 only when the query itself fails, or with --strict when a writer sends no shelter.
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
+import { exitWith } from "./lib/exit.mjs";
 
 const argv = process.argv.slice(2);
 const verbose = argv.includes("--verbose");
@@ -43,8 +44,9 @@ let row;
 try { row = JSON.parse(text)[0]; } catch { /* reported below */ }
 if (!res.ok || !row) {
   console.error(`check-scheduled-writers: query failed (HTTP ${res.status}): ${text.slice(0, 300)}`);
-  process.exit(1);
+  await exitWith(1);
 }
+else {
 
 const tenant = new Set(row.shelter_tables);
 const strip = (s) => s.replace(/--[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
@@ -107,4 +109,5 @@ for (const k of ["none", "unknown", "sends", "deleteonly", "nowrite"]) {
 console.log("\nLimits: bodies are judged by pattern; a function that calls another function that writes is not followed; trigger and");
 console.log("definer functions run in a request WITH a header when a person caused them, so 'sends no shelter' is an error only where");
 console.log("no request header exists (pg_cron, service-role statements with no scriptShelterHeaders). The Pi and production are not read.");
-if (strict && (groups.none.length || jobRows.some((j) => j.bucket === "none"))) process.exitCode = 1;
+if (strict && (groups.none.length || jobRows.some((j) => j.bucket === "none"))) await exitWith(1);
+}

@@ -1,3 +1,4 @@
+// exit-debt: exits follow fetches in the release flow; needs a restructure (#scimp)
 // Build and deploy one environment's Worker.
 //
 //   node scripts/deploy.mjs --env test                # test.lannacare.org

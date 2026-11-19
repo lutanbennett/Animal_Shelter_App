@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// exit-debt: fail() is reachable after fetches; needs a restructure (#scimp)
 // Reset the TEST system back to a bare shelter: keep the setup, clear the content.
 //
 // Lutan, 2026-11-07: "Can we clear the test system please, it is so full of test data it is

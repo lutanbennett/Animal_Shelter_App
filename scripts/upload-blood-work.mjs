@@ -1,3 +1,4 @@
+// exit-ok: stop() exits only before any request is open; later failures throw (see stop())
 // Load lab reports from the Blood Work inbox on Drive into the app: the
 // database half of the /upload-blood-work skill.
 //

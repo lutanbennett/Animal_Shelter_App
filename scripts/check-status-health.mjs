@@ -9,6 +9,7 @@
 // With --url it also calls a running server: no token and a wrong token must be 401.
 // A --token is only used to confirm a 200 and is never printed.
 import { readFileSync } from "node:fs";
+import { exitWith } from "./lib/exit.mjs";
 import { buildHealthFeed, makeLimiter, tokenMatches, databaseSizeState } from "../src/lib/status/health-feed.ts";
 import { RUNTIME_CONFIG } from "./lib/runtime-config.mjs";
 
@@ -80,5 +81,5 @@ if (url) {
     check("live: right token is 200 and no-store", res.status === 200 && res.headers.get("cache-control") === "no-store");
   }
 }
-if (failed) { console.error(`\n${failed} check(s) failed`); process.exit(1); }
-console.log("\nall checks passed");
+if (failed) { console.error(`\n${failed} check(s) failed`); await exitWith(1); }
+else console.log("\nall checks passed");
