@@ -4,9 +4,13 @@
 // Usage:
 //   node --env-file=.env.local scripts/google-oauth-setup.mjs              # Drive token -> GOOGLE_OAUTH_REFRESH_TOKEN
 //   node --env-file=.env.local scripts/google-oauth-setup.mjs --calendar   # calendar token -> GOOGLE_CALENDAR_REFRESH_TOKEN
+//   node --env-file=.env.local scripts/google-oauth-setup.mjs --backup     # backup token   -> BACKUP_GOOGLE_OAUTH_REFRESH_TOKEN
 //
-// --calendar is the only flag. The Drive and calendar tokens are SEPARATE: each run asks for its own
-// consent and mints its own token, so run it once for each and paste each into its own setting.
+// --calendar and --backup are the flags (give one, not both). The Drive, calendar and backup tokens are
+// SEPARATE: each run asks for its own consent and mints its own token, so run it once for each and paste
+// each into its own setting. --backup reads the backup's OWN client, BACKUP_GOOGLE_OAUTH_CLIENT_ID and
+// BACKUP_GOOGLE_OAUTH_CLIENT_SECRET, never the app's pair: one client per identity
+// (docs/decisions/2026-11-19-backups-own-client.md).
 //
 // Requires GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET to already
 // be set (in .env.local or the environment) from a Desktop-app OAuth client
@@ -28,22 +32,36 @@ function writeStatus(data) {
   fs.writeFileSync(statusFile, JSON.stringify(data, null, 2));
 }
 
-const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
-const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+const forCalendar = process.argv.includes("--calendar");
+const forBackup = process.argv.includes("--backup");
+if (forCalendar && forBackup) {
+  console.error("Give --calendar or --backup, not both: each mints a different token.");
+  process.exit(1);
+}
+
+// --backup uses the backup's own client so its token can never be written into the app's setting by a
+// hand-run with the wrong names pasted in. Without the flag the app's pair is read, as before.
+const idName = forBackup ? "BACKUP_GOOGLE_OAUTH_CLIENT_ID" : "GOOGLE_OAUTH_CLIENT_ID";
+const secretName = forBackup ? "BACKUP_GOOGLE_OAUTH_CLIENT_SECRET" : "GOOGLE_OAUTH_CLIENT_SECRET";
+const clientId = process.env[idName];
+const clientSecret = process.env[secretName];
 
 if (!clientId || !clientSecret) {
   console.error(
-    "Missing GOOGLE_OAUTH_CLIENT_ID / GOOGLE_OAUTH_CLIENT_SECRET.\n" +
+    `Missing ${idName} / ${secretName}.\n` +
       "Set them in .env.local first, then run:\n" +
-      "  node --env-file=.env.local scripts/google-oauth-setup.mjs",
+      `  node --env-file=.env.local scripts/google-oauth-setup.mjs${forBackup ? " --backup" : ""}`,
   );
   process.exit(1);
 }
 
 // --calendar mints the shelter calendar's own token (calendar.events only), kept apart from the Drive one
 // so a calendar fault can never stop photo uploads. Paste it as GOOGLE_CALENDAR_REFRESH_TOKEN.
-const forCalendar = process.argv.includes("--calendar");
-const tokenName = forCalendar ? "GOOGLE_CALENDAR_REFRESH_TOKEN" : "GOOGLE_OAUTH_REFRESH_TOKEN";
+const tokenName = forCalendar
+  ? "GOOGLE_CALENDAR_REFRESH_TOKEN"
+  : forBackup
+    ? "BACKUP_GOOGLE_OAUTH_REFRESH_TOKEN"
+    : "GOOGLE_OAUTH_REFRESH_TOKEN";
 
 const PORT = 8991;
 const redirectUri = `http://127.0.0.1:${PORT}/oauth2callback`;
@@ -53,6 +71,8 @@ const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri)
 const authUrl = oauth2Client.generateAuthUrl({
   access_type: "offline",
   prompt: "consent",
+  // Full `drive` scope for the default and --backup alike: the backup both uploads AND prunes old dumps, so
+  // `drive.file` (which #dscop chose for the self-service screen) is not enough here. Not an oversight.
   scope: [forCalendar ? "https://www.googleapis.com/auth/calendar.events" : "https://www.googleapis.com/auth/drive"],
 });
 
