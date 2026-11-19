@@ -7,9 +7,11 @@
 import fs from "node:fs";
 import { execSync } from "node:child_process";
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
+import { exitWith } from "./lib/exit.mjs";
 
 const reg = JSON.parse(fs.readFileSync("docs/shelter-settings-registry.json", "utf8"));
 const bad = [];
+let readFailed = false;
 const hits = [];
 for (const f of execSync("git ls-files src worker", { encoding: "utf8" }).split(/\r?\n/).filter((f) => /\.(ts|tsx|mjs|js)$/.test(f))) {
   if (!fs.existsSync(f)) continue;
@@ -33,16 +35,17 @@ if (args.includes("--env")) {
     body: JSON.stringify({ query: "select key, drive_root_folder_id, display_name, short_name from shelters where key = 'lanna'" }),
   });
   const rows = await res.json();
-  if (!res.ok || !Array.isArray(rows)) { console.error(`read failed (HTTP ${res.status}). VALUES NOT CHECKED.`); process.exit(2); }
-  for (const r of rows) {
+  if (!res.ok || !Array.isArray(rows)) { console.error(`read failed (HTTP ${res.status}). VALUES NOT CHECKED.`); readFailed = true; }
+  for (const r of readFailed ? [] : rows) {
     if (!r.drive_root_folder_id) bad.push(`UNPOPULATED  ${r.key}: empty, so readers use the variable (safe, but run populate-shelter-settings.mjs --apply)`);
     else if (r.drive_root_folder_id !== root) bad.push(`DIFFERS  ${r.key}: stored value is not this environment's GOOGLE_DRIVE_ROOT_FOLDER_ID`);
   }
   // 0400: the stored names must equal the literals the converted readers replaced, so Lanna's output cannot differ.
   const want = { display_name: "Lanna Care for Animals", short_name: "Lanna Care" };
-  for (const r of rows) for (const [col, lit] of Object.entries(want)) if (r[col] !== lit) bad.push(`NAME DIFFERS  ${r.key}.${col}: stored ${JSON.stringify(r[col])}, the code it replaced said ${JSON.stringify(lit)}`);
-  console.log(`${rows.length} shelter(s) compared with ${name}'s variable`);
+  for (const r of readFailed ? [] : rows) for (const [col, lit] of Object.entries(want)) if (r[col] !== lit) bad.push(`NAME DIFFERS  ${r.key}.${col}: stored ${JSON.stringify(r[col])}, the code it replaced said ${JSON.stringify(lit)}`);
+  if (!readFailed) console.log(`${rows.length} shelter(s) compared with ${name}'s variable`);
 }
 bad.forEach((b) => console.log(b));
-console.log(bad.length ? "NOT CLEAN" : "no new reader of the Drive folder variable, and stored values match");
-process.exit(bad.length ? 1 : 0);
+if (!readFailed) console.log(bad.length ? "NOT CLEAN" : "no new reader of the Drive folder variable, and stored values match");
+// exitWith, not process.exit: process.exit right after a fetch can die in libuv on Windows (docs/decisions/2026-11-19-exit-code-after-success.md)
+await exitWith(readFailed ? 2 : bad.length ? 1 : 0);
