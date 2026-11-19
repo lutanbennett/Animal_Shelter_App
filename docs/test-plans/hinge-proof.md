@@ -98,7 +98,7 @@ The build gate ended `0` on a single run, so the `SecurityFatalError` halt did n
 - [ ] Smoke-tested on `test.lannacare.org` — deferred: the production release manager. There is nothing to smoke-test: the diff is one document
 - [ ] **Timezone-sensitive behaviour proved** — n/a: nothing in this PR derives a date or a "today"
 - [ ] **Boundary or banding change covers both edges** — n/a: no boundary, threshold, rounding rule, retry window, pagination limit or permission cutoff is changed
-- [ ] **Evidence pasted into this plan is the tool's actual output, unedited** — n/a for this plan's own body: the gates block is pasted unedited, and the probe's own HTTP statuses are quoted in the decision file as the runs printed them
+- [x] **Evidence pasted into this plan is the tool's actual output, unedited** — the gates block in section 2 is pasted exactly as the run printed it, per-gate timings included, and the probe's HTTP statuses are quoted in the decision file as its runs printed them
 - [ ] Public pages re-checked after a cache purge — deferred: the production release manager. No public page changes
 - [ ] `deploy: production → Supabase project <ref>` line read and the ref matches production — deferred: the production release manager
 - [ ] `strip-baked-env` seen in the deploy output — deferred: the production release manager
