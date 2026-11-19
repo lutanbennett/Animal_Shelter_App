@@ -105,6 +105,9 @@ const SIGNED_IN = [
   { name: "admin-blood-test-types", path: "/admin/blood-test-types" },
   // Runbook (docs/shelter-onboarding-runbook.md): needs a login on the product-administrator list; aal1 view only.
   { name: "runbook-product-admin", path: "/platform", full: true },
+  // Step 6 and 9 of the runbook: a shelter's Settings page (Drive/calendar status, lookup-list tiles), and Step 7.
+  { name: "runbook-settings-lookups", path: "/admin", full: true },
+  { name: "runbook-who-does-what", path: "/admin/who-does-what" },
 ];
 
 const SIGNED_OUT = [
