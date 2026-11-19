@@ -3,10 +3,14 @@
 //   node scripts/populate-shelter-settings.mjs [--env test|uat|production] [--apply]
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 import { exitWith } from "./lib/exit.mjs";
+import { unknownArgs, unknownArgsMessage } from "./lib/args.mjs";
 
 const args = process.argv.slice(2);
 const { name } = parseEnvArg(args);
 async function main() {
+// Before anything is read or written: a mistyped flag must not run as if it were the safe default (#sflag).
+const unknown = unknownArgs(args, { flags: ["--apply"], valued: ["--env"] });
+if (unknown.length) { console.error(unknownArgsMessage("populate-shelter-settings", unknown)); return 2; }
 const env = loadEnv(name);
 const root = env.GOOGLE_DRIVE_ROOT_FOLDER_ID?.trim();
 if (!root || !/^[A-Za-z0-9_-]+$/.test(root)) { console.error("GOOGLE_DRIVE_ROOT_FOLDER_ID is not set or not an id here."); return 2; }

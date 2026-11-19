@@ -13,11 +13,15 @@
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 import { validateInputs, verifyWithGoogle, buildConnectSql } from "./lib/connect-shelter-drive.mjs";
 import { exitWith } from "./lib/exit.mjs";
+import { unknownArgs, unknownArgsMessage } from "./lib/args.mjs";
 
 const args = process.argv.slice(2);
 const arg = (n) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : undefined; };
 const { name } = parseEnvArg(args);
 async function main() {
+// Before anything is read or written: a mistyped flag must not run as if it were the safe default (#sflag).
+const unknown = unknownArgs(args, { flags: ["--apply"], valued: ["--env","--shelter","--folder"] });
+if (unknown.length) { console.error(unknownArgsMessage("connect-shelter-drive", unknown)); return 2; }
 const env = loadEnv(name);
 const input = {
   shelterKey: arg("--shelter"), folderId: arg("--folder"),

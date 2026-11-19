@@ -23,10 +23,13 @@ import { decryptBackup, encryptBackup, parseRecipients } from "./lib/backup-cryp
 import { envFile, loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 import { insertSql, nullRowsSql, planTables, q, selectSql } from "./lib/shelter-export.mjs";
 import { ExitRequest, bail, runMain } from "./lib/exit.mjs";
+import { unknownArgs, unknownArgsMessage } from "./lib/args.mjs";
 
 async function main() {
 
 const { name: envName, rest: args } = parseEnvArg(process.argv.slice(2));
+// Before anything is read or written (#sflag). --env was already taken out of args by parseEnvArg.
+{ const unknown = unknownArgs(args, { flags: ["--prove"], valued: ["--shelter", "--out", "--port", "--age-recipient"] }); if (unknown.length) fail(unknownArgsMessage("shelter-export", unknown)); }
 const val = (f) => { const i = args.indexOf(f); return i < 0 ? null : args[i + 1]; };
 const prove = args.includes("--prove");
 const shelterKey = val("--shelter");
