@@ -7,8 +7,7 @@
 #
 # Scheduled, never on the pull-request path: this repository is public on purpose and a PR run would hand a write-capable token
 # to every run. Like tenancy-catalogue.yml it is allowed to FAIL and cannot turn a PR red.
-# Limits (also printed by the script): it cannot see service-role calls (Part 7), and until Part 5 there are no per-shelter
-# policies for it to check.
+# Limits (also printed by the script): it cannot see service-role calls (Part 7), and the plain pass is TRUSTED (is_trusted_caller() true); the --untrusted pass exercises the 0392 per-shelter policies.
 
 name: Tenancy canary
 
@@ -31,7 +30,16 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: node scripts/check-tenancy-canary.mjs --strict
+      # Two passes, each its own rolled-back transaction (docs/decisions/2026-11-19-canary-plain-run-trust.md). Trusted = the path the app's service-role callers take;
+      # untrusted = what PostgREST sends, so the 0392 per-shelter clause decides. if: always() so a red first pass cannot hide the second.
+      - name: Trusted pass (plain)
+        run: node scripts/check-tenancy-canary.mjs --strict
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_CANARY_TOKEN }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+      - name: Untrusted pass (per-shelter clause)
+        if: always()
+        run: node scripts/check-tenancy-canary.mjs --strict --untrusted
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_CANARY_TOKEN }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
