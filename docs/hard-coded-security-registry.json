@@ -1129,6 +1129,21 @@
         "migration": "0421_product_admin_hosts_and_admin_role_scope.sql",
         "item": "function public.product_admin_link_shelter_admin definer",
         "reason": "PADMIN list (docs/decisions/2026-11-19-platform-console-finish.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. The body is the earlier one plus a transaction-local scope to the shelter it works on; it grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0422_product_admin_lookup_audit.sql",
+        "item": "function public.product_admin_login_exists definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-19-lookup-audit-row.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. The body is 0418's plus a row recording who asked which address; it grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0422_product_admin_lookup_audit.sql",
+        "item": "policy public.product_admin_lookups.product_admin_lookups_select",
+        "reason": "PADMIN list (docs/decisions/2026-11-19-lookup-audit-row.md): read only by is_product_admin(), the PADMIN list, outside the card system. Nothing writes through the API. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0422_product_admin_lookup_audit.sql",
+        "item": "policy public.product_admin_lookups.definer_all",
+        "reason": "PADMIN list (docs/decisions/2026-11-19-lookup-audit-row.md): lets the definer owner (rls_definer) write the lookup record; not reachable by any login. Recorded under outsideTheCardSystem.productAdmin, not debt."
       }
     ],
     "stubs": [

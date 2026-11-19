@@ -105,8 +105,9 @@ export async function setPublicPageHidden(entry: string, hide: boolean, requestI
     const next = hide ? [...new Set([...current, entry])] : current.filter((e) => e !== entry);
 
     if (next.length !== current.length) {
-      const { error } = await supabase.from("site_content").update({ hidden_public_pages: next }).eq("id", true);
+      const { data, error } = await supabase.from("site_content").update({ hidden_public_pages: next }).eq("id", true).select("id");
       if (error) return refuse(error.message);
+      if (!data?.length) return refuse(t.admin.website.noRow);
     }
 
     revalidateWebsitePages();
@@ -274,16 +275,17 @@ export async function updateSiteContent(
       data: { user },
     } = await supabase.auth.getUser();
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("site_content")
       .update({
         ...built.patch,
         updated_at: new Date().toISOString(),
         updated_by: user?.id ?? null,
       })
-      .eq("id", true);
+      .eq("id", true).select("id");
 
     if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.admin.website.noRow);
 
     revalidateWebsitePages();
     return { ok: true, success: t.common.saved };
@@ -365,16 +367,17 @@ export async function updateClinicVisitEstimate(
       data: { user },
     } = await supabase.auth.getUser();
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("site_content")
       .update({
         clinic_visit_estimate: estimate.value,
         updated_at: new Date().toISOString(),
         updated_by: user?.id ?? null,
       })
-      .eq("id", true);
+      .eq("id", true).select("id");
 
     if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.admin.website.noRow);
 
     revalidatePath("/admin/website");
     // The forecast page reads this figure (next branch); it is not on any
@@ -484,16 +487,17 @@ export async function setFeaturedResident(
       data: { user },
     } = await supabase.auth.getUser();
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("site_content")
       .update({
         featured_resident_id: residentId,
         updated_at: new Date().toISOString(),
         updated_by: user?.id ?? null,
       })
-      .eq("id", true);
+      .eq("id", true).select("id");
 
     if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.admin.website.noRow);
 
     revalidateWebsitePages();
     return {
@@ -1113,12 +1117,13 @@ export async function uploadPagePhoto(page: string, formData: FormData): Promise
       .limit(1)
       .returns<Record<string, string | null>[]>();
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("site_content")
       .update({ [column]: driveFileId })
-      .eq("id", true);
+      .eq("id", true).select("id");
 
     if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.admin.website.noRow);
 
     const previousFileId = current?.[0]?.[column];
     if (previousFileId) await trashInDrive(previousFileId);
@@ -1143,12 +1148,13 @@ export async function removePagePhoto(page: string, requestId: string): Promise<
       .limit(1)
       .returns<Record<string, string | null>[]>();
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("site_content")
       .update({ [column]: null })
-      .eq("id", true);
+      .eq("id", true).select("id");
 
     if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.admin.website.noRow);
 
     const previousFileId = current?.[0]?.[column];
     if (previousFileId) await trashInDrive(previousFileId);
@@ -1169,11 +1175,12 @@ export async function savePagePhotoAlt(page: string, formData: FormData): Promis
       const v = String(formData.get(name) ?? "").trim().slice(0, 300);
       return v === "" ? null : v;
     };
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("site_content")
       .update({ [`${page}_photo_alt`]: clean("alt"), [`${page}_photo_alt_th`]: clean("alt_th") })
-      .eq("id", true);
+      .eq("id", true).select("id");
     if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.admin.website.noRow);
 
     revalidateWebsitePages();
     return { ok: true, success: t.common.saved };

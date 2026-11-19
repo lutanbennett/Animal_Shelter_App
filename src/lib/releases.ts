@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "Website settings: if a shelter has no website settings row yet, a save in Website now says so, and to ask the product administrator, instead of saying it saved when nothing was kept.", admin: true },
 ];
 
 /** Newest first. */
