@@ -524,7 +524,7 @@
       "reason": "Reads the key only to compare it, in constant time, with the bearer token a release-mail request carries; it queries nothing and writes nothing."
     },
     {
-      "id": "worker/shelter.mjs#resolveShelter",
+      "id": "worker/shelter.mjs#resolveShelterSite",
       "classification": "cross-shelter",
       "reason": "Calls resolve_shelter_host(p_host) (0382, executable by service_role only) to learn which shelter a request host belongs to, and sends the answer as x-shelter-id. Writes nothing; a failed lookup sends no header, so the database returns no rows."
     },
