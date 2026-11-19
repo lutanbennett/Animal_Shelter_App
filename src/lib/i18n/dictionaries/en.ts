@@ -2055,6 +2055,7 @@ const en = {
         adminOnly: "Only an Admin can change this.",
         twoStep: "Sign in with your authenticator app (2-step verification) to change this.",
         unknownArea: "That switch does not exist.",
+        noRow: "This shelter has no settings row yet, so the switch was not saved. Ask the product administrator to set the shelter up, then try again.",
       },
     },
     security: {

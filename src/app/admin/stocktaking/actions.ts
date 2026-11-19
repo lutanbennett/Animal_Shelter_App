@@ -35,11 +35,15 @@ export async function setStocktakingSwitch(area: StocktakingArea, enabled: boole
     if (!(area in COLUMN)) return { ok: false, error: e.unknownArea };
     if (!(await hasAdminRole())) return { ok: false, error: e.adminOnly };
     if (!(await hasTwoStep())) return { ok: false, error: e.twoStep };
-    const { error } = await supabase
+    // .select() returns the rows the update touched. An update matching nothing is not an error to
+    // Postgres, so without it a shelter lacking its site_content row would "save" and keep nothing.
+    const { data, error } = await supabase
       .from("site_content")
       .update({ [COLUMN[area]]: enabled })
-      .eq("id", true);
+      .eq("id", true)
+      .select("id");
     if (error) return databaseFailure("stocktaking.setSwitch", error, t.common);
+    if (!data || data.length === 0) return { ok: false, error: e.noRow };
 
     // Everything that forecasts or lists stock reads the switch.
     for (const path of [
