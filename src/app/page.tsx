@@ -37,7 +37,8 @@ import { SiteBody } from "@/components/SiteBody";
 import { PublicHeader } from "./adopt/PublicHeader";
 import { PublicFooter } from "./adopt/PublicFooter";
 import { LockedLanding } from "./LockedLanding";
-import { isPublicSiteLocked, isPublicSiteOff } from "@/lib/public-site";
+import { isPublicSiteLocked, isPublicSiteOff, type PublicSiteState } from "@/lib/public-site";
+import { getPublicSiteState } from "@/lib/public-site-request";
 import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
 import { redirect } from "next/navigation";
 import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
@@ -78,14 +79,15 @@ const textLink =
  * hero photo as the image, so a link to the site previews as the site.
  */
 export async function generateMetadata(): Promise<Metadata> {
-  const [supabase, { t, locale }, origin] = await Promise.all([
+  const [supabase, { t, locale }, origin, site] = await Promise.all([
     createClient(),
     getT(),
     getSiteOrigin(),
+    getPublicSiteState(),
   ]);
   // Locked and signed out: no share preview — it would describe the site
   // the visitor can't see (docs/decisions.md, 2026-09-25).
-  if (await showsLockedLanding(supabase)) {
+  if (await showsLockedLanding(supabase, site)) {
     return { title: t.header.appName, robots: { index: false, follow: false } };
   }
   const content = await loadSiteContent(supabase);
@@ -126,12 +128,13 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 async function showsLockedLanding(
   supabase: Awaited<ReturnType<typeof createClient>>,
+  site: PublicSiteState,
 ): Promise<boolean> {
-  if (!isPublicSiteLocked()) return false;
+  if (!isPublicSiteLocked(site)) return false;
   // Off: nobody sees the website. A signed-in login never gets this far
   // (offSiteDestination sends it on first); this keeps the share preview
   // empty for everyone.
-  if (isPublicSiteOff()) return true;
+  if (isPublicSiteOff(site)) return true;
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -148,13 +151,14 @@ async function showsLockedLanding(
  */
 async function offSiteDestination(
   supabase: Awaited<ReturnType<typeof createClient>>,
+  site: PublicSiteState,
 ): Promise<string | null> {
-  if (!isPublicSiteOff()) return null;
+  if (!isPublicSiteOff(site)) return null;
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
-  return signedInLandingPath(await loadSessionRole(supabase), null);
+  return signedInLandingPath(await loadSessionRole(supabase), null, site);
 }
 
 /**
@@ -167,9 +171,10 @@ async function offSiteDestination(
  */
 export default async function WelcomePage() {
   const supabase = await createClient();
-  const offDestination = await offSiteDestination(supabase);
+  const site = await getPublicSiteState();
+  const offDestination = await offSiteDestination(supabase, site);
   if (offDestination) redirect(offDestination);
-  if (await showsLockedLanding(supabase)) return <LockedLanding />;
+  if (await showsLockedLanding(supabase, site)) return <LockedLanding />;
   const [{ t, locale }, origin] = await Promise.all([getT(), getSiteOrigin()]);
 
   const [content, pages, photosResult, statsResult, figuresResult, friendsResult] = await Promise.all([

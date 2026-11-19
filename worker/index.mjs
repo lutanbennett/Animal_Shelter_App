@@ -141,7 +141,9 @@ async function route(request, env, ctx) {
   request = await withShelter(request, env);
 
   const url = new URL(request.url);
-  const cacheable = isCacheable(request, url);
+  // A shelter whose website is locked or off (x-public-site, worker/shelter.mjs, #wbsof) is never served from or stored in the edge
+  // cache: a page cached while it was open would otherwise outlive the switch by up to CACHE_TTL_SECONDS. Open is the common case.
+  const cacheable = isCacheable(request, url) && (request.headers.get("x-public-site") ?? "open") === "open";
   if (!cacheable) {
     return withHeaders(await serve(request, env, ctx), { "x-lanna-cache": "BYPASS" });
   }

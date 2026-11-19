@@ -6,6 +6,7 @@
 
 import { redirect } from "next/navigation";
 import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
+import { getPublicSiteState } from "@/lib/public-site-request";
 import { safeNextPath } from "@/lib/auth/next-path";
 import { ADOPTER_PATH, loadAdopterScope } from "@/lib/adopter/scope";
 import { getT } from "@/lib/i18n/get-t";
@@ -51,7 +52,7 @@ export async function login(
   // Back to the page that sent them to sign in, if any (the form carries
   // /login?next=… as a hidden field); src/lib/auth/next-path.ts. A public
   // viewer lands on the home page instead (src/lib/auth/app-access.ts).
-  redirect(signedInLandingPath(role, safeNextPath(formData.get("next") as string)));
+  redirect(signedInLandingPath(role, safeNextPath(formData.get("next") as string), await getPublicSiteState()));
 }
 
 /**
