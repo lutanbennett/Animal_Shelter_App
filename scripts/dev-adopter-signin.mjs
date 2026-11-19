@@ -9,6 +9,9 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
+import { bail, runMain } from "./lib/exit.mjs";
+
+async function main() {
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -47,7 +50,7 @@ async function remove() {
 
 if (process.argv.includes("--remove")) {
   await remove();
-  process.exit(0);
+  bail(0);
 }
 
 let resident = ok(await service.from("residents").select("id").eq("resident_code", CODE).maybeSingle(), "find resident");
@@ -74,3 +77,5 @@ if (signErr) throw signErr;
 const sets = [...jar].map(([n, v]) => `document.cookie=${JSON.stringify(`${n}=${encodeURIComponent(v)}; path=/; max-age=3000; samesite=lax`)}`);
 console.error(`${EMAIL} is an adopter of ${CODE} on dev (no role, no card). Run this in javascript_tool on http://localhost:${port}:`);
 console.log(`${sets.join(";")};location.href="/adopter-update"`);
+}
+await runMain(main);

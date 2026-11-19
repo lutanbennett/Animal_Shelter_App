@@ -39,6 +39,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
+import { runMain } from "./lib/exit.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BASE = (process.env.MANUAL_BASE_URL ?? "http://localhost:3000").replace(/\/$/, "");
@@ -316,7 +317,4 @@ async function discoverIds(page) {
   return ids;
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+await runMain(main);

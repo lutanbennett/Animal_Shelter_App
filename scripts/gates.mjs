@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// exit-ok: every process.exit is either before any child starts or after every gate child has closed; the children are awaited, not left running
 // The merge train's gates in one command, with every exit code printed.
 //
 // Runs `npm run typecheck`, `npm run lint`, `npm test` and `npm run build` — the same

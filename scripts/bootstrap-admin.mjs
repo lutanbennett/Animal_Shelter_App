@@ -31,6 +31,9 @@
 import { randomBytes } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
+import { bail, runMain } from "./lib/exit.mjs";
+
+async function main() {
 
 const { name: envName, rest } = parseEnvArg(process.argv.slice(2));
 const email = rest.find((a) => a.includes("@"));
@@ -43,7 +46,7 @@ const RULE_STARTS_AT = "2026-10-01T00:00:00Z";
 const setupWindowEnd = () => new Date(Date.now() + 3 * 86_400_000).toISOString();
 if (!email) {
   console.error("bootstrap-admin: give the admin's email address.");
-  process.exit(2);
+  bail(2);
 }
 const env = loadEnv(envName);
 const admin = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
@@ -160,3 +163,5 @@ async function bootstrap() {
 
 // exitCode, not exit(): exiting straight after fetch trips a libuv assertion on Windows.
 process.exitCode = resetTwoStep ? await resetFactors() : allowSetup ? await allowSetup2() : await bootstrap();
+}
+await runMain(main);

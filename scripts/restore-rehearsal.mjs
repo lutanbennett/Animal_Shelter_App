@@ -38,6 +38,9 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { decryptBackup } from "./lib/backup-crypto.mjs";
 import { aclTocLines, archiveObjects, compareAcls, GRANT_SCHEMAS, resetSql } from "./lib/restore-grants.mjs";
+import { ExitRequest, bail, runMain } from "./lib/exit.mjs";
+
+async function main() {
 
 const MIN_PG_MAJOR = 17;
 const SCHEMAS = ["public", "private", "auth"];
@@ -222,7 +225,7 @@ try {
 
 if (failures > 0) {
   console.error(`\nREHEARSAL FAILED: ${failures} check(s) did not pass. This backup did not restore whole.`);
-  process.exit(1);
+  bail(1);
 }
 console.log("\nREHEARSAL PASSED: the backup decrypts, restores, and every table, row, view, function, policy and trigger in it came back.");
 console.log("Not proved here: that a Supabase project comes back (README \"Backups\").");
@@ -231,7 +234,7 @@ console.log("Not proved here: that a Supabase project comes back (README \"Backu
 
 function fail(message) {
   console.error(message);
-  process.exit(1);
+  bail(1);
 }
 
 function valueOf(flag) {
@@ -330,3 +333,5 @@ function findPgBin() {
   }
   return fail(`PostgreSQL ${MIN_PG_MAJOR}+ server programs (initdb, pg_ctl) not found. README "Backups" says how to get them, or set PG_BIN to their folder.`);
 }
+}
+await runMain(main);
