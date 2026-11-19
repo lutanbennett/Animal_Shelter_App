@@ -167,7 +167,7 @@ export async function linkShelterAdmin(shelterId: string, email: string, request
 }
 
 /*
- * Create a shelter's FIRST login and link it as its Admin (#flogn, 0424). The database is the gate: product_admin_permit_first_login
+ * Create a shelter's FIRST login and link it as its Admin (#flogn, 0425). The database is the gate: product_admin_permit_first_login
  * (signed-in client, PADMIN and aal2) answers only for a shelter whose Admin role has no login yet and an address no login has, and records it.
  * Only after that does the service role create the login, with a temporary password shown once (stored replay: a refusal). Admin gets no cards.
  * If the link fails the new login is deleted again, so nothing orphaned is left.

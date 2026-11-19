@@ -12,6 +12,7 @@ import {
   createShelter,
   createShelterAdminRole,
   linkShelterAdmin,
+  createShelterAdminLogin,
   loginExists,
   mapShelterHost,
   removeProductAdmin,

@@ -37,15 +37,6 @@ drop trigger if exists product_admin_login_grants_no_truncate on public.product_
 create trigger product_admin_login_grants_no_truncate before truncate on public.product_admin_login_grants
   for each statement execute function public.product_admin_login_grants_refuse_change();
 
-do $$
-begin
-  if exists (select 1 from pg_roles where rolname = 'rls_definer') then
-    drop policy if exists definer_all on public.product_admin_login_grants;
-    create policy definer_all on public.product_admin_login_grants for all to rls_definer using (true) with check (true);
-    grant select, insert on public.product_admin_login_grants to rls_definer;
-  end if;
-end $$;
-
 create or replace function public.product_admin_permit_first_login(p_shelter uuid, p_email text)
 returns void
 language plpgsql
@@ -73,9 +64,4 @@ $$;
 revoke all on function public.product_admin_permit_first_login(uuid, text) from public, anon;
 grant execute on function public.product_admin_permit_first_login(uuid, text) to authenticated, service_role;
 
-do $$
-begin
-  if exists (select 1 from pg_roles where rolname = 'rls_definer') then
-    alter function public.product_admin_permit_first_login(uuid, text) owner to rls_definer;
-  end if;
-end $$;
+-- OWNER: postgres, not rls_definer. The function reads auth.users, which rls_definer cannot (same as 0417's login_exists and by-email wrappers; precedent 0370).
