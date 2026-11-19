@@ -1,3 +1,4 @@
+// exit-debt: exits follow fetches mid-flow; needs a restructure (#scimp)
 // Cut one resident's placement history back to "Intake, then fostered" —
 // written for Panda, whose AppSheet history came across with placements
 // that never happened (docs/data-migration.md; confirmed with the shelter

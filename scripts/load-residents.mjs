@@ -1,3 +1,4 @@
+// exit-ok: every process.exit precedes the database section; none after the marked line
 // Bulk-load residents into one environment's database from a reviewed CSV.
 //
 //   node scripts/load-residents.mjs --file residents.csv                       # dry run against dev

@@ -8,6 +8,7 @@
 // Exit 0 only when the snapshot read something AND nothing differs.
 import { readFileSync, writeFileSync } from "node:fs";
 import { loadEnv, projectRef } from "./lib/env.mjs";
+import { exitWith } from "./lib/exit.mjs";
 
 const argv = process.argv.slice(2);
 const mode = argv[0];
@@ -94,13 +95,14 @@ function compare(a, b) {
   return diffs.length === 0 && nonEmpty.length > 0;
 }
 
+async function main() {
 if (mode === "--snapshot") {
   const { status, body } = await run(`begin; ${HELPERS} select who, obj, result from pg_temp.snapshot(); rollback;`);
-  if (status >= 300 || !Array.isArray(body)) { console.error("NOT CHECKED", status, JSON.stringify(body).slice(0, 400)); process.exit(2); }
+  if (status >= 300 || !Array.isArray(body)) { console.error("NOT CHECKED", status, JSON.stringify(body).slice(0, 400)); return 2; }
   writeFileSync(argv[1], JSON.stringify(body));
   console.log(`wrote ${body.length} rows to ${argv[1]}`);
 } else if (mode === "--diff") {
-  process.exit(compare(JSON.parse(readFileSync(argv[1], "utf8")), JSON.parse(readFileSync(argv[2], "utf8"))) ? 0 : 1);
+  return compare(JSON.parse(readFileSync(argv[1], "utf8")), JSON.parse(readFileSync(argv[2], "utf8"))) ? 0 : 1;
 } else if (mode === "--harness") {
   const mig = readFileSync(argv[1], "utf8");
   // One transaction: before, migration, after; the report leaves as the message of a final exception so everything rolls back.
@@ -112,12 +114,16 @@ do $d$ begin raise exception 'REPORT%', (select json_build_object('s0', (select 
   const { body } = await run(sql);
   const text = typeof body === "object" && body?.message ? body.message : JSON.stringify(body);
   const i = text.indexOf("REPORT");
-  if (i < 0) { console.error("NOT CHECKED", text.slice(0, 600)); process.exit(2); }
+  if (i < 0) { console.error("NOT CHECKED", text.slice(0, 600)); return 2; }
   const rep = JSON.parse(text.slice(i + 6).split(/\nCONTEXT:/)[0].trim());
   const ok = compare(rep.s0, rep.s1);
   console.log(ok ? "HARNESS: no difference (rolled back)" : "HARNESS: FAILED");
-  process.exit(ok ? 0 : 1);
+  return ok ? 0 : 1;
 } else {
   console.error("usage: --harness <file.sql> | --snapshot <out.json> | --diff <a> <b>");
-  process.exit(2);
+  return 2;
 }
+return 0;
+}
+
+await exitWith(await main());

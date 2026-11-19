@@ -1,3 +1,4 @@
+// exit-ok: its only process.exit is a top-level token check before the first fetch
 // Read-only: which residents' PROFILE PHOTOS would 0342 hide from the website, and which are on it today without being an
 // approved picture of their own? Backlog #h8xqv; docs/decisions/2026-11-09-profile-photo-fails-open.md.
 //

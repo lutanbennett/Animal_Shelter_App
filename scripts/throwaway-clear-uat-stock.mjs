@@ -1,3 +1,4 @@
+// exit-ok: both process.exit calls are top-level refusals before any fetch runs
 // THROWAWAY — clears the stock figures out of the UAT database, which were
 // never a physical count (Lutan, 2026-09-27, during the role walkthrough).
 // Delete this file once it has been run and the result recorded.

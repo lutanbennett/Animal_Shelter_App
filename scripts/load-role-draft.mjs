@@ -29,6 +29,7 @@ import { readFileSync } from "node:fs";
 import { ACTIVITIES } from "../src/lib/permissions/catalogue.ts";
 import { cellsFor } from "../src/lib/roles-draft/resolve.ts";
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
+import { exitWith } from "./lib/exit.mjs";
 
 const { name: envName, rest } = parseEnvArg(process.argv.slice(2));
 const apply = rest.includes("--apply");
@@ -84,12 +85,13 @@ const word = (level, kind) => (level == null ? "none" : kind === "yesno" ? "yes"
 
 console.log(`Environment: ${envName} — project ${ref} — draft ${draftNo} — ${apply ? "APPLY" : "dry run (nothing is written)"}`);
 
+async function main() {
 const keys = Object.keys(draft.roles);
 const rolesFound = await query(`select key from roles where key in (${keys.map(lit).join(",")})`);
 const missing = keys.filter((k) => !rolesFound.some((r) => r.key === k));
 if (missing.length) {
   console.error(`These roles are in the draft but not in the database: ${missing.join(", ")}`);
-  process.exit(1);
+  return 1;
 }
 const current = await query(
   `select r.key as role, p.activity, p.level from role_permissions p join roles r on r.id = p.role_id where r.key in (${keys.map(lit).join(",")})`,
@@ -135,11 +137,11 @@ console.log(`\n${changes.length} cells change: ${gained} gained, ${lost} lost, $
 
 if (!apply) {
   console.log("Dry run. Add --apply to write this.");
-  process.exit(0);
+  return 0;
 }
 if (changes.length === 0) {
   console.log("Nothing to write.");
-  process.exit(0);
+  return 0;
 }
 
 const auditCount = async () => Number((await query("select count(*)::int as n from audit_log where table_name = 'role_permissions'"))[0].n);
@@ -159,3 +161,7 @@ await query(statements.join("\n"));
 
 const auditAfter = await auditCount();
 console.log(`Written. audit_log gained ${auditAfter - auditBefore} role_permissions rows (actor empty: a script, not a person in Settings).`);
+return 0;
+}
+
+await exitWith(await main());

@@ -11,6 +11,7 @@
 // (refresh-deceased-archive.ts, or the hub's Retry button per resident).
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { exitWith } from "./lib/exit.mjs";
 
 const { loadEnv, parseEnvArg, projectRef } = await import(
   pathToFileURL(join(process.cwd(), "scripts/lib/env.mjs")).href
@@ -61,8 +62,10 @@ const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/qu
 const text = await res.text();
 if (!res.ok) {
   console.error(`${name} (${ref}): ${text}`);
-  process.exit(1);
+  await exitWith(1);
 }
+else {
 const [row] = JSON.parse(text);
 console.log(`${name} (${ref}): ${row.archived} archived summaries, ${row.with_sara_am} with a ำ, ${row.in_header} of them in the header.`);
 for (const r of row.residents) console.log(`  ${r.resident_code}  ${r.name}  (${r.places.join(", ")})`);
+}

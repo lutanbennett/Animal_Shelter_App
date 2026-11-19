@@ -1,3 +1,4 @@
+// exit-debt: 25 exits, many after fetches in helpers; needs a restructure (#scimp)
 // Apply supabase/migrations/*.sql to one environment's Supabase project,
 // recording each file in a `schema_migrations` table so the database itself
 // knows what has been applied — no memory notes, no "did I run 0026?".

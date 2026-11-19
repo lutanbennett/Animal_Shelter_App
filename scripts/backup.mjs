@@ -1,3 +1,4 @@
+// exit-debt: fail() is called after the pooler fetch; needs a restructure (#scimp)
 // Back up one environment's Supabase database into the shelter's Google
 // Drive. Free-tier Supabase projects have no backups of their own (README
 // "Backups"), so this is production's only safety net.

@@ -21,6 +21,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
 import { appEnvForSupabaseUrl } from "../src/lib/app-env.ts";
+import { exitWith } from "./lib/exit.mjs";
 
 const { name: envName, rest: args } = parseEnvArg(process.argv.slice(2));
 const value = (n) => {
@@ -96,9 +97,10 @@ for (const id of ids) {
   else if (r.cancel_reason !== NOTE || r.calendar_change_kind !== "cancelled")
     problems.push(`${id}: not cancelled by the calendar poll (reason: ${r.cancel_reason ?? "none"}, kind: ${r.calendar_change_kind ?? "none"}); a person did that`);
 }
+async function main() {
 if (problems.length) {
   console.error(`Refusing; nothing changed:\n  ${problems.join("\n  ")}`);
-  process.exit(1);
+  return 1;
 }
 
 const change = `update clinic_visits set status = 'scheduled', cancel_reason = null, calendar_change_kind = null,
@@ -112,16 +114,20 @@ for (const r of rows) console.log(`  ${r.id}  dated ${r.appointment_date}  cance
 if (!apply) {
   const out = await query(`begin; ${change}; rollback;`).catch((e) => ({ error: e.message }));
   console.log(out.error ? `Dry run failed: ${out.error}` : "Dry run: the change runs cleanly (rolled back). Add --apply to do it.");
-  process.exit(out.error ? 1 : 0);
+  return out.error ? 1 : 0;
 }
 
 const desktop = [join(homedir(), "OneDrive", "Desktop"), join(homedir(), "Desktop")].find(existsSync) ?? homedir();
 const receipt = join(desktop, `restored-calendar-visits-${live ? "live" : "test"}-${new Date().toISOString().slice(0, 10)}.json`);
 if (existsSync(receipt)) {
   console.error(`${receipt} already exists; a receipt is never overwritten.`);
-  process.exit(2);
+  return 2;
 }
 writeFileSync(receipt, `${JSON.stringify({ at: new Date().toISOString(), rows }, null, 2)}\n`);
 console.log(`Receipt written first: ${receipt}`);
 const done = await query(`begin; ${change}; commit;`);
 console.log(`Restored: ${JSON.stringify(done)}`);
+return 0;
+}
+
+await exitWith(await main());
