@@ -361,6 +361,21 @@ npm run audit:prod
 
 Record the result under "Before the deploy" in the release record.
 
+### Prove the dev-only step-up is absent (every release, before any deploy)
+
+`dev-signin --aal2` (#dvaal) can raise a scripted dev login to aal2. It cannot run anywhere but dev, and this is the
+step that proves it rather than trusting it. From the main checkout, bare:
+
+```bash
+node scripts/check-dev-aal2-absent.mjs --env production
+node scripts/check-dev-aal2-absent.mjs --env uat
+```
+
+Each prints the static proofs (the helper is imported by `dev-signin.mjs` alone, nothing under `src/` or `worker/` mentions
+it, 0411's aal2 policies are untouched) and then reads that project: **no `dev-signin-*@example.invalid` login exists**.
+Exit 0 is "absent". **Any FAIL stops the release.** It sits here and not in `check-production.mjs` because that file
+is keyed to data checks, and this one also has to read the repository at the SHA being deployed.
+
 ## 4. Cut the release
 
 Its own small PR, from its own worktree — never in the main checkout:
