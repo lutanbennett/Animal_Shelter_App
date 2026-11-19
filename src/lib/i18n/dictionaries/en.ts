@@ -2736,6 +2736,7 @@ const en = {
       },
     },
     website: {
+      noRow: "This shelter has no website settings row yet, so nothing was saved. Ask the product administrator to set the shelter up, then try again.",
       title: "Website",
       subtitle:
         "Everything on the public website that isn't a resident or a project story: photos, the wording of each page in both languages, and how to reach the shelter. Changes go live immediately.",
