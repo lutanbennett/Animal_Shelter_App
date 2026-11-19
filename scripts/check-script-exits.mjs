@@ -35,8 +35,8 @@ const strictWidened = args.includes("--strict-widened");
 const root = resolve(args.find((a) => !a.startsWith("--")) ?? process.cwd());
 const rel = (p) => relative(root, p).split(sep).join("/");
 
-// Owned by another stream; reported rather than touched (brief, 2026-11-19).
-const EXEMPT = new Map([["scripts/dev-signin.mjs", "owned by the product-admin stream (#1736); for the planner to convert"]]);
+// Scripts exempted by name with a reason; keep empty rather than let a reason expire.
+const EXEMPT = new Map(); // none: dev-signin.mjs, the last, was converted 2026-11-20
 
 const walk = (dir, out = []) => {
   let names;

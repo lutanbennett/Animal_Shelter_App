@@ -208,6 +208,7 @@ try {
     `privileges differ from the backup after the privileges step: ${after.missing.length} missing, ${after.extra.length} extra\n      ${[...after.missing.slice(0, 5), ...after.extra.slice(0, 5)].join("\n      ")}`,
   );
 } catch (e) {
+  if (e instanceof ExitRequest) throw e; // a fail() in a helper: its message is already printed; the finally still cleans up
   failures++;
   console.error(`\nStopped: ${e.message}`);
 } finally {
