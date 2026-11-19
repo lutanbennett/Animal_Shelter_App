@@ -7,10 +7,7 @@ import { isProductAdmin } from "@/lib/auth/product-admin";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { generateTemporaryPassword } from "@/lib/auth/temp-password";
-import { MUST_CHANGE_PASSWORD } from "@/lib/auth/password-change";
-import { SETUP_OPEN_UNTIL, setupWindowEnd } from "@/lib/auth/two-step";
+import { createAuthLogin, deleteAuthLogin } from "@/lib/platform/create-login";
 
 /*
  * Add and remove a product administrator (#shmgt). The checks here are the courtesy: the database is the
@@ -195,25 +192,18 @@ export async function createShelterAdminLogin(
         const msg = shelterError(e, permit.error.code, e.firstLoginRefused, e.firstLoginRefused);
         return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.createAdminLogin", permit.error, t.common);
       }
-      const temporaryPassword = generateTemporaryPassword();
-      const admin = createAdminClient();
-      const created = await admin.auth.admin.createUser({
-        email: addr,
-        password: temporaryPassword,
-        email_confirm: true,
-        app_metadata: { [MUST_CHANGE_PASSWORD]: true, [SETUP_OPEN_UNTIL]: setupWindowEnd() },
-      });
-      if (created.error || !created.data.user) {
-        if (created.error?.code === "email_exists") return { ok: false, error: e.firstLoginRefused };
-        return databaseFailure("productAdmin.createAdminLogin", created.error ?? new Error("no user"), t.common);
+      const created = await createAuthLogin(addr);
+      if ("error" in created) {
+        if (created.error.code === "email_exists") return { ok: false, error: e.firstLoginRefused };
+        return databaseFailure("productAdmin.createAdminLogin", new Error("createUser failed: " + (created.error.code ?? "unknown")), t.common);
       }
       const linked = await supabase.rpc("product_admin_link_shelter_admin_by_email", { p_shelter: shelterId, p_email: addr });
       if (linked.error) {
-        await admin.auth.admin.deleteUser(created.data.user.id);
+        await deleteAuthLogin(created.id);
         return databaseFailure("productAdmin.createAdminLogin", linked.error, t.common);
       }
       revalidatePath("/platform");
-      return { ok: true, temporaryPassword, email: addr };
+      return { ok: true, temporaryPassword: created.temporaryPassword, email: addr };
     },
     { storedAs: () => ({ ok: false, error: e.secretShownOnce }) },
   );

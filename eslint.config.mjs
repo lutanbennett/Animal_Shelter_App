@@ -39,7 +39,7 @@ const eslintConfig = defineConfig([
       "src/app/account/password/actions.ts",
       "src/app/admin/recent-changes/page.tsx",
       "src/app/admin/security/actions.ts",
-      "src/app/platform/actions.ts",
+      "src/lib/platform/create-login.ts",
       "src/app/admin/security/page.tsx",
       "src/app/admin/security/role-options.ts",
       "src/app/admin/security/verify/actions.ts",

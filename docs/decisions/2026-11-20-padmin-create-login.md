@@ -11,7 +11,7 @@ Recorded under `outsideTheCardSystem.productAdmin`, not debt, and **not a preced
 - `createShelterAdminLogin` in `src/app/platform/actions.ts`: PADMIN and aal2 checks (courtesy), then the permit call through the signed-in client, then the **service role**
   creates the login (`auth.admin.createUser`, temporary password, must-change-password, setup window as the Security page does), then links it with
   `product_admin_link_shelter_admin_by_email`; if linking fails the new login is deleted. The temporary password is shown once; the stored replay is a refusal (the password is not kept).
-- The service-role use is declared under `serviceRoleSites`; the function and the new table's policy under `database.declared`.
+- The service-role call lives in `src/lib/platform/create-login.ts` (not a "use server" file, so the existing admin-check rule needs no exemption). It is declared under `serviceRoleSites`; the function and the new table's policy under `database.declared`.
 - Console: a "Create a login for this shelter's Admin" button appears beside Link when the lookup says no login has the address.
 
 ## Why not a card
