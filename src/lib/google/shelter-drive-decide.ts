@@ -1,7 +1,8 @@
 import { DriveCredentialsError, decryptSecret } from "./drive-credentials-crypto";
+import { FALLBACK_SHELTER_KEY } from "./fallback-shelter-key";
 
 /** The pure half of the per-shelter Drive rules: no I/O and no Next imports, so tests can load it. */
-export const FALLBACK_SHELTER_KEY = "lanna";
+export { FALLBACK_SHELTER_KEY };
 
 export type DriveCredentials = {
   /** Token-cache key: one cached access token per Google account. */

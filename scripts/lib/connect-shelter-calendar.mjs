@@ -1,7 +1,7 @@
 // The logic behind scripts/connect-shelter-calendar.mjs (#calsh piece 1), kept apart so a test can run it with no network and no
 // database. Modelled on connect-shelter-drive.mjs. Everything here is either pure or takes its network call as an argument.
 import { encryptSecret } from "../../src/lib/google/drive-credentials-crypto.ts";
-import { FALLBACK_SHELTER_KEY } from "../../src/lib/google/shelter-drive-decide.ts";
+import { FALLBACK_SHELTER_KEY } from "../../src/lib/google/fallback-shelter-key.ts";
 
 const CALENDAR_ID = /^[A-Za-z0-9._@#%+=-]{3,300}$/;
 const CLIENT_ID = /^[A-Za-z0-9._-]{10,300}$/;
