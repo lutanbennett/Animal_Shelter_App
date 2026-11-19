@@ -9,7 +9,7 @@
 |---|---|
 | Feature | Canary nightly runs trusted and untrusted passes |
 | Backlog item | `docs/backlog.md` → #cnutr |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/canary-plain-run-trust` @ `C:\Development\Animal_Shelter_<feature>` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | see PR |
 | Tested by / date | Claude / 2026-11-19 |
