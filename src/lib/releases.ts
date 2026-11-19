@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "A second shelter can now keep its photos in its own Google Drive account. A photo added for one shelter goes into that shelter's own Drive folder and is never filed in another shelter's. Nothing changes for Lanna.", admin: true },
 ];
 
 /** Newest first. */
