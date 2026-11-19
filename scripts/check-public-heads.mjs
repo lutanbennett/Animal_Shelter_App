@@ -5,6 +5,7 @@
 // explicit ?-less English request with no header renders en_GB. The page list IS the sitemap, so the two
 // cannot disagree. Needs a dev server: node scripts/check-public-heads.mjs [port] [extra bare paths...].
 import fs from "node:fs";
+import { exitWith } from "./lib/exit.mjs";
 const port = process.argv[2] ?? (fs.existsSync(".port") ? fs.readFileSync(".port", "utf8").trim() : "3000");
 const base = `http://localhost:${port}`;
 const get = async (p, headers = {}) => (await fetch(base + p, { headers, redirect: "manual" })).text();
@@ -39,4 +40,4 @@ for (const p of bare) {
   if (!/property="og:locale" content="en_GB"/.test(enHtml)) fail(`bare ${p}: locale=en cookie did not override Accept-Language th`);
 }
 console.log(`${bare.length} pages x 2 shapes checked, ${bad} failure(s)`);
-process.exit(bad ? 1 : 0);
+await exitWith(bad ? 1 : 0);

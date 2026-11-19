@@ -3,17 +3,20 @@
 //   node scripts/check-tenancy-shared-tables.mjs [--env test|uat|production]
 import fs from "node:fs";
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
+import { exitWith } from "./lib/exit.mjs";
 
 const { name } = parseEnvArg(process.argv.slice(2));
 const env = loadEnv(name);
-if (!env.SUPABASE_ACCESS_TOKEN) { console.error("SUPABASE_ACCESS_TOKEN is required. NOT CHECKED."); process.exit(2); }
+if (!env.SUPABASE_ACCESS_TOKEN) { console.error("SUPABASE_ACCESS_TOKEN is required. NOT CHECKED."); await exitWith(2); }
+else {
 const query = `select c.relname as name, exists (select 1 from pg_attribute a where a.attrelid = c.oid and a.attname = 'shelter_id' and not a.attisdropped) as scoped
   from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind in ('r','p') order by 1`;
 const res = await fetch(`https://api.supabase.com/v1/projects/${projectRef(env)}/database/query`, {
   method: "POST", headers: { Authorization: `Bearer ${env.SUPABASE_ACCESS_TOKEN}`, "Content-Type": "application/json" }, body: JSON.stringify({ query }),
 });
 const rows = await res.json();
-if (!res.ok || !Array.isArray(rows) || !rows.length) { console.error(`catalogue read failed (HTTP ${res.status}). NOT CHECKED.`); process.exit(2); }
+if (!res.ok || !Array.isArray(rows) || !rows.length) { console.error(`catalogue read failed (HTTP ${res.status}). NOT CHECKED.`); await exitWith(2); }
+else {
 const reg = JSON.parse(fs.readFileSync("docs/tenancy-shared-tables-registry.json", "utf8")).tables;
 const unscoped = rows.filter((r) => !r.scoped).map((r) => r.name);
 const bad = [];
@@ -27,4 +30,6 @@ for (const [t, why] of Object.entries(reg)) {
 console.log(`${rows.length - unscoped.length} scoped, ${unscoped.length} unscoped, ${Object.keys(reg).length} recorded`);
 bad.forEach((b) => console.log(b));
 console.log(bad.length ? "NOT CLEAN" : "every unscoped table is recorded");
-process.exit(bad.length ? 1 : 0);
+await exitWith(bad.length ? 1 : 0);
+}
+}
