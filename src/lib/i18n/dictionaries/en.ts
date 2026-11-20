@@ -904,6 +904,10 @@ const en = {
       body: "We're busy putting it together, and it will be available soon. Do come back and meet the animals looking for a home.",
       signInHint: "Work at the shelter? Sign in to see the app and the public pages.",
     },
+    closed: {
+      title: "This shelter is closed",
+      body: "This shelter has been switched off on CooperJaidee, so its website and its app are not available. Its records are kept safe. If you think this is a mistake, please contact the shelter.",
+    },
     forgot: {
       title: "Reset your password",
       subtitle: "Enter the email you sign in with and we'll send a link to choose a new password.",
