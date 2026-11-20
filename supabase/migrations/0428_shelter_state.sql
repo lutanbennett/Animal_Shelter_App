@@ -1,4 +1,5 @@
--- consumer: src/app/platform/page.tsx, src/app/platform/ProductAdminPanel.tsx, src/app/platform/actions.ts (the #pacon console redesign, app half); worker/shelter.mjs (reads resolve_shelter_site; no change needed)
+-- consumer: src/app/platform/page.tsx, src/app/platform/ProductAdminPanel.tsx, src/app/platform/actions.ts
+-- (the #pacon console redesign is the app half; worker/shelter.mjs reads resolve_shelter_site and needs no change)
 --
 -- #pacon SCHEMA HALF. Lutan, 2026-11-20 (docs/decisions/2026-11-20-product-admin-console-requirements.md, sections A, B, E).
 -- docs/decisions/2026-11-20-shelter-state-schema.md is the specification the screen is built from; read it before this file.
@@ -79,7 +80,7 @@ revoke all on function resolve_shelter_site(text) from public, anon, authenticat
 grant execute on function resolve_shelter_site(text) to service_role;
 
 -- ---------------------------------------------------------------------------
--- The read. Everything in 0424's product_admin_shelters() unchanged, then seven columns. Archived shelters ARE listed (so they can be reopened).
+-- The read. Everything in 0424's product_admin_shelters() unchanged, then eight columns. Archived shelters ARE listed (so they can be reopened).
 -- ---------------------------------------------------------------------------
 drop function if exists public.product_admin_shelters();
 create function public.product_admin_shelters()

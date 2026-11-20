@@ -1198,6 +1198,31 @@
         "migration": "0427_shelter_enquiries.sql",
         "item": "policy public.shelter_enquiries.definer_all",
         "reason": "Shelter enquiry (docs/decisions/2026-11-20-shelter-enquiry-schema.md): lets the definer owner (rls_definer) write; not reachable by any login. Recorded under outsideTheCardSystem.productAdmin (the PADMIN list), not debt; it is not the website-account exception and widens nothing."
+      },
+      {
+        "migration": "0428_shelter_state.sql",
+        "item": "function public.product_admin_shelters definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-20-shelter-state-schema.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. The body is 0424's plus the account holder, primary host, enquiry link, archived_at and public_site. It grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0428_shelter_state.sql",
+        "item": "function public.product_admin_set_shelter_account_holder definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-20-shelter-state-schema.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. It writes only the shelter's four account-holder columns, scoped to that shelter for the transaction. It grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0428_shelter_state.sql",
+        "item": "function public.product_admin_set_shelter_archived definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-20-shelter-state-schema.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. It writes only shelters.archived_at; nothing else is touched. It grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0428_shelter_state.sql",
+        "item": "function public.product_admin_set_primary_host definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-20-shelter-state-schema.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. It moves only the is_primary flag among the shelter's own addresses. It grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0428_shelter_state.sql",
+        "item": "function public.product_admin_carry_enquiry definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-20-shelter-state-schema.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. It copies an enquiry's contact onto the shelter (never over a typed value), links them and marks the enquiry created. It grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
       }
     ],
     "stubs": [
