@@ -189,15 +189,11 @@ list) and `#34a30`. **`#shsup` is partly shipped**: #1770 and #1779 built the en
 unchanged.** Carried forward rather than reworded, because rewording it five times is how it became
 invisible:
 
-- **Narrow the floor row to ~87.2-91.6k**, note that **exact repeats recur across days, briefs and
-  unrelated streams**, and **OFFER NO CAUSE.**
-- **Drop the band-table note about two bottoms nearer 135k.** Nothing has landed below **142,750** in
-  thirty-two readings.
-- **Lower the edit-is-not-an-audit row back toward the audit row.**
-- **The `+10k` for looking STILL has no verdict** — `drive-scope-read` was the test and its brief was
-  corrected mid-flight. **The next looking-not-driving stream needs a brief nobody has to touch.**
-- **NEW, AND THE ONE WITH EVIDENCE: the specification discount has its first verdict** (above). Write it
-  into the band table as a measured instrument, with #1770 and #1779 named.
+- **DONE (plan-day-skill-edits):** floor row narrowed to ~87.2–91.6k, no cause offered.
+- **STRUCK, PHANTOM:** "two bottoms nearer 135k" and "the +10k for looking" never existed in the skill files. `grep -n "135k|for looking" .claude/skills/plan-day/*.md` is empty and `git log -S` finds neither across history. Nothing to drop or to give a verdict.
+- **STILL OPEN, conditional:** lowering "Reads very widely and edits many call sites" toward the audit row. The only reading found (`silent-empty-reads`, 133,986, older floor and dials) is not enough; needs readings at current dials.
+- **DONE:** specification discount written in as measured (two held, one unrelated overrun).
+- **DONE:** step 7 counts only planned streams (Lutan, 2026-11-20).
 
 ## PROCESS NOTES
 

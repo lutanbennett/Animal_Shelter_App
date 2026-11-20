@@ -324,10 +324,10 @@ stream **actually ran on**, never what you recommended.
 setup, once each**, however often the batch is re-planned. `Streams merged since handover <slug>:
 <n> of 9 (<date>)` is the distance to the next edition. **A handover is written every NINE merged stream
 PRs since the previous one — across batches, plans and chats (Lutan, 2026-11-18); a plan finishing is no
-trigger.** One stream, one PR, one count, even with two PRs; an unplanned stream that shipped a PR counts
-in; a stream counts even if `unmeasured` or `rescoped=yes` (counting is not a band reading). A release's
+trigger.** One stream, one PR, one count, even with two PRs; ~~an unplanned stream that shipped a PR counts
+in~~ **SUPERSEDED 2026-11-20 (Lutan: "no it's 9 streams that you plan, anything outside of your plan does not count"): only a stream a plan created counts, however much an unplanned one shipped (the old clause gave two wrong counts in one turn)**; a stream counts even if `unmeasured` or `rescoped=yes` (counting is not a band reading). A release's
 own two PRs, the handover's PR, bot PRs and unmerged branches do not. A fresh chat recovers the count
-from the latest handover's "Streams covered" list: merged stream PRs since then, by `gh pr list`.
+from the latest handover's "Streams covered" list: merged PRs of **planned** streams since then (`gh pr list` cannot tell planned from unplanned, so read the handover's covered list).
 
 **Count interruptions as a cost of the BRIEF, not the stream**, and record them here. A batch that cost
 an unplanned interruption is a briefing defect even when every check is green.
@@ -365,7 +365,7 @@ never a figure.
 
 | scale | band |
 |---|---|
-| Floor, before any work | **~86–90k, measured 2026-11-17 across two complete sets in one day (nine streams)** — re-measure, never carry forward |
+| Floor, before any work | **~87.2–91.6k, measured 2026-11-21 (seven planned streams, one complete day)** — exact repeats recur across days, briefs, dials, schema and app work: record the range and the repeats, **offer no cause**; re-measure, never carry forward |
 | **Ordinary well-briefed stream — the default** | **146–175k** |
 | Quick win (1–3 files, answer already on the item) | 143–170k (bottom raised 2026-11-18, see reference.md) |
 | Routing into surfaces that already exist | 120–165k |
@@ -403,7 +403,7 @@ how many **live interactions** must it drive (dearest, and it scales with the ro
 
 **Discounts and premiums that are real:** a brief handing over the cause, the decision AND the shape of
 the fix lands near the floor. A schema half that wrote the app half a **specification** (not just a
-column) discounts it to the bottom of its row — and quoting that specification into the brief is the
+column) discounts it to the bottom of its row (**measured 2026-11-21: #1770→#1779 and #1788→#1790 held; #1786→#1789 overran for an unrelated reason, a layer the band never priced — two held, one unrelated**) — and quoting that specification into the brief is the
 planner's job. A permissions schema PR carries **+30k of proof**. Asking for real browser verification
 adds **~30k** whatever the code shape. *"Modelled on an existing screen"* is not a discount until you
 list what that screen does **not** do. Reconciling two sources of truth bands on the harder side.
