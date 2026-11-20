@@ -134,7 +134,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | That the wordmark reads well as one word in the display face beside the mark — `CooperJaidee` is a judgement about type, not about code, and it is Lutan's call. If he wants a different form (`Cooperjaidee`, or the camel-case kept), it is one string in `CooperJaideeLockup.tsx` plus the dictionary entries | the console header on `cooperjaidee.org/platform`, or `http://localhost:3002/platform` with a product-administrator login |
+| 1 | **ANSWERED 2026-11-20 — Lutan looked and confirmed `CooperJaidee` is the form he wants (*"Yes, that's right"*).** The question was whether the wordmark reads well as one word in the display face beside the mark: a judgement about type, not about code, and his. Nothing changed as a result, because that is what shipped | the console header on `cooperjaidee.org/platform` |
 
 ## Sign-off
 
@@ -147,9 +147,9 @@ Automated checks by: Claude  Date: 2026-11-20
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: Lutan's eye on the one-word wordmark in the display face
+- [x] The manual list above is empty, or every item in it was checked by a person — the one item was put to Lutan and he answered it; nothing followed from his answer, because the merged code already reads `CooperJaidee`
 
-Manual verification by: pending: Lutan to confirm the one-word wordmark reads well in the header
+Manual verification by: Lutan Bennett — confirmed in chat (*"Yes, that's right"*), then asked for it to be recorded here; line written by Claude at their request  Date: 2026-11-20
 
 ### Result
 
