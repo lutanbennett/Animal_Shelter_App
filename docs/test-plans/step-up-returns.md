@@ -86,7 +86,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [ ] Backlog item ticked — n/a: see the PR; #stpbk ticked on this branch only once the Settings journey has been pressed
 - [x] Decision file `docs/decisions/2026-11-20-step-up-returns.md`
 - [x] README still accurate
-- [ ] Release notes — n/a: only a product administrator reaches the console, and today that is one person; Settings-side behaviour is unchanged
+- [ ] **Release notes.** Would a shelter user notice this change? n/a: only a product administrator reaches the console, and today that is one person; Settings-side behaviour is unchanged
 - [x] Commit messages say why
 
 ## 8. Pre-production gate
