@@ -595,7 +595,10 @@ if (visible.length && added.length === 0 && !releaseAnswered) {
 }
 const releaseNote =
   visible.length && added.length === 0 && releaseNa.length
-    ? `\nNo release note, on the plan's word (touches ${shown}):\n` + releaseNa.map((r) => `  ${r}`).join("\n")
+    ? `\nNo release note, on the plan's word (touches ${shown}). Did you ask whether an Admin or product administrator would notice ` +
+      "something appear, move or disappear, not only a shelter user? If so, add `{ text, admin: true }` " +
+      "(docs/decisions/2026-11-03-release-note-admin-flag.md). A prompt, not a failure:\n" +
+      releaseNa.map((r) => `  ${r}`).join("\n")
     : "";
 const clip = (t) => `  "${t.length > 90 ? t.slice(0, 90) + "…" : t}"`;
 const audienceNote =
