@@ -20,3 +20,20 @@ export function missingHosts(addresses, registered) {
   const have = new Set(registered.map(clean));
   return addresses.filter((h) => !have.has(clean(h)));
 }
+
+const SPECIAL = /[.+?^${}()|[\]\\]/g;
+const globToRegExp = (g) =>
+  new RegExp(
+    "^" + g.trim().replace(SPECIAL, (c) => "\\" + c).replace(/\*\*/g, "\u0000").replace(/\*/g, "[^/]*").replace(/\u0000/g, ".*") + "$",
+    "i",
+  );
+
+/**
+ * The addresses whose sign-in callback (https://<host>/auth/callback) no entry of Supabase's `uri_allow_list` admits (#aucbk).
+ * `allowList` is the comma-separated string the Management API returns. An exact entry matches, and so does a glob entry
+ * (`https://host/**`), because GoTrue treats it as matching. A miss is not refused by Supabase: it substitutes SITE_URL.
+ */
+export function missingCallbacks(addresses, allowList) {
+  const entries = String(allowList ?? "").split(",").map((e) => e.trim()).filter(Boolean).map(globToRegExp);
+  return addresses.filter((h) => !entries.some((re) => re.test(`https://${h}/auth/callback`)));
+}

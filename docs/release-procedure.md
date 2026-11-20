@@ -376,6 +376,8 @@ node scripts/check-deployed-hosts.mjs
 The last is dev, the database the test site serves. Exit 0 means every address the environment answers on (`APP_HOST`, `PUBLIC_HOST`, `PLATFORM_HOST` and the `www.` form of each) has a row. **Any FAIL stops the release.** Not in CI: it needs a database credential per environment
 (docs/decisions/2026-11-20-deployed-hosts-check-runs-at-release.md).
 
+The same run also reads that environment's Supabase sign-in redirect allow-list (`GET /v1/projects/<ref>/config/auth`, `uri_allow_list`) and fails when an address has no `/auth/callback` entry, printing `site_url`, where Supabase silently sends an unlisted sign-in (#aucbk, docs/decisions/2026-11-20-callback-allowlist-check.md). It changes nothing: a person adds the missing entry.
+
 ### Prove the dev-only step-up is absent (every release, before any deploy)
 
 `dev-signin --aal2` (#dvaal) can raise a scripted dev login to aal2. It cannot run anywhere but dev, and this is the

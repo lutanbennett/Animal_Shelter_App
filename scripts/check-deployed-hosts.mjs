@@ -6,10 +6,12 @@
 // PLATFORM_HOST and the www. form of each, because the Worker looks a host up literally), then asks that environment's database
 // (read-only select through the Management API, project from NEXT_PUBLIC_SUPABASE_URL as apply-migrations.mjs does)
 // which hosts are registered. Exit 1 names every host that is missing. 
-// Different from scripts/check-site-hosts.mjs, which asserts a host is pinned into the BUILD, not that it has a ROW.
+// Second question, same addresses (#aucbk): the Management API's GET /v1/projects/<ref>/config/auth gives `uri_allow_list`
+// and `site_url`; every address needs an /auth/callback entry there, or Supabase silently sends that sign-in to site_url.
+// Changes no setting. Different from scripts/check-site-hosts.mjs, which asserts a host is pinned into the BUILD, not that it has a ROW.
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 import { readWranglerConfig } from "./lib/wrangler.mjs";
-import { addressesAnsweredOn, missingHosts } from "./lib/deployed-hosts.mjs";
+import { addressesAnsweredOn, missingHosts, missingCallbacks } from "./lib/deployed-hosts.mjs";
 import { runMain } from "./lib/exit.mjs";
 
 await runMain(async () => {
@@ -47,5 +49,29 @@ await runMain(async () => {
     return 1;
   }
   console.log(`ok: every deployed host has a shelter_hosts row in ${name}.`);
+
+  const authRes = await fetch(`https://api.supabase.com/v1/projects/${ref}/config/auth`, {
+    headers: { Authorization: `Bearer ${env.SUPABASE_ACCESS_TOKEN}` },
+    signal: AbortSignal.timeout(30_000),
+  });
+  const authText = await authRes.text();
+  if (!authRes.ok) {
+    console.error(`FAIL: could not read the auth config (HTTP ${authRes.status}): ${authText.slice(0, 200)}`);
+    return 1;
+  }
+  const auth = JSON.parse(authText);
+  if (typeof auth.uri_allow_list !== "string") {
+    console.error(`FAIL: the auth config has no uri_allow_list string (keys: ${Object.keys(auth).join(", ")}).`);
+    return 1;
+  }
+  const noCallback = missingCallbacks(deployed, auth.uri_allow_list);
+  console.log(`sign-in redirect allow-list in ${name}: ${auth.uri_allow_list || "(empty)"}`);
+  console.log(`site_url (where an unlisted sign-in is thrown): ${auth.site_url}`);
+  for (const h of deployed) console.log(`  ${noCallback.includes(h) ? "NO CALLBACK" : "ok         "} https://${h}/auth/callback`);
+  if (noCallback.length) {
+    console.error(`FAIL: ${noCallback.length} address(es) have no /auth/callback entry in ${name}'s Supabase allow-list: ${noCallback.join(", ")}. Signing in there lands on ${auth.site_url}. Add them by hand; this check changes nothing.`);
+    return 1;
+  }
+  console.log(`ok: every deployed address has an /auth/callback entry in ${name}.`);
   return 0;
 });
