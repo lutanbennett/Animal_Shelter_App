@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Signing in with Google now takes you back to the page you were trying to open, instead of to the main shelter home page. The link in a forgotten-password email now goes straight to choosing a new password.",
   "The app has its own picture now. In a browser tab, a bookmark, or on a phone home screen you will see a small orange dog tag with a heart on it instead of the shelter photograph that was there before. It is the Cooper Jaidee mark — jaidee, ใจดี, means kind-hearted. Nothing about the app itself has changed, and the puppy is still on the loading screens.",
 ];
 

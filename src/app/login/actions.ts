@@ -5,6 +5,8 @@
 // app database. docs/decisions/2026-11-01-write-paths-tail-b.md, section 3.
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { NEXT_COOKIE, callbackUrl, nextCookieOptions } from "@/lib/auth/next-cookie";
 import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
 import { getPublicSiteState } from "@/lib/public-site-request";
 import { safeNextPath } from "@/lib/auth/next-path";
@@ -62,19 +64,22 @@ export async function login(
  * writes the code-verifier cookie here; src/app/auth/callback/route.ts
  * exchanges the returned code for a session and checks the user has a
  * user_roles row before letting them in. `next` (the page that sent them
- * to sign in) rides along on the callback URL, as the password-reset
- * link does.
+ * to sign in) rides in a cookie, never on the callback URL (src/lib/auth/next-cookie.ts).
  */
 export async function signInWithGoogle(formData: FormData) {
   const next = safeNextPath(formData.get("next") as string);
-  const callback = new URL(`${await requestOrigin()}/auth/callback`);
-  if (next) callback.searchParams.set("next", next);
+  const origin = await requestOrigin();
+  // No query on the callback URL: Supabase matches it against exact allow-list entries and a miss silently
+  // sends the person to SITE_URL (#nxtqs). The destination rides in a short-lived cookie instead.
+  const jar = await cookies();
+  if (next) jar.set(NEXT_COOKIE, next, nextCookieOptions(origin));
+  else jar.set(NEXT_COOKIE, "", { ...nextCookieOptions(origin), maxAge: 0 }); // expire a stale one; .delete( reads as a DB write to check-wrapped-write-paths
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: callback.toString(),
+      redirectTo: callbackUrl(origin),
       queryParams: { prompt: "select_account" },
     },
   });
