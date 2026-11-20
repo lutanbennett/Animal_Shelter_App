@@ -53,6 +53,8 @@ const broken = {
   "an environment missing PUBLIC_HOST": (c) => { delete c.env.uat.vars.PUBLIC_HOST; },
   "two environments claiming one route": (c) => { c.env.uat.routes = [{ pattern: NEW, custom_domain: true }]; },
   "a route outside its environment's hosts": (c) => { c.env.production.routes.push({ pattern: "lannacare.org", custom_domain: true }); },
+  "an environment with routes but no SUPABASE_URL": (c) => { delete c.env.uat.vars.SUPABASE_URL; },
+  "two environments sharing one database": (c) => { c.env.uat.vars.SUPABASE_URL = c.env.production.vars.SUPABASE_URL; },
 };
 for (const [what, mutate] of Object.entries(broken)) {
   const c = clone();
