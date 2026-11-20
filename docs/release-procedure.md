@@ -785,6 +785,26 @@ including `deploy: production → Supabase project <ref> (<sha>)` and the
 which time it is written. **Never conclude from an empty `.local/` that the
 handover was ignored**, and never ask him to re-run anything on that basis.
 
+**A second, different mechanism bites AFTER the deploy has finished: his log is
+UTF-16, so a plain `grep` of it matches nothing and reads as an empty log.**
+In Windows PowerShell 5.1 `tee` is `Tee-Object`, which writes UTF-16LE. The
+buffering above explains a file that is absent *during* the build; it does not
+explain a file that is present and unsearchable, so a release manager who has read
+that paragraph can still draw the same false conclusion. On `0.47.5` the file was
+27,966 bytes and the first `grep` returned no lines. So, once the deploy is done:
+
+1. **Check the size first:** `ls -l .local/deploy-<version>.log`. Non-zero means
+   there is a log, whatever `grep` says.
+2. **Decode, then search:**
+   `tr -d '\000' < .local/deploy-<version>.log | grep "deploy: production"`.
+3. **The tell is the byte-order mark:** `head -c 2 .local/deploy-<version>.log | od -c`
+   printing `377 376` means UTF-16LE.
+
+Only the log Lutan's PowerShell `tee` writes is affected. The `--env test` and
+`--env uat` deploys are run by Claude from Git Bash, whose `tee` writes plain
+bytes, so they need no decode. (A log `deploy.mjs` wrote itself would not depend
+on the shell, but that is a code change, not a procedure line; not done here.)
+
 The `deploy: production → Supabase project dbkodyyxxhtygxcxmfcu (<sha>)` line
 was missed for this reason on `0.15.0`, `0.15.1` and `0.16.0` — three releases
 running, each time recorded as a gap and each time settled indirectly. Also read
