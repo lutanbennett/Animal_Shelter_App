@@ -62,7 +62,7 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 - [ ] Migration number is one above the highest on `main`, and no other in-flight branch carries one — n/a: no migration
 - [ ] `node scripts/apply-migrations.mjs --status` reviewed before applying — n/a: no migration
 - [ ] `node scripts/apply-migrations.mjs --dry-run` reviewed — n/a: no migration
-- [ ] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations`
+- [ ] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` — n/a: no migration
 - [ ] File is re-runnable (`if not exists` / `or replace` / `drop … if exists`) — n/a: no migration
 - [ ] Existing rows still read correctly after the change (checked against real dev data) — n/a: no migration
 - [ ] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness — the `do $$ … $$` block CLAUDE.md describes under "Database migrations", whose `raise exception` assertions surface as errors. Say what was asserted, not merely that it ran: typically that checks reject invalid values, that `null` means "not set" rather than zero, that values round-trip at full precision, and that nothing was silently back-filled. This is usually the most valuable single thing done to a migration, and it signs under **Automated checks** — it is scripted and repeatable, not a person looking at a screen — n/a: no migration
@@ -258,7 +258,7 @@ Manual verification by: n/a: nothing for a person to look at, script only
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR — pending: PR not yet open
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — pending: release manager
 
 Result: pass
 
