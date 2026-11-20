@@ -106,7 +106,7 @@ it makes no difference.
 - [ ] Smoke-tested on `test.lannacare.org` — deferred: release manager
 - [ ] **Timezone-sensitive behaviour proved** — n/a: the change draws a header and derives no date
 - [ ] **Boundary or banding change: both edges covered** — n/a: no threshold, window or cutoff. The size boundary this change does have is in section 4, where it was measured
-- [ ] **Evidence pasted into this plan is the tool's actual output, unedited** — the gates block in section 2 is the run's own closing lines
+- [x] **Evidence pasted into this plan is the tool's actual output, unedited** — the gates block in section 2 is the run's own closing lines
 - [ ] Public pages re-checked after a cache purge — n/a: no public page is touched. `/platform` is `noindex` and is never served anonymously
 
 ### Deploy safety
@@ -151,6 +151,6 @@ Automated checks by: Claude  Date: 2026-11-20
 
 ### Manual verification
 
-pending: Lutan to say whether the lockup reads right at header size — the one row in the table above
+Manual verification by: pending: Lutan to say whether the lockup reads right at header size, the one row in the table above
 
 Result: pass
