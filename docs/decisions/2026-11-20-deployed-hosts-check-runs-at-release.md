@@ -3,13 +3,13 @@
 **The fault:** `test.lannacare.org` was deployed but had no `shelter_hosts` row on dev, so the Worker sent no shelter,
 `0392`'s policies answered nothing, and every login was told its own account had no access.
 
-**What was built:** `scripts/check-deployed-hosts.mjs --env <test|uat|production>` reads `APP_HOST` and `PUBLIC_HOST`
-for that environment from `wrangler.jsonc`, reads that environment's `shelter_hosts` (a read-only select through the
-Management API, project from `NEXT_PUBLIC_SUPABASE_URL`, the way `apply-migrations.mjs` resolves it via
-`scripts/lib/env.mjs`), and exits 1 naming every host with no row. Pure logic in `scripts/lib/deployed-hosts.mjs`, tested.
-
-**`PLATFORM_HOST` is listed but not required.** It serves the operator console, which needs no shelter (and maps to none
-on purpose, `2026-11-19-operator-console-on-the-platform-host.md`). Requiring it would fail production for the design.
+**What was built:** `scripts/check-deployed-hosts.mjs --env <test|uat|production>` takes the addresses the environment answers on
+from `wrangler.jsonc` through `siteHosts()` (`src/lib/site-hosts.ts`), reads that environment's `shelter_hosts` (a read-only select
+through the Management API, project resolved by `scripts/lib/env.mjs` as `apply-migrations.mjs` does), and exits 1 naming every
+address with no row. **`siteHosts()`, not the raw vars,** because it adds the `www.` form of each host and `worker/shelter.mjs`
+looks a host up literally, so each www form needs its own row (planner's correction, measured on dev: `www.test.lannacare.org` and
+`www.lannacareforanimals.org` have none). Exported for `#aucbk` to loop over a second time: `addressesAnsweredOn(vars)` in
+`scripts/lib/deployed-hosts.mjs`. The platform host is included. The rows are not added here.
 
 **Where it runs: a numbered release step, not CI.** CI's env holds `placeholder` Supabase values and no
 `SUPABASE_ACCESS_TOKEN`, so it cannot read any real database; wiring it for dev would need a dev token in CI secrets,

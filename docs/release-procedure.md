@@ -373,8 +373,7 @@ node scripts/check-deployed-hosts.mjs --env uat
 node scripts/check-deployed-hosts.mjs
 ```
 
-The last is dev, the database the test site serves. Exit 0 means every `APP_HOST` and `PUBLIC_HOST` in `wrangler.jsonc`
-for that environment has a row. **Any FAIL stops the release.** Not in CI: it needs a database credential per environment
+The last is dev, the database the test site serves. Exit 0 means every address the environment answers on (`APP_HOST`, `PUBLIC_HOST`, `PLATFORM_HOST` and the `www.` form of each) has a row. **Any FAIL stops the release.** Not in CI: it needs a database credential per environment
 (docs/decisions/2026-11-20-deployed-hosts-check-runs-at-release.md).
 
 ### Prove the dev-only step-up is absent (every release, before any deploy)
