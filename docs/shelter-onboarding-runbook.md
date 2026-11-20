@@ -17,9 +17,11 @@ pictures are listed in `scripts/manual-screenshots.mjs` (see "Screenshots"). **E
 press on that screen needs the two-step code (aal2); see "What has been rehearsed".**
 
 **Rehearsed on 2026-11-20 (test database), by following it: Steps 1 and 6's
-console half in about five minutes. Two things stop a person finishing alone today:
-Step 7 (the Who does what page fails on a shelter that has only its Admin role) and
-"A shelter leaving" (the export refuses). Both are written in the steps below.**
+console half in about five minutes. Two things stopped a person finishing alone then:
+Step 7 (the Who does what page failed on a shelter that has only its Admin role) and
+"A shelter leaving" (the export refused). **Both were fixed on 2026-11-20 by PR #1764**;
+Step 7 was re-checked that day (the page opens and offers Create a role), the export
+was not re-run to the end (it needs the age key).**
 
 ## Who can do each step
 
@@ -82,6 +84,10 @@ A shelter leaving is a separate section at the end.
 ---
 
 ## Step 1. Create the shelter and its host  **[ADMIN SCREEN]** (product administrator)
+
+![The Product admin console: each shelter with its names, checklist and web addresses, then Create a shelter and the product administrators](../public/manual/runbook-product-admin.png)
+
+*What the console looks like. One real address in the first card is covered over in the picture.*
 
 **What it is.** A shelter is one row in the `shelters` table (a short lower-case
 `key` such as `<shelter-key>`, and a `name`). Its address is one or more rows in
@@ -289,6 +295,10 @@ Close the window afterwards.
 
 ## Step 6. The shelter's names, receipt series and lookup lists **[ADMIN SCREEN]**
 
+![A new shelter's Settings page: the Drive-not-connected notice and the tiles, including Blood Test Types, Immunization Types, Procedure Types and Units](../public/manual/runbook-settings-lookups.png)
+
+*A brand-new shelter's Settings page. The red Drive notice is correct until Step 4 is done.*
+
 **What a newly created shelter already has (`0416`).** Creating it on the screen
 fills, with neutral wording and no Lanna text: the eight public site pages (titles
 set, **bodies empty**), the four public-figure switches (on), the 14 bill kinds and
@@ -321,6 +331,10 @@ clicking in from the Admin page (not by typing the address):
 
 ## Step 7. Roles and cards  **[ADMIN SCREEN]**
 
+![Who does what on a brand-new shelter: only the Admin line and a Create a role button](../public/manual/runbook-who-does-what.png)
+
+*A new shelter has only Admin, so the page offers Create a role.*
+
 A role gets **no** permission until a card is given to it. There is no built-in
 exception except Admin, who always has everything.
 
@@ -335,13 +349,7 @@ exception except Admin, who always has everything.
 The screen lets you give and take away cards one at a time; do one, check it,
 then the next.
 
-**NOT POSSIBLE ON A BRAND-NEW SHELTER TODAY (rehearsed 2026-11-20).** The shelter's
-only role is its Admin, which this page does not list, and the page then stops with
-*Who does what: invalid input syntax for type uuid: ""* instead of offering **New
-role**. So the first role cannot be made from the screen, and a developer must make
-it or fix the page (`src/app/admin/who-does-what/page.tsx`, which queries with an
-empty role id when the shelter has no listed role). Until that is fixed, this step
-cannot be finished by you alone.
+**Fixed (PR #1764, checked 2026-11-20).** On a shelter whose only role is Admin the page now opens and offers **Create a role**, as in the picture above. This step can be finished by you alone.
 
 ## Step 8. Deploy  **[LUTAN ONLY]** for production
 
@@ -461,7 +469,7 @@ node scripts/decrypt-backup.mjs C:\Temp\<shelter-key>-export\<the file>.sql.age 
 
    Delete the decrypted file when you are done.
 
-**THE EXPORT REFUSES TODAY (rehearsed 2026-11-20).** On a test database with a
+**THE EXPORT REFUSED WHEN REHEARSED (2026-11-20); FIXED THE SAME DAY BY PR #1764, NOT RE-RUN TO THE END.** What follows is what it said then. On a test database with a
 rehearsal shelter, it stopped with *Not exporting; the registry does not cover every
 table* naming `product_admin_login_grants`, `product_admin_lookups` and
 `product_admins` (tables added by the product-admin work, never recorded in the
