@@ -361,6 +361,21 @@ npm run audit:prod
 
 Record the result under "Before the deploy" in the release record.
 
+### Prove every deployed host has a shelter_hosts row (every release, before any deploy)
+
+A host that is deployed but missing from its own environment's `shelter_hosts` sends no shelter, so every sign-in there
+is refused (#hostx, 2026-11-20, the test site). Each environment has its own database, so each is read separately.
+From the main checkout, bare:
+
+```bash
+node scripts/check-deployed-hosts.mjs --env production
+node scripts/check-deployed-hosts.mjs --env uat
+node scripts/check-deployed-hosts.mjs
+```
+
+The last is dev, the database the test site serves. Exit 0 means every address the environment answers on (`APP_HOST`, `PUBLIC_HOST`, `PLATFORM_HOST` and the `www.` form of each) has a row. **Any FAIL stops the release.** Not in CI: it needs a database credential per environment
+(docs/decisions/2026-11-20-deployed-hosts-check-runs-at-release.md).
+
 ### Prove the dev-only step-up is absent (every release, before any deploy)
 
 `dev-signin --aal2` (#dvaal) can raise a scripted dev login to aal2. It cannot run anywhere but dev, and this is the
@@ -525,7 +540,7 @@ cannot break a build.
 
 ## 5. Migrations, before any deploy
 
-**FIRST, the release-order guard (it refuses; nothing else here does).** `node scripts/check-release-order.mjs --env production --worker-deployed <commit the Worker was deployed from>`. Some migrations must follow the Worker, not precede it: `0392`'s per-shelter policies blank the public website until the Worker sends `x-shelter-id`. If one is pending, deploy the Worker (§6) BEFORE the apply, then run this. It also asks the live Worker (`/api/releases/current`) which release it runs and checks that against the named commit; if it cannot reach the Worker it refuses too. It exits 1 with `REFUSED` otherwise. Run it for each environment you apply to.
+**FIRST, the release-order guard (it refuses; nothing else here does).** `node scripts/check-release-order.mjs --env production --worker-deployed <commit the Worker was deployed from>`. Some migrations must follow the Worker, not precede it: `0392`'s per-shelter policies blank the public website until the Worker sends `x-shelter-id`; and the other way round, `0426` must be applied BEFORE any Worker that calls `resolve_shelter_site` (`MUST_PRECEDE_WORKER`). The guard prints one line per direction. If a must-follow migration is pending, deploy the Worker (§6) BEFORE the apply, then run this. It also asks the live Worker (`/api/releases/current`) which release it runs and checks that against the named commit; if it cannot reach the Worker it refuses too. If it refuses with "still pending but the Worker ... already calls", apply that migration now, before the Worker serves any more traffic, then re-run. It exits 1 with `REFUSED` otherwise. Run it for each environment you apply to.
 
 ```bash
 node scripts/apply-migrations.mjs --env production --status

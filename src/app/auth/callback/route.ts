@@ -4,6 +4,7 @@ import { getPublicSiteState } from "@/lib/public-site-request";
 import { safeNextPath } from "@/lib/auth/next-path";
 import { PASSWORD_CHANGE_PATH } from "@/lib/auth/password-change";
 import { ADOPTER_PATH, loadAdopterScope } from "@/lib/adopter/scope";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteOrigin } from "@/lib/site-origin";
 
@@ -51,7 +52,9 @@ export async function GET(request: NextRequest) {
   }
   if (!role) {
     await supabase.auth.signOut();
-    return NextResponse.redirect(`${origin}/login?error=no_role`);
+    // No shelter on the request: this host is not registered, so say the site is not set up, not that the account has no role (#hostx).
+    const reason = (await actingShelterId()) ? "no_role" : "no_site";
+    return NextResponse.redirect(`${origin}/login?error=${reason}`);
   }
 
   // A public viewer lands on the home page (src/lib/auth/app-access.ts) —

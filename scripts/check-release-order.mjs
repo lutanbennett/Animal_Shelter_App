@@ -11,7 +11,7 @@ import { spawnSync } from "node:child_process";
 import { exitWith } from "./lib/exit.mjs";
 import { SITE_ORIGINS, loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 import { appliedMigrations } from "./lib/deploy-schema.mjs";
-import { releaseOrderProblems, MUST_FOLLOW_WORKER } from "./lib/release-order.mjs";
+import { releaseOrderProblems, releaseOrderSummary } from "./lib/release-order.mjs";
 
 const { name: envName, rest } = parseEnvArg(process.argv.slice(2));
 const i = rest.indexOf("--worker-deployed");
@@ -43,6 +43,6 @@ if (problems.length) {
   for (const p of problems) console.error(`REFUSED: ${p}`);
   await exitWith(1);
 }
-const guarded = MUST_FOLLOW_WORKER.filter((e) => pending.includes(e.migration)).length;
-console.log(guarded ? `ok: ${guarded} guarded migration(s) pending, Worker proven live at ${workerSha}.` : "ok: no guarded migration is pending here, nothing to prove.");
+console.log("ok, both directions checked:");
+for (const l of releaseOrderSummary({ pending, workerSha })) console.log(`  ${l}`);
 await exitWith(0);

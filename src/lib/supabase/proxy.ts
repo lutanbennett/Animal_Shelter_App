@@ -187,7 +187,8 @@ export async function updateSession(request: NextRequest, rewriteTo?: URL) {
       } else {
         await supabase.auth.signOut();
         url.pathname = "/login";
-        url.searchParams.set("error", "no_role");
+        // No shelter on the request: the host is not registered, so say so rather than blame the account (#hostx).
+        url.searchParams.set("error", SHELTER_HEADER in requestShelterHeaders(request.headers.get(SHELTER_HEADER)) ? "no_role" : "no_site");
       }
       return noindex(withCookies(NextResponse.redirect(url), response), locked);
     }

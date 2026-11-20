@@ -9,7 +9,7 @@ import { LoginForm } from "./LoginForm";
 import { LanguageSwitcher } from "../LanguageSwitcher";
 
 /** ?error= codes set by src/app/auth/callback/route.ts and signInWithGoogle(), and by the request proxy for an expired session. */
-const ERROR_CODES = ["no_role", "google", "expired"] as const;
+const ERROR_CODES = ["no_role", "no_site", "google", "expired"] as const;
 type ErrorCode = (typeof ERROR_CODES)[number];
 
 export default async function LoginPage({
@@ -24,7 +24,9 @@ export default async function LoginPage({
     error && ERROR_CODES.includes(error as ErrorCode)
       ? error === "no_role"
         ? t.login.errors.noRole
-        : error === "expired"
+        : error === "no_site"
+          ? t.login.errors.siteNotSetUp
+          : error === "expired"
           ? t.login.errors.expired
           : t.login.errors.google
       : undefined;

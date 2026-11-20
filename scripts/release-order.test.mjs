@@ -44,3 +44,27 @@ test("endpoint unreachable: refused, and says unreachable", () => {
   assert.equal(p.length, 1);
   assert.match(p[0], /could not ask the live Worker/);
 });
+
+// #rlord: the opposite direction, a migration that must precede the Worker.
+const P = "0426_shelter_public_site.sql";
+const calls = { "worker/shelter.mjs": "await fetch(`${u}/rpc/resolve_shelter_site`)" };
+test("planted bad case: 0426 pending and the named Worker already calls resolve_shelter_site is refused", () => {
+  const p = releaseOrderProblems({ pending: [P], workerSha: "w2", liveVersion: live, read: readFrom({ w2: calls }) });
+  assert.equal(p.length, 1);
+  assert.match(p[0], /still pending.*resolve_shelter_site/);
+});
+test("0426 pending but the named Worker is older (does not call it): passes", () => {
+  assert.deepEqual(releaseOrderProblems({ pending: [P], workerSha: "w0", liveVersion: live, read: readFrom({ w0: { "worker/shelter.mjs": "resolve_shelter_host" } }) }), []);
+});
+test("0426 pending and no Worker named: passes (ordinary order applies before the deploy)", () => {
+  assert.deepEqual(releaseOrderProblems({ pending: [P], workerSha: null, read: readFrom({}) }), []);
+});
+test("0426 already applied: passes whatever the Worker calls", () => {
+  assert.deepEqual(releaseOrderProblems({ pending: [], workerSha: "w2", liveVersion: live, read: readFrom({ w2: calls }) }), []);
+});
+test("the summary names both directions", async () => {
+  const { releaseOrderSummary } = await import("./lib/release-order.mjs");
+  const s = releaseOrderSummary({ pending: [P], workerSha: null }).join("\n");
+  assert.match(s, /must-follow-Worker: none pending/);
+  assert.match(s, /must-precede-Worker: 1 pending/);
+});
