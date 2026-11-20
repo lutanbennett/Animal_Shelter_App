@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { loadSessionRole } from "@/lib/auth/app-access";
 import { DEFAULT_SIGNED_IN_PATH } from "@/lib/auth/next-path";
+import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
 import { staffLoginHref } from "@/lib/site-hosts";
 import { getSiteOrigin } from "@/lib/site-origin";
@@ -209,16 +210,19 @@ export async function PublicHeader({
 
   const brand = (
     <Link href={localizedHref("/", locale)} className="flex min-h-11 items-center gap-2.5 text-site-ink lg:gap-3">
-      <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center lg:h-16 lg:w-16">
-        <Image
-          src="/lca-logo-transparent.png"
-          alt=""
-          width={128}
-          height={128}
-          className="object-contain"
-          priority={current === "home"}
-        />
-      </span>
+      {/* This shelter's own logo (site_content.logo_drive_file_id). None uploaded: no image at all, the name alone. */}
+      {site?.logo_drive_file_id && (
+        <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center lg:h-16 lg:w-16">
+          <Image
+            src={driveImageUrl(site.logo_drive_file_id, 160)}
+            alt=""
+            width={128}
+            height={128}
+            className="h-full w-full object-contain"
+            priority={current === "home"}
+          />
+        </span>
+      )}
       <span className="font-display text-[17px] font-bold leading-tight xl:text-[22px]">
         {/* The short name on a phone, and on a small laptop where the five
             menu entries leave the full one wrapping onto three lines. */}

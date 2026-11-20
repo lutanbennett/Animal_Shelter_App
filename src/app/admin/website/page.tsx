@@ -8,6 +8,7 @@ import { CreateSiteContentRow } from "./CreateSiteContentRow";
 import { ClinicVisitEstimate } from "./ClinicVisitEstimate";
 import { type SitePageRow } from "./SitePageForm";
 import { HeroPhoto } from "./HeroPhoto";
+import { ShelterLogo } from "./ShelterLogo";
 import { GalleryPhotos, type GalleryPhotoRow } from "./GalleryPhotos";
 import { FeaturedResident, type FeaturedResidentOption } from "./FeaturedResident";
 import { ImpactBaselines } from "./ImpactBaselines";
@@ -261,6 +262,7 @@ export default async function WebsitePage({
             home: (
               <>
                 <HeroPhoto heroDriveFileId={content.hero_drive_file_id} canChange={canGallery} />
+                <ShelterLogo logoDriveFileId={content.logo_drive_file_id} canChange={canGallery} />
                 <FeaturedResident
                   featuredResidentId={content.featured_resident_id}
                   residents={publicResidents}
@@ -293,6 +295,9 @@ export default async function WebsitePage({
                 {/* A photo-strip login has no Home tab, so the hero control sits here for it. */}
                 {!canContent && canGallery && (
                   <HeroPhoto heroDriveFileId={content.hero_drive_file_id} canChange />
+                )}
+                {!canContent && canGallery && (
+                  <ShelterLogo logoDriveFileId={content.logo_drive_file_id} canChange />
                 )}
                 <GalleryPhotos photos={photosResult.data ?? []} canEdit={canGallery} />
               </>

@@ -15,6 +15,8 @@ import {
  */
 export type SiteContent = {
   hero_drive_file_id: string | null;
+  /** This shelter's own logo (0429), set by set_shelter_logo(). Null = none uploaded; the public header then shows the name alone. */
+  logo_drive_file_id: string | null;
   hero_alt: string;
   hero_alt_th: string | null;
   tagline: string;
@@ -64,7 +66,7 @@ export type SiteContent = {
 };
 
 export const SITE_CONTENT_COLUMNS =
-  "hero_drive_file_id, hero_alt, hero_alt_th, tagline, tagline_th, contact_email, contact_address, contact_phone, contact_line, contact_map_url, facebook_url, instagram_url, messenger_url, whatsapp_number, x_url, visiting_hours, visiting_hours_th, featured_resident_id, preferred_channels, donate_photo_drive_file_id, donate_photo_alt, donate_photo_alt_th, foster_photo_drive_file_id, foster_photo_alt, foster_photo_alt_th, volunteer_photo_drive_file_id, volunteer_photo_alt, volunteer_photo_alt_th, about_photo_drive_file_id, about_photo_alt, about_photo_alt_th, registration_text, registration_text_th, contact_address_th, gift_split_year, gift_split_unit, gift_split_food, gift_split_vet, gift_split_sterilisation, gift_split_running, hidden_public_pages";
+  "hero_drive_file_id, logo_drive_file_id, hero_alt, hero_alt_th, tagline, tagline_th, contact_email, contact_address, contact_phone, contact_line, contact_map_url, facebook_url, instagram_url, messenger_url, whatsapp_number, x_url, visiting_hours, visiting_hours_th, featured_resident_id, preferred_channels, donate_photo_drive_file_id, donate_photo_alt, donate_photo_alt_th, foster_photo_drive_file_id, foster_photo_alt, foster_photo_alt_th, volunteer_photo_drive_file_id, volunteer_photo_alt, volunteer_photo_alt_th, about_photo_drive_file_id, about_photo_alt, about_photo_alt_th, registration_text, registration_text_th, contact_address_th, gift_split_year, gift_split_unit, gift_split_food, gift_split_vet, gift_split_sterilisation, gift_split_running, hidden_public_pages";
 
 /**
  * The read with its outcome kept: the content, nothing (the row is missing), or what failed.

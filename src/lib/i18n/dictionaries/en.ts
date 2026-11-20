@@ -2880,6 +2880,20 @@ const en = {
         updated: "Hero photo updated.",
         removeConfirm: "Remove the hero photo?",
       },
+      logo: {
+        heading: "Shelter logo",
+        subtitle:
+          "The small picture beside your shelter's name at the top of every page of your public website. A transparent PNG is best, so it sits cleanly on the page; a JPG, WebP or HEIC photo also works, up to 15 MB.",
+        noLogo: "No logo set. Your website shows the shelter's name on its own.",
+        upload: "Upload logo",
+        replace: "Replace logo",
+        remove: "Remove",
+        updated: "Logo updated.",
+        removeConfirm: "Remove the logo? The website will show the shelter's name on its own.",
+        noRow: "This shelter's website settings have not been created yet. Create them first, then add the logo.",
+        notSaved: "The logo did not save. Nothing was changed; please try again.",
+        alt: "Current logo",
+      },
       pagePhotos: {
         cardHeading: "Photo for this page",
         cardSubtitle:
