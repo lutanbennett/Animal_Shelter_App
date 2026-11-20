@@ -69,8 +69,22 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: (await shelterNames()).displayName,
     description: "Resident and shelter management",
+    // THE PRODUCT'S mark, not the shelter's. Cooper Jaidee is the product; a shelter
+    // keeps its own logo in the header and on its public site. Until 2026-11-20 this
+    // was /lca-logo.jpg — the FIRST shelter's own photograph — so every tab, bookmark
+    // and phone home screen wore that one shelter's logo, whichever shelter was being
+    // served. It predates multi-tenancy and nothing flagged it when tenancy arrived.
+    //
+    // The svg is what a modern browser takes; the pngs are for the ones that do not,
+    // and for a phone adding the app to a home screen. public/cooper-jaidee-icon.svg is
+    // the source the pngs were rendered from, so they cannot drift apart.
     icons: {
-      icon: "/lca-logo.jpg",
+      icon: [
+        { url: "/cooper-jaidee-icon.svg", type: "image/svg+xml" },
+        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      ],
+      apple: { url: "/apple-touch-icon.png", sizes: "180x180" },
     },
   };
 }

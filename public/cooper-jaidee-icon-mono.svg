@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512" fill="currentColor" role="img" aria-label="Cooper Jaidee">
+  <title>Cooper Jaidee</title>
+  <!-- One colour, for anywhere that will not take two: a rubber stamp, an embroidered
+       shirt, a fax-grade form, or a place that recolours the mark for you. The heart is a
+       hole punched through the disc (fill-rule evenodd), not a pale shape laid on top, so
+       it stays a heart whatever colour sits behind it. -->
+  <circle cx="50" cy="18" r="8.5" fill="none" stroke="currentColor" stroke-width="6"/>
+  <path fill-rule="evenodd" d="M50 30 A32 32 0 1 1 50 94 A32 32 0 1 1 50 30 Z M50 80 C36 70.5 32 64.5 32 59 A9.6 9.6 0 0 1 50 54.5 A9.6 9.6 0 0 1 68 59 C68 64.5 64 70.5 50 80 Z"/>
+</svg>
