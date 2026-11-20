@@ -11,6 +11,8 @@ const problems = [];
 const names = RUNTIME_CONFIG.map((c) => c.name);
 for (const c of RUNTIME_CONFIG) {
   if (!["worker", "pi", "both", "tools"].includes(c.where)) problems.push(`${c.name}: where "${c.where}" is not worker|pi|both|tools`);
+  if ((c.routed || c.distinct) && c.source !== "wrangler") problems.push(`${c.name}: routed/distinct only mean something for a wrangler.jsonc var (source: "wrangler")`);
+  if (c.routed && c.routed !== "required") problems.push(`${c.name}: routed "${c.routed}" is not "required"`);
   if (!c.purpose) problems.push(`${c.name}: no purpose line`);
 }
 for (const n of names) if (names.indexOf(n) !== names.lastIndexOf(n)) problems.push(`${n} is listed twice`);

@@ -4,6 +4,7 @@
 // Why these rules: docs/decisions/2026-11-04-cutover-preflight.md.
 import { isSiteHostname } from "../../src/lib/site-hosts.ts";
 import { routeHosts } from "./wrangler.mjs";
+import { WORKER_ROUTED_VARS } from "./runtime-config.mjs";
 
 /** Reads `- hostname:` / `httpHostHeader:` pairs out of the cloudflared ingress list. */
 export function ingressRules(yml) {
@@ -19,7 +20,7 @@ export function ingressRules(yml) {
 }
 
 /** Returns [{ ok, msg }] — every rule reports, so a pass is visible as well as a fail. */
-export function hostProblems(config, ingressYml) {
+export function hostProblems(config, ingressYml, routedVars = WORKER_ROUTED_VARS) {
   const out = [];
   const say = (ok, msg) => out.push({ ok, msg });
   const envs = config.env ?? {};
@@ -29,21 +30,29 @@ export function hostProblems(config, ingressYml) {
     say(!!b.vars?.APP_HOST && !!b.vars?.PUBLIC_HOST, `${name} sets APP_HOST and PUBLIC_HOST`);
   }
 
-  // The Worker asks the database which shelter a request host belongs to (worker/shelter.mjs
-  // resolveShelterSite), and gives up on its FIRST line when SUPABASE_URL is unset: no header is
-  // sent, no shelter means no rows, and EVERY sign-in is refused while every page still renders.
-  // UAT shipped that way and two database-level checks passed throughout (#uatsb, 2026-11-20).
-  // Sharing one value between environments would point a site at another's database, so the
-  // values must also be distinct. Only environments that answer on a route can be reached.
-  const databases = new Map();
-  for (const [name, b] of Object.entries(envs)) {
-    if (!routeHosts(config, name).length) continue;
-    const url = b.vars?.SUPABASE_URL;
-    say(!!url, `${name} sets SUPABASE_URL, which its host lookup needs`);
-    if (!url) continue;
-    const other = databases.get(url);
-    say(!other, `${name}: its SUPABASE_URL is its own${other ? ` (shared with ${other})` : ""}`);
-    if (!other) databases.set(url, name);
+  // Settings the Worker's own code needs on every request, declared in scripts/lib/runtime-config.mjs
+  // with `routed: "required"` (today SUPABASE_URL). The Worker asks the database which shelter a
+  // request host belongs to (worker/shelter.mjs resolveShelterSite) and gives up on its FIRST line
+  // when SUPABASE_URL is unset: no header is sent, no shelter means no rows, and EVERY sign-in is
+  // refused while every page still renders. UAT shipped that way and two database-level checks
+  // passed throughout (#uatsb, 2026-11-20). A value added for one consumer quietly acquires a
+  // second, so the rule comes from the registry, not from a list of names kept here.
+  // Only an environment that answers on a route can be reached, so only those are held to it:
+  // that is what separates "this environment does not have that setting" (no routes, or a setting
+  // the registry does not mark routed-required, like PLATFORM_HOST on test and uat) from
+  // "this environment is missing a setting it needs". Values marked `distinct` must also differ
+  // between environments: copying a neighbour's would point a site at another's database.
+  for (const { name: key, distinct, needs } of routedVars) {
+    const seen = new Map();
+    for (const [name, b] of Object.entries(envs)) {
+      if (!routeHosts(config, name).length) continue;
+      const value = b.vars?.[key];
+      say(!!value, `${name} sets ${key}, which ${needs} needs`);
+      if (!value || !distinct) continue;
+      const other = seen.get(value);
+      say(!other, `${name}: its ${key} is its own${other ? ` (shared with ${other})` : ""}`);
+      if (!other) seen.set(value, name);
+    }
   }
 
   // Two Workers cannot own one custom domain.
