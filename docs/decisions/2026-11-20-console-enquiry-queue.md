@@ -1,0 +1,13 @@
+# 2026-11-20: the enquiry queue on the platform console (#shsup, last half)
+
+Built on #1789's card screen, 0427 (`shelter_enquiries`) and 0428 (`product_admin_carry_enquiry`). No migration.
+
+- **Where it sits.** A collapsed section on the console landing, between the shelter cards and the product administrators, titled "Enquiries from shelters that want to join". It is not a shelter, so it is not a card. It opens by itself and shows a "N new" count only while something is new, so the landing stays the shelters the rest of the time.
+- **What it reads.** `shelter_enquiries` through the signed-in client, newest first, limit 200; the table's own policy (`is_product_admin()`) decides. Every field is a stranger's free text and is drawn as text only (checked: a `<b>` in a message renders as the characters, not an element).
+- **Contacted and Declined.** A plain update, `status` plus optional `status_note` plus `status_at`, only from `new` or `contacted`. The table's restrictive aal2 policy makes a refused update change zero rows instead of raising, so the action selects the changed id back and treats none as refused. Declined asks first (it cannot be undone and a declined enquiry can never be carried).
+- **Create from an enquiry.** `product_admin_create_shelter`, then `product_admin_carry_enquiry` on the id it returns, then the shelter row is read back (`product_admin_shelters`) so the message shows what actually carried, not what we assumed. Shelter name is prefilled from the enquiry; **the short name is never suggested** (it is permanent, and `test123` reached production that way). The field says so beside it.
+- **If the second call fails.** There is no transaction, on purpose. The shelter exists (empty account holder) and the enquiry is still `new`. The answer says exactly that, names the cause (declined, already another shelter, different enquiry, refused) and tells the person to type the account holder into the shelter. Pressing Create again would fail on the short name already existing, which is the safe outcome: we never carry an enquiry onto a shelter that was not made from it.
+- **Gating.** Every control is drawn only when `canWrite` (aal2). The actions check `isProductAdmin()` and `hasTwoStep()` and the database enforces both. No role is read or named.
+- **Message slots.** One per control, `enq-contacted:<id>`, `enq-declined:<id>`, `enq-create:<id>`, drawn under the control (#msgtp pattern). No shared slot, no `stepUpExpired`.
+- **Mail.** Not built here. The form already mails best-effort when `SHELTER_ENQUIRY_MAIL_TO` is set; the console is where Lutan sees enquiries.
+- **Not done, by brief.** No Drive connect button (`#pacon` stays open).

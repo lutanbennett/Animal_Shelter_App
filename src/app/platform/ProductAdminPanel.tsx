@@ -10,6 +10,8 @@ import { useWriteCall } from "@/lib/use-write-form";
 import {
   addProductAdmin,
   createShelter,
+  createShelterFromEnquiry,
+  setEnquiryStatus,
   createShelterAdminRole,
   linkShelterAdmin,
   createShelterAdminLogin,
@@ -51,6 +53,19 @@ export type ShelterRow = {
   archived_at: string | null;
   public_site: string | null;
 };
+export type EnquiryRow = {
+  id: string;
+  created_at: string;
+  shelter_name: string;
+  contact_name: string;
+  email: string;
+  phone: string | null;
+  location: string | null;
+  message: string | null;
+  status: "new" | "contacted" | "created" | "declined";
+  status_note: string | null;
+  status_at: string | null;
+};
 export type PersonRow = { kind: string; shelterId: string | null; userId: string; email: string | null };
 /** The database check's state, shared by every shelter (null when it was not run). */
 export type SystemState = "ok" | "warn" | "fail" | "off" | null;
@@ -83,6 +98,7 @@ const input = "min-h-11 rounded border border-border bg-background px-3 md:min-h
  * to the step-up. The gate is is_product_admin() plus aal2, not a card (Lutan, 2026-11-18); no role is checked here.
  */
 export function ProductAdminPanel({
+  enquiries,
   shelters,
   people,
   selfId,
@@ -90,6 +106,7 @@ export function ProductAdminPanel({
   stepUpPath,
   systemDatabase,
 }: {
+  enquiries: EnquiryRow[];
   shelters: ShelterRow[];
   people: PersonRow[];
   selfId: string;
@@ -114,6 +131,8 @@ export function ProductAdminPanel({
   const [newLogin, setNewLogin] = useState<{ email: string; password: string } | null>(null);
   // One slot PER control, keyed by what was pressed, so two actions can never overwrite each other's answer.
   const [msgs, setMsgs] = useState<Record<string, { ok: boolean; text: string }>>({});
+  const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
+  const [fromDrafts, setFromDrafts] = useState<Record<string, { key: string; name: string }>>({});
   const [nameDrafts, setNameDrafts] = useState<Record<string, { full: string; short: string }>>({});
 
   const say = (key: string, ok: boolean, text: string) => setMsgs((m) => ({ ...m, [key]: { ok, text } }));
@@ -182,6 +201,126 @@ export function ProductAdminPanel({
   );
 
   const open = shelters.find((x) => x.id === openId) ?? null;
+
+  /* ------------------------------------------------------------------- an enquiry (a stranger's free text: drawn as text only, never as markup) */
+  const newEnquiries = enquiries.filter((x) => x.status === "new").length;
+  const enquiryCard = (x: EnquiryRow) => {
+    const q = p.enquiries;
+    const statusWords = { new: q.statusNew, contacted: q.statusContacted, created: q.statusCreated, declined: q.statusDeclined };
+    const isOpen = x.status === "new" || x.status === "contacted";
+    const made = shelters.find((s) => s.enquiry_id === x.id);
+    const fd = fromDrafts[x.id] ?? { key: "", name: x.shelter_name };
+    const rows: [string, string | null][] = [
+      [q.from, x.contact_name],
+      [q.email, x.email],
+      [q.phone, x.phone],
+      [q.location, x.location],
+      [q.arrived, x.created_at.slice(0, 16).replace("T", " ")],
+    ];
+    return (
+      <article key={x.id} className="flex flex-col gap-2 rounded-lg border border-border p-4">
+        <header className="flex flex-wrap items-start justify-between gap-2">
+          <h3 className="text-base font-semibold text-foreground">{x.shelter_name}</h3>
+          <span className="rounded-full border border-border bg-surface px-2 py-0.5 text-xs font-medium text-foreground">{statusWords[x.status]}</span>
+        </header>
+        <dl className="flex flex-col gap-1 text-sm">
+          {rows
+            .filter(([, v]) => v)
+            .map(([k, v]) => (
+              <div key={k} className="flex flex-wrap gap-x-2">
+                <dt className="text-muted">{k}</dt>
+                <dd className="break-all text-foreground">{v}</dd>
+              </div>
+            ))}
+          {x.message && (
+            <div className="flex flex-col">
+              <dt className="text-muted">{q.message}</dt>
+              <dd className="whitespace-pre-wrap break-words text-foreground">{x.message}</dd>
+            </div>
+          )}
+        </dl>
+        {x.status_note && <p className="text-xs text-muted">{x.status_note}</p>}
+        {made && <p className="text-sm text-success">{made.name}</p>}
+        {canWrite && isOpen && (
+          <div className="flex flex-col gap-2 border-t border-border pt-2">
+            <label className="flex max-w-xl flex-col gap-1 text-sm">
+              {q.note}
+              <input value={noteDrafts[x.id] ?? ""} maxLength={2000} onChange={(e) => setNoteDrafts((d) => ({ ...d, [x.id]: e.target.value }))} className={input} autoComplete="off" />
+            </label>
+            <div className="flex flex-wrap gap-3">
+              {x.status === "new" && (
+                <div className="flex flex-col gap-1">
+                  <ActionButton
+                    icon={ACTION_ICONS.edit}
+                    variant="secondary"
+                    compact
+                    disabled={pending}
+                    onClick={() =>
+                      startTransition(async () => {
+                        const r = await call((id) => setEnquiryStatus(x.id, "contacted", noteDrafts[x.id] ?? "", id));
+                        say(`enq-contacted:${x.id}`, r.ok, r.ok ? q.contacted : (r.error ?? ""));
+                      })
+                    }
+                  >
+                    {q.markContacted}
+                  </ActionButton>
+                  {note(`enq-contacted:${x.id}`)}
+                </div>
+              )}
+              <div className="flex flex-col gap-1">
+                <ActionButton
+                  icon={ACTION_ICONS.delete}
+                  variant="danger"
+                  compact
+                  disabled={pending}
+                  onClick={() => {
+                    if (!window.confirm(q.declineConfirm(x.shelter_name))) return;
+                    startTransition(async () => {
+                      const r = await call((id) => setEnquiryStatus(x.id, "declined", noteDrafts[x.id] ?? "", id));
+                      say(`enq-declined:${x.id}`, r.ok, r.ok ? q.declined : (r.error ?? ""));
+                    });
+                  }}
+                >
+                  {q.markDeclined}
+                </ActionButton>
+                {note(`enq-declined:${x.id}`)}
+              </div>
+            </div>
+            <form
+              className="flex max-w-xl flex-col gap-2 border-t border-border pt-2"
+              onSubmit={(ev) => {
+                ev.preventDefault();
+                startTransition(async () => {
+                  const r = await call((id) => createShelterFromEnquiry(x.id, fd.key, fd.name, id));
+                  say(`enq-create:${x.id}`, r.ok, r.ok ? `${q.createdShelter} ${q.carried(r.carried)}` : (r.error ?? ""));
+                  if (r.ok) setFromDrafts((d) => ({ ...d, [x.id]: { key: "", name: fd.name } }));
+                });
+              }}
+            >
+              <h4 className="text-sm font-semibold text-foreground">{q.createFrom}</h4>
+              <label className="flex flex-col gap-1 text-sm">
+                {q.keyLabel}
+                <input value={fd.key} onChange={(e) => setFromDrafts((d) => ({ ...d, [x.id]: { ...fd, key: e.target.value } }))} className={`${input} font-mono`} autoComplete="off" spellCheck={false} />
+              </label>
+              <span className="max-w-prose text-xs text-muted">
+                {q.keyHelp} {p.createHelp}
+              </span>
+              <label className="flex flex-col gap-1 text-sm">
+                {q.nameLabel}
+                <input value={fd.name} onChange={(e) => setFromDrafts((d) => ({ ...d, [x.id]: { ...fd, name: e.target.value } }))} className={input} autoComplete="off" />
+              </label>
+              <div>
+                <ActionButton icon={ACTION_ICONS.add} variant="primary" compact type="submit" disabled={pending || fd.key.trim() === "" || fd.name.trim() === ""}>
+                  {q.createButton}
+                </ActionButton>
+              </div>
+              {note(`enq-create:${x.id}`)}
+            </form>
+          </div>
+        )}
+      </article>
+    );
+  };
 
   /* ----------------------------------------------------------------------------------------------- landing: one card per shelter */
   const card = (s: ShelterRow) => {
@@ -721,6 +860,18 @@ export function ProductAdminPanel({
             {shelters.length === 0 && <p className="text-sm text-muted">{p.noShelters}</p>}
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{shelters.map(card)}</div>
           </section>
+
+          {/* The enquiry queue (#shsup): a stranger's request to join, newest first. Collapsed unless something is new, so the landing stays the shelters. */}
+          <details className="flex flex-col gap-2" open={newEnquiries > 0}>
+            <summary className="cursor-pointer text-lg font-semibold text-foreground">
+              {p.enquiries.title}
+              {newEnquiries > 0 && <span className="ml-2 rounded-full border border-success px-2 py-0.5 text-xs font-medium text-success">{p.enquiries.newCount(newEnquiries)}</span>}
+            </summary>
+            <div className="flex flex-col gap-3 pt-2">
+              {enquiries.length === 0 && <p className="text-sm text-muted">{p.enquiries.none}</p>}
+              {enquiries.map(enquiryCard)}
+            </div>
+          </details>
 
           <details className="flex flex-col gap-2">
             <summary className="cursor-pointer text-lg font-semibold text-foreground">{p.adminsTitle}</summary>
