@@ -165,7 +165,12 @@ async function main() {
 
   // 3. Classify. File bucket: prod | test | shared | leave.  Folder home: prod | test | none.
   const fileBucket = (n) => {
-    if (n.path.startsWith(ICON_PREFIX) || n.path.startsWith(BACKUPS_PREFIX)) return "prod"; // icons and Admin/Backups: Lutan, 2026-11-07
+    // Admin/Backups: Lutan, 2026-11-07 (it has its own account and folder since #civwx; not re-pointed here).
+    if (n.path.startsWith(BACKUPS_PREFIX)) return "prod";
+    // The icon library is a PLATFORM file (#shfil, Lutan 2026-11-20): it lives in PLATFORM_DRIVE_FOLDER_ID, not in any
+    // shelter's tree, so no bucket owns it. "leave" copies nothing and moves nothing; it was "prod", which put a copy
+    // of platform files into production's shelter tree. Any old copy still under a shelter root is left where it is.
+    if (n.path.startsWith(ICON_PREFIX)) return "leave";
     const p = P.has(n.id), d = D.has(n.id);
     return p && d ? "shared" : p ? "prod" : d ? "test" : "leave";
   };

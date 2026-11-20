@@ -2,7 +2,7 @@
 // Claude runs this at each release (docs/release-procedure.md); nobody else needs to.
 //
 //   node scripts/sync-home-icons.mjs --local <dir>   draw the PNGs into <dir>, no Drive (a dry run)
-//   node scripts/sync-home-icons.mjs                 upload to Drive under GOOGLE_DRIVE_ROOT_FOLDER_ID
+//   node scripts/sync-home-icons.mjs                 upload to the PLATFORM Drive folder (PLATFORM_DRIVE_FOLDER_ID), never a shelter's root
 //   node scripts/sync-home-icons.mjs --env production   (production's Drive values, as the other scripts)
 //
 // Every page in src/lib/permissions/routes.ts gets 8 files: dark and light, with and without the
@@ -78,11 +78,14 @@ if (localDir) {
 }
 
 const env = loadEnv(envName);
-for (const k of ["GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_OAUTH_REFRESH_TOKEN", "GOOGLE_DRIVE_ROOT_FOLDER_ID"]) {
-  if (!env[k]) fail(`${k} is not set for ${envName}.`);
+// Platform files live in ONE folder on the platform's own Google account (docs/platform-files-registry.json),
+// signed in with that account's identity (the BACKUP_GOOGLE_OAUTH_* triple, #civwx). There is deliberately NO
+// fallback to GOOGLE_DRIVE_ROOT_FOLDER_ID or the app's token: that fallback was the whole fault (#shfil).
+for (const k of ["PLATFORM_DRIVE_FOLDER_ID", "BACKUP_GOOGLE_OAUTH_CLIENT_ID", "BACKUP_GOOGLE_OAUTH_CLIENT_SECRET", "BACKUP_GOOGLE_OAUTH_REFRESH_TOKEN"]) {
+  if (!env[k]) fail(`${k} is not set for ${envName}. Platform files never go under a shelter's Drive root, so there is nothing to fall back to.`);
 }
-const auth = new google.auth.OAuth2(env.GOOGLE_OAUTH_CLIENT_ID, env.GOOGLE_OAUTH_CLIENT_SECRET);
-auth.setCredentials({ refresh_token: env.GOOGLE_OAUTH_REFRESH_TOKEN });
+const auth = new google.auth.OAuth2(env.BACKUP_GOOGLE_OAUTH_CLIENT_ID, env.BACKUP_GOOGLE_OAUTH_CLIENT_SECRET);
+auth.setCredentials({ refresh_token: env.BACKUP_GOOGLE_OAUTH_REFRESH_TOKEN });
 const drive = google.drive({ version: "v3", auth });
 
 const FOLDER = "application/vnd.google-apps.folder";
@@ -152,7 +155,7 @@ async function listPngs(parent) {
 
 const { Readable } = await import("node:stream");
 const { createHash } = await import("node:crypto");
-const top = await folderIn(env.GOOGLE_DRIVE_ROOT_FOLDER_ID, HOME_ICONS_FOLDER);
+const top = await folderIn(env.PLATFORM_DRIVE_FOLDER_ID, HOME_ICONS_FOLDER);
 const subs = new Map();
 let created = 0, updated = 0, unchanged = 0;
 for (const f of files) {

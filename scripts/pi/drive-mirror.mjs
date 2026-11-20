@@ -14,6 +14,9 @@
 // Reads GOOGLE_OAUTH_CLIENT_ID/SECRET, GOOGLE_OAUTH_REFRESH_TOKEN, GOOGLE_DRIVE_ROOT_FOLDER_ID
 // from the env file (the app's own; nothing new is minted), so after the move to the shelter's
 // own account only that file changes. docs/pi-hosting.md, "Drive mirror", has the restore steps.
+// PLATFORM FILES (#shfil, docs/platform-files-registry.json): when PLATFORM_DRIVE_FOLDER_ID and the
+// BACKUP_GOOGLE_OAUTH_* identity are both in the env file, that folder is pulled too, into <dest>/_platform,
+// a sibling of the shelter folders and never inside one. Unset: only the shelter is mirrored, as before.
 import fs from "node:fs";
 import path from "node:path";
 import { pipeline } from "node:stream/promises";
@@ -60,13 +63,17 @@ if (!fs.existsSync(DEST)) {
 fs.mkdirSync(META, { recursive: true });
 const started = new Date().toISOString();
 
+// Which Google identity and output folder the walk in progress uses: the shelter's (the app's token) or the platform's.
+const SHELTER_ID = { prefix: "GOOGLE_OAUTH", base: SHELTER };
+const PLATFORM_ID = { prefix: "BACKUP_GOOGLE_OAUTH", base: "_platform" };
+let ident = SHELTER_ID;
 async function token() {
   const r = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     body: new URLSearchParams({
-      client_id: env.GOOGLE_OAUTH_CLIENT_ID,
-      client_secret: env.GOOGLE_OAUTH_CLIENT_SECRET,
-      refresh_token: env.GOOGLE_OAUTH_REFRESH_TOKEN,
+      client_id: env[ident.prefix + "_CLIENT_ID"],
+      client_secret: env[ident.prefix + "_CLIENT_SECRET"],
+      refresh_token: env[ident.prefix + "_REFRESH_TOKEN"],
       grant_type: "refresh_token",
     }),
   });
@@ -125,7 +132,7 @@ async function copyFile(f, target, how) {
       : `${API}/${f.id}?alt=media&supportsAllDrives=true`;
   const r = await get(url);
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  const full = path.join(DEST, SHELTER, target);
+  const full = path.join(DEST, ident.base, target);
   fs.mkdirSync(path.dirname(full), { recursive: true });
   const tmp = full + ".part";
   try {
@@ -194,6 +201,14 @@ async function walk(id, rel) {
 let fatal = "";
 try {
   await walk(env.GOOGLE_DRIVE_ROOT_FOLDER_ID, "");
+  const platformSet = ["PLATFORM_DRIVE_FOLDER_ID", "BACKUP_GOOGLE_OAUTH_CLIENT_ID", "BACKUP_GOOGLE_OAUTH_CLIENT_SECRET", "BACKUP_GOOGLE_OAUTH_REFRESH_TOKEN"];
+  if (platformSet.every((k) => env[k])) {
+    ident = PLATFORM_ID;
+    tok = await token();
+    await walk(env.PLATFORM_DRIVE_FOLDER_ID, "");
+  } else if (env.PLATFORM_DRIVE_FOLDER_ID) {
+    throw new Error("PLATFORM_DRIVE_FOLDER_ID is set but the BACKUP_GOOGLE_OAUTH_* identity is not: platform files were not mirrored");
+  }
 } catch (e) {
   fatal = e.message;
 }
