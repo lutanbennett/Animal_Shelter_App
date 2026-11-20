@@ -23,10 +23,18 @@
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`
+- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — run twice. The first run was piped through `tail -25`, which both truncated three of the four per-gate lines and made the shell's reported status `tail`'s rather than the script's: exactly the trap this section describes. It was re-run with no pipe, redirected to a file, and `gates.mjs`'s own exit code read separately (`0`). The block below is the second run's output
 
 ```
-<gates output pasted here from the real run>
+=== gates: typecheck — npm run typecheck
+=== gates: typecheck exited 0 after 24s
+=== gates: lint — npm run lint
+=== gates: lint exited 0 after 544s
+=== gates: test — npm test
+=== gates: test exited 0 after 119s
+=== gates: build — npm run build
+=== gates: build exited 0 after 148s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
