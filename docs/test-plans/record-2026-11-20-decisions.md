@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → `#pacon` (requirements recorded, item NOT closed), `#gidty` (the name correction it asked for) |
 | Branch / worktree | `claude/record-2026-11-20-decisions` @ `C:\Development\Animal_Shelter_record-2026-11-20-decisions` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3002` |
-| PR | <pending> |
+| PR | #1783 |
 | Tested by / date | Claude, 2026-11-20 |
 | Carries a migration? | no |
 | Tested at SHA | 69e21c1e6 |
