@@ -28,6 +28,6 @@ test("the cookie is preferred, the query is a fallback", () => {
 test("safeNextPath is applied on read: a hostile cookie is refused, not trusted", () => {
   assert.equal(resolveNext("//evil.com", null), null);
   assert.equal(resolveNext("https://evil.com", null), null);
-  assert.equal(resolveNext("/\evil.com", null), null);
+  assert.equal(resolveNext(String.fromCharCode(47, 92) + "evil.com", null), null);
   assert.equal(resolveNext("//evil.com", "/ok"), "/ok");
 });
