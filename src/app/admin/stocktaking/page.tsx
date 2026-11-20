@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireAdminUser } from "@/lib/auth/require-admin";
-import { TWO_STEP_PATH, hasTwoStep } from "@/lib/auth/two-step";
+import { stepUpHref, hasTwoStep } from "@/lib/auth/two-step";
 import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { loadStocktakingSwitches } from "@/lib/management/stocktaking-switches";
@@ -13,7 +13,7 @@ import { StocktakingSwitches } from "./StocktakingSwitches";
  */
 export default async function StocktakingSettingsPage() {
   await requireAdminUser();
-  if (!(await hasTwoStep())) redirect(TWO_STEP_PATH);
+  if (!(await hasTwoStep())) redirect(stepUpHref("/admin/stocktaking"));
   const { t } = await getT();
   const switches = await loadStocktakingSwitches(await createClient());
 

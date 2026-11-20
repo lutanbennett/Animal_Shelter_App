@@ -832,6 +832,8 @@ const th: Dictionary = {
     productAdmin: {
       title: "ผู้ดูแลผลิตภัณฑ์",
       subtitle: "ศูนย์พักพิงที่แอปนี้ให้บริการ และผู้ที่จัดการได้ เฉพาะคนในรายชื่อนี้เท่านั้นที่เห็นหน้านี้",
+      wrongDoor: "การเข้าสู่ระบบนี้ไม่ได้ใช้กับที่อยู่นี้",
+      wrongDoorLink: "ไปที่แอป",
       sheltersTitle: "ศูนย์พักพิง",
       shelterKey: "รหัส",
       shelterName: "ชื่อ",

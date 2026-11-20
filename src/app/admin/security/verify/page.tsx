@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdminUser, hasAdminRole } from "@/lib/auth/require-admin";
 import { isProductAdmin } from "@/lib/auth/product-admin";
-import { getAssuranceLevel } from "@/lib/auth/two-step";
+import { safeNextPath } from "@/lib/auth/next-path";
+import { getAssuranceLevel, stepUpDestination } from "@/lib/auth/two-step";
 import { getT } from "@/lib/i18n/get-t";
 import { TwoStepForm } from "./TwoStepForm";
 
@@ -14,7 +15,9 @@ import { TwoStepForm } from "./TwoStepForm";
  * you signed in. The first visit sets up an authenticator app; after that
  * it asks for the current code and goes back to Security.
  */
-export default async function TwoStepPage() {
+export default async function TwoStepPage({ searchParams }: { searchParams: Promise<{ next?: string | string[] }> }) {
+  const raw = (await searchParams).next;
+  const next = safeNextPath(Array.isArray(raw) ? raw[0] : raw);
   // Admin, or someone on the product-administrator list (#shmgt), who needs the same second step for Product admin.
   const forAdmin = await hasAdminRole();
   if (!forAdmin) {
@@ -23,7 +26,7 @@ export default async function TwoStepPage() {
     if (!(await isProductAdmin())) await requireAdminUser();
   }
   const level = await getAssuranceLevel();
-  if (level.current === "aal2") redirect(forAdmin ? "/admin/security" : "/platform");
+  if (level.current === "aal2") redirect(stepUpDestination(next, forAdmin ? "/admin/security" : "/platform"));
 
   const { t } = await getT();
   const s = t.admin.security.twoStep;
@@ -40,7 +43,7 @@ export default async function TwoStepPage() {
       </div>
 
       {level.enrolled || level.setupOpen ? (
-        <TwoStepForm enrolled={level.enrolled} />
+        <TwoStepForm enrolled={level.enrolled} next={next} />
       ) : (
         // A password alone can't bind a first app: an admin opens set-up (two-step.ts).
         <p className="max-w-prose rounded-lg border border-border bg-surface p-4 text-sm text-foreground">

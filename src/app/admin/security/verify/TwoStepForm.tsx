@@ -19,7 +19,7 @@ type Setup = { factorId: string; qrCode: string; secret: string };
  * from. Setup is a button rather than something the page does on load, so
  * a reload or a prefetch never makes a new key behind the admin's back.
  */
-export function TwoStepForm({ enrolled }: { enrolled: boolean }) {
+export function TwoStepForm({ enrolled, next }: { enrolled: boolean; next: string | null }) {
   const { t } = useI18n();
   const s = t.admin.security.twoStep;
   const [state, onSubmit, confirming] = useWriteForm(confirmTwoStep, undefined);
@@ -82,6 +82,7 @@ export function TwoStepForm({ enrolled }: { enrolled: boolean }) {
       )}
 
       <form onSubmit={onSubmit} className="flex flex-col gap-2">
+        {next && <input type="hidden" name="next" value={next} />}
         {setup && <input type="hidden" name="factorId" value={setup.factorId} />}
         <label htmlFor="code" className="text-sm font-medium text-muted">
           {s.codeLabel}
