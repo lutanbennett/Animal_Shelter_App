@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512" role="img" aria-label="Cooper Jaidee">
+  <title>Cooper Jaidee</title>
+  <!-- The full-colour mark, for light backgrounds. -->
+  <circle cx="50" cy="18" r="8.5" fill="none" stroke="#1A1512" stroke-width="6"/>
+  <circle cx="50" cy="62" r="32" fill="#D97706"/>
+  <path d="M50 80 C36 70.5 32 64.5 32 59 A9.6 9.6 0 0 1 50 54.5 A9.6 9.6 0 0 1 68 59 C68 64.5 64 70.5 50 80 Z" fill="#FBF7F0"/>
+</svg>
