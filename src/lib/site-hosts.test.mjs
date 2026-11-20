@@ -64,7 +64,9 @@ test("the platform host is a third address in the allowed origins, with www", ()
 
 test("the platform host serves the console and sign-in only; any shelter page goes to the console", () => {
   for (const p of ["/platform", "/login", "/auth/callback", "/admin/security/verify", "/api/version", "/lca-logo.jpg"]) assert.equal(platformRedirect("cooper.example.com", p, plat), null, p);
-  for (const p of ["/", "/residents", "/my", "/admin", "/admin/product-admin", "/adopt"]) assert.equal(platformRedirect("cooper.example.com", p, plat), "/platform", p);
+  for (const p of ["/residents", "/my", "/admin", "/admin/product-admin", "/adopt"]) assert.equal(platformRedirect("cooper.example.com", p, plat), "/platform", p);
+  assert.equal(platformRedirect("cooper.example.com", "/", plat), "/platform/about"); // #apxld: the apex goes to the product page
+  assert.equal(platformRedirect("cooper.example.com", "/platform/about", plat), null);
   assert.equal(platformRedirect("app.example.org", "/residents", plat), null);
   assert.equal(platformRedirect("cooper.example.com", "/residents", split), null);
 });

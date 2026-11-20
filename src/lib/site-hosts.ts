@@ -172,5 +172,6 @@ export function platformRedirect(
 ): string | null {
   if (!host || !isPlatformHostname(host, env)) return null;
   const kept = PLATFORM_KEEPS.some((k) => (k.endsWith("/") ? pathname.startsWith(k) : pathname === k || pathname.startsWith(`${k}/`)));
+  if (pathname === "/") return "/platform/about"; // #apxld: the product page, not the console
   return kept ? null : "/platform";
 }
