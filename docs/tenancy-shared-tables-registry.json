@@ -16,7 +16,8 @@
     "translatable_labels": "Schema metadata: which labels are translatable.",
     "product_admins": "Platform: the product administrators (0411), logins that run the /platform console. Belongs to the installation, not to any shelter; asked only through is_product_admin().",
     "product_admin_lookups": "Platform: audit of which email a product administrator checked (0422). Names no shelter; asked only by the product-admin functions.",
-    "product_admin_login_grants": "Platform: audit of first-login permits a product administrator gave (0425). It records for_shelter as a target, so it is not a shelter-scoped row; asked only by the product-admin functions."
+    "product_admin_login_grants": "Platform: audit of first-login permits a product administrator gave (0425). It records for_shelter as a target, so it is not a shelter-scoped row; asked only by the product-admin functions.",
+    "shelter_enquiries": "Platform: a stranger's enquiry to join (0427). It exists because no shelter does yet, so it has no shelter_id; written only by the service role, read only through is_product_admin()."
   },
   "exportTreatment": {
     "shelters": "own-row",
@@ -34,6 +35,7 @@
     "schema_migrations": "all",
     "product_admins": "none",
     "product_admin_lookups": "none",
-    "product_admin_login_grants": "none"
+    "product_admin_login_grants": "none",
+    "shelter_enquiries": "none"
   }
 }
