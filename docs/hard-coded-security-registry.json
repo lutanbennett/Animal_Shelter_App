@@ -895,6 +895,21 @@
         "reason": "SELECT on the public views public_fundraising_events and public_fundraising_event_photos, and EXECUTE on is_public_drive_file(text) restated with one more branch. The existing public-site pattern (0210, 0285): the base tables stay revoked from anon, a view shows only a published, not cancelled event and a photo only once attachments.approved_at is set, and appeal/project links only when those are public themselves. It lets anon read what the shelter chose to publish, not do anything. docs/decisions/2026-11-04-fundraising-events-staff-screens.md."
       },
       {
+        "migration": "0429_shelter_logo.sql",
+        "item": "grant to anon",
+        "reason": "SELECT on the public view public_site_content (restated with one appended column, logo_drive_file_id) and EXECUTE on is_public_drive_file(text), restated with the logo in the first branch. The existing public-site pattern (0256, 0369): site_content itself is not readable by anon, and the view shows only what the shelter chose to publish. It lets anon read a shelter's own logo, not do anything. docs/decisions/2026-11-20-shelter-logo-schema.md."
+      },
+      {
+        "migration": "0429_shelter_logo.sql",
+        "item": "function is_known_drive_file definer",
+        "reason": "Restated from 0218 with the logo column added to the site_content branch. EXECUTE is revoked from public, anon and authenticated and granted to service_role only: it is the Worker's own is-this-file-one-of-ours test, not a door for a person, so there is no activity and no card to ask. docs/decisions/2026-11-20-shelter-logo-schema.md."
+      },
+      {
+        "migration": "0430_public_site_content_scoped.sql",
+        "item": "grant to anon",
+        "reason": "SELECT on public_site_content restated unchanged in columns, with a WHERE that only NARROWS what anon reads: the request's own shelter (current_shelter_id()), or any row for a trusted caller (is_trusted_caller(), the 0392 policies' own test). Before this the view answered every shelter's row to anon. docs/decisions/2026-11-20-shelter-logo-schema.md."
+      },
+      {
         "migration": "0369_merch_shop_schema.sql",
         "item": "grant to anon",
         "reason": "SELECT on the public views public_merch_products and public_merch_variants (new) and EXECUTE on is_public_drive_file(text), restated with one more branch. The existing public-site pattern (0285, 0314): the six merch tables stay revoked from anon, a view shows only a shown, unarchived product and the sizes of one, with no supplier, no stock count and no creator. It lets anon read what the shelter chose to publish, not do anything. docs/decisions/2026-11-13-merch-shop-schema.md."
