@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LogIn } from "lucide-react";
 import { getT } from "@/lib/i18n/get-t";
+import { isShelterClosed } from "@/lib/public-site-request";
 import { PuppyConstruction } from "@/components/PuppyConstruction";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
@@ -17,6 +18,9 @@ import { LanguageSwitcher } from "./LanguageSwitcher";
  */
 export async function LockedLanding() {
   const { t } = await getT();
+  // A closed (archived) shelter says so instead of "under construction" (0428).
+  const closed = await isShelterClosed();
+  const words = closed ? t.login.closed : t.login.locked;
 
   return (
     <main data-public-site className="flex flex-1 items-center justify-center bg-background px-4 py-12">
@@ -26,10 +30,10 @@ export async function LockedLanding() {
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-semibold text-foreground">{t.header.appName}</h1>
           <p className="text-sm font-semibold uppercase tracking-wide text-primary">
-            {t.login.locked.title}
+            {words.title}
           </p>
         </div>
-        <p className="text-base text-muted">{t.login.locked.body}</p>
+        <p className="text-base text-muted">{words.body}</p>
         <div className="flex w-full flex-col items-center gap-2">
           <Link
             href="/login"
@@ -38,7 +42,7 @@ export async function LockedLanding() {
             <LogIn className="h-4 w-4" aria-hidden="true" />
             {t.login.signIn}
           </Link>
-          <p className="text-xs text-muted">{t.login.locked.signInHint}</p>
+          {!closed && <p className="text-xs text-muted">{t.login.locked.signInHint}</p>}
         </div>
         <Link href="/privacy" className="text-xs text-muted underline hover:text-foreground">
           {t.privacy.nav}

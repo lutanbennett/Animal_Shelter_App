@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { safeNextPath } from "@/lib/auth/next-path";
 import { isInAppBrowser } from "@/lib/auth/in-app-browser";
 import { getT } from "@/lib/i18n/get-t";
+import { isShelterClosed } from "@/lib/public-site-request";
 import { LoginForm } from "./LoginForm";
 import { LanguageSwitcher } from "../LanguageSwitcher";
 
@@ -19,6 +20,7 @@ export default async function LoginPage({
 }) {
   const { t } = await getT();
   const { error, next } = await searchParams;
+  const closed = await isShelterClosed();
   const inAppBrowser = isInAppBrowser((await headers()).get("user-agent"));
   const errorMessage =
     error && ERROR_CODES.includes(error as ErrorCode)
@@ -52,6 +54,12 @@ export default async function LoginPage({
             {t.login.heading}
           </h1>
         </div>
+        {closed && (
+          <div role="status" className="rounded-lg border border-border bg-surface p-3 text-sm text-foreground">
+            <p className="font-semibold">{t.login.closed.title}</p>
+            <p className="text-muted">{t.login.closed.body}</p>
+          </div>
+        )}
         <LoginForm error={errorMessage} next={safeNextPath(next)} inAppBrowser={inAppBrowser} />
         <Link
           href="/"

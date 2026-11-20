@@ -5,6 +5,8 @@ import { isProductAdmin } from "@/lib/auth/product-admin";
 import { getT } from "@/lib/i18n/get-t";
 import { appHost, isPlatformHostname, platformHost, requestHost } from "@/lib/site-hosts";
 import { createClient } from "@/lib/supabase/server";
+import { checkDatabase } from "@/lib/status/health";
+import { runCheck } from "@/lib/status/run";
 import { ProductAdminPanel, type PersonRow, type ShelterRow } from "./ProductAdminPanel";
 
 /**
@@ -39,10 +41,12 @@ export default async function PlatformPage() {
     );
   }
 
-  const [shelters, people, twoStep] = await Promise.all([
+  const [shelters, people, twoStep, database] = await Promise.all([
     supabase.rpc("product_admin_shelters"),
     supabase.rpc("product_admin_people"),
     hasTwoStep(),
+    // The one system-wide dot the console shows behind a shelter card, labelled there as the system's, not the shelter's.
+    runCheck(checkDatabase, 5_000),
   ]);
 
   return (
@@ -60,6 +64,7 @@ export default async function PlatformPage() {
         // The writes need aal2 (0411's restrictive policies), so every control that acts is drawn only then.
         canWrite={twoStep}
         stepUpPath={stepUpHref("/platform")}
+        systemDatabase={database.state}
       />
     </main>
   );

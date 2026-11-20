@@ -55,3 +55,14 @@ test("no shelter, or a state that is not one of the three, sends no x-public-sit
   assert.equal(odd.headers.get("x-public-site"), null);
   assert.equal(odd.headers.get("x-shelter-id"), ID);
 });
+
+test("a closed shelter sends no shelter id, a website that is off, and a header saying why", async () => {
+  clearShelterCache();
+  const r = await withShelter(new Request("https://gone.example/", { headers: { "x-shelter-archived": "evil" } }), env, async () => new Response(JSON.stringify({ id: null, site: null, archived: true })));
+  assert.equal(r.headers.get("x-shelter-id"), null);
+  assert.equal(r.headers.get("x-public-site"), "off");
+  assert.equal(r.headers.get("x-shelter-archived"), "1");
+  clearShelterCache();
+  const open = await withShelter(new Request("https://ok.example/", { headers: { "x-shelter-archived": "1" } }), env, async () => new Response(JSON.stringify({ id: ID, site: "open", archived: false })));
+  assert.equal(open.headers.get("x-shelter-archived"), null, "a visitor cannot claim a shelter is closed");
+});

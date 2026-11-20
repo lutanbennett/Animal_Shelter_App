@@ -41,7 +41,7 @@ export async function loginExists(email: string): Promise<{ ok: boolean; exists?
   if (!addr) return { ok: false, error: e.badId };
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("product_admin_login_exists", { p_email: addr });
-  if (error) return { ok: false, error: error.code === "42501" ? e.stepUpExpired : e.badId };
+  if (error) return { ok: false, error: error.code === "42501" ? e.refused("the login check") : e.badId };
   return { ok: true, exists: data === true };
 }
 
@@ -56,7 +56,7 @@ export async function addProductAdmin(email: string, requestId: string | null): 
     if (!addr) return { ok: false, error: e.badId };
     const { error } = await supabase.rpc("product_admin_add_by_email", { p_email: addr });
     if (error) {
-      const msg = shelterError(e, error.code, e.noLoginForAddress, e.noLoginForAddress);
+      const msg = shelterError(e, error.code, e.noLoginForAddress, e.noLoginForAddress, "adding that product administrator");
       return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.add", error, t.common);
     }
     revalidatePath("/platform");
@@ -95,8 +95,10 @@ function shelterError(
   code: string | undefined,
   on23505: string,
   on22023: string,
+  what: string,
 ): string | null {
-  if (code === "42501") return e.stepUpExpired;
+  // 42501 is the database refusing, not necessarily an expired second step: say what was refused (#msgtp).
+  if (code === "42501") return e.refused(what);
   if (code === "23505") return on23505;
   if (code === "22023") return on22023;
   return null;
@@ -111,7 +113,7 @@ export async function createShelter(key: string, name: string, requestId: string
     if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
     const { error } = await supabase.rpc("product_admin_create_shelter", { p_key: key.trim(), p_name: name.trim() });
     if (error) {
-      const msg = shelterError(e, error.code, e.shelterExists, e.badShelter);
+      const msg = shelterError(e, error.code, e.shelterExists, e.badShelter, "creating the shelter");
       return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.createShelter", error, t.common);
     }
     revalidatePath("/platform");
@@ -135,7 +137,7 @@ export async function createShelterAdminRole(shelterId: string, requestId: strin
     if (!UUID.test(shelterId)) return { ok: false, error: e.badHost };
     const { error } = await supabase.rpc("product_admin_create_shelter_admin_role", { p_shelter: shelterId });
     if (error) {
-      const msg = shelterError(e, error.code, e.adminRoleExists, e.badHost);
+      const msg = shelterError(e, error.code, e.adminRoleExists, e.badHost, "giving the shelter an Admin role");
       return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.createAdminRole", error, t.common);
     }
     revalidatePath("/platform");
@@ -155,7 +157,7 @@ export async function linkShelterAdmin(shelterId: string, email: string, request
     if (!addr) return { ok: false, error: e.badId };
     const { error } = await supabase.rpc("product_admin_link_shelter_admin_by_email", { p_shelter: shelterId, p_email: addr });
     if (error) {
-      const msg = shelterError(e, error.code, e.loginUnavailable, e.noLoginForAddress);
+      const msg = shelterError(e, error.code, e.loginUnavailable, e.noLoginForAddress, "linking that login");
       return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.linkAdmin", error, t.common);
     }
     revalidatePath("/platform");
@@ -189,7 +191,7 @@ export async function createShelterAdminLogin(
       if (!addr) return { ok: false, error: e.badId };
       const permit = await supabase.rpc("product_admin_permit_first_login", { p_shelter: shelterId, p_email: addr });
       if (permit.error) {
-        const msg = shelterError(e, permit.error.code, e.firstLoginRefused, e.firstLoginRefused);
+        const msg = shelterError(e, permit.error.code, e.firstLoginRefused, e.firstLoginRefused, "creating that login");
         return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.createAdminLogin", permit.error, t.common);
       }
       const created = await createAuthLogin(addr);
@@ -220,7 +222,7 @@ export async function seedShelterDefaults(shelterId: string, requestId: string |
     if (!UUID.test(shelterId)) return { ok: false, error: e.badHost };
     const { error } = await supabase.rpc("seed_shelter_defaults", { p_shelter: shelterId });
     if (error) {
-      const msg = shelterError(e, error.code, e.badHost, e.badHost);
+      const msg = shelterError(e, error.code, e.badHost, e.badHost, "adding the starting content");
       return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.seedDefaults", error, t.common);
     }
     revalidatePath("/platform");
@@ -238,7 +240,7 @@ export async function mapShelterHost(shelterId: string, host: string, requestId:
     if (!UUID.test(shelterId)) return { ok: false, error: e.badHost };
     const { error } = await supabase.rpc("product_admin_map_host", { p_shelter: shelterId, p_host: host.trim() });
     if (error) {
-      const msg = shelterError(e, error.code, e.hostTaken, e.badHost);
+      const msg = shelterError(e, error.code, e.hostTaken, e.badHost, "adding that web address");
       return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.mapHost", error, t.common);
     }
     revalidatePath("/platform");
@@ -255,7 +257,7 @@ export async function unmapShelterHost(host: string, requestId: string | null): 
     if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
     const { error } = await supabase.rpc("product_admin_unmap_host", { p_host: host });
     if (error) {
-      const msg = shelterError(e, error.code, e.noSuchHost, e.noSuchHost);
+      const msg = shelterError(e, error.code, e.noSuchHost, e.noSuchHost, "removing that web address");
       return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.unmapHost", error, t.common);
     }
     revalidatePath("/platform");
@@ -282,7 +284,7 @@ export async function setShelterNames(shelterId: string, displayName: string, sh
     if (full === "" || short === "" || full.length > 120 || short.length > 60) return { ok: false, error: e.badNames };
     const { error } = await supabase.rpc("product_admin_set_shelter_names", { p_shelter: shelterId, p_display_name: full, p_short_name: short });
     if (error) {
-      const msg = shelterError(e, error.code, e.badNames, e.badNames);
+      const msg = shelterError(e, error.code, e.badNames, e.badNames, "saving the names");
       return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.setNames", error, t.common);
     }
     revalidatePath("/platform");
@@ -311,8 +313,82 @@ export async function setShelterReceipts(
     const block = { name, addressLines: lines, registrationLines: [], statementLines: [] };
     const { error } = await supabase.rpc("product_admin_set_shelter_receipts", { p_shelter: shelterId, p_series: s, p_issuers: { TH: block, US: block } });
     if (error) {
-      const msg = shelterError(e, error.code, e.receiptSeriesTaken, e.badReceipts);
+      const msg = shelterError(e, error.code, e.receiptSeriesTaken, e.badReceipts, "saving the receipt numbers");
       return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.setReceipts", error, t.common);
+    }
+    revalidatePath("/platform");
+    return { ok: true };
+  });
+}
+
+/*
+ * Account holder, archive and primary address (0428, #pacon). Same pattern: the signed-in client, and the functions raise for anyone who is not
+ * a product administrator at aal2. Archiving touches only archived_at: nothing is deleted, and both doors (website and staff) close in the
+ * resolver, effective within a minute.
+ */
+export async function setShelterAccountHolder(
+  shelterId: string,
+  name: string,
+  email: string,
+  phone: string,
+  location: string,
+  requestId: string | null,
+): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.productAdmin.errors;
+  const supabase = await createClient();
+  return runWriteAction("productAdmin.setAccountHolder", write(t), { id: requestId, action: "productAdmin.setAccountHolder", db: supabase }, async () => {
+    if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
+    if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
+    if (!UUID.test(shelterId)) return { ok: false, error: e.badHost };
+    if (name.trim() === "") return { ok: false, error: e.badAccountHolder };
+    if (email.trim() !== "" && !cleanEmail(email)) return { ok: false, error: e.badId };
+    const { error } = await supabase.rpc("product_admin_set_shelter_account_holder", {
+      p_shelter: shelterId,
+      p_name: name.trim(),
+      p_email: email.trim(),
+      p_phone: phone.trim(),
+      p_location: location.trim(),
+    });
+    if (error) {
+      const msg = shelterError(e, error.code, e.badAccountHolder, e.badAccountHolder, "saving the account holder");
+      return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.setAccountHolder", error, t.common);
+    }
+    revalidatePath("/platform");
+    return { ok: true };
+  });
+}
+
+export async function setShelterArchived(shelterId: string, archived: boolean, requestId: string | null): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.productAdmin.errors;
+  const supabase = await createClient();
+  return runWriteAction("productAdmin.setArchived", write(t), { id: requestId, action: "productAdmin.setArchived", db: supabase }, async () => {
+    if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
+    if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
+    if (!UUID.test(shelterId)) return { ok: false, error: e.badHost };
+    const { error } = await supabase.rpc("product_admin_set_shelter_archived", { p_shelter: shelterId, p_archived: archived });
+    if (error) {
+      const msg = shelterError(e, error.code, e.badHost, e.badHost, archived ? "closing the shelter" : "reopening the shelter");
+      return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.setArchived", error, t.common);
+    }
+    revalidatePath("/platform");
+    return { ok: true };
+  });
+}
+
+export async function setShelterPrimaryHost(shelterId: string, host: string, requestId: string | null): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.productAdmin.errors;
+  const supabase = await createClient();
+  return runWriteAction("productAdmin.setPrimaryHost", write(t), { id: requestId, action: "productAdmin.setPrimaryHost", db: supabase }, async () => {
+    if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
+    if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
+    if (!UUID.test(shelterId)) return { ok: false, error: e.badHost };
+    const { error } = await supabase.rpc("product_admin_set_primary_host", { p_shelter: shelterId, p_host: host.trim() });
+    if (error) {
+      const msg = shelterError(e, error.code, e.badHost, e.badHost, "choosing the website");
+      return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.setPrimaryHost", error, t.common);
     }
     revalidatePath("/platform");
     return { ok: true };

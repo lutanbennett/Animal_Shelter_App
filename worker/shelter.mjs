@@ -13,6 +13,7 @@
 
 const HEADER = "x-shelter-id";
 const SITE_HEADER = "x-public-site";
+const ARCHIVED_HEADER = "x-shelter-archived";
 const SITES = new Set(["open", "locked", "off"]);
 const TTL_MS = 60_000;
 const cache = new Map(); // host -> { id: string | null, site: string | null, until: number }
@@ -22,7 +23,7 @@ export function normaliseHost(host) {
 }
 
 export async function resolveShelterSite(env, rawHost, fetchImpl = fetch, now = Date.now()) {
-  const none = { id: null, site: null };
+  const none = { id: null, site: null, archived: false };
   const host = normaliseHost(rawHost);
   if (!host || !env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) return none;
   const hit = cache.get(host);
@@ -45,7 +46,9 @@ export async function resolveShelterSite(env, rawHost, fetchImpl = fetch, now = 
     const id = row && typeof row.id === "string" ? row.id : null;
     // A shelter with no valid state sends none, so only the deployment floor applies.
     const site = id && SITES.has(row.site) ? row.site : null;
-    const entry = { id, site, until: now + TTL_MS };
+    // An archived shelter (0428) comes back with id and site null and archived true: no shelter header is sent, so no rows, and the app is told why.
+    const archived = row?.archived === true;
+    const entry = { id, site, archived, until: now + TTL_MS };
     cache.set(host, entry);
     return entry;
   } catch (err) {
@@ -60,13 +63,19 @@ export async function resolveShelter(env, rawHost, fetchImpl = fetch, now = Date
 
 /** A copy of the request carrying x-shelter-id for its host, or none (any inbound one is dropped). */
 export async function withShelter(request, env, fetchImpl) {
-  const { id, site } = await resolveShelterSite(env, new URL(request.url).host, fetchImpl);
+  const { id, site, archived } = await resolveShelterSite(env, new URL(request.url).host, fetchImpl);
   const headers = new Headers(request.headers);
   // Both inbound headers are always removed: a visitor chooses neither their shelter nor whether its website is open.
   headers.delete(HEADER);
   headers.delete(SITE_HEADER);
+  headers.delete(ARCHIVED_HEADER);
   if (id) headers.set(HEADER, id);
   if (site) headers.set(SITE_HEADER, site);
+  // A closed shelter: its website is off (nothing cached, nothing shown) and the sign-in page can say why.
+  if (archived) {
+    headers.set(SITE_HEADER, "off");
+    headers.set(ARCHIVED_HEADER, "1");
+  }
   return new Request(request, { headers });
 }
 
