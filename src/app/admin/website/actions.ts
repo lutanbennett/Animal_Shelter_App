@@ -629,6 +629,86 @@ export async function removeHeroPhoto(requestId: string): Promise<ActionResult> 
   });
 }
 
+/** Reads this shelter's logo id back; null when none is set or the row is missing. */
+async function readLogoId(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const { data, error } = await supabase
+    .from("site_content")
+    .select("logo_drive_file_id")
+    .eq("id", true)
+    .limit(1)
+    .returns<{ logo_drive_file_id: string | null }[]>();
+  return { error, row: data?.[0] ?? null };
+}
+
+/**
+ * The shelter's own logo, set directly like the hero (not queued for approval). set_shelter_logo() asks website.gallery
+ * itself (0429); it updates nothing and says nothing when the shelter has no site_content row, so the value is read back
+ * and a save that did not land is reported, never shown as success.
+ */
+export async function uploadShelterLogo(formData: FormData): Promise<ActionResult<{ success: string }>> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction("website.uploadShelterLogo", write(t), { id: writeRequestIdFrom(formData), action: "website.uploadShelterLogo", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.gallery")) return refuse(t.admin.security.errors.adminAccessRequired);
+
+    const file = formData.get("file");
+    if (!(file instanceof File) || file.size === 0) {
+      return refuse(t.admin.website.errors.noFile);
+    }
+
+    const before = await readLogoId(supabase);
+    if (before.error || !before.row) return refuse(t.admin.website.logo.noRow);
+
+    let driveFileId: string;
+    try {
+      driveFileId = await uploadToWebsiteFolder(file);
+    } catch (err) {
+      return refuse(await driveErrorMessage(err, t.admin.website.errors.uploadFailed));
+    }
+
+    const { error } = await supabase.rpc("set_shelter_logo", { p_drive_file_id: driveFileId });
+    if (error) {
+      await trashInDrive(driveFileId);
+      return dbRefusal("website.setShelterLogo", error, t);
+    }
+
+    const after = await readLogoId(supabase);
+    if (after.row?.logo_drive_file_id !== driveFileId) {
+      await trashInDrive(driveFileId);
+      return refuse(t.admin.website.logo.notSaved);
+    }
+
+    const previousFileId = before.row.logo_drive_file_id;
+    if (previousFileId) await trashInDrive(previousFileId);
+
+    revalidateWebsitePages();
+    return { ok: true, success: t.admin.website.logo.updated };
+  });
+}
+
+export async function removeShelterLogo(requestId: string): Promise<ActionResult> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction("website.removeShelterLogo", write(t), { id: requestId, action: "website.removeShelterLogo", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.gallery")) return refuse(t.admin.security.errors.adminAccessRequired);
+
+    const before = await readLogoId(supabase);
+    if (before.error || !before.row) return refuse(t.admin.website.logo.noRow);
+
+    const { error } = await supabase.rpc("set_shelter_logo", { p_drive_file_id: null });
+    if (error) return dbRefusal("website.setShelterLogo", error, t);
+
+    const after = await readLogoId(supabase);
+    if (after.row?.logo_drive_file_id) return refuse(t.admin.website.logo.notSaved);
+
+    const previousFileId = before.row.logo_drive_file_id;
+    if (previousFileId) await trashInDrive(previousFileId);
+
+    revalidateWebsitePages();
+    return { ok: true };
+  });
+}
+
 export async function uploadGalleryPhoto(formData: FormData): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   const supabase = await createClient();
