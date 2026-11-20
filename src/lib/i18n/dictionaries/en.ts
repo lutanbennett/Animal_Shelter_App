@@ -2292,7 +2292,7 @@ const en = {
           "Security decides who can get into the app, so it asks for a second step: a 6-digit code from an authenticator app on your phone. You set it up once; after that, Security asks for a code once each time you sign in. The rest of the app doesn't change.",
         codeTitle: "Enter your code",
         codeSubtitle:
-          "Security needs the second step. Open the authenticator app on your phone and enter the 6-digit code it shows for Lanna Animal Care.",
+          "Security needs the second step. Open the authenticator app on your phone and enter the 6-digit code it shows for this shelter.",
         stepInstall:
           "Install an authenticator app on your phone if you don't have one: Google Authenticator, Microsoft Authenticator or similar — any of them works.",
         stepScan: "Tap Start below and scan the QR code with the app.",

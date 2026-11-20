@@ -193,13 +193,18 @@ export default async function PublicResidentPage(
 
   const hours = visitingHoursLines(locale, content);
   const phone = content?.contact_phone?.replace(/\s+/g, "");
-  const email = content?.contact_email ?? "lannacareforanimals@gmail.com";
+  // No fallback address: a shelter that has set none must never be offered another shelter's.
+  const email = content?.contact_email?.trim() || null;
   const emailSubject = p.emailSubject(resident.name);
   // "Book a visit" rings the shelter, as the mockup's "Message us on LINE
   // or call" has it; with no phone number on file it becomes an email.
+  // With neither a phone nor an email on file there is no route to offer, so the
+  // button is not drawn (the shelter's own preferred channel still is).
   const bookHref = phone
     ? `tel:${phone}`
-    : `mailto:${email}?subject=${encodeURIComponent(emailSubject)}`;
+    : email
+      ? `mailto:${email}?subject=${encodeURIComponent(emailSubject)}`
+      : null;
   // The button beside it is the shelter's preferred channel (LINE unless
   // they chose otherwise), the message started where the channel can. Not
   // shown when that channel is the one Book a visit already uses.
@@ -277,12 +282,14 @@ export default async function PublicResidentPage(
                   {t.contactChannels.ask[ask.channel]}
                 </a>
               )}
-              <a
-                href={bookHref}
-                className="flex h-[52px] flex-1 items-center justify-center rounded-full bg-site-action px-6 text-base font-bold text-site-on-action hover:bg-site-action-hover"
-              >
-                {p.bookVisit}
-              </a>
+              {bookHref && (
+                <a
+                  href={bookHref}
+                  className="flex h-[52px] flex-1 items-center justify-center rounded-full bg-site-action px-6 text-base font-bold text-site-on-action hover:bg-site-action-hover"
+                >
+                  {p.bookVisit}
+                </a>
+              )}
             </nav>
 
             {getsAlong.length > 0 && (
@@ -430,12 +437,14 @@ export default async function PublicResidentPage(
                 {t.contactChannels.ask[ask.channel]}
               </a>
             )}
-            <a
-              href={bookHref}
-              className="flex h-[52px] flex-1 items-center justify-center rounded-full bg-site-action px-6 text-base font-bold text-site-on-action hover:bg-site-action-hover sm:flex-none sm:basis-56"
-            >
-              {p.bookVisit}
-            </a>
+            {bookHref && (
+              <a
+                href={bookHref}
+                className="flex h-[52px] flex-1 items-center justify-center rounded-full bg-site-action px-6 text-base font-bold text-site-on-action hover:bg-site-action-hover sm:flex-none sm:basis-56"
+              >
+                {p.bookVisit}
+              </a>
+            )}
           </div>
         </nav>
       </div>
