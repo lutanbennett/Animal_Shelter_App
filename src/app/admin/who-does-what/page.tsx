@@ -54,16 +54,20 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
   const admin = createAdminClient();
   // Role rows are per-shelter: every role read names the acting shelter. features / card_features are the shared card catalogue (no shelter_id).
   const shelterId = (await actingShelterId()) ?? "00000000-0000-0000-0000-000000000000";
+  // A shelter whose only role is the Admin has no role to show a column for (loadRoles leaves Admin out on purpose: it holds no cards).
+  // There is then nothing to read per role, and an empty string must never reach the database as a uuid ("invalid input syntax for type uuid").
+  const roleId = role?.id;
+  const noRows = Promise.resolve({ data: null, error: null });
   const [grants, { data: cardRows, error: cardsError }, { data: roleRow }, { data: cellRows }, { data: groupRows, error: groupsError }, { data: featureRows, error: featuresError }, { data: cardFeatureRows, error: cardFeaturesError }] = await Promise.all([
     loadCardGrants(admin),
-    admin.from("role_cards").select("card, position, group_id").eq("shelter_id", shelterId).eq("role_id", role?.id ?? "").order("position"),
-    admin.from("roles").select("key, name, kind, home_path, show_menu").eq("shelter_id", shelterId).eq("id", role?.id ?? "").maybeSingle(),
-    admin.from("role_permissions").select("activity, level").eq("shelter_id", shelterId).eq("role_id", role?.id ?? ""),
-    admin.from("role_groups").select("id, name, name_th, icon").eq("shelter_id", shelterId).eq("role_id", role?.id ?? "").order("position").order("name"),
+    roleId ? admin.from("role_cards").select("card, position, group_id").eq("shelter_id", shelterId).eq("role_id", roleId).order("position") : noRows,
+    roleId ? admin.from("roles").select("key, name, kind, home_path, show_menu").eq("shelter_id", shelterId).eq("id", roleId).maybeSingle() : noRows,
+    roleId ? admin.from("role_permissions").select("activity, level").eq("shelter_id", shelterId).eq("role_id", roleId) : noRows,
+    roleId ? admin.from("role_groups").select("id, name, name_th, icon").eq("shelter_id", shelterId).eq("role_id", roleId).order("position").order("name") : noRows,
     admin.from("features").select("id, name, name_th, position").order("position").order("name"),
     admin.from("card_features").select("card, feature_id"),
   ]);
-  const { count: endedLinks } = await admin.from("user_roles").select("user_id", { count: "exact", head: true }).eq("shelter_id", shelterId).eq("role_id", role?.id ?? "").not("archived_at", "is", null);
+  const { count: endedLinks } = roleId ? await admin.from("user_roles").select("user_id", { count: "exact", head: true }).eq("shelter_id", shelterId).eq("role_id", roleId).not("archived_at", "is", null) : { count: 0 };
   const loadError = cardsError ?? groupsError ?? featuresError ?? cardFeaturesError;
   if (loadError) throw new Error(`Who does what: ${loadError.message}`);
   // Features (0255): sections of the Available column. A card with no row, a null feature, or a feature that is gone is Not yet sorted.
