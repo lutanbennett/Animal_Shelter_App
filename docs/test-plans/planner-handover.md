@@ -10,7 +10,7 @@
 | Backlog item | `docs/backlog.md` → n/a: not a backlog item. The handover is written every nine merged stream PRs under `CLAUDE.md`'s *"Every PR merges on green"* and `/plan-day` step 8 |
 | Branch / worktree | `claude/planner-handover` @ `C:\Development\Animal_Shelter_planner-handover` |
 | Dev server | n/a: documentation only; no dev server was started |
-| PR | PR_PLACEHOLDER |
+| PR | #1756 |
 | Tested by / date | Claude (planner session) / 2026-11-20 |
 | Carries a migration? | no |
 | Tested at SHA | see the gates block in section 2 — run on the merge commit of `origin/main` into `claude/planner-handover` |
