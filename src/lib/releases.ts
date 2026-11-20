@@ -71,6 +71,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   "A shelter's adopt page no longer offers another shelter's email address: with no phone or email set, the Book a visit button is simply not shown. The header shows your own shelter's short name, and the Security code prompt no longer names a shelter.",
+  "Signing in with Google now takes you back to the page you were trying to open, instead of to the main shelter home page. The link in a forgotten-password email now goes straight to choosing a new password.",
 ];
 
 /** Newest first. */
