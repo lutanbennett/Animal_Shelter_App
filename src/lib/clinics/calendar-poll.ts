@@ -178,7 +178,8 @@ export async function pollCalendarChanges(origin: string | null): Promise<PollRe
   const total: PollResult = { configured: false, moved: 0, cancelled: 0, imported: 0, clashes: 0 };
   let shelters: { id: string }[] = [];
   try {
-    const { data } = await createAdminClient().from("shelters").select("id").returns<{ id: string }[]>();
+    // A closed (archived) shelter is switched off, not deleted: its calendar is not polled until it is reopened (0428).
+    const { data } = await createAdminClient().from("shelters").select("id").is("archived_at", null).returns<{ id: string }[]>();
     shelters = data ?? [];
   } catch {
     total.note = "Could not list the shelters.";
