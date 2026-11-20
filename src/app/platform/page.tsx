@@ -7,7 +7,7 @@ import { appHost, isPlatformHostname, platformHost, requestHost } from "@/lib/si
 import { createClient } from "@/lib/supabase/server";
 import { checkDatabase } from "@/lib/status/health";
 import { runCheck } from "@/lib/status/run";
-import { ProductAdminPanel, type PersonRow, type ShelterRow } from "./ProductAdminPanel";
+import { ProductAdminPanel, type EnquiryRow, type PersonRow, type ShelterRow } from "./ProductAdminPanel";
 
 /**
  * The operator console (#shmgt, moved here by #pltfd): the platform's own front door, outside every shelter's
@@ -41,7 +41,7 @@ export default async function PlatformPage() {
     );
   }
 
-  const [shelters, people, twoStep, database] = await Promise.all([
+  const [shelters, people, twoStep, database, enquiries] = await Promise.all([
     supabase.rpc("product_admin_shelters"),
     supabase.rpc("product_admin_people"),
     hasTwoStep(),
@@ -56,6 +56,7 @@ export default async function PlatformPage() {
         <p className="max-w-prose text-sm text-muted">{t.admin.productAdmin.subtitle}</p>
       </div>
       <ProductAdminPanel
+        enquiries={(enquiries.data ?? []) as EnquiryRow[]}
         shelters={(shelters.data ?? []) as ShelterRow[]}
         people={((people.data ?? []) as { kind: string; shelter_id: string | null; user_id: string; email: string | null }[]).map(
           (p): PersonRow => ({ kind: p.kind, shelterId: p.shelter_id, userId: p.user_id, email: p.email }),

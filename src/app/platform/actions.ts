@@ -394,3 +394,93 @@ export async function setShelterPrimaryHost(shelterId: string, host: string, req
     return { ok: true };
   });
 }
+
+/*
+ * The enquiry queue (#shsup, last half; 0427 table, 0428 carry). Same pattern: signed-in client, product administrator plus aal2.
+ * The status change is a plain update the table's own policies gate (is_product_admin() and a restrictive aal2); a refused update
+ * changes ZERO rows rather than raising, so the affected row is read back and none means refused. Only an open enquiry (new or
+ * contacted) can move, which is the same rule product_admin_carry_enquiry applies for declined.
+ */
+export async function setEnquiryStatus(
+  enquiryId: string,
+  status: "contacted" | "declined",
+  note: string,
+  requestId: string | null,
+): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.productAdmin.errors;
+  const q = t.admin.productAdmin.enquiries;
+  const supabase = await createClient();
+  return runWriteAction("productAdmin.setEnquiryStatus", write(t), { id: requestId, action: "productAdmin.setEnquiryStatus", db: supabase }, async () => {
+    if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
+    if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
+    if (!UUID.test(enquiryId)) return { ok: false, error: q.carryNoEnquiry };
+    const trimmed = note.trim().slice(0, 2000);
+    const { data, error } = await supabase
+      .from("shelter_enquiries")
+      .update({ status, status_note: trimmed === "" ? null : trimmed, status_at: new Date().toISOString() })
+      .eq("id", enquiryId)
+      .in("status", ["new", "contacted"])
+      .select("id");
+    if (error) {
+      const msg = shelterError(e, error.code, q.refusedStatus, q.refusedStatus, "changing the enquiry");
+      return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.setEnquiryStatus", error, t.common);
+    }
+    if (!data || data.length === 0) return { ok: false, error: q.refusedStatus };
+    revalidatePath("/platform");
+    return { ok: true };
+  });
+}
+
+/**
+ * Create a shelter from an enquiry: product_admin_create_shelter, then product_admin_carry_enquiry on the id it returned, so the
+ * contact arrives without being retyped. The two are separate calls (no transaction by design). If the second fails the shelter exists
+ * and the enquiry is still 'new'; the answer says exactly that. The carried values are READ BACK from the shelter, not assumed.
+ */
+export async function createShelterFromEnquiry(
+  enquiryId: string,
+  key: string,
+  name: string,
+  requestId: string | null,
+): Promise<ActionResult<{ created: string; carried: { name: string; email: string; phone: string; location: string } }>> {
+  const { t } = await getT();
+  const e = t.admin.productAdmin.errors;
+  const q = t.admin.productAdmin.enquiries;
+  const supabase = await createClient();
+  return runWriteAction("productAdmin.createFromEnquiry", write(t), { id: requestId, action: "productAdmin.createFromEnquiry", db: supabase }, async () => {
+    if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
+    if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
+    if (!UUID.test(enquiryId)) return { ok: false, error: q.carryNoEnquiry };
+    const created = await supabase.rpc("product_admin_create_shelter", { p_key: key.trim(), p_name: name.trim() });
+    if (created.error) {
+      const msg = shelterError(e, created.error.code, e.shelterExists, e.badShelter, "creating the shelter");
+      return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.createFromEnquiry", created.error, t.common);
+    }
+    const shelterId = created.data as string;
+    const carry = await supabase.rpc("product_admin_carry_enquiry", { p_shelter: shelterId, p_enquiry: enquiryId });
+    if (carry.error) {
+      const why =
+        carry.error.code === "42501"
+          ? e.refused("carrying the contact over")
+          : /declined/.test(carry.error.message ?? "")
+            ? q.carryDeclined
+            : /another shelter/.test(carry.error.message ?? "")
+              ? q.carryTaken
+              : /different enquiry/.test(carry.error.message ?? "")
+                ? q.carryOther
+                : /no such enquiry/.test(carry.error.message ?? "")
+                  ? q.carryNoEnquiry
+                  : t.common.notAccepted;
+      revalidatePath("/platform");
+      return { ok: false, error: q.carryFailed(name.trim(), why) };
+    }
+    const read = await supabase.rpc("product_admin_shelters");
+    const row = ((read.data ?? []) as { id: string; account_holder_name: string | null; account_holder_email: string | null; account_holder_phone: string | null; account_holder_location: string | null }[]).find((x) => x.id === shelterId);
+    revalidatePath("/platform");
+    return {
+      ok: true,
+      created: name.trim(),
+      carried: { name: row?.account_holder_name ?? "", email: row?.account_holder_email ?? "", phone: row?.account_holder_phone ?? "", location: row?.account_holder_location ?? "" },
+    };
+  });
+}
