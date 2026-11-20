@@ -13,7 +13,7 @@
 | PR | see the PR this plan ships in |
 | Tested by / date | Claude (Opus 5) / 2026-11-20 |
 | Carries a migration? | no |
-| Tested at SHA | `f994ec8d9` |
+| Tested at SHA | `0e05ef460` |
 
 ## 1. Scope and risk
 
@@ -28,26 +28,41 @@
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`
 
 ```
-=== gates: typecheck exited 0 after 7s
-=== gates: lint exited 0 after 176s
-=== gates: test exited 0 after 73s
-=== gates: build exited 0 after 79s
+=== gates: typecheck exited 0 after 8s
+=== gates: lint exited 0 after 138s
+=== gates: test exited 0 after 33s
+=== gates: build exited 0 after 39s
 
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-Run at `f994ec8d9`. **The branch then merged `origin/main` again** (`6b71b53f7`), because the
-`0.47.7` release cut landed while this PR was open and conflicted in `src/lib/releases.ts`: the cut
-moved the adopt-page note into the `0.47.7` entry, so this PR's note stays in `unreleased` for the
-next release and the adopt line is not duplicated. **That merge changes `releases.ts`, `package.json`
-and `package-lock.json` only, and CI runs the same four gates on the merge head** — which is the run
-that is read before merging, per the merge step in section 2. The local lines above are not re-typed
-for the new head, because they are evidence of the run that produced them.
+Run at `0e05ef460`, which is the branch head: the run printed that SHA before it started and the head
+was unchanged when it finished, so these lines belong to this commit and no other.
 
-**Cross-checked independently:** the stream session ran its own
-gates on the same commit and reported `typecheck=0 lint=0 test=0 build=0` with its
-own timings (18s / 158s / 53s / 63s). Two runs on one commit agreeing is better
-evidence than one, and the differing timings are what show they are two runs.
+**This is the third full gates run on this branch, and the two before it are deliberately NOT quoted
+here — which is the point worth recording.** Two sessions were finishing the same branch at once (the
+stream, and the main checkout that took it over), so each commit landed underneath a run already in
+flight:
+
+- Run 1 at `f994ec8d9` — all four green, and superseded twice over by later merges.
+- Run 2 started at `9e8e1c34b` and the branch moved to `0e05ef460` **while it was building**. It
+  exited 0 and **that result is not evidence**: a build whose tree changed mid-run cannot be
+  attributed to a commit. It is named rather than quietly dropped, because an unexplained green run
+  in a scratchpad is exactly the kind of thing a later reader mistakes for proof.
+- Run 3, above, is the only one started and finished on one unchanging commit.
+
+**Cross-checked independently:** the stream session ran its own gates on `f994ec8d9` and reported all
+four zero with its own timings (18s / 158s / 53s / 63s). That was a different commit, so it is a
+cross-check of the change, not of this head.
+
+**And one check earned its keep here.** `check-wrapped-write-paths` went red on the PR: it read
+`jar.delete(...)` in `src/app/login/actions.ts` as a database write and refused the replay-safe
+declaration. Fixed in `0e05ef460` by expiring the cookie instead — `set(NEXT_COOKIE, "", {...opts,
+maxAge: 0})`, same name, path and attributes — and the check now exits 0 (*"every path on
+WRAPPED_WRITE_PATHS has all its reachable writes wrapped (163 listed)"*). **The similar-looking
+`done.cookies.delete(...)` at `src/app/auth/callback/route.ts:67` is correct and stays:** it is a
+method on the `NextResponse`, not on the cookie jar, and that route is not on `WRAPPED_WRITE_PATHS`.
+Do not tidy it to match.
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
