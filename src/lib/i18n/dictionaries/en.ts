@@ -1002,10 +1002,10 @@ const en = {
       calIncomplete: "Calendar: connection unfinished",
       calConnected: "Calendar: connected",
       calDead: "Calendar: sign-in has stopped working",
-      platformName: "Cooper Jaidee platform",
+      platformName: "CooperJaidee platform",
       /** The public enquiry form on the platform front door (#shsup): a stranger asking to use the app for a shelter. */
       enquiry: {
-        title: "Ask about using Cooper Jaidee for your shelter",
+        title: "Ask about using CooperJaidee for your shelter",
         intro: "Tell us about your shelter and how to reach you. We read every enquiry and will be in touch. Sending this does not create an account.",
         shelterName: "Shelter name",
         contactName: "Your name",

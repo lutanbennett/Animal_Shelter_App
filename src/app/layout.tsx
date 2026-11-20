@@ -69,7 +69,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: (await shelterNames()).displayName,
     description: "Resident and shelter management",
-    // THE PRODUCT'S mark, not the shelter's. Cooper Jaidee is the product; a shelter
+    // THE PRODUCT'S mark, not the shelter's. CooperJaidee is the product; a shelter
     // keeps its own logo in the header and on its public site. Until 2026-11-20 this
     // was /lca-logo.jpg — the FIRST shelter's own photograph — so every tab, bookmark
     // and phone home screen wore that one shelter's logo, whichever shelter was being

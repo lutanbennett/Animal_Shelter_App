@@ -1,5 +1,32 @@
 # 2026-11-14 — The system is called Cooper Jaidee, and that unblocks the multi-tenancy build
 
+> **SUPERSEDED 2026-11-20 — THE NAME IS ONE WORD. Lutan, 2026-11-20:** *"no product name should be one
+> word cooperjaidee"*.
+>
+> **Only the display form changes. Everything else in this file stands** — the choice of the name, the
+> shortlist it beat, the reason it honours Cooper, the domain history and what it unblocks are all sound
+> and are not rewritten. **Where this file writes "Cooper Jaidee" with a space, read `CooperJaidee`.**
+>
+> **What was corrected on screen in the same change** (the PR that added
+> `docs/decisions/2026-11-20-product-admin-console-requirements.md`): `platformName` and the enquiry
+> form's title in `src/lib/i18n/dictionaries/en.ts` and `th.ts`, the wordmark in
+> `src/components/CooperJaideeLockup.tsx`, the three `public/cooper-jaidee-icon*.svg` titles and
+> accessible names, and a comment in `src/app/layout.tsx`.
+>
+> **What was deliberately LEFT with the space, and must not be "fixed":**
+>
+> - **`src/lib/releases.ts`** — that line is a release note **already sent to admins**. It is history, and
+>   rewriting it would make the record untrue.
+> - **The `CooperJaidee` app name on the Cooper Cloud project's consent screen is ALREADY CORRECT.** It
+>   reads as one word, Lutan has confirmed it, and a guided session that suggested adding a space was
+>   corrected by him. **Do not touch it.**
+> - **The flat brand files and the print lockup** — including the stacked "Cooper" over "Jaidee" variant
+>   that `CooperJaideeLockup.tsx`'s own comment describes — are **artwork**, not strings. Redrawing them
+>   is Lutan's call and is not part of this correction.
+>
+> The slug, the domain and the Cloud project were one word throughout and are unaffected: `cooperjaidee`,
+> `cooperjaidee.org`, `CooperJaidee`.
+
 **Lutan, 2026-11-14, in chat: *"ok we will use cooperjaidee as the system name"*, and immediately after:
 *"I will buy the domain tonight"*.**
 
