@@ -71,8 +71,9 @@ export async function generateMetadata(): Promise<Metadata> {
     description: "Resident and shelter management",
     // THE PRODUCT'S mark, not the shelter's. Cooper Jaidee is the product; a shelter
     // keeps its own logo in the header and on its public site. Until 2026-11-20 this
-    // was /lca-logo.jpg — one shelter's photograph — so every tab, bookmark and phone
-    // home screen wore Lanna's logo whichever shelter was being served.
+    // was /lca-logo.jpg — the FIRST shelter's own photograph — so every tab, bookmark
+    // and phone home screen wore that one shelter's logo, whichever shelter was being
+    // served. It predates multi-tenancy and nothing flagged it when tenancy arrived.
     //
     // The svg is what a modern browser takes; the pngs are for the ones that do not,
     // and for a phone adding the app to a home screen. public/cooper-jaidee-icon.svg is
