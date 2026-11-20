@@ -1,0 +1,33 @@
+{
+  "rule": "A PLATFORM file is one the platform itself writes, not a shelter: it must never sit under a shelter's own Drive root (shelters.drive_root_folder_id). Every platform path is declared here with a reason, and scripts/check-platform-files.mjs (in npm run lint) fails when a script that writes to Google Drive is in neither list below. Adding a platform file means adding an entry here, which is the decision; the check only makes it impossible to skip. NOT a complete inventory of the Drive tree: files put there by hand cannot be found from the repository and are a separate question for Lutan (#shfil).",
+  "platformFolder": {
+    "env": "PLATFORM_DRIVE_FOLDER_ID",
+    "account": "the platform's own Google account (the Cooper Jaidee one), signed in with the BACKUP_GOOGLE_OAUTH_* identity from #civwx",
+    "piDestination": "<mirror dest>/_platform, a sibling of the per-shelter folders and never inside one; see scripts/pi/drive-mirror.mjs"
+  },
+  "platformPaths": [
+    {
+      "path": "/Home screen icons",
+      "writer": "scripts/sync-home-icons.mjs",
+      "env": "PLATFORM_DRIVE_FOLDER_ID",
+      "reason": "The icon library is drawn by the platform from the route registry and is the same for every shelter. Lutan ruled 2026-11-20 it moves to the platform folder (#shfil)."
+    },
+    {
+      "path": "/Admin/Backups",
+      "writer": "scripts/backup.mjs",
+      "env": "BACKUP_DRIVE_FOLDER_ID",
+      "reason": "Database dumps belong to the platform, on their own account and folder since #civwx (2026-11-19). Declared here so it is on the list; not re-pointed by #shfil. Known residue: backup.mjs still falls back to Backups/ under GOOGLE_DRIVE_ROOT_FOLDER_ID when BACKUP_DRIVE_FOLDER_ID is unset."
+    }
+  ],
+  "otherDriveWriters": [
+    { "file": "scripts/check-drive-token.mjs", "reason": "Read-only probe of one token and its root folder; writes nothing." },
+    { "file": "scripts/drive-copy-tree.mjs", "reason": "Operator copy of a whole shelter tree into another shelter root (UAT/dev); shelter data, not platform files." },
+    { "file": "scripts/drive-partition-tree.mjs", "reason": "Operator split of one shelter tree between prod and test roots; shelter data. The icon prefix is classified leave (a platform file) since #shfil." },
+    { "file": "scripts/drive-sharing.mjs", "reason": "Reads and changes sharing on a shelter's own files." },
+    { "file": "scripts/google-drive-verify.mjs", "reason": "Diagnostic that writes and trashes a probe file in the shelter root it is pointed at." },
+    { "file": "scripts/lib/connect-shelter-drive.mjs", "reason": "Connects a shelter's own Drive; the files are that shelter's." },
+    { "file": "scripts/pi/drive-mirror.mjs", "reason": "Pull-only: every Drive call is a GET." },
+    { "file": "scripts/reset-test-data.mjs", "reason": "Trashes dev shelter files when dev data is reset; shelter data." },
+    { "file": "scripts/upload-blood-work.mjs", "reason": "Files lab reports in the served shelter's own Blood Work folders." }
+  ]
+}
