@@ -6,7 +6,7 @@
 
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { NEXT_COOKIE, NEXT_COOKIE_PATH, callbackUrl, nextCookieOptions } from "@/lib/auth/next-cookie";
+import { NEXT_COOKIE, callbackUrl, nextCookieOptions } from "@/lib/auth/next-cookie";
 import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
 import { getPublicSiteState } from "@/lib/public-site-request";
 import { safeNextPath } from "@/lib/auth/next-path";
@@ -73,7 +73,7 @@ export async function signInWithGoogle(formData: FormData) {
   // sends the person to SITE_URL (#nxtqs). The destination rides in a short-lived cookie instead.
   const jar = await cookies();
   if (next) jar.set(NEXT_COOKIE, next, nextCookieOptions(origin));
-  else jar.delete({ name: NEXT_COOKIE, path: NEXT_COOKIE_PATH });
+  else jar.set(NEXT_COOKIE, "", { ...nextCookieOptions(origin), maxAge: 0 }); // expire a stale one; .delete( reads as a DB write to check-wrapped-write-paths
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
