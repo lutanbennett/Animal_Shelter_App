@@ -70,6 +70,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "Admin → Website has a new Shelter logo card, next to the hero photo. Upload your shelter's own logo (a PNG with a transparent background looks best) and it shows beside your shelter's name at the top of your public website. A shelter that has not uploaded one shows its name on its own.",
+    admin: true,
+  },
 ];
 
 /** Newest first. */
