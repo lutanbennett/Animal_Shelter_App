@@ -7,7 +7,7 @@
 |---|---|
 | Feature | host-pin-guard |
 | Backlog item | `docs/backlog.md` → #plhbd |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/host-pin-guard` @ `C:\Development\Animal_Shelter_host-pin-guard` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | pending: opened after this commit |
 | Tested by / date | Claude / 2026-11-20 |
