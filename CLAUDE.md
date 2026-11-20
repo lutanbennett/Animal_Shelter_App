@@ -609,7 +609,7 @@ Know its limits, and say so in the test plan when they bite:
   of its own holding exactly those cards, so no real role is disturbed and no other running stream is signed out. The login is keyed by card set **plus your port** (`dev_signin_cards_<hash>_<port>`, `--label x` to override), so two
   streams holding the same card each get their own login and neither signs the other out. Calling it again from the SAME port re-keys
   that port's login, so only that port's **later** snippet is valid. `--remove --cards a,b --port N` removes that port's login only.
-- **A login on a SECOND shelter: add `--shelter <key|id>`** (`shelters.key`, e.g. `test-shelter-2`; 2026-11-19,
+- **A login on a SECOND shelter (no flag = the DEV_SHELTER_ID shelter, #dsgnr): add `--shelter <key|id>`** (`shelters.key`, e.g. `test-shelter-2`; 2026-11-19,
   `docs/decisions/2026-11-19-dev-shelter-login.md`), to a role (`admin --shelter test-shelter-2 --aal2`) or to `--cards`. The role is
   made **on that shelter** (key tagged `_s<first 6 of its id>`, so the same card set on two shelters is two roles and two logins; the
   throwaway Admin is `dev_signin_admin_<port>_s<id6>` and is made only when the shelter has no Admin of its own). **THE LOGIN DOES NOT
