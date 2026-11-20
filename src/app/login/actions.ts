@@ -11,6 +11,7 @@ import { safeNextPath } from "@/lib/auth/next-path";
 import { ADOPTER_PATH, loadAdopterScope } from "@/lib/adopter/scope";
 import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
+import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { createClient } from "@/lib/supabase/server";
 
 /** `email` comes back with an error so the box is not emptied (a form action resets uncontrolled fields). */
@@ -46,7 +47,8 @@ export async function login(
   if (!role) {
     await supabase.auth.signOut();
     const { t } = await getT();
-    return { error: t.login.errors.noRolePassword, email };
+    // No shelter on the request means this host is not registered in shelter_hosts: the site is not set up, and the account is fine (#hostx).
+    return { error: (await actingShelterId()) ? t.login.errors.noRolePassword : t.login.errors.siteNotSetUp, email };
   }
 
   // Back to the page that sent them to sign in, if any (the form carries

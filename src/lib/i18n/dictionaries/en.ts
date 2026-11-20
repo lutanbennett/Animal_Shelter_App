@@ -920,6 +920,9 @@ const en = {
       /** Email and password: no request exists (admins create these logins). */
       noRolePassword:
         "This account doesn’t have access. Ask an administrator to assign you a role, then try again.",
+      /** Sign-in refused because this address is not registered to any shelter (#hostx): nothing is wrong with the account. */
+      siteNotSetUp:
+        "This site isn’t set up yet, so nobody can sign in here. Your account is fine. Please tell the person who looks after the system.",
       /** Email and password: wrong email or password (the auth service only says "Invalid login credentials"). */
       badCredentials: "That email or password isn’t right. Try again, or tap Forgot password?",
       /** Email and password: any other refusal from the auth service. */
