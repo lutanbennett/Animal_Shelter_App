@@ -72,3 +72,33 @@ export function hostProblems(config, ingressYml) {
 
   return out;
 }
+
+/**
+ * The build-pinning invariant (#plhbd): every host an environment DECLARES in wrangler.jsonc `vars`
+ * is carried into that environment's build and onto the Pi. wrangler `vars` are RUNTIME values, so a
+ * host nobody carries across never reaches the bundle's serverActions.allowedOrigins, and every
+ * button on it is refused while every page renders. NOT "every environment declares all hosts":
+ * test and uat have no PLATFORM_HOST, and that is correct.
+ *
+ * ctx = { siteHostVars: SITE_HOST_VARS, piWranglerVars: PI_WRANGLER_VARS, deploySrc: text of scripts/deploy.mjs }
+ */
+export function pinProblems(config, ctx) {
+  const out = [];
+  const say = (ok, msg) => out.push({ ok, msg });
+  const hostVars = new Set(ctx.siteHostVars);
+  // ORIGIN_HOST names the Pi's tunnel, not an address people browse to; it is checked above.
+  const looksLikeSiteHost = (k) => /_HOST$/.test(k) && k !== "ORIGIN_HOST";
+
+  const unlisted = new Set();
+  const notOnPi = new Set();
+  for (const [name, b] of Object.entries(config.env ?? {})) {
+    for (const key of Object.keys(b.vars ?? {})) {
+      if (looksLikeSiteHost(key) && !hostVars.has(key)) unlisted.add(`${name}.${key}`);
+      if (hostVars.has(key) && !ctx.piWranglerVars.includes(key)) notOnPi.add(key);
+    }
+  }
+  say(unlisted.size === 0, `every *_HOST in wrangler.jsonc vars is in SITE_HOST_VARS, so the build pins it${unlisted.size ? ` (not listed: ${[...unlisted].join(", ")})` : ""}`);
+  say(notOnPi.size === 0, `every declared site host is copied onto the Pi (runtime-config.mjs, source wrangler)${notOnPi.size ? ` (not copied: ${[...notOnPi].join(", ")})` : ""}`);
+  say(/for\s*\(\s*const\s+\w+\s+of\s+SITE_HOST_VARS\s*\)\s*buildEnv\[/.test(ctx.deploySrc), "scripts/deploy.mjs pins the build by looping over SITE_HOST_VARS, not by naming hosts one by one");
+  return out;
+}
