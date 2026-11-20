@@ -16,3 +16,17 @@ test("names every address with no row, and none that has one", () => {
 test("nothing configured gives nothing to check", () => {
   assert.deepEqual(addressesAnsweredOn({}), []);
 });
+
+import { missingCallbacks } from "./lib/deployed-hosts.mjs";
+
+test("callback allow-list: names the www. forms an exact list lacks", () => {
+  const a = addressesAnsweredOn({ APP_HOST: "a.org" });
+  assert.deepEqual(missingCallbacks(a, "https://a.org/auth/callback"), ["www.a.org"]);
+  assert.deepEqual(missingCallbacks(a, "https://a.org/auth/callback, https://www.a.org/auth/callback"), []);
+});
+
+test("callback allow-list: a glob entry admits, a query-bearing or other-host entry does not", () => {
+  assert.deepEqual(missingCallbacks(["a.org"], "https://a.org/**"), []);
+  assert.deepEqual(missingCallbacks(["a.org"], "https://b.org/**,https://a.org/other"), ["a.org"]);
+  assert.deepEqual(missingCallbacks(["a.org"], ""), ["a.org"]);
+});
