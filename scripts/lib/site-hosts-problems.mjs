@@ -29,6 +29,23 @@ export function hostProblems(config, ingressYml) {
     say(!!b.vars?.APP_HOST && !!b.vars?.PUBLIC_HOST, `${name} sets APP_HOST and PUBLIC_HOST`);
   }
 
+  // The Worker asks the database which shelter a request host belongs to (worker/shelter.mjs
+  // resolveShelterSite), and gives up on its FIRST line when SUPABASE_URL is unset: no header is
+  // sent, no shelter means no rows, and EVERY sign-in is refused while every page still renders.
+  // UAT shipped that way and two database-level checks passed throughout (#uatsb, 2026-11-20).
+  // Sharing one value between environments would point a site at another's database, so the
+  // values must also be distinct. Only environments that answer on a route can be reached.
+  const databases = new Map();
+  for (const [name, b] of Object.entries(envs)) {
+    if (!routeHosts(config, name).length) continue;
+    const url = b.vars?.SUPABASE_URL;
+    say(!!url, `${name} sets SUPABASE_URL, which its host lookup needs`);
+    if (!url) continue;
+    const other = databases.get(url);
+    say(!other, `${name}: its SUPABASE_URL is its own${other ? ` (shared with ${other})` : ""}`);
+    if (!other) databases.set(url, name);
+  }
+
   // Two Workers cannot own one custom domain.
   const owner = new Map();
   let clash = false;
