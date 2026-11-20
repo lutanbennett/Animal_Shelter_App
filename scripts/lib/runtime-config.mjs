@@ -28,6 +28,14 @@
 //   source    env (default): the environment's values file. wrangler: a var in wrangler.jsonc.
 //   own       set when another module owns the value's validation and handling
 //             (actions-key.mjs); the generic derivations skip it.
+//   routed    "required": a Worker var (source wrangler) that EVERY environment answering on a
+//             route must set in wrangler.jsonc, because a Worker consumer needs it on each
+//             request; scripts/lib/site-hosts-problems.mjs fails when one lacks it. Absent =
+//             the setting is legitimately optional per environment (test and uat set no
+//             PLATFORM_HOST, and that is correct).
+//   distinct  true: no two environments may share the value (a shared database address points
+//             one site at another environment's data). Only meaningful with source wrangler.
+//   needs     with routed: what reads it, so the failure message says why it matters.
 //   purpose   one line, for people.
 export const RUNTIME_CONFIG = [
   { name: "NEXT_PUBLIC_SUPABASE_URL", where: "both", secret: false, scrub: false, required: true, build: true, purpose: "The environment's Supabase project URL; inlined into the build." },
@@ -58,6 +66,7 @@ export const RUNTIME_CONFIG = [
   { name: "APP_HOST", where: "pi", secret: false, scrub: false, required: false, build: false, source: "wrangler", purpose: "The staff app's hostname (src/lib/site-hosts.ts); wrangler.jsonc var, copied so the Pi serves what the Worker would." },
   { name: "PUBLIC_HOST", where: "pi", secret: false, scrub: false, required: false, build: false, source: "wrangler", purpose: "The public website's hostname (src/lib/site-hosts.ts); wrangler.jsonc var, copied to the Pi." },
   { name: "PLATFORM_HOST", where: "pi", secret: false, scrub: false, required: false, build: false, source: "wrangler", purpose: "The platform front door's hostname (src/lib/site-hosts.ts), which maps to no shelter; wrangler.jsonc var, copied to the Pi. Missing here until #plhbd, which is why every button on cooperjaidee.org was refused while every page rendered." },
+  { name: "SUPABASE_URL", where: "worker", secret: false, scrub: false, required: false, source: "wrangler", routed: "required", distinct: true, needs: "its host lookup (worker/shelter.mjs resolveShelterSite)", purpose: "The environment's Supabase project URL as a Worker run-time var (the Worker cannot read the build-time NEXT_PUBLIC_ one). Without it the host lookup gives up, no shelter header is sent and every sign-in is refused (#uatsb, 2026-11-20). Also read by the translations cron, heartbeat and writer-runs." },
   { name: "SUPABASE_ACCESS_TOKEN", where: "tools", secret: false, scrub: true, required: false, neverOnPi: true, purpose: "Management API token for migrations and deploys." },
   { name: "SUPABASE_DB_URL", where: "tools", secret: false, scrub: true, required: false, purpose: "Session-pooler connection string with the password, for scripts/backup.mjs; set on the Pi so the backup never needs the Management API token." },
   { name: "SUPABASE_DB_PASSWORD", where: "tools", secret: false, scrub: true, required: false, purpose: "Database password for scripts/backup.mjs." },
@@ -81,6 +90,10 @@ export const PI_REQUIRED = names((c) => onPi(c) && c.required && fromEnv(c));
 export const PI_OPTIONAL = names((c) => onPi(c) && !c.required && fromEnv(c));
 /** wrangler.jsonc vars the Pi's file copies. */
 export const PI_WRANGLER_VARS = names((c) => onPi(c) && c.source === "wrangler");
+/** wrangler.jsonc vars the Worker itself needs at run time (any environment). */
+export const WORKER_WRANGLER_VARS = names((c) => onWorker(c) && c.source === "wrangler");
+/** Worker vars every environment with a route must set: [{ name, distinct, needs }]. */
+export const WORKER_ROUTED_VARS = RUNTIME_CONFIG.filter((c) => onWorker(c) && c.source === "wrangler" && c.routed === "required").map((c) => ({ name: c.name, distinct: !!c.distinct, needs: c.needs ?? c.purpose }));
 /** Names no env file on a Pi may hold. */
 export const PI_FORBIDDEN = names((c) => c.neverOnPi);
 /** Names to strip out of status-tile error text. */

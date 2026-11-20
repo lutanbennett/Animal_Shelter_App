@@ -19,7 +19,7 @@ import { siteAllowedOrigins } from "../src/lib/site-hosts.ts";
 import { readWranglerConfig } from "./lib/wrangler.mjs";
 import { hostProblems, pinProblems } from "./lib/site-hosts-problems.mjs";
 import { SITE_HOST_VARS } from "../src/lib/site-hosts.ts";
-import { PI_WRANGLER_VARS } from "./lib/runtime-config.mjs";
+import { PI_WRANGLER_VARS, WORKER_ROUTED_VARS } from "./lib/runtime-config.mjs";
 
 let failed = 0;
 const say = (ok, msg) => {
@@ -79,6 +79,27 @@ for (const [what, mutate] of Object.entries(broken)) {
   say(caught(fourth, ctx), "caught: a fourth host in wrangler.jsonc that SITE_HOST_VARS does not list");
   say(caught(config, { ...ctx, piWranglerVars: ctx.piWranglerVars.filter((k) => k !== "PLATFORM_HOST") }), "caught: PLATFORM_HOST not copied onto the Pi");
   say(caught(config, { ...ctx, deploySrc: deploySrc.replace(/for\s*\(\s*const\s+\w+\s+of\s+SITE_HOST_VARS\s*\)/, "for (const key of [])") }), "caught: deploy.mjs no longer loops over SITE_HOST_VARS");
+}
+
+{
+  // The registry drives the rule (#uatsb): each fixture must fail with the RIGHT message, not merely fail.
+  const failing = (c, routed) => hostProblems(c, yml, routed).filter((r) => !r.ok).map((r) => r.msg);
+  say(WORKER_ROUTED_VARS.some((v) => v.name === "SUPABASE_URL" && v.distinct), "the registry marks SUPABASE_URL routed-required and distinct");
+  const missing = clone();
+  delete missing.env.uat.vars.SUPABASE_URL;
+  say(failing(missing).some((m) => /^uat sets SUPABASE_URL, which .* needs$/.test(m)), "caught, by name: uat routed but SUPABASE_URL missing");
+  const shared = clone();
+  shared.env.uat.vars.SUPABASE_URL = shared.env.production.vars.SUPABASE_URL;
+  say(failing(shared).some((m) => /SUPABASE_URL is its own \(shared with /.test(m)), "caught, by name: uat and production share one SUPABASE_URL");
+  // A setting added to the registry later is held to the same rule with no new code here.
+  const next = [...WORKER_ROUTED_VARS, { name: "FUTURE_SETTING", distinct: false, needs: "a future consumer" }];
+  say(failing(config, next).some((m) => /FUTURE_SETTING/.test(m)), "caught: a newly registered routed setting that no environment sets");
+  // Legitimate absence is not a failure: an environment with no routes owes nothing, and test/uat set no PLATFORM_HOST.
+  const unrouted = clone();
+  unrouted.env.uat.routes = [];
+  delete unrouted.env.uat.vars.SUPABASE_URL;
+  say(!failing(unrouted).some((m) => /^uat sets SUPABASE_URL/.test(m)), "not blamed: an environment with no routes and no SUPABASE_URL");
+  say(!config.env.uat.vars.PLATFORM_HOST && !failing(config).some((m) => /PLATFORM_HOST/.test(m)), "not blamed: uat has no PLATFORM_HOST, which is correct");
 }
 
 console.log(failed ? `\n${failed} wrong` : "\nall right");
