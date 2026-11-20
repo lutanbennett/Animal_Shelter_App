@@ -36,7 +36,15 @@
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-Run at `f994ec8d9`. **Cross-checked independently:** the stream session ran its own
+Run at `f994ec8d9`. **The branch then merged `origin/main` again** (`6b71b53f7`), because the
+`0.47.7` release cut landed while this PR was open and conflicted in `src/lib/releases.ts`: the cut
+moved the adopt-page note into the `0.47.7` entry, so this PR's note stays in `unreleased` for the
+next release and the adopt line is not duplicated. **That merge changes `releases.ts`, `package.json`
+and `package-lock.json` only, and CI runs the same four gates on the merge head** — which is the run
+that is read before merging, per the merge step in section 2. The local lines above are not re-typed
+for the new head, because they are evidence of the run that produced them.
+
+**Cross-checked independently:** the stream session ran its own
 gates on the same commit and reported `typecheck=0 lint=0 test=0 build=0` with its
 own timings (18s / 158s / 53s / 63s). Two runs on one commit agreeing is better
 evidence than one, and the differing timings are what show they are two runs.
