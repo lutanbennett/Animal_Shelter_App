@@ -1,150 +1,150 @@
-# Release handover — written 2026-11-20 after `0.47.5`
+# Release handover — written 2026-11-20 after `0.47.6`
 
 A **delta**. The durable rules are in `docs/release-procedure.md` and this release's own record is
-`docs/releases/2026-11-20-0-47-5.md`. **Both outrank this file.**
-
-**The handover was missed on three releases running and only ever caught by Lutan asking.** It is
-written here, in the record's own PR, as rule 3 requires. `#hndvr` asked for a check and **it now
-exists**: `scripts/check-release-handover.mjs` (#1733, advisory) fails when this file's first line
-does not name the newest file in `docs/releases/`. So the instrument is no longer missing — but it is
-advisory, and it cannot tell you the *contents* are current.
+`docs/releases/2026-11-20-0-47-6.md`. **Both outrank this file.**
 
 ## START HERE
 
-Production is `lannacareforanimals.org`, now on **`0.47.5`** — a **minor release that mailed nobody**.
-`test.lannacare.org` and `uat.lannacare.org` serve `0.47.5` too, and **there is a fourth host now**:
-`cooperjaidee.org`, the platform front door, which went live in this deploy. All four answer
-`x-lanna-served-by: pi`, and all three Workers are `0.47.5`.
+Production is `lannacareforanimals.org`, now on **`0.47.6`** — a **minor release that mailed nobody**.
+`cooperjaidee.org`, `test.lannacare.org` and `uat.lannacare.org` serve `0.47.6` too. **All four hosts
+answer on both endpoints and all three Workers are `0.47.6`.**
 
-**Production and UAT both hold every migration on `main`: 422 applied, 0 pending, 0 drift.**
+**Production and UAT both hold every migration on `main`: 427 applied, 0 pending, 0 drift.**
 
-**Re-measure before trusting any of this, and read BOTH endpoints on all hosts.**
-`/api/releases/current` reports the **Worker's** version whatever the Pi serves. This release passed
-through that half-state twice on purpose, and `0.47.3` shipped in it.
+**Re-measure before trusting any of this, and read BOTH endpoints on all four hosts.**
+`/api/releases/current` reports the **Worker's** version whatever the Pi serves. `0.47.3` shipped in
+that half-state.
 
-## What `0.47.5` was
+## What `0.47.6` was
 
-23 PRs, six migrations `0416`–`0421`. The operator console moved off `/admin` onto
-`cooperjaidee.org`, with the **six console writes that `0419`–`0421` fix**, a per-shelter setup
-checklist, add-or-link a login by email, and a receipts form. Everything else was instruments,
-scripts and documents. **Two notes, both `admin: true`.**
+11 PRs (#1745–#1755), five migrations `0422`–`0426`, **two notes, both `admin: true`**: a product
+administrator can create a shelter's first Admin login (closing `#flogn`), and a Website save on a
+shelter with no settings row now says so. **And the fault it existed to fix:** `#plhbd`, the
+`cooperjaidee.org` buttons.
 
-## THE ONE THING TO READ BEFORE YOUR NEXT CUT: `unreleased` MAY BE EMPTY AND WRONG
+## THE RELEASE WENT TO TARGET FOR THE FIRST TIME: ONE TOUCH
 
-**Eleven streams and 23 PRs merged, and `unreleased` was `[]`.** All 64 changed test plans had
-answered the release-notes line `n/a`, each with a reason that held up **about shelter users** — and
-missed that the release **deleted the Product admin tile and page from Settings**, which Admin had
-used that same day.
+**Lutan did one thing — the deploy.** Target is two. Three things made that happen, and they are worth
+keeping:
 
-- **`cut-release.mjs` refuses to write while `unreleased` is empty.** That refusal is what surfaced
-  it. Treat it as a question, not an obstacle.
-- **When you meet it, measure rather than accept it:**
-  `git log <previous cut>..HEAD --name-only -- src/app src/components src/lib/manual src/lib/i18n worker`,
-  then `check-deferred-notes.mjs`. Four changes and 64 `n/a` answers was the state here.
-- **Ask who the change is visible to, not whether it is visible.** `admin: true` notes exist for
-  exactly the case the `n/a` reasons keep missing: a product administrator or Admin is not a shelter
-  user, and is the only person who reads release notes.
-- **Do not invent visibility to fill the list.** The first candidate here was the stocktaking failure
-  message, and its own plan says `0417` backfilled every shelter so nobody can reach it. **Read the
-  plan, not the diff.**
-- **The underlying process fault is the planner's** and is filed: the ordinary route produced no
-  user-facing note from eleven streams of real work.
+- **Meshnet did not drop.** It has on the last two releases, and restoring it was his second touch each
+  time. Nothing was done to achieve this; it simply held. **Do not read it as fixed.**
+- **The Pi's `sudo -n -l` and `lanna-pi-mesh` were checked BEFORE anything was built**, so neither a
+  missing rule nor a dead route turned into a mid-release question. Thirty seconds, and it is now the
+  first thing to do.
+- **The scoped Cloudflare API token held again.** His log said *"API token from
+  `.env.deploy.production`"*, not wrangler's OAuth login, so the `0.47.1` mid-upload expiry cannot
+  recur. His deploy did not fail once.
 
-**`check-deferred-notes.mjs` is a REAL GATE on a release, not advisory.** `cut-release.mjs` refused
-outright until all 16 flagged PRs were reviewed by name through `--deferred-reviewed "<one line
-each>"`. Budget a few minutes for it, and know that five of the 16 "reasons" are the rule's own text
-quoted into a plan, which makes the list longer than the real question.
+## THE ONE TECHNIQUE TO TAKE FROM THIS RELEASE: PROVE A BAKED VALUE BY READING THE BUILD
 
-**`--verify` needs an explicit base whenever the cut publishes a note added in the same PR** — which
-is now the normal case, not the exception. Copy the working file aside **before** running the cut;
-that file is `origin/main` plus exactly your notes. Plain `origin/main` fails two assertions on a
-count that is correct.
+`#plhbd` was a build-time value missing from a build — and **the page rendered perfectly while it was
+broken**, so nothing observable from outside said whether the fix had landed. Rather than wait for a
+person to press a button, the list was read out of the running build:
 
-## Traps that cost something this time
+```bash
+ssh lanna-pi-mesh 'cd ~/Animal_Shelter_App && node -e "console.log(JSON.stringify(require(\"./.next/required-server-files.json\").config.experimental.serverActions.allowedOrigins))"'
+["lannacareforanimals.org","www.lannacareforanimals.org","cooperjaidee.org","www.cooperjaidee.org"]
+```
 
-- **The harness's completion notification reports the WRAPPER's exit code.** A failed Pi launch was
-  reported `completed (exit code 0)` while the real code was **255**. **Third release running.** Write
-  `cmd > log 2>&1; echo "EXIT=$?"` and read **that** line, never the notification.
-- **PowerShell's `Tee-Object` writes Lutan's deploy log as UTF-16LE**, so a plain `grep` of
-  `.local/deploy-<version>.log` matches **nothing at all**. The file was 27,966 bytes and read as
-  empty. **This is a second mechanism for the false conclusion the procedure already warns about** —
-  deciding the handover was ignored; the first is `tee`'s buffering. **Check the size, then decode:**
-  `tr -d '\000' < .local/deploy-<v>.log | grep …`. The BOM `377 376` is the tell.
-- **A red dry-run can mean "apply".** `0420` failed with *cannot change return type of existing
-  function* on both databases, because `0417`'s drop-and-recreate had been rolled back. The runner
-  says so itself — **and check it in the files anyway**: the two return shapes were character-identical,
-  which is the thing that makes the real apply work.
-- **`deploy.mjs --plan`'s mail line is cosmetically wrong**, third release running: it picks between
-  three fixed strings from `--no-mail` and `uat` alone (`scripts/deploy.mjs:392–395`) and never reads
-  the `major` flag, while the real path calls `majorReleasesSince` at line 467. **Verify it in the
-  source before you reassure Lutan**, because the line numbers move — `0.47.4`'s record said 389. Do
-  **not** pass `--no-mail` to production to be safe: it suppresses the proof line.
-- **`n/a: ` needs its reason immediately.** `n/a at the cut: …` fails `check-test-plan.mjs`. A cut plan
-  also **cannot tick the release-notes line**, by construction.
+**`.next/required-server-files.json` holds the config the build was made with**, which is what the
+origin check actually reads. The general form: **when a value has to travel to be true, read it at the
+far end.** This works for any baked setting — `allowedOrigins`, anything in `next.config.ts`.
 
-## The Pi and the network
+**What it does not replace:** the saving proof itself. A baked list is strong evidence; only a real
+save proves the whole path, and that is still outstanding (below).
 
-`lanna-pi.local` timed out throughout, as every release; **all three Pi builds ran over
-`lanna-pi-mesh`**. **Meshnet dropped mid-release for the second release running**, after test and UAT
-had used it — both routes then timed out while all four sites stayed healthy on `pi`. **That is
-Lutan's second touch and the only thing he was asked for besides the deploy.** Ask him to turn Meshnet
-back on; it worked first time afterwards.
+## Traps that cost something, or nearly did
 
-**Read the served headers before concluding anything about the Pi.** Four `pi` answers mean the box is
-fine and your route is broken:
-`for h in lannacareforanimals.org test.lannacare.org uat.lannacare.org cooperjaidee.org; do curl -4 -sI "https://$h/login" | grep -i x-lanna-served-by; done`
+- **`check-release-order.mjs` is SILENT about migrations that must come BEFORE the Worker.** `0426`
+  was one: `worker/shelter.mjs` calls `resolve_shelter_site`, and if it is absent the RPC 404s, the
+  lookup returns no shelter id, and **since `0392` no shelter header means no rows** — the public
+  website blanks. The guard models only `MUST_FOLLOW_WORKER` and answered *"no guarded migration is
+  pending here, nothing to prove"*. **Not wrong, silent — and silence reads as "order does not
+  matter".** The ordinary order (§5 before §6) saves you; a hotfix Worker deploy between releases
+  would not be. Filed as `#rlord`.
+- **The harness notification reports the WRAPPER's exit code**, still. Write
+  `cmd > log 2>&1; echo "EXIT=$?"` and read **that** line. The three Pi builds were read that way.
+- **`Tee-Object` writes his deploy log as UTF-16LE**, still. A plain `grep` of a 26,756-byte
+  `.local/deploy-0.47.6.log` matches **nothing**. `tr -d '\000' < <file> | grep …`. Filed as `#utf16`.
+  **"The log is empty" is the wrong conclusion and has been drawn before.**
+- **A `fetch failed` from `apply-migrations.mjs` is the network, not the SQL.** The first production
+  apply died on `0422`. The runner says *"nothing from it was kept"* — **confirm that with `--status`
+  rather than believing it**, then retry. All five applied.
+- **`apply-migrations.mjs` cried wolf on `0425`'s consumer header**, reporting
+  `src/app/platform/actions.ts (createShelterAdminLogin)` as *"not on origin/main at all"* because the
+  parenthetical defeats its path lookup. `git grep` settled it in one line. **A warning that is wrong
+  on a correct header will be ignored on the day it is right.**
+- **`--verify` needed NO base-building this time.** Two releases running had to work out that
+  `origin/main` stops being the pre-cut state when the cut *adds* a note. **This cut added none**, so
+  plain `origin/main` was right and all 17 passed. Check which case you are in before building a base.
+- **`n/a: ` still needs its reason immediately**, and a **cut plan cannot tick the release-notes line**,
+  by construction.
 
-**IPv6 is still preferred on this machine and it still has no IPv6 address** — Lutan reverted the
-`netsh` fix after `0.47.3`, so the fault is live. **Use `curl -4` for everything.** Nothing failed
-this release because of it, and `#fntlc` landed (local fonts), so no build needs Google Fonts at all
-now: the font half of that fault is gone for good.
+## The release-notes route WORKED this time, and that is the news
 
-**The scoped Cloudflare API token held.** `--plan` showed wrangler using
-`.env.deploy.production`'s token rather than its own OAuth login, and nothing expired mid-upload. The
-`0.47.1` failure did not recur.
+`0.47.5`'s handover opened with *"`unreleased` MAY BE EMPTY AND WRONG"* — eleven streams, 23 PRs, no
+notes, and the cut had to write its own. **This release, two of eleven streams wrote notes in their own
+PRs and the cut had nothing to invent.** Keep measuring anyway:
 
-## `cooperjaidee.org` — new, and what is still unproven
+```bash
+git log <previous deployed SHA>..HEAD --name-only -- src/app src/components src/lib/manual src/lib/i18n worker
+node scripts/check-deferred-notes.mjs <prev> HEAD
+```
 
-The deploy created all four custom domains itself and both Cooper addresses answered 200 at once. The
-zone must be **empty** for that: it held 0 of 200 records. **TRAP: Cloudflare's Recommendations panel
-urges adding apex and `www` records, and following it breaks the deploy**, which refuses to overwrite.
+**Ask who the change is visible to, not whether it is visible.** `admin: true` exists for the product
+administrator and for Admin, who are the only people who read release notes.
 
-**The address opening proves nothing.** Section F's real check is **signing in there, doing the
-authenticator step, and saving a web address** — a missing allowed origin refuses every button while
-every page renders. **Still outstanding, and it needs Lutan.**
+**One note was considered and declined, and the reasoning is in the record:** `#plhbd` itself. Nobody
+at a shelter can reach `cooperjaidee.org`, `0.47.5`'s published note already says the new address needs
+set-up before it will open, and a third platform-console note would reach every shelter Admin about an
+address none of them can open. **It could go the other way; do not treat it as settled precedent.**
+
+**`check-deferred-notes.mjs` over-lists, third release running:** 75 plans read for a range of 11 PRs,
+and 7 of 20 candidates were the test-plan template's own text printed as a "reason". **Budget one
+lookup per candidate and do not try to narrow it** — under-listing is the fault it exists to prevent.
 
 ## What is still open
 
-- **`#flogn` — the clearest next job, and it needs HIS decision first.** A product administrator can
-  link an existing login but cannot **create or invite** one, so a shelter cannot be onboarded end to
-  end. **Do not reach for widening `security.createUser`:** a shelter's own Admin can grant themselves
-  that card, which would hand every Admin the ability to mint logins.
-- **`shelterError` maps every `42501` to "your second step has expired"**, which is why six broken
-  writes hid for a day. A policy refusal is not an expired step-up.
+- **THE SAVING PROOF ON `cooperjaidee.org`, and it is the first thing to ask him about.** Sign in, do
+  the authenticator step, **save** a web address or a shelter's name. It is the only check that closes
+  `#plhbd`, and the baked-list read above is evidence, not proof.
+- **`#hostx` — a whole environment can be locked out by ONE missing `shelter_hosts` row, and to every
+  user it looks like their own account being deleted.** That is what happened to `test.lannacare.org`
+  this morning. **The item asks that UAT and production be checked the same way and that was NOT
+  done**, because no script in this repository reads `shelter_hosts` and an ad-hoc production read is
+  refused. What exists instead is behavioural evidence for production only: `/` serves the shelter's
+  own name out of the database, and people sign in all day. **Nothing is established about UAT's host.**
+  The release did not make it worse — `0426` keeps `resolve_shelter_host` and both need the same row.
+- **`shelterError` still maps every `42501` to "your second step has expired"**, which is why six
+  broken writes hid for a day. A policy refusal is not an expired step-up.
 - **`dev-signin.mjs <role>` breaks (`PGRST116`) once two shelters each hold a role keyed `admin`** —
-  the intended end state. Plan around it.
-- **The Thai sign-off, EIGHTH release running** (`#y1dqu`). **Still the largest standing gap.**
-  Likewise **a signed-in look at production**, which Claude cannot do: no account there.
-- Carried forward: the per-shelter policy click-throughs, `/admin/security` with a real code, the
-  Cloudflare rate-limit rule (`#8t3rk`), the PromptPay id, the e-Donation screens.
+  the state dev is in now, so plan around it. `--cards` still works.
+- **The Thai sign-off, NINTH release running** (`#y1dqu`). **Still the largest standing gap.** Likewise
+  **a signed-in look at production**, which Claude cannot do: no account there.
+- Carried: the per-shelter policy click-throughs, `/admin/security` with a real code, the Cloudflare
+  rate-limit rule (`#8t3rk`), the PromptPay id, the e-Donation screens.
+- Seven of the eleven PRs' plans carry a `pending:` line. All eight outstanding presses are tabulated
+  in the record under *the gaps*; they are shipped on his instruction, not absorbed.
 
 ## Now routine — stop treating these as open
 
-- **`sync-home-icons.mjs` is done and the backlog of two skipped releases cost nothing**: 536 images,
-  **536 unchanged, 0 updated**. Run it, but do not treat a missed one as damage.
-- **`#pdmin` is CLOSED** (Lutan is the first product administrator) and **`#fntlc` is CLOSED** (local
-  fonts). Do not re-raise either.
+- **`PUBLIC_SITE=locked` on production**, so every signed-out page `307`s to `/login` and the template's
+  own `n/a: vacuous (site locked)` is the right answer. **`0426` did not change this** —
+  `publicSiteStateFor()` takes the more closed of the floor and the shelter's value, and a `locked`
+  floor beats Lanna's `'open'` row. Check it rather than reporting a regression.
+- **`sync-home-icons.mjs`**: 536 images, 536 unchanged. Run it; a missed one costs nothing.
+- **`#flogn` is CLOSED** (`0425`, a narrow product-administrator definer function — **not** a widening
+  of `security.createUser`). **`#pdmin` and `#fntlc` stay closed.** Do not re-raise any of them.
 - **Merge on green with no approval round-trip**, every PR. **`test-plan` is advisory, permanently.**
   Neither is a decision he owes.
 - **`audit` runs for real on a cut** (it changes `package.json`) and `skipped` elsewhere is not a pass.
   `audit:register` exiting 0 means *registered and unreachable*, which is what to write — not "clean".
+- **IPv6 is still preferred on this machine and it still has no IPv6 address.** Use `curl -4` for
+  everything. Nothing failed because of it.
 
 ## The two touches that are his, and stay his
 
-**Major versus minor**, and the **production Worker deploy**. Against a target of two,
-`0.47.5` cost him **exactly two** — the deploy, and restoring Meshnet. **That is the target met for
-the first time in four releases**, and the only extra was the machine's networking again.
-
-**One thing he settled this release that is worth not re-deriving:** told plainly that eleven streams
-were shipping under a patch label, and offered `0.48.0`, he answered *"Keep 0.47.5"*. **The version is
-derived from the mail answer, never from the word "minor"** — and he is content with that.
+**Major versus minor**, and the **production Worker deploy**. `0.47.6` cost him **one** — he had already
+answered the mail question before the release began. **Do not read one as the new target**; two is the
+target and the second was simply not needed.
