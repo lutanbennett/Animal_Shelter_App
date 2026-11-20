@@ -159,6 +159,18 @@
     "width": 1920,
     "height": 1200
   },
+  "/manual/runbook-product-admin.png": {
+    "width": 1898,
+    "height": 8769
+  },
+  "/manual/runbook-settings-lookups.png": {
+    "width": 1898,
+    "height": 1496
+  },
+  "/manual/runbook-who-does-what.png": {
+    "width": 1920,
+    "height": 1200
+  },
   "/manual/vet-hub.png": {
     "width": 1898,
     "height": 1590
@@ -167,7 +179,7 @@
     "width": 1898,
     "height": 1238
   },
-  "/manual/clinics.png": {
+  "/manual/vets.png": {
     "width": 1920,
     "height": 1200
   },
