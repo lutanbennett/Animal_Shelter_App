@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
 import { getPublicSiteState } from "@/lib/public-site-request";
-import { safeNextPath } from "@/lib/auth/next-path";
+import { NEXT_COOKIE, NEXT_COOKIE_PATH, resolveNext } from "@/lib/auth/next-cookie";
 import { PASSWORD_CHANGE_PATH } from "@/lib/auth/password-change";
 import { ADOPTER_PATH, loadAdopterScope } from "@/lib/adopter/scope";
 import { actingShelterId } from "@/lib/supabase/acting-shelter";
@@ -60,7 +60,10 @@ export async function GET(request: NextRequest) {
   // A public viewer lands on the home page (src/lib/auth/app-access.ts) —
   // but a password-recovery link's ?next= is the change-password page,
   // which every account may use, so that is honoured for anyone.
-  const next = safeNextPath(searchParams.get("next"));
+  // Cookie first, then a legacy ?next= (see next-cookie.ts); safeNextPath runs inside resolveNext on the way in.
+  const next = resolveNext(request.cookies.get(NEXT_COOKIE)?.value, searchParams.get("next"));
   const landing = next?.startsWith(PASSWORD_CHANGE_PATH) ? next : signedInLandingPath(role, next, await getPublicSiteState());
-  return NextResponse.redirect(`${origin}${landing}`);
+  const done = NextResponse.redirect(`${origin}${landing}`);
+  done.cookies.delete({ name: NEXT_COOKIE, path: NEXT_COOKIE_PATH });
+  return done;
 }

@@ -4,6 +4,8 @@
 // claim as; a second run sends a second email, bounded by Supabase's own rate limit, and changes nothing in the app
 // database. docs/decisions/2026-11-01-write-paths-tail-b.md, section 3.
 
+import { cookies } from "next/headers";
+import { callbackUrl, nextCookieOptions, NEXT_COOKIE } from "@/lib/auth/next-cookie";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -30,7 +32,7 @@ export async function requestPasswordReset(
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-    redirectTo: `${await requestOrigin()}/auth/callback?next=${encodeURIComponent("/account/password?reset=1")}`,
+    redirectTo: callbackUrl(origin),
   });
   // A rate-limit or config error is worth showing; "user not found" is
   // deliberately not distinguished from success.
