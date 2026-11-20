@@ -1169,6 +1169,26 @@
         "migration": "0425_product_admin_permit_first_login.sql",
         "item": "policy public.product_admin_login_grants.product_admin_login_grants_select",
         "reason": "PADMIN first login (docs/decisions/2026-11-20-padmin-create-login.md): read only by is_product_admin(), the PADMIN list, outside the card system. Nothing writes through the API. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0427_shelter_enquiries.sql",
+        "item": "policy public.shelter_enquiries.shelter_enquiries_select",
+        "reason": "Shelter enquiry (docs/decisions/2026-11-20-shelter-enquiry-schema.md): read only by is_product_admin(). No anon or authenticated insert exists; the only writer is the service role. Recorded under outsideTheCardSystem.productAdmin (the PADMIN list), not debt; it is not the website-account exception and widens nothing."
+      },
+      {
+        "migration": "0427_shelter_enquiries.sql",
+        "item": "policy public.shelter_enquiries.shelter_enquiries_update",
+        "reason": "Shelter enquiry (docs/decisions/2026-11-20-shelter-enquiry-schema.md): a product administrator may set an enquiry's status, by is_product_admin(). Recorded under outsideTheCardSystem.productAdmin (the PADMIN list), not debt; it is not the website-account exception and widens nothing."
+      },
+      {
+        "migration": "0427_shelter_enquiries.sql",
+        "item": "policy public.shelter_enquiries.shelter_enquiries_update_requires_aal2",
+        "reason": "Shelter enquiry (docs/decisions/2026-11-20-shelter-enquiry-schema.md): restrictive: an update needs an aal2 session, as 0411's writes do; it only ever narrows. Recorded under outsideTheCardSystem.productAdmin (the PADMIN list), not debt; it is not the website-account exception and widens nothing."
+      },
+      {
+        "migration": "0427_shelter_enquiries.sql",
+        "item": "policy public.shelter_enquiries.definer_all",
+        "reason": "Shelter enquiry (docs/decisions/2026-11-20-shelter-enquiry-schema.md): lets the definer owner (rls_definer) write; not reachable by any login. Recorded under outsideTheCardSystem.productAdmin (the PADMIN list), not debt; it is not the website-account exception and widens nothing."
       }
     ],
     "stubs": [
