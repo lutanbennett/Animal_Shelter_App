@@ -896,9 +896,9 @@ const th: Dictionary = {
       calIncomplete: "ปฏิทิน: การเชื่อมต่อยังไม่เสร็จ",
       calConnected: "ปฏิทิน: เชื่อมต่อแล้ว",
       calDead: "ปฏิทิน: การลงชื่อเข้าใช้หยุดทำงาน",
-      platformName: "แพลตฟอร์ม Cooper Jaidee",
+      platformName: "แพลตฟอร์ม CooperJaidee",
       enquiry: {
-        title: "สอบถามการใช้ Cooper Jaidee สำหรับศูนย์พักพิงของคุณ",
+        title: "สอบถามการใช้ CooperJaidee สำหรับศูนย์พักพิงของคุณ",
         intro: "บอกเราเกี่ยวกับศูนย์พักพิงของคุณและวิธีติดต่อ เราอ่านทุกคำสอบถามและจะติดต่อกลับ การส่งแบบฟอร์มนี้ไม่ได้สร้างบัญชี",
         shelterName: "ชื่อศูนย์พักพิง",
         contactName: "ชื่อของคุณ",

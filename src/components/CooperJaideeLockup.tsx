@@ -47,7 +47,7 @@ export function CooperJaideeLockup({ label }: { label: string }) {
     <span role="img" aria-label={label} className="flex items-center gap-2 text-foreground sm:gap-2.5">
       <CooperJaideeMark className="h-10 w-10 shrink-0" />
       <span aria-hidden="true" className="font-display text-xl font-bold leading-none tracking-tight">
-        Cooper Jaidee
+        CooperJaidee
       </span>
     </span>
   );
