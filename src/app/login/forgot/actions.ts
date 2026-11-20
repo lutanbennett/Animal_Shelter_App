@@ -6,6 +6,7 @@
 
 import { cookies } from "next/headers";
 import { callbackUrl, nextCookieOptions, NEXT_COOKIE } from "@/lib/auth/next-cookie";
+import { PASSWORD_CHANGE_PATH } from "@/lib/auth/password-change";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -29,6 +30,13 @@ export async function requestPasswordReset(
   if (typeof email !== "string" || !email.trim()) {
     return { error: t.login.forgot.errors.emailRequired };
   }
+
+  // The destination rides in the cookie, not on the callback URL: Supabase matches the whole
+  // redirectTo against exact allow-list entries and a miss is silently replaced by SITE_URL
+  // (#nxtqs, src/lib/auth/next-cookie.ts). Set before the call, so it is already in the browser
+  // that asked -- the same browser the PKCE code verifier beside it requires anyway.
+  const origin = await requestOrigin();
+  (await cookies()).set(NEXT_COOKIE, `${PASSWORD_CHANGE_PATH}?reset=1`, nextCookieOptions(origin));
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {

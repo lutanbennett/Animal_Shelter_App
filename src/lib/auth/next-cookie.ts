@@ -17,8 +17,19 @@ export const NEXT_COOKIE = "auth_next";
 export const NEXT_COOKIE_PATH = "/auth/callback";
 const TEN_MINUTES = 600;
 
-/** The one callback address per host: no query string, ever. */
+/**
+ * The one callback address per host: no query string, ever.
+ *
+ * It throws on anything that is not an http(s) origin rather than building a
+ * nonsense address. `origin` is a DOM global (lib.dom.d.ts declares it), so a
+ * caller that forgets to resolve its own origin still TYPECHECKS and then
+ * silently mints `undefined/auth/callback` on the server -- which, in a
+ * recovery email, is a dead link nobody would see until a person reported it.
+ */
 export function callbackUrl(origin: string): string {
+  if (!/^https?:\/\/[^/]+$/.test(origin ?? "")) {
+    throw new Error(`callbackUrl needs an http(s) origin with no path, got ${JSON.stringify(origin)}`);
+  }
   return `${origin}${NEXT_COOKIE_PATH}`;
 }
 

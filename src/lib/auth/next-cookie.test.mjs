@@ -10,6 +10,13 @@ test("the callback URL has no query string, whatever the destination", () => {
   }
 });
 
+test("a missing or malformed origin throws instead of minting a dead address", () => {
+  // `origin` is a DOM global, so forgetting to resolve one typechecks (see callbackUrl).
+  for (const bad of [undefined, null, "", "undefined", "cooperjaidee.org", "https://x.org/auth/callback"]) {
+    assert.throws(() => callbackUrl(bad), /needs an http\(s\) origin/);
+  }
+});
+
 test("the cookie is httpOnly, short-lived, callback-scoped; secure only on https", () => {
   const https = nextCookieOptions("https://x.org");
   assert.equal(https.httpOnly, true);
