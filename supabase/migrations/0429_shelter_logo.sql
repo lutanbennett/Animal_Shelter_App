@@ -1,4 +1,4 @@
--- consumer: src/app/adopt/PublicHeader.tsx, src/app/admin/website/actions.ts, src/lib/site/content.ts (the app half, #shlog: shelter-logo-upload)
+-- consumer: src/app/adopt/PublicHeader.tsx, src/app/admin/website/actions.ts, src/lib/site/content.ts
 --
 -- #shlog schema half: each shelter's OWN logo for its own public website. PublicHeader serves one hard-coded file to every tenant.
 -- Shape (docs/decisions/2026-11-20-shelter-logo-schema.md): the logo is a Drive file id on site_content, the same shape as the
