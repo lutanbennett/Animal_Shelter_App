@@ -110,7 +110,15 @@
         "PUBLIC_SITE": "locked",
         // The puppy loader showcase pause on /adopt's first load
         // (docs/decisions.md, 2026-09-28). Clamped to 3000ms regardless.
-        "SHOWCASE_LOADER_MS": "1800"
+        "SHOWCASE_LOADER_MS": "1800",
+        // The database this Worker asks which shelter a request is for: worker/shelter.mjs
+        // resolveShelterSite() returns no shelter on its FIRST line when this (or the
+        // SUPABASE_SERVICE_ROLE_KEY secret) is unset, and no shelter means no rows, so every
+        // sign-in here was refused as "no role" however many shelter_hosts rows existed (#uatsb,
+        // found 2026-11-20 by pressing the button rather than by a check). test and production
+        // set it for the translations cron; UAT has no cron, and needs it for the host lookup,
+        // the heartbeat (worker/heartbeat.mjs) and writer runs (worker/writer-runs.mjs).
+        "SUPABASE_URL": "https://fsjagxmxjosauwmxwype.supabase.co"
       },
       "send_email": [{ "name": "RELEASE_MAIL" }]
     },
