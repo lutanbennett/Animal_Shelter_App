@@ -47,6 +47,8 @@ export default async function PlatformPage() {
     hasTwoStep(),
     // The one system-wide dot the console shows behind a shelter card, labelled there as the system's, not the shelter's.
     runCheck(checkDatabase, 5_000),
+    // The enquiry queue (#shsup): read through the table's own policy, newest first (0427 indexes created_at desc).
+    supabase.from("shelter_enquiries").select("id, created_at, shelter_name, contact_name, email, phone, location, message, status, status_note, status_at").order("created_at", { ascending: false }).limit(200),
   ]);
 
   return (

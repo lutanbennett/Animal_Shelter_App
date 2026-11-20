@@ -10,6 +10,8 @@ import { useWriteCall } from "@/lib/use-write-form";
 import {
   addProductAdmin,
   createShelter,
+  createShelterFromEnquiry,
+  setEnquiryStatus,
   createShelterAdminRole,
   linkShelterAdmin,
   createShelterAdminLogin,
@@ -96,6 +98,7 @@ const input = "min-h-11 rounded border border-border bg-background px-3 md:min-h
  * to the step-up. The gate is is_product_admin() plus aal2, not a card (Lutan, 2026-11-18); no role is checked here.
  */
 export function ProductAdminPanel({
+  enquiries,
   shelters,
   people,
   selfId,
@@ -103,6 +106,7 @@ export function ProductAdminPanel({
   stepUpPath,
   systemDatabase,
 }: {
+  enquiries: EnquiryRow[];
   shelters: ShelterRow[];
   people: PersonRow[];
   selfId: string;
