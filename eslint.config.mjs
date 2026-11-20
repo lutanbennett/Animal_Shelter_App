@@ -70,6 +70,7 @@ const eslintConfig = defineConfig([
       "src/app/api/residents/*/videos/finish/route.ts",
       "src/app/api/reels/start/route.ts",
       "src/app/api/reels/finish/route.ts",
+      "src/app/platform/enquire/actions.ts",
       "src/lib/adopter/scope.ts",
       "src/app/adopter-update/actions.ts",
       "src/app/adopter-update/page.tsx",

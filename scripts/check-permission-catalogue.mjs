@@ -383,6 +383,7 @@ const APP = "Behind the proxy's gate (signed in, a role that opens the app).";
 const EXEMPT = {
   "/adopter-update": { why: "The adopter's own page (#l5gxn). Not behind the app gate: the proxy lets a login with no staff card here only when its verified email is a live contact, and the page asks again (loadAdopterScope). It holds no card on purpose." },
   "/platform": { why: "The product-administrator list (#shmgt), outside the card system by Lutan's decision of 2026-11-18: the page asks is_product_admin() in the database and answers not-found to anyone not on the list. No card, role or cell is read; it is the third named exception, recorded under outsideTheCardSystem.productAdmin." },
+  "/platform/enquire": { public: true, why: "The public shelter enquiry form (#shsup) on the platform front door: the same form for every visitor, no sign-in, nothing read. Only the host check applies. Reachable signed out because /platform/enquire is in PUBLIC_PATHS (exact path); the console beside it stays product-admin only." },
   "/admin/role-draft": { why: "A redirect to /admin/who-does-what, which carries the guard (who-does-what-edit retired the page and kept the address)." },
   "/": { public: true, why: "The public home page. Reads the session only to choose the header; shows nothing from the app." },
   "/login": { public: true, why: "Sign-in. There is no one to ask a permission of yet." },
@@ -531,6 +532,7 @@ const NO_ACTIVITY = {
   "services/report-animal/actions.ts": "the public report-an-animal form, signed out by definition: written as the anon role with insert-only column grants (0372), so the database decides; it never reads a report back",
   "shop/merch/checkout/actions.ts": "the public checkout, signed out by definition: placeOrder (src/lib/merch/checkout.ts, recorded in the hard-coded-security registry) takes only variant ids and quantities and re-reads every price from the tables",
   "adopter-update/actions.ts": "an adopter holds no staff card on purpose (#l5gxn): sendAdopterUpdate verifies the email, takes the contact from loadAdopterScope and asks adopter_may_submit(contact, resident) before the one insert",
+  "platform/enquire/actions.ts": "the public shelter enquiry (#shsup): a stranger holds no card and no login by design; submitEnquiry inserts one shelter_enquiries row, reads nothing back and answers every outcome alike (honeypot, per-address throttle, length caps first)",
   "services/sterilisation/actions.ts": "the public sign-up, signed out by definition: written as the anon role with insert-only column grants (0233), so the database gate decides; it never reads a sign-up back",
   "account/password/actions.ts": "changes the signed-in user's own password and name; its one service-role call clears their own must-change flag after the password check",
   "medical/scan-actions.ts": "leaves or clears a five-minute waiting cookie and nothing else; startCardWait refuses unless canOpen(perms, route) for the job's own page, and /scan/arrive re-checks it at the redirect",
@@ -559,7 +561,7 @@ const NO_ACTIVITY = {
   eq("G every NO_ACTIVITY entry gives a reason", Object.entries(NO_ACTIVITY).filter(([, w]) => w.length < 30).map(([p]) => p), []);
   eq(
     "G a service-role writer carries its own admin check",
-    serverFiles.filter((f) => /createAdminClient\(/.test(read(f)) && !ADMIN_CHECK.test(read(f)) && rel(f) !== "account/password/actions.ts" && rel(f) !== "adopter-update/actions.ts").map(rel),
+    serverFiles.filter((f) => /createAdminClient\(/.test(read(f)) && !ADMIN_CHECK.test(read(f)) && rel(f) !== "account/password/actions.ts" && rel(f) !== "adopter-update/actions.ts" && rel(f) !== "platform/enquire/actions.ts").map(rel),
     [],
   );
   console.log(`G ${serverFiles.length} server-action files: ${serverFiles.length - Object.keys(NO_ACTIVITY).length} name a guard, ${Object.keys(NO_ACTIVITY).length} listed with a reason`);

@@ -191,6 +191,11 @@
   ],
   "serviceRoleSites": [
     {
+      "file": "src/app/platform/enquire/actions.ts",
+      "for": "submitEnquiry: inserts one row into shelter_enquiries (0427) for a stranger on the platform front door, reads nothing back, and posts one mail to the owner through the Worker relay.",
+      "guard": "Grants nothing and reads nothing. Honeypot, a per-address throttle and length caps run before the insert; every outcome returns the same answer so no address or shelter is revealed. Creates no shelter, role, login or invitation (Lutan, 2026-11-20, shape a: record an enquiry)."
+    },
+    {
       "file": "src/lib/platform/create-login.ts",
       "for": "createAuthLogin (called by createShelterAdminLogin in src/app/platform/actions.ts): makes the auth login (auth.admin.createUser) and deletes it again if linking fails. It touches no table.",
       "guard": "Only after the signed-in call to product_admin_permit_first_login (0425), which raises unless the caller is a product administrator at aal2, the shelter has an Admin role with no login yet, and the address is not already a login; isProductAdmin() and hasTwoStep() are checked first as the courtesy. PADMIN list, outside the card system (Lutan, 2026-11-20, docs/decisions/2026-11-20-padmin-create-login.md); not a precedent."
@@ -651,6 +656,10 @@
     ]
   },
   "environment": [
+    {
+      "name": "SHELTER_ENQUIRY_MAIL_TO",
+      "gates": "Where the shelter enquiry notice is mailed. Not who may do anything."
+    },
     {
       "name": "DRIVE_CREDENTIALS_KEY",
       "gates": "The key that decrypts each shelter's stored Google credentials (shelter_drive_credentials, 0404). Chooses which Google account the server acts as; not a role or card rule."
