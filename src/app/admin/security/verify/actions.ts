@@ -17,6 +17,7 @@ import { hasAdminRole } from "@/lib/auth/require-admin";
 import { isProductAdmin } from "@/lib/auth/product-admin";
 import {
   APPROVED_FACTOR,
+  stepUpDestination,
   SETUP_OPEN_UNTIL,
   isSetupOpen,
   totpIssuer,
@@ -167,6 +168,6 @@ export async function confirmTwoStep(
     return { ok: true };
   });
   // Outside runWriteAction: nothing to catch, and the redirect is the success.
-  if (result.ok) redirect((await hasAdminRole()) ? "/admin/security" : "/platform");
+  if (result.ok) redirect(stepUpDestination(formData.get("next") as string | null, (await hasAdminRole()) ? "/admin/security" : "/platform"));
   return result;
 }

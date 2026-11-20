@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { refuseFor } from "@/lib/auth/require-role";
 import { loadPermissions } from "@/lib/permissions/load";
 import { CARDS, CARD_KEYS } from "@/lib/permissions/cards";
-import { TWO_STEP_PATH, hasTwoStep } from "@/lib/auth/two-step";
+import { stepUpHref, hasTwoStep } from "@/lib/auth/two-step";
 import { WHO_DOES_WHAT_PATH, opensWhoDoesWhat } from "@/lib/permissions/who-does-what";
 import { getT } from "@/lib/i18n/get-t";
 import { FeaturesPanel } from "../FeaturesPanel";
@@ -56,7 +56,7 @@ export default async function WhoDoesWhatFeaturesPage() {
         {isAdmin && !canEdit && (
           <p className="text-foreground">
             {c.verifyPrompt}{" "}
-            <Link href={TWO_STEP_PATH} className="font-medium text-primary underline">
+            <Link href={stepUpHref("/admin/who-does-what/features")} className="font-medium text-primary underline">
               {c.verifyLink}
             </Link>
           </p>

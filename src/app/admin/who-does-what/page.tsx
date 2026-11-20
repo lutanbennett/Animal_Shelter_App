@@ -8,7 +8,7 @@ import { ACTIVITIES, type ActivityKey } from "@/lib/permissions/catalogue";
 import { APPROVE_ACTIVITY, approverNames, needsApprover } from "@/lib/permissions/approvers";
 import { CARDS, CARD_KEYS, isCardKey, type CardKey } from "@/lib/permissions/cards";
 import { includedBy, loadCardGrants } from "@/lib/permissions/card-grants";
-import { TWO_STEP_PATH, hasTwoStep } from "@/lib/auth/two-step";
+import { stepUpHref, hasTwoStep } from "@/lib/auth/two-step";
 import { requirePermission } from "@/lib/permissions/require";
 import { WHO_DOES_WHAT_PATH } from "@/lib/permissions/who-does-what";
 import { parsePermissions } from "@/lib/permissions/can";
@@ -174,7 +174,7 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
         {isAdmin && !canEdit && (
           <p className="text-foreground">
             {c.verifyPrompt}{" "}
-            <Link href={TWO_STEP_PATH} className="font-medium text-primary underline">
+            <Link href={stepUpHref("/admin/who-does-what")} className="font-medium text-primary underline">
               {c.verifyLink}
             </Link>
           </p>
@@ -258,7 +258,7 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
           roleName={names.get(role.key) ?? role.key}
           canEdit={canEdit}
           locked={isAdmin && !canEdit}
-          verifyHref={TWO_STEP_PATH}
+          verifyHref={stepUpHref("/admin/who-does-what")}
           held={held.map(tileOf)}
           groups={groups}
           library={library.map(tileOf)}

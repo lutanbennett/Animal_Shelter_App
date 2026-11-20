@@ -938,6 +938,8 @@ const en = {
     productAdmin: {
       title: "Product admin",
       subtitle: "The shelters this app serves, and the people who may manage them. Only people on this list can see this page.",
+      wrongDoor: "This address is not for this sign-in.",
+      wrongDoorLink: "Go to the app",
       sheltersTitle: "Shelters",
       shelterKey: "Key",
       shelterName: "Name",

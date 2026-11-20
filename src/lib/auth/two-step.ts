@@ -1,6 +1,7 @@
 import type { Factor, User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { getAppEnv } from "@/lib/app-env";
+import { safeNextPath } from "@/lib/auth/next-path";
 
 /**
  * 2-step verification for Settings → Security (docs/decisions.md,
@@ -16,6 +17,20 @@ import { getAppEnv } from "@/lib/app-env";
  * at its next refresh (within the hour the access token lives).
  */
 export const TWO_STEP_PATH = "/admin/security/verify";
+
+/**
+ * The step-up link from a page that knows where it is (#stpbk): the second step returns to
+ * `from`, not to wherever the login's roles would send it. In-app only, so a query is enough
+ * (the cookie of #1773 exists because OAuth leaves for Supabase's allow-list; this never does).
+ */
+export function stepUpHref(from: string): string {
+  return `${TWO_STEP_PATH}?next=${encodeURIComponent(from)}`;
+}
+
+/** Where the second step ends: the sanitised `next` if the journey carried one, else `fallback`. */
+export function stepUpDestination(next: string | null | undefined, fallback: string): string {
+  return safeNextPath(next) ?? fallback;
+}
 
 /**
  * Who may bind a login's first authenticator app

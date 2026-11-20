@@ -1,9 +1,9 @@
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
-import { TWO_STEP_PATH, hasTwoStep } from "@/lib/auth/two-step";
+import { stepUpHref, hasTwoStep } from "@/lib/auth/two-step";
 import { isProductAdmin } from "@/lib/auth/product-admin";
 import { getT } from "@/lib/i18n/get-t";
-import { isPlatformHostname, platformHost, requestHost } from "@/lib/site-hosts";
+import { appHost, isPlatformHostname, platformHost, requestHost } from "@/lib/site-hosts";
 import { createClient } from "@/lib/supabase/server";
 import { ProductAdminPanel, type PersonRow, type ShelterRow } from "./ProductAdminPanel";
 
@@ -25,9 +25,20 @@ export default async function PlatformPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  if (!(await isProductAdmin())) notFound();
-
   const { t } = await getT();
+  if (!(await isProductAdmin())) {
+    // #cjred: a signed-in login that is not on the list is told where to go, and nothing about what is here.
+    const app = appHost();
+    return (
+      <main className="flex flex-1 flex-col gap-3 p-6">
+        <p className="max-w-prose text-sm text-foreground">{t.admin.productAdmin.wrongDoor}</p>
+        <a href={app ? `https://${app}/home` : "/home"} className="w-fit text-sm font-medium text-primary underline">
+          {t.admin.productAdmin.wrongDoorLink}
+        </a>
+      </main>
+    );
+  }
+
   const [shelters, people, twoStep] = await Promise.all([
     supabase.rpc("product_admin_shelters"),
     supabase.rpc("product_admin_people"),
@@ -48,7 +59,7 @@ export default async function PlatformPage() {
         selfId={user.id}
         // The writes need aal2 (0411's restrictive policies), so every control that acts is drawn only then.
         canWrite={twoStep}
-        stepUpPath={TWO_STEP_PATH}
+        stepUpPath={stepUpHref("/platform")}
       />
     </main>
   );
