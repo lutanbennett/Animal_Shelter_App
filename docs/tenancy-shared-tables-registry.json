@@ -13,7 +13,10 @@
     "card_includes": "Card catalogue: cards a card brings with it, identical for every shelter. Holds no assignments. Decided in Part 10 (docs/decisions/2026-11-17-per-shelter-roles.md).",
     "features": "Card catalogue: code-defined, identical for every shelter.",
     "translatable_fields": "Schema metadata: which columns are translatable.",
-    "translatable_labels": "Schema metadata: which labels are translatable."
+    "translatable_labels": "Schema metadata: which labels are translatable.",
+    "product_admins": "Platform: the product administrators (0411), logins that run the /platform console. Belongs to the installation, not to any shelter; asked only through is_product_admin().",
+    "product_admin_lookups": "Platform: audit of which email a product administrator checked (0422). Names no shelter; asked only by the product-admin functions.",
+    "product_admin_login_grants": "Platform: audit of first-login permits a product administrator gave (0425). It records for_shelter as a target, so it is not a shelter-scoped row; asked only by the product-admin functions."
   },
   "exportTreatment": {
     "shelters": "own-row",
@@ -28,6 +31,9 @@
     "features": "all",
     "translatable_fields": "all",
     "translatable_labels": "all",
-    "schema_migrations": "all"
+    "schema_migrations": "all",
+    "product_admins": "none",
+    "product_admin_lookups": "none",
+    "product_admin_login_grants": "none"
   }
 }
