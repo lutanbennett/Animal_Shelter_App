@@ -70,12 +70,20 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  { text: "Platform console: a product administrator can now create a new shelter's first Admin login from the console, with a temporary password shown once, instead of needing a developer.", admin: true },
-  { text: "Website settings: if a shelter has no website settings row yet, a save in Website now says so, and to ask the product administrator, instead of saying it saved when nothing was kept.", admin: true },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.47.6",
+    date: "2026-11-20",
+    title: "The platform console's first login, and an honest website save",
+    major: false,
+    notes: [
+      { text: "Platform console: a product administrator can now create a new shelter's first Admin login from the console, with a temporary password shown once, instead of needing a developer.", admin: true },
+      { text: "Website settings: if a shelter has no website settings row yet, a save in Website now says so, and to ask the product administrator, instead of saying it saved when nothing was kept.", admin: true },
+    ],
+  },
   {
     version: "0.47.5",
     date: "2026-11-19",
