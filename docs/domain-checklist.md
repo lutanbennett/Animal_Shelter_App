@@ -153,4 +153,6 @@ The free Supabase plan allows two projects (dev and production), and a third wou
 3. In Supabase (production project), Authentication, URL configuration: add **one** Redirect URL, `https://cooperjaidee.org/auth/callback`.
 4. **Do NOT touch Google.** The consent screen is verified; editing it can put the branding back under review and show shelter staff a raw Supabase address at sign-in (P3).
 
+**Why saving is the only proof, and what guards the rest (#plhbd):** `wrangler.jsonc` `vars` are *run-time* values, but `serverActions.allowedOrigins` is fixed at *build* time from `APP_HOST`, `PUBLIC_HOST` and `PLATFORM_HOST`, so each host has to be carried into the build (`scripts/deploy.mjs` loops over `SITE_HOST_VARS`) and onto the Pi (`scripts/lib/runtime-config.mjs`). `node scripts/check-site-hosts.mjs` now fails if a host an environment declares is not carried both ways, or if a new `*_HOST` var is not in `SITE_HOST_VARS`. It reads files, not the built bundle: only pressing a button on the live address proves a host end to end.
+
 **Prove it by saving, not by loading:** sign in at `https://cooperjaidee.org`, press *Verify with your authenticator app*, then add a web address to a test shelter. A page that loads proves nothing here: a missing allowed origin refuses every button while every page renders (30 September / 1 October 2026).

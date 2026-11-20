@@ -17,7 +17,9 @@ import { exitWith } from "./lib/exit.mjs";
 import { readFileSync } from "node:fs";
 import { siteAllowedOrigins } from "../src/lib/site-hosts.ts";
 import { readWranglerConfig } from "./lib/wrangler.mjs";
-import { hostProblems } from "./lib/site-hosts-problems.mjs";
+import { hostProblems, pinProblems } from "./lib/site-hosts-problems.mjs";
+import { SITE_HOST_VARS } from "../src/lib/site-hosts.ts";
+import { PI_WRANGLER_VARS } from "./lib/runtime-config.mjs";
 
 let failed = 0;
 const say = (ok, msg) => {
@@ -28,6 +30,10 @@ const say = (ok, msg) => {
 const config = readWranglerConfig();
 const yml = readFileSync(new URL("./pi/cloudflared-config.yml", import.meta.url), "utf8");
 for (const r of hostProblems(config, yml)) say(r.ok, r.msg);
+
+const deploySrc = readFileSync(new URL("./deploy.mjs", import.meta.url), "utf8");
+const ctx = { siteHostVars: [...SITE_HOST_VARS], piWranglerVars: PI_WRANGLER_VARS, deploySrc };
+for (const r of pinProblems(config, ctx)) say(r.ok, r.msg);
 
 const cfg = readFileSync(new URL("../next.config.ts", import.meta.url), "utf8");
 say(/allowedOrigins:\s*siteAllowedOrigins\(\)/.test(cfg), "next.config.ts allowedOrigins comes from siteAllowedOrigins()");
@@ -60,6 +66,17 @@ for (const [what, mutate] of Object.entries(broken)) {
   say(stale !== yml && hostProblems(config, stale).some((r) => !r.ok && /pi\.lannacare\.org presents lannacare\.org/.test(r.msg)), "caught: tunnel still presents lannacare.org to production");
   const rest = hostProblems(config, yml).filter((r) => !r.ok);
   say(rest.length === 0, `the complete cutover state (wrangler.jsonc + tunnel) passes every rule${rest.length ? `: ${rest.map((r) => r.msg).join("; ")}` : ""}`);
+}
+
+{
+  // The fault itself (#plhbd): a fourth host added to wrangler.jsonc, and to SITE_HOST_VARS, but not carried across.
+  const fourth = clone();
+  fourth.env.production.vars.EXTRA_HOST = "extra.example.org";
+  const caught = (c, x) => pinProblems(c, x).some((r) => !r.ok);
+  say(caught(fourth, { ...ctx, siteHostVars: [...ctx.siteHostVars, "EXTRA_HOST"] }), "caught: a fourth host in SITE_HOST_VARS that the Pi does not copy");
+  say(caught(fourth, ctx), "caught: a fourth host in wrangler.jsonc that SITE_HOST_VARS does not list");
+  say(caught(config, { ...ctx, piWranglerVars: ctx.piWranglerVars.filter((k) => k !== "PLATFORM_HOST") }), "caught: PLATFORM_HOST not copied onto the Pi");
+  say(caught(config, { ...ctx, deploySrc: deploySrc.replace(/for\s*\(\s*const\s+\w+\s+of\s+SITE_HOST_VARS\s*\)/, "for (const key of [])") }), "caught: deploy.mjs no longer loops over SITE_HOST_VARS");
 }
 
 console.log(failed ? `\n${failed} wrong` : "\nall right");
