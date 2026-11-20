@@ -153,7 +153,7 @@ Automated checks by: Claude  Date: 2026-11-20
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — pending: both rows wait on the UAT Worker deploy, which is Lutan's, and only the person who looks may tick this
 
 Manual verification by: pending: both rows wait on the UAT Worker deploy, which is Lutan's
 
