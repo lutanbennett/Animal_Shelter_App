@@ -225,8 +225,19 @@ if (cardsArg) {
   if (setErr) throw setErr;
 }
 
+// #dsgnr: with no --shelter, the role is the one on the shelter DEV_SHELTER_ID names, which is the shelter the dev server sends and the
+// browser shows. A bare key lookup matches one row per shelter since 0387 and died with PGRST116.
+let defaultShelterId = null;
+if (!targetShelter && !cardKeys) {
+  defaultShelterId = env.DEV_SHELTER_ID?.trim() || null;
+  if (!defaultShelterId) throw new Error("DEV_SHELTER_ID is not set. Put the dev shelter's id in .env.local (worktree.mjs copies it into a new worktree), or pass --shelter <key|id>.");
+  const { data: sh, error: shErr } = await service.from("shelters").select("id").eq("id", defaultShelterId).maybeSingle();
+  if (shErr) throw new Error(`DEV_SHELTER_ID in .env.local is not a usable shelter id ("${defaultShelterId}"): ${shErr.message}`);
+  if (!sh) throw new Error(`DEV_SHELTER_ID in .env.local names no shelter ("${defaultShelterId}"). Fix it, or pass --shelter <key|id>.`);
+}
 let roleQ = service.from("roles").select("id").eq("key", role);
 if (targetShelter) roleQ = roleQ.eq("shelter_id", targetShelter.id);
+else if (defaultShelterId) roleQ = roleQ.eq("shelter_id", defaultShelterId);
 let { data: roleRow, error: roleErr } = await roleQ.maybeSingle();
 if (!roleErr && !roleRow && targetShelter && role === "admin") {
   // A bare shelter has no Admin role (roles are per shelter since 0401, one is_admin per shelter since 0387). Make a throwaway one
@@ -255,7 +266,7 @@ if (user) {
 const keepRole = roleRow.id;
 { const { error: clearErr } = await service.from("user_roles").delete().eq("user_id", user.id).neq("role_id", keepRole); if (clearErr) throw clearErr; }
 const alreadyHeld = (await service.from("user_roles").select("role_id").eq("user_id", user.id).eq("role_id", keepRole)).data?.length > 0;
-const { error: giveErr } = alreadyHeld ? { error: null } : targetShelter ? await service.from("user_roles").insert({ user_id: user.id, role_id: roleRow.id }) : await giveRole(service, user.id, role);
+const { error: giveErr } = alreadyHeld ? { error: null } : (targetShelter || defaultShelterId) ? await service.from("user_roles").insert({ user_id: user.id, role_id: roleRow.id }) : await giveRole(service, user.id, role);
 if (giveErr) throw giveErr;
 
 const jar = new Map();
@@ -273,7 +284,7 @@ if (wantAal2) await stepUpToAal2({ service, ssr, user, projectRef: projectRef(en
 
 const sets = [...jar].map(([n, v]) => `document.cookie=${JSON.stringify(`${n}=${encodeURIComponent(v)}; path=/; max-age=3000; samesite=lax`)}`);
 console.error(`${email} is ${wantAal2 ? "at aal2, " : ""}${cardKeys ? `holding only the cards ${cardKeys.join(", ")}` : `a ${role}`} on dev${targetShelter ? ` (shelter ${targetShelter.key})` : ""}. Run this in javascript_tool on http://localhost:${port}, then navigate to /my:`);
-if (targetShelter) console.error(`The browser reads the shelter from the dev server, not the login: start it as  DEV_SHELTER_ID=${targetShelter.id} node scripts/worktree.mjs dev  (the shell value beats .env.local). Port ${port} is otherwise on the default shelter.`);
+if (targetShelter) console.error(`The browser reads the shelter from the dev server, not the login: start it as  DEV_SHELTER_ID=${targetShelter.id} node scripts/worktree.mjs dev  (the shell value beats .env.local). Without --shelter the login is on the shelter DEV_SHELTER_ID names, which is the one the dev server already shows.`);
 console.log(`${sets.join(";")};location.href="/my"`);
 }
 await runMain(main);
