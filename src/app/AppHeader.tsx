@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getT } from "@/lib/i18n/get-t";
+import { shelterNames } from "@/lib/shelter-settings";
 import { getAppEnv } from "@/lib/app-env";
 import { can, entersApp } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -21,6 +22,7 @@ export async function AppHeader() {
   if (!user) return null;
 
   const { t, locale } = await getT();
+  const names = await shelterNames();
   // The assistant opens from here so it is reachable from every screen,
   // including the phone. The doctor role does not get it (0070).
   const perms = await loadPermissions();
@@ -102,7 +104,7 @@ export async function AppHeader() {
             />
           </span>
           <span className="text-sm font-semibold text-foreground">
-            {t.header.shortName}
+            {names.shortName}
           </span>
         </Link>
         {badge && (
