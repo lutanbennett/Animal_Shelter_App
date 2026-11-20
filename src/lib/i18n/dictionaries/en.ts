@@ -990,7 +990,7 @@ const en = {
         declined: "Marked as declined.",
         createFrom: "Create a shelter from this enquiry",
         keyLabel: "Short name (typed by you)",
-        keyHelp: "This is the shelter's permanent short name. It cannot be changed afterwards, so check it before you press the button.",
+        keyHelp: "You type this one yourself, and it is permanent: check it before you press the button.",
         nameLabel: "Shelter name",
         createButton: "Create shelter and carry the contact over",
         createdShelter: "Shelter created from this enquiry.",
