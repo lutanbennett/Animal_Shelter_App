@@ -1,4 +1,4 @@
-import { safeNextPath } from "./next-path.ts";
+import { safeNextPath } from "./next-path";
 
 /**
  * Carries "where were you going" across the OAuth / recovery round trip WITHOUT
