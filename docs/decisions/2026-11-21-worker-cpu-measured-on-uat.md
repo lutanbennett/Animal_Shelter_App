@@ -69,4 +69,19 @@ lesson is the repo's own: **read the instruments, not just the item.**
 2. **Keep the Pi serving the website**, and drop or defer the domain split.
 3. **Make the pages dramatically cheaper to render** — a 5–9× reduction, which is a programme, not a tweak.
 
-`#ykefa` parts 12 and 13: **12 is closed by this measurement; 13 stays open on his decision.**
+## DECIDED, the same day: route 2
+
+**Lutan, 2026-11-21, asked directly and answering in one line:** *"keep the pi serving the website"*.
+
+**So `#34a30` is closed without a build and without a bill.** The Pi goes on serving the public website
+through its tunnel, the Worker stays the cache and the fallback, and `ORIGIN_HOST` stays set on every
+environment — emptied only for a measurement, briefly, and put back.
+
+**The risk he accepted, stated plainly rather than buried: a Pi outage still takes the public website down
+with the app.** That was part 13's whole purpose, and it is **accepted at zero cost**, not solved. It
+stands until the pages are cheap enough to render in a Worker or the zero-ongoing-cost rule changes.
+
+**Do not re-offer Workers Paid.** If this is ever re-opened it needs a fresh measurement, not this one.
+
+`#ykefa` parts 12 and 13: **both closed — 12 by this measurement, 13 by his decision.** The programme is
+down to its go-live step.

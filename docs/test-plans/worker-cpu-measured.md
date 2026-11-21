@@ -34,7 +34,11 @@ the signed-out public: nothing executable is touched. **Out of scope:** the deci
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`
 
 ```
-GATES_OUTPUT_PLACEHOLDER
+=== gates: typecheck exited 0 after 9s
+=== gates: lint exited 0 after 133s
+=== gates: test exited 0 after 33s
+=== gates: build exited 0 after 49s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR (runs the same four gates, among its other checks) - n/a: not yet - the PR does not exist at this commit
