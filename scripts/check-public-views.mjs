@@ -197,6 +197,31 @@ if (!root.ok) {
     );
   }
 
+  // #pvws4: NO HEADER, NO ROWS. Every public_* view the Data API exposes (listed here or not, so a view nobody
+  // added to PUBLIC_VIEWS is still tested) must answer an anon request that carries no x-shelter-id with nothing.
+  // An owner-run view skips the 0392 policies unless its owner obeys row-level security (rls_definer, 0375) or the
+  // view scopes itself (0391, 0430), so a view created or recreated as `postgres` answers EVERY shelter's rows to
+  // anyone. Every call above sends the header, which is why this was invisible: public_site_content leaked 6 rows
+  // with and without it (#1788) and nothing here went red. A view over installation-level tables (the register,
+  // docs/tenancy-shared-tables-registry.json) would be listed in INSTALLATION_LEVEL_VIEWS; there are none today.
+  // public_shelter_stats is an aggregate: it always answers one row, so its counts must all be zero.
+  // A view that is also empty WITH the header proves nothing (no rows to leak): it is noted, never passed silently.
+  const INSTALLATION_LEVEL_VIEWS = new Set();
+  const bare = { apikey: key, Authorization: `Bearer ${key}` };
+  for (const name of exposed.filter((n) => n.startsWith("public_") && !INSTALLATION_LEVEL_VIEWS.has(n))) {
+    const read = await fetch(`${url}/rest/v1/${name}?select=*&limit=1000`, { headers: bare });
+    if (!read.ok) continue; // refused: reported by the loops above
+    const rows = await read.json();
+    const aggregate = name === "public_shelter_stats";
+    const leaked = aggregate ? rows.filter((row) => Object.values(row).some((v) => v)) : rows;
+    report(leaked.length === 0, `${name}: anon with NO x-shelter-id reads nothing`, `${leaked.length} row(s)`);
+    if (!leaked.length && Object.keys(shelterHeader).length) {
+      const withHeader = await fetch(`${url}/rest/v1/${name}?select=*&limit=1`, { headers });
+      const n = withHeader.ok ? (await withHeader.json()).length : 0;
+      if (!n) console.log(`note  ${name}: also empty WITH the header, so this proves nothing for it (no rows to leak)`);
+    }
+  }
+
   // Every function the Data API exposes. The allow-listed ones must answer
   // anon; every other one must be refused *as a function* (42501 naming the
   // function), not merely fail further in — before 0082 most write RPCs
