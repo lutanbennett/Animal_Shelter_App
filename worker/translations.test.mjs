@@ -133,3 +133,19 @@ test("runLabelDrafts: a closed shelter is not drafted for (#clsjb)", async () =>
   assert.equal(out.proposed, 1);
   assert.ok(!calls.some((c) => c.headers["x-shelter-id"] === "shelter-b"));
 });
+
+// #fu86i: a closed shelter's pending drafts are not sent to the engine, and the query itself excludes them.
+test("runTranslations: a closed shelter is excluded from the pending read (#fu86i)", async () => {
+  const urls = [];
+  const fetchImpl = async (url) => {
+    const u = String(url);
+    urls.push(u);
+    if (u.includes("/rest/v1/shelters")) return Response.json([{ id: "closed-1" }, { id: "closed-2" }]);
+    return Response.json([]);
+  };
+  const env = { SUPABASE_URL: "https://x.supabase.co", SUPABASE_SERVICE_ROLE_KEY: "svc", AI: { run: async () => ({ response: "x" }) }, TRANSLATE_ENGINE: "workers-ai" };
+  await runTranslations(env, { fetchImpl, now: NOW, log: () => {} });
+  assert.ok(urls.some((u) => u.includes("archived_at=not.is.null")), "closed shelters were not read");
+  const pending = urls.find((u) => u.includes("status=eq.pending"));
+  assert.match(pending, /shelter_id=not.in.(closed-1,closed-2)/);
+});

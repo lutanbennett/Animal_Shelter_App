@@ -159,9 +159,13 @@ export async function runTranslations(env, { fetchImpl = fetch, now = Date.now()
       dailyReviewed - recent.filter((r) => tierOf.get(`${r.table_name}.${r.column_name}`) === "reviewed").length,
     );
 
+    // A closed shelter is skipped (#fu86i): its pending drafts stay pending and resume if it reopens. Filtered in the
+    // query, not after it, so a closed shelter's backlog cannot fill the WINDOW and starve an open one.
+    const closed = await api("shelters?select=id&archived_at=not.is.null");
+    const notClosed = closed.length ? `&shelter_id=not.in.(${closed.map((c) => c.id).join(",")})` : "";
     const pending = await api(
       "translations?select=id,table_name,column_name,source_lang,target_lang,source_text,engine,updated_at" +
-        `&status=eq.pending&order=updated_at.asc&limit=${WINDOW}`,
+        `&status=eq.pending${notClosed}&order=updated_at.asc&limit=${WINDOW}`,
     );
 
     let done = 0;
