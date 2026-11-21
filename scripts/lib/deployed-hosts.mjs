@@ -11,8 +11,15 @@ const clean = (v) => (typeof v === "string" ? v.trim().toLowerCase().replace(/^h
  * with the app. worker/shelter.mjs looks a host up literally, so every one of these needs its own row.
  * Also the list a second assertion (the Supabase redirect allow-list, #aucbk) should loop over.
  */
-export function addressesAnsweredOn(vars = {}) {
-  return siteHosts(vars);
+export function addressesAnsweredOn(vars = {}, routes) {
+  const all = siteHosts(vars);
+  if (!Array.isArray(routes) || !routes.length) return all;
+  // #wwwcb: siteHosts() invents a www. form for every host. Keep an invented one only when the environment ROUTES it
+  // (wrangler.jsonc routes: the deployment itself, not DNS, so a flaky lookup can never hide a real fault). A host
+  // configured literally (APP_HOST etc.) is always kept, and a routed www. form still needs its rows.
+  const configured = new Set(["APP_HOST", "PUBLIC_HOST", "PLATFORM_HOST"].map((k) => clean(vars[k])).filter(Boolean));
+  const routed = new Set(routes.map(clean));
+  return all.filter((h) => configured.has(h) || routed.has(h));
 }
 
 /** The addresses with no row among `registered` (host strings from shelter_hosts). */
