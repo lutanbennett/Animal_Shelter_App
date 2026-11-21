@@ -53,6 +53,9 @@ export default async function AboutPage() {
           <a href="/login" className={link}>
             {a.signInShelter}
           </a>
+          <a href="/login?next=%2Fplatform%2Fshelters" className={link}>
+            {a.signInChooser}
+          </a>
           <a href="/login?next=%2Fplatform" className={link}>
             {a.signInAdmin}
           </a>
