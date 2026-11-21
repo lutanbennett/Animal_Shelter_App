@@ -17,12 +17,12 @@ const PROTECTED = ["lanna"];
 const CASCADE_OK = ["shelter_calendar_credentials", "shelter_drive_credentials"];
 
 const { name: envName, rest } = parseEnvArg(process.argv.slice(2));
-if (!process.argv.includes("--env")) { console.error("Name the environment: --env test|uat|production."); await exitWith(2); process.exit; }
 const apply = rest.includes("--apply");
 const keys = rest.filter((a) => !a.startsWith("--"));
-const stop = async (m, c = 2) => { console.error(m); await exitWith(c); };
+const stop = (m, c = 2) => { console.error(m); return c; };
 
 async function main() {
+  if (!process.argv.includes("--env")) return stop("Name the environment: --env test|uat|production.");
   if (keys.length !== 1) return stop(`Give exactly one shelter key (got ${keys.length}).`);
   const key = keys[0];
   if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(key)) return stop(`"${key}" is not a shelter key.`);
