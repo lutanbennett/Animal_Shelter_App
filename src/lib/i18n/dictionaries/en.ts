@@ -1135,6 +1135,12 @@ const en = {
         signInTitle: "Already using CooperJaidee?",
         signInShelter: "Sign in to my shelter",
         signInAdmin: "Sign in to administer the platform",
+        signInChooser: "I work at more than one shelter",
+      },
+      chooser: {
+        title: "Your shelters",
+        lead: "These are the shelters you can sign in to. Each one asks you to sign in again on its own address.",
+        open: "Open",
       },
       notFoundHere: "Not found.",
       adminsTitle: "Product administrators",

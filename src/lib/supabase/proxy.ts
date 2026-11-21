@@ -9,6 +9,7 @@ import {
 } from "@/lib/auth/password-change";
 import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
 import { DEFAULT_SIGNED_IN_PATH, NO_ACCESS_PATH, safeNextPath } from "@/lib/auth/next-path";
+import { CHOOSER_PATH } from "@/lib/auth/chooser-path";
 import { isPublicPath as isPublicPathname, isWebsitePageWhenOff } from "@/lib/public-paths";
 import { ADOPTER_PATH, loadAdopterScope } from "@/lib/adopter/scope";
 import { PUBLIC_SITE_HEADER, isPublicSiteLocked, isPublicSiteOff, publicSiteStateFor } from "@/lib/public-site";
@@ -153,7 +154,10 @@ export async function updateSession(request: NextRequest, rewriteTo?: URL) {
   if (
     user &&
     !isPublicPathname(request.nextUrl.pathname, off) &&
-    request.nextUrl.pathname !== PASSWORD_CHANGE_PATH
+    request.nextUrl.pathname !== PASSWORD_CHANGE_PATH &&
+    // The shelter chooser (#apxld): any signed-in login may reach it, with or without a role at THIS host (it lists the
+    // shelters the login holds roles at). The page asks my_shelters() and answers not-found when there are none.
+    request.nextUrl.pathname !== CHOOSER_PATH
   ) {
     const role = await loadSessionRole(supabase);
     if (off && role?.entersApp && isWebsitePageWhenOff(request.nextUrl.pathname)) {
