@@ -80,13 +80,14 @@ const labelEnv = {
   LABEL_DRAFT_EMAIL: "m@x", LABEL_DRAFT_PASSWORD: "p", AI: { run: async () => ({ response: "ทดสอบ" }) }, TRANSLATE_ENGINE: "workers-ai",
 };
 /** A fake Supabase: records every call, answers sign-in, the login's roles, the label list and the proposal. */
-function fakeSupabase({ shelters, rpcStatus = 200 }) {
+function fakeSupabase({ shelters, rpcStatus = 200, closed = [] }) {
   const calls = [];
   const fetchImpl = async (url, init = {}) => {
     const u = String(url);
     calls.push({ url: u, headers: init.headers ?? {} });
     if (u.includes("/auth/v1/token")) return Response.json({ access_token: "tok", user: { id: "u1" } });
     if (u.includes("/rest/v1/user_roles")) return Response.json(shelters.map((s) => ({ shelter_id: s })));
+    if (u.includes("/rest/v1/shelters")) return Response.json(shelters.filter((x) => !closed.includes(x)).map((x) => ({ id: x })));
     if (rpcStatus !== 200) return new Response("{}", { status: rpcStatus });
     if (u.endsWith("/rpc/label_translations")) return Response.json([{ status: "missing", source_text: "Dog", table_name: "diet_types", column_name: "name", row_id: `r-${init.headers["x-shelter-id"]}` }]);
     if (u.endsWith("/rpc/propose_label_th")) return Response.json(true);
@@ -124,4 +125,11 @@ test("runLabelDrafts: a refused rpc is reported as failed, not swallowed", async
 test("runLabelDrafts: not configured is 'skipped', which is healthy", async () => {
   const out = await runLabelDrafts({ SUPABASE_URL: "https://x.supabase.co" }, { fetchImpl: async () => { throw new Error("no network"); }, log: () => {} });
   assert.equal(out.outcome, "skipped");
+});
+
+test("runLabelDrafts: a closed shelter is not drafted for (#clsjb)", async () => {
+  const { fetchImpl, calls } = fakeSupabase({ shelters: ["shelter-a", "shelter-b"], closed: ["shelter-b"] });
+  const out = await runLabelDrafts({ ...labelEnv, LABEL_DRAFT_BATCH: "5" }, { fetchImpl, log: () => {} });
+  assert.equal(out.proposed, 1);
+  assert.ok(!calls.some((c) => c.headers["x-shelter-id"] === "shelter-b"));
 });

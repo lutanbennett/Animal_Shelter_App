@@ -286,7 +286,10 @@ export async function syncPendingVisits(origin: string | null, limit = SWEEP_BAT
     ]);
     const byId = new Map<string, Row>();
     for (const r of [...(stale.data ?? []), ...(neverSent.data ?? [])]) byId.set(r.id, r);
-    const pending = [...byId.values()].filter(isPending);
+    // A closed shelter keeps no calendar moving: its visits stay as they are, to be sent if it reopens (#clsjb).
+    const { data: closed } = await db.from("shelters").select("id").not("archived_at", "is", null);
+    const closedIds = new Set((closed ?? []).map((c) => c.id as string));
+    const pending = [...byId.values()].filter(isPending).filter((r) => !r.shelter_id || !closedIds.has(r.shelter_id));
 
     // Resolve each shelter's calendar once. A visit with no shelter has no calendar to go to.
     const resolutions = new Map<string, Promise<CalendarResolution>>();
