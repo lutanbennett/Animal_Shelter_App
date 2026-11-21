@@ -813,6 +813,15 @@ running, each time recorded as a gap and each time settled indirectly. Also read
 `strip-baked-env: removed N env var(s)` and the `Server Actions key <fingerprint>`
 line, which must match what the Pi build printed.
 
+**THE SERVER ACTIONS KEY IS PER ENVIRONMENT — THERE ARE THREE, NOT ONE — AND THE
+DEPLOY'S OWN WORDING INVITES THE WRONG READING.** It prints *"the Pi's build must
+print the same"*, which reads as one global key. It is not. **Compare WITHIN an
+environment only:** production Worker against production Pi, test against test,
+UAT against UAT. On `0.47.9` the three pairs were `cbd55beae8d8`, `ecc41837fc0b`
+and `cdeca9cbc4de` — all matching, and any two of them put side by side look
+exactly like a release that has gone wrong. Promoted here 2026-11-21, after that
+release briefly read production's key against test's.
+
 **Setting a production secret by hand** (`wrangler secret put`) makes a new Worker
 version from the same code with no tag, so the Release tile on `/admin/status`
 goes amber ("The Worker has no release tag") until the next deploy through
