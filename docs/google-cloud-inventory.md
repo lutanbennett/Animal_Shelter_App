@@ -1,5 +1,7 @@
 # Google Cloud: which project holds what, and how to consolidate it
 
+> **A DATED READING, SUPERSEDED FOR LIVE STATE (2026-11-21, #3zr7o).** Everything below was read on 2026-10-09 and has not been regenerated; it predates the platform (Cooper Jaidee) account and the `BACKUP_GOOGLE_OAUTH_*` client. For which Google credentials exist and whether they refresh, run `node scripts/check-google-identity.mjs`; its record is `docs/google-identity-registry.json`. This file still holds what the check cannot see (console-only facts: project ownership, redirect URIs, consent screen). Where they disagree, the check wins.
+
 Written 2026-09-30 by the `google-cloud-one-account` stream. Scope narrowed by Lutan on 2026-09-30 to **Test and UAT** (production is separate and later). Companion to the
 decision record `docs/decisions/2026-09-30-google-cloud-one-account.md` and the
 backlog item "Put the Google Cloud setup under one account".

@@ -19,6 +19,7 @@
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { exitWith } from "./lib/exit.mjs";
+import { readGoogleIdentity, readRegistry, compare } from "./lib/google-identity.mjs";
 
 const root = process.cwd();
 const { loadEnv, parseEnvArg, projectRef } = await import(
@@ -90,6 +91,26 @@ if (name === "production") {
   await probeManagement(`production ${prodRef}`, prodRef);
 } else {
   console.log("note  production not probed — re-run with --env production to include it");
+}
+
+// ------------------------------------------------------------- Google identity
+// REPORT ONLY, never a failure here: a token recorded as revoked (#drvtk) must not turn
+// the whole preflight red, or the preflight gets ignored. A recorded claim the session
+// now SEES contradicted is a WARN. Keys and verdicts only, never a value.
+// Full output: node scripts/check-google-identity.mjs
+try {
+  const g = compare(await readGoogleIdentity(), readRegistry());
+  for (const r of g.filter((x) => x.identity !== "*" && x.status === "CONTRADICTS")) {
+    console.log(`WARN google ${r.env}/${r.identity}: ${r.verdict} - ${r.detail}`);
+  }
+  const n = g.filter((x) => x.status === "CONTRADICTS").length;
+  console.log(
+    n
+      ? `WARN ${n} recorded Google claim(s) contradicted: run node scripts/check-google-identity.mjs`
+      : "ok   Google identity matches docs/google-identity-registry.json",
+  );
+} catch (e) {
+  console.log(`note  Google identity not checked (${e.code ?? "error"})`);
 }
 
 console.log("");
