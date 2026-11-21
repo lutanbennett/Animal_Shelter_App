@@ -234,7 +234,7 @@ Manual verification by: n/a: nothing for a person to look at; UAT and production
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR — n/a: the plan is in the PR as a file
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — pending: release manager
 
 Result: pass
 
