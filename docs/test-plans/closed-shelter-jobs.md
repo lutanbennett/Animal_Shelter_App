@@ -1,4 +1,4 @@
-| Tested at SHA | 3065b97a6 || Carries a migration? | no || Tested by / date | Claude, 2026-11-21 || PR | opened after this commit || Dev server | not run; port 3003 || Branch / worktree | `claude/closed-shelter-jobs`, worktree Animal_Shelter_closed-shelter-jobs || Backlog item | `docs/backlog.md` -> #clsjb || Feature | Closed-shelter jobs skip a closed shelter |# Test plan: closed-shelter-jobs
+# Test plan: closed-shelter-jobs
 
 ---
 
@@ -6,13 +6,14 @@
 
 | | |
 |---|---|
-| Feature | |
-| Backlog item | `docs/backlog.md` → |
-| Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
-| PR | |
-| Tested by / date | |
-| Carries a migration? | yes / no |
-| Tested at SHA | |
+| Feature | Closed-shelter jobs skip a closed shelter |
+| Backlog item | `docs/backlog.md`, #clsjb |
+| Branch / worktree | `claude/closed-shelter-jobs`, worktree Animal_Shelter_closed-shelter-jobs |
+| Dev server | not run; port 3003 |
+| PR | #1794 |
+| Tested by / date | Claude, 2026-11-21 |
+| Carries a migration? | no |
+| Tested at SHA | 3065b97a6 |
 
 ## 1. Scope and risk
 
