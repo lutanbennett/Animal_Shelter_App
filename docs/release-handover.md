@@ -1,146 +1,138 @@
-# Release handover — written 2026-11-20 after `0.47.8` (and `0.47.7`)
+# Release handover — written 2026-11-21 after `0.47.9`
 
-A **delta**. The durable rules are in `docs/release-procedure.md` and these releases' own records are
-`docs/releases/2026-11-20-0-47-8.md` and `docs/releases/2026-11-20-0-47-7.md`. **All three outrank this
-file.** Its predecessor was written after `0.47.6` the same morning; **two more releases shipped the
-same day.**
+A **delta**. The durable rules are in `docs/release-procedure.md` and this release's own record is
+`docs/releases/2026-11-21-0-47-9.md`. **Both outrank this file.** Its predecessor was written after
+`0.47.8` (and `0.47.7`) the previous day.
 
 ## START HERE
 
-Production is `lannacareforanimals.org`, now on **`0.47.8`** — **a release that mailed nobody.**
-`cooperjaidee.org`, `test.lannacare.org` and `uat.lannacare.org` serve `0.47.8` too, and **all three
-Workers are `0.47.8`**, verified on **both** endpoints on all four hosts after a fault that is this
-edition's main lesson.
+Production is `lannacareforanimals.org`, now on **`0.47.9`** — **a release that mailed nobody.**
+`cooperjaidee.org`, `test.lannacare.org` and `uat.lannacare.org` serve `0.47.9` too, **all three Workers
+are `0.47.9`**, and **all four Pi apps report the same SHA, `3435f97c1`** — one commit, not three.
 
-**Production and UAT both hold every migration on `main`: 428 applied, 0 pending, 0 drift.** Dev has one
-extra `schema_migrations` row for a renumbered file (`0422_keep_an_admin_per_shelter.sql`) — known,
-harmless, not drift.
+**Read on BOTH endpoints and all four agreed first time.** `0.47.8`'s fault — three Pi builds making every
+`/api/version` agree while two Workers were stale — **did not recur**, because `/api/releases/current` was
+read beside it and `/icon-192.png` answered 200 on all four.
 
-**Test and UAT run commits AHEAD of production's** (test `d859c7bd9`, UAT `fab14dca5`, production
-`3d93e90ec`), asserted with `git merge-base --is-ancestor`. **Ahead is expected; behind is the thing the
-standing rule prevents.**
+**Production and UAT both hold every migration on `main`: 434 applied, 0 pending, `No drift` both ways.**
+Dev still has its one extra `schema_migrations` row for the renumbered `0422_keep_an_admin_per_shelter.sql`
+— known since `0.47.6`, 0 missing, **not drift**.
 
-**Re-measure before trusting any of this**, and read the next section before you believe a version
-number.
+**`0.47.9` cost Lutan two touches: one answer and one command. That is target.**
 
-## THE LESSON OF THESE TWO RELEASES: THREE PI BUILDS CAN MAKE EVERY `/api/version` AGREE WHILE TWO WORKERS ARE STALE
+**Re-measure before trusting any of this.**
 
-**`0.47.6`'s handover already said "read BOTH endpoints on all four hosts", and the fault still
-happened** — so the warning as written was not enough. Here is the sharper version.
+## THE LESSON OF THIS RELEASE: A PRESCRIBED CHECK WENT SIX RELEASES UNRUN, BECAUSE IT EXITS 1 ON SOMETHING DELIBERATE
 
-**`/api/version` is answered by the app on the Pi. `/api/releases/current` is answered by the Worker.**
-A Pi build does **not** deploy the Worker, and the Worker holds the **static assets**. After the
-production deploy and three Pi builds, **all four hosts reported `0.47.8` on `/api/version`** and the
-release looked finished. It was not: **test's Worker was still `0.47.6` and UAT's `0.47.7`.**
+**`check-tenancy-catalogue.mjs --strict` is a step of §5 and no record from `0.47.3` to `0.47.8` mentions
+it.** It was run here and exits 1 on **three** objects. **None is a leak**, and that is the point:
 
-**The tell that settled it in one command**, and the technique to copy:
+- **`product_admin_permit_first_login` owned by `postgres` is DELIBERATE** — `0425` line 67 says so in
+  writing, with its reason (it reads `auth.users`, which `rls_definer` cannot) and its precedents. It is
+  simply **missing from the lint's own allow-list**, where six comparable functions already sit.
+- **`product_admin_login_grants` has RLS on and no `definer_all` policy** (`0425` again). The runbook
+  states the consequence itself: *reads return 0 rows*, a blank page and **not** a leak.
+- **`set_shelter_logo` owned by `postgres` — introduced by THIS release.** `0429` omitted the
+  `alter function … owner to rls_definer` line that `0428` and `0433` both carry and that its own model
+  `set_hero_photo` already has.
 
-```bash
-curl -s https://test.lannacare.org/api/releases/current   # the Worker's version
-curl -s https://test.lannacare.org/api/version            # the Pi app's version
-curl -s -o /dev/null -w '%{http_code}' https://test.lannacare.org/icon-192.png   # 307 = stale Worker
-```
+**THE MECHANISM WORTH CARRYING: a check that exits 1 on a known-correct object is a check people stop
+running.** Nobody decided to skip it. One allow-list line would have left it green, and then its third
+flag — a real one, from this release — would have been caught by the gate instead of by a release manager
+who happened to run it. **Filed as `#tncy3`. Run it, and record that you ran it, even when it is red.**
 
-**A new static asset is the cheapest probe of a Worker's age**: `/icon-192.png` answered **200 on
-production and 307 on test and UAT**, because a stale Worker does not know the file exists. **It was
-caught while writing the record, by a disagreement between two numbers — not by any check.**
+**It was also predicted before it was confirmed, which is the cheap technique:** dev already had the six
+migrations, so running the lint on dev showed `set_shelter_logo` *before* the production apply. **Dev is a
+free preview of what a migration will do to production's catalogue.**
 
-**NOTHING ASSERTS THAT AN ENVIRONMENT'S WORKER AND ITS PI APP ARE ON THE SAME RELEASE.** That is the
-guard worth building, and it is filed in the record's defect table.
+## ANY FAIL STOPS THE RELEASE IS TOO BLUNT FOR ONE HALF OF ONE CHECK
 
-## What `0.47.7` and `0.47.8` were
+**`check-deployed-hosts.mjs` failed on test and UAT** for `www.test.lannacare.org` and
+`www.uat.lannacare.org` having no `/auth/callback` entry. **Neither address exists:** `nslookup` says
+*Non-existent domain*, `curl` gets HTTP `000`, and `wrangler.jsonc` declares no route for either. The
+check synthesises a `www.` form for every host without asking whether it is deployed.
 
-**`0.47.7` (#1772) never reached production.** It was cut **only** to unblock UAT: `#uatsb` left UAT
-refusing every sign-in because `wrangler.jsonc` set `SUPABASE_URL` for `test` and `production` and not
-for `uat`, and **`deploy.mjs` ships only a written-down release**, so #1766's note had to move into an
-entry before any UAT deploy could run. UAT's Worker took it; production never did.
+**Settled by measuring, in about a minute**, and the release proceeded. Read it carefully before copying
+the conclusion: **the `shelter_hosts` half — the one `#hostx` exists for — passed on all three**, and
+production, whose `www.` forms genuinely exist, passed both halves. **The allow-list half is written in
+the runbook as "a person adds the missing entry", not as a stop.** Filed as `#wwwcb`.
 
-**`0.47.8` (#1775) is what production runs: 17 PRs, one migration (`0427`), two notes.** The sign-in
-`?next=` fix (#1773) and the app's own icon (#1774). **Yesterday's nine streams are in it** — they
-merged after `0.47.6` had already deployed.
+## THE SERVER ACTIONS KEY IS PER ENVIRONMENT, AND THE DEPLOY'S OWN WORDING INVITES THE WRONG READING
 
-## A RELEASE CUT AND A MERGING BATCH RACE, AND THE CUT LOSES
+`deploy.mjs` prints `deploy: Server Actions key <fp> (the Pi's build must print the same)`. **There are
+three keys, not one**, and this release read them as one for a moment: production's Worker printed
+`cbd55beae8d8` while test's printed `ecc41837fc0b`, which looks like a mismatch and is not.
 
-**#1774 merged a release note between `0.47.7`'s cut and its production deploy, so that deploy refused**
-and a second cut was needed within the hour. **No rule was broken by either side:** the stream was right
-to write a note, and the guard was right to refuse rather than ship user-visible code with nothing
-written down. **Cut after a batch has drained, not during it.** Both cuts were otherwise clean, 17
-assertions each.
+**The comparison is WITHIN an environment:** production Worker `cbd55beae8d8` = production Pi
+`cbd55beae8d8`; test `ecc41837fc0b` = `ecc41837fc0b`; UAT `cdeca9cbc4de` = `cdeca9cbc4de`. Three pairs,
+all matching. **Promoted into `docs/release-procedure.md` §6 this release**, so it stops being re-derived.
 
-## THE ONE PROOF THAT COUNTED, AND IT WAS A PRESS
+## `0.47.8`'S UNREAD LINE WAS READ THIS TIME
 
-`#uatsb` is the mirror of `#hostx`, and together they are worth one sentence you should not have to
-re-derive: **`#hostx` was the rows being missing; `#uatsb` was the Worker not reading them.**
+`strip-baked-env: removed 20 env var(s)` — `0.47.8` had to record it as never read. **The runbook's
+three-step UTF-16 decode works exactly as written** (§6: check the size, `od -c` the first two bytes for
+`377 376`, then `tr -d '\000' | grep`). Nothing to add; just do it rather than concluding the log is empty.
 
-**A `resolve_shelter_site()` read and `check-deployed-hosts.mjs` BOTH PASSED while every UAT sign-in was
-still refused.** The data was right and the Worker was broken, and **only a pressed sign-in can tell
-those apart.** Lutan pressed it — *"I have successfully logged in"* — which closed `#hostx` outright.
+## A RELEASE STEP THAT DID NOTHING AND EXITED 0
 
-**It also answered a setting that cannot be read back.** `SUPABASE_SERVICE_ROLE_KEY` for `uat` was
-unprovable; a **plain** deploy fixed sign-in, so it is set, and **no `--secrets` deploy is needed for
-it** — which matters because `--secrets` would push this PC's **revoked** Drive token.
+`sync-home-icons.mjs --env production` drew 67 pages and 536 images and **uploaded none**, because
+`PLATFORM_DRIVE_FOLDER_ID` is not set for production — and **exited 0 anyway**. The cause is a known
+outstanding step (#1781's plan names the Drive move as pending on the platform account's credentials, and
+it is the planner's, not a release step). **The fault worth fixing is the exit code.** Consequence is
+bounded: the app draws every icon in the browser, only the shared folder is stale.
 
-## Traps that cost something, or nearly did
+## Traps that cost nothing this time but will
 
-- **`deploy.mjs` refuses UAT and production while `unreleased` holds anything.** It is why a one-command
-  UAT fix became a release cut. **Read it as the guard working, and check `unreleased` before promising
-  anyone a deploy.**
-- **UAT also refuses while `main` and `origin/main` differ** (*"3 behind / 0 ahead"*). On a day with
-  streams merging, **pull immediately before the deploy** — and know that pulling may bring in a new
-  note, which puts you back in the previous trap.
-- **A grep that matches part of a document is not a reading of it.** A search for `Result: fail` across
-  17 test plans appeared to find a failing one; it had matched **the template's own prose quoted inside
-  the plan**. Its verdict was `pass`. **Read the sign-off section.**
-- **`check-deferred-notes.mjs` over-lists, fourth release running:** 22 PRs flagged for the `0.47.7`
-  cut, **nine of them parse artefacts** where a plan's `n/a` reason quotes the release-note truth rule
-  itself. The gate is right to refuse until a person reviews. **Review it once and quote the review into
-  the next cut** — the range resets after each cut, so `0.47.8`'s cut needed no sweep at all.
-- **`check-release-order.mjs` is still silent about migrations that must come BEFORE the Worker.**
-  Nothing to prove this time (`0427` is additive with no reader), but the silence still reads as *"order
-  does not matter"*.
-- **Meshnet dropped mid-day and came back on its own.** Two SSH attempts timed out **while the Pi was
-  serving happily** — the route, not the machine. A third attempt an hour later worked. **Do not
-  diagnose the Pi from a failed ssh; check what it is serving first.**
-- **`git fetch` failures hit `worktree.mjs done` twice and cleared on a plain retry.** One of them left a
-  **merged branch alive on `origin`** after its folder and local branch were gone: check
-  `git ls-remote origin refs/heads/claude/<slug>` after a failed `done`, and confirm the commit is an
-  ancestor of `origin/main` before deleting it.
+- **The `0430` dry-run FAILED and applying was correct.** `0430` replaces a view over the column `0429`
+  adds, and the dry-run rolls each file back before the next, so it cannot see it. **The runner diagnoses
+  this itself** — *"NOT a fault in 0430 … it runs cleanly after 0428, 0429"* — and that line is the thing
+  to read, because a red dry-run normally means do not apply.
+- **`check-deferred-notes.mjs` over-listed for the FIFTH release running:** 5 of 9 candidates were the
+  test-plan template's own guidance paragraph printed as the "reason". **Read each plan's real answer**;
+  the review table is in #1807's test plan, not just in the `--deferred-reviewed` flag.
+- **A deploy was piped through `tail` after the `tee`** (`… | tee <log> | tail -40`) on the test Worker.
+  The runbook says never, and it cost nothing **only because the `tee` was there** — the head lines were
+  read from the file. Drop the `tail`; it buys nothing.
+- **A cut's `--verify` needed no explicit base**, because the note was already in `unreleased` and the cut
+  published none of its own. Build a base only when the cut itself adds a note.
 
 ## What is still open
 
-- **12 items on `0.47.8`'s record are `pending: Lutan`**, every one a press only a signed-in person on a
-  deployed host can make. **The one worth asking for first is this release's headline:** start from a
-  link that bounces you to the sign-in page, sign in with Google, and confirm you land on the page you
-  asked for rather than the shelter home.
-- **`#drvtk` — this PC's `.env.deploy.uat` still holds a revoked Drive refresh token.** The rule is
-  narrow and exact: **fix it before any `--secrets` deploy or any rewrite of the Pi's env.** A plain
-  Worker deploy is unaffected and three were run today.
-- **`#uatsb`'s registry half shipped as #1777** (`SUPABASE_URL` declared in `runtime-config.mjs`, the
-  host check derived from it) — **after** this release's cut, so it is **not** in `0.47.8`. It will be in
-  the next one.
-- **The Thai sign-off, tenth release running** (`#y1dqu`). **Still the largest standing gap.**
-- **`dev-signin.mjs <role>` still breaks (`PGRST116`) once two shelters each hold a role keyed `admin`**,
+- **11 items on `0.47.9`'s record are `pending: Lutan`**, every one a press only a signed-in person on a
+  deployed host can make. **The one worth asking for first is this release's only note:** Admin → Website,
+  upload a transparent PNG, and see it beside the shelter name on the public header with no white or black
+  box — then clear it and see the name alone.
+- **Ten of the 30 test plans in the release wait on a person**, none of them a failure. **Four are this
+  release's own surface** (`shelter-logo-upload`, `logo-alpha-serving`, `step-up-returns`,
+  `shelter-chooser-page`); the rest are console items or not release steps. The full table is in the record.
+- **`#tncy3` and `#wwwcb`** — this release's two findings, both filed, neither fixed here.
+- **`PLATFORM_DRIVE_FOLDER_ID` is unset for production**, so the icon sync is a no-op until it is set.
+- **`#drvtk` — this PC's `.env.deploy.uat` still holds a revoked Drive refresh token.** Narrow and exact:
+  **fix it before any `--secrets` deploy or any rewrite of the Pi's env.** Plain Worker deploys are
+  unaffected and two were run today.
+- **The Thai sign-off, eleventh release running** (`#y1dqu`). **Still the largest standing gap.**
+- **`dev-signin.mjs <role>` still breaks (`PGRST116`)** once two shelters each hold a role keyed `admin`,
   which is the state dev is in, so a signed-in `/releases` read on dev is not available.
-- **The public site is still locked** (`#pl7aq`), so the whole signed-out half of the smoke test is
-  vacuous by design. Record it that way rather than as unchecked.
+- **The public site is still locked** (`#pl7aq`), so the signed-out half of the smoke test is vacuous by
+  design. Record it that way rather than as unchecked.
 
 ## Now routine — stop treating these as open
 
-- **Merge on green with no approval round-trip**, every PR, releases included. **`test-plan` is
-  advisory, permanently.**
-- **`audit` runs for real on a cut** (it changes `package.json`); `skipped` elsewhere is not a pass. One
-  registered, unreachable `glob` advisory; `audit:register` exits 0.
-- **The Pi's `sudo -n -l` now covers all three services**, `lanna-care-uat` included. Checking it before
-  a build still costs thirty seconds and is still worth it.
-- **`cut-release.mjs --verify` needed no base-building for either cut**, because neither published a note
-  of its own. Build a base only when the cut itself adds one.
-- **A cut PR cannot tick the release-notes line**, and `n/a:` needs its reason immediately.
+Everything in this list did what the runbook says it does, first time. **It is here only so the next
+editor deletes it rather than re-investigating it.**
+
+- **No cut/batch race**, `main` still at the cut's base when it merged, #1807 the only open PR.
+- **UAT second, before his command** (the 2026-11-16 reversal) — clean, and nothing of ours ran after his.
+- **Three Pi builds, one at a time, pinned with `--ref`** — all three logged `restarting under the script
+  from <sha>`, with 3.1 / 2.1 / 3.4 GiB free against 6 GiB of swap.
+- **`lanna-pi-mesh` worked first time** for all three. Do not put the route to him as a question.
+- **UAT restarts its own service**, and **`audit:register` is the audit** (exit 0, the one registered
+  `glob` advisory, fourth release running).
 
 ## The two touches that are his, and stay his
 
 **Major versus minor** — asked as *"should this release email you?"*, never as the two words — and the
 **production Worker deploy**.
 
-**`0.47.8` cost him two touches: one answer and one command.** That is target. **`0.47.7` cost one
-answer and no command**, and it was superseded, so the pair together cost him **three** against a target
-of two — **and the extra one was caused by the cut/batch race above, not by anything he did.**
+**This time he answered it unprompted** (*"lets do a minor release no email"*), which settled both halves
+in one message and cost no round trip. **`0.47.9` cost him one answer and one command. That is target.**
