@@ -579,6 +579,27 @@ write a single `pending: no signed-in session` line, because that line is now a 
 4. To test another role, run the script again and paste again. `node scripts/dev-signin.mjs --remove`
    deletes every login it made.
 
+**Pressing something (a save, a delete, a form)? Do NOT paste the snippet; drive headless Chrome instead.**
+Measured 2026-11-21 (`docs/decisions/2026-11-21-driving-a-browser-proof.md`, `#bprf7`): the snippet is ~2.7 KB of base64, and a model
+pasting it into `javascript_tool` has to retype it. One paste lost 180 characters, the app read the broken cookie as no session, and
+showed `/login?error=expired` two minutes after sign-in. That is what "my dev sign-in kept expiring" was (`#shlog`, #1790). The pane is
+for **reading** a page (and the pane notes below); **a proof that presses something is driven with `playwright-core`**, already in
+`node_modules`, no install, no dependency. `scripts/lib/driven-session.mjs` runs `dev-signin.mjs` for you and loads its cookies into
+Chrome, so nothing is retyped. Copy this into a scratch `scripts/_x.mjs`, run `node scripts/_x.mjs`, **delete it, never commit it**:
+
+```js
+import { signedInPage } from "./lib/driven-session.mjs";
+const base = "http://localhost:<port>";   // same args as dev-signin.mjs: a role, or --cards a,b; --aal2; --shelter X
+const { browser, page } = await signedInPage({ args: ["management", "--port", "<port>"], base });
+await page.goto(base + "/residents");  // press: page.fill(...), page.getByRole("button", { name: "Save" }).click()
+await page.waitForTimeout(4000);        // a server action takes seconds; then reload and READ THE ROW BACK
+await browser.close();
+```
+
+Headless Chrome has a real `requestAnimationFrame`, so the pane's direct-load hydration fault below does not apply. Two gotchas from the
+run: a form the browser refuses to submit shows nothing (print `page.locator(":invalid")` before concluding the app is dead), and public
+text fields wait for approval, so they will not read back. Prove it by saving, reloading and reading the value, not by the page loading.
+
 What this does **not** need: no password from anyone (`DEV_TEST_USER_PASSWORD` stays unread), no
 Google button, and **no `/auth/callback` Redirect URL** — password sign-in never leaves the app, which
 is why the old "ask for your port to be added" step was a dead end. Nothing about dev's auth is relaxed.
