@@ -14,7 +14,7 @@
 | PR | pending |
 | Tested by / date | Claude / 2026-11-21 |
 | Carries a migration? | no |
-| Tested at SHA | 2368234dd |
+| Tested at SHA | 3db8742e2 |
 
 ## 1. Scope and risk
 
@@ -43,7 +43,15 @@ indistinguishable from one that passed.
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`
 
 ```
-(filled in after the gates run)
+=== gates: typecheck — npm run typecheck
+=== gates: typecheck exited 0 after 11s
+=== gates: lint — npm run lint
+=== gates: lint exited 0 after 137s
+=== gates: test — npm test
+=== gates: test exited 0 after 35s
+=== gates: build — npm run build
+=== gates: build exited 0 after 50s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 - [ ] CI green on the PR (runs the same four gates, among its — n/a: not yet — the PR does not exist at this commit
 

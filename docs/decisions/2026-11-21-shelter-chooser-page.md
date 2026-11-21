@@ -10,3 +10,5 @@
 - **Controls:** every entry is a plain link to another address; no action, so no card gate.
 - **Driven (headless Chrome, real session):** signed out -> login; one shelter -> one link; two shelters -> two links (`https://<host>/`). The two-shelter login needed a service-role `user_roles` row added **after** `dev-signin` (it deletes extra roles on every run). Dev note: the real shelter `lanna` has no `is_primary` host on dev, so it is left out by `my_shelters()` unless one is set; I set one for the run and restored it. **Production needs checking: a shelter with no primary host never appears.**
 - **Not driven:** Thai rendering, 375px, console/network.
+
+- **The proxy** (`src/lib/supabase/proxy.ts`) also signs out a role-less login on any non-public path, so it now lets `/platform/shelters` through for any signed-in login (found when the permission catalogue check failed, then reading the proxy). **Not driven with a genuinely role-less, shelter-only login** (my driven login held an app role); that exact case is left for a person.
