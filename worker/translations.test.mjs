@@ -147,5 +147,5 @@ test("runTranslations: a closed shelter is excluded from the pending read (#fu86
   await runTranslations(env, { fetchImpl, now: NOW, log: () => {} });
   assert.ok(urls.some((u) => u.includes("archived_at=not.is.null")), "closed shelters were not read");
   const pending = urls.find((u) => u.includes("status=eq.pending"));
-  assert.match(pending, /shelter_id=not.in.(closed-1,closed-2)/);
+  assert.ok(pending.includes("shelter_id=not.in.(closed-1,closed-2)"));
 });
