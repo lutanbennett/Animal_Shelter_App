@@ -49,7 +49,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [ ] Existing rows still read — n/a: no data or columns change
 - [x] Behaviour exercised: lint on dev went from `2 flagged (1 functions, 1 tables missing definer_all)` to `0 flagged, 7 allowed by name, 0 stale`
 - [ ] Down-migration — n/a: additive policy and an owner line; leaving both in place is safe
-- [ ] Production apply plan — deferred: planner applies 0434 to production with the release, then runs `node scripts/check-tenancy-catalogue.mjs --env production --strict --tenant-role rls_definer`
+- [ ] Production apply plan — pending: planner applies 0434 to production with the release, then runs `node scripts/check-tenancy-catalogue.mjs --env production --strict --tenant-role rls_definer`
 
 ## 4. Functional checks
 
@@ -118,7 +118,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [ ] Migration and code that reads it together — n/a: no code reads 0434; it only fixes ownership and a policy
 - [ ] Production `--dry-run` — deferred: release manager
 - [ ] Destructive migration backup — n/a: additive
-- [ ] Apply plan stated: 0434 to production `dbkodyyxxhtygxcxmfcu`, order does not matter, nothing reads it
+- [x] Apply plan stated: 0434 to production `dbkodyyxxhtygxcxmfcu`, order does not matter, nothing reads it
 
 ### Rollback
 
