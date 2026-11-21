@@ -130,6 +130,11 @@ export async function runSupplierEmails(now = new Date()): Promise<SupplierRun[]
     const { data: sup } = await db.from("suppliers").select("name, email, delivery_method, shelter_id").eq("id", supplierId).single();
     const name = sup?.name ?? supplierId;
     if (!sup || sup.delivery_method !== "daily_email") continue;
+    // A closed shelter sends nothing out in its name; the parts stay queued and go if it reopens (#clsjb).
+    if (sup.shelter_id) {
+      const { data: sh } = await db.from("shelters").select("archived_at").eq("id", sup.shelter_id).maybeSingle();
+      if (sh?.archived_at) continue;
+    }
     if (!sup.email) {
       results.push({ supplier: name, outcome: "no_address", parts: parts.length });
       continue;

@@ -282,7 +282,18 @@ export async function runLabelDrafts(env, { fetchImpl = fetch, log = console.log
       { headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` } },
     );
     if (!rolesRes.ok) return finish("failed", `could not read the label login's shelters (${rolesRes.status})`);
-    const shelters = [...new Set((await rolesRes.json()).map((r) => r.shelter_id).filter(Boolean))];
+    const heldIds = [...new Set((await rolesRes.json()).map((r) => r.shelter_id).filter(Boolean))];
+    // A closed shelter is unreachable to people, so a draft for it is wasted work (#clsjb): drop archived ones.
+    let shelters = heldIds;
+    if (heldIds.length) {
+      const openRes = await fetchImpl(`${base}/rest/v1/shelters?id=in.(${heldIds.join(",")})&archived_at=is.null&select=id`, {
+        headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` },
+      });
+      if (!openRes.ok) return finish("failed", `could not read which shelters are open (${openRes.status})`);
+      const open = new Set((await openRes.json()).map((r) => r.id));
+      shelters = heldIds.filter((id) => open.has(id));
+      if (!shelters.length) return finish("skipped", "every shelter the label login serves is closed; nothing to draft");
+    }
     if (!shelters.length) return finish("failed", "the label login holds no role in any shelter, so it can propose nothing");
 
     const call = async (shelter, fn, body) => {
