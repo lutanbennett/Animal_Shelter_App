@@ -16,18 +16,29 @@
 
 create or replace function public.my_shelters()
 returns table (shelter_id uuid, name text, host text)
-language sql
-stable
+language plpgsql
 security definer
-set search_path = public
+set search_path = ''
 as $$
-  select s.id, s.name, h.host
-    from public.shelters s
-    join public.shelter_hosts h on h.shelter_id = s.id and h.is_primary
-   where s.archived_at is null
-     and auth.uid() is not null
-     and exists (select 1 from public.user_roles ur where ur.user_id = auth.uid() and ur.shelter_id = s.id)
-   order by s.name, s.id;
+#variable_conflict use_column
+declare v_hdr text; v_ids uuid[]; v_id uuid; v_uid uuid := auth.uid();
+begin
+  if v_uid is null then return; end if;
+  -- rls_definer is a member of authenticated, so the 0392 policies still apply inside this function (found by the harness, not assumed).
+  -- Same as product_admin_shelters() (0428): ask one shelter at a time, with the request's shelter set to it for that read, and put it back.
+  v_hdr := current_setting('request.headers', true);
+  select array_agg(s0.id) into v_ids from public.shelters s0 where s0.archived_at is null;
+  foreach v_id in array coalesce(v_ids, '{}'::uuid[]) loop
+    perform set_config('request.headers', json_build_object('x-shelter-id', v_id::text)::text, true);
+    return query
+    select s.id, s.name, h.host
+      from public.shelters s
+      join public.shelter_hosts h on h.shelter_id = s.id and h.is_primary
+     where s.id = v_id
+       and exists (select 1 from public.user_roles ur where ur.user_id = v_uid and ur.shelter_id = v_id);
+  end loop;
+  perform set_config('request.headers', coalesce(v_hdr, ''), true);
+end;
 $$;
 
 do $$
