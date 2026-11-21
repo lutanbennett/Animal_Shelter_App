@@ -75,7 +75,7 @@ export function ShelterLogo({
       <div className="relative h-24 w-24 overflow-hidden rounded border border-border bg-background">
         {logoDriveFileId ? (
           <Image
-            src={driveImageUrl(logoDriveFileId, 160)}
+            src={driveImageUrl(logoDriveFileId)}
             alt={t.admin.website.logo.alt}
             fill
             sizes="96px"

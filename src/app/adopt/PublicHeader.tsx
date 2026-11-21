@@ -210,11 +210,11 @@ export async function PublicHeader({
 
   const brand = (
     <Link href={localizedHref("/", locale)} className="flex min-h-11 items-center gap-2.5 text-site-ink lg:gap-3">
-      {/* This shelter's own logo (site_content.logo_drive_file_id). None uploaded: no image at all, the name alone. */}
+      {/* This shelter's own logo (site_content.logo_drive_file_id). None uploaded: no image at all, the name alone. Asked for with NO width on purpose: a width is served as Drive's JPEG/WebP rendition, which flattens a transparent logo onto black (#m52yp, docs/decisions/2026-11-21-logo-served-as-original.md). */}
       {site?.logo_drive_file_id && (
         <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center lg:h-16 lg:w-16">
           <Image
-            src={driveImageUrl(site.logo_drive_file_id, 160)}
+            src={driveImageUrl(site.logo_drive_file_id)}
             alt=""
             width={128}
             height={128}
