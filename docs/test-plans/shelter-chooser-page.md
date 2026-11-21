@@ -197,6 +197,7 @@ section 8's.
 
 | # | What to check | Where |
 |---|---|---|
+| 2 | A login with roles only at shelters (none at the platform host) signs in via the product page link and reaches the list | cooperjaidee.org after deploy |
 | 1 | Thai wording of the chooser reads naturally | /platform/shelters with locale th |
 
 ## Sign-off
