@@ -1,226 +1,205 @@
-# Planner handover — edition `768`, 2026-11-20
+# Planner handover — edition `769`, 2026-11-21
 
-**This is a DELTA against `767`.** It says what changed, corrects its predecessor, and reports what `767`
+**This is a DELTA against `768`.** It says what changed, corrects its predecessor, and reports what `768`
 left owed. Figures, batch composition and ports live in `.plan-day.md`.
 
 **It outranks nothing.** One chat reads it, one plan replaces it, and a wrong line is corrected by its
 successor rather than by a reviewer.
 
-**`767` AND `768` WERE BOTH WRITTEN ON 2026-11-20.** `767` was written in the morning after `0.47.6`;
-this one after a second full day of streams and **two more releases**. If you are reading both, read this
-one — and do not read a document's own date as proof it is fresh. **Read the system date and compare.**
+**IT COVERS ELEVEN MERGED STREAMS, AND ELEVEN IS NOT A MISCOUNT.** The trigger is nine, and the ninth
+(#1793) merged within four minutes of #1794 and #1795 in the same batch. **Splitting a batch to make the
+arithmetic tidy would have orphaned two streams from the record**, so this edition takes all eleven and
+the counter resets to 0 when its PR merges.
 
-**IT COVERS THE EIGHT STREAMS MERGED SINCE `767`:** #1770, #1771, #1773 (batch 1), #1777, #1778, #1779
-(batch 2), plus **#1774** (the product icon) and **#1776** (the platform lockup), neither of them planned.
-**A NINTH, `platform-drive-folder`, IS STILL RUNNING** — written in deliberately, at Lutan's instruction
-to write this while the day's context existed. **Its figure is read next morning from its PR, which is
-safe: a `stream-usage:` comment outlives the branch and the worktree.** The two releases' three PRs
-(#1772, #1775 cuts, #1780 record) post no figures.
+**The eleven:** #1784, #1785, #1786 (twelfth plan, batch 1), #1788, #1789 (batch 2), #1790, #1791
+(batch 3), #1792 (batch 4), **#1793, #1794, #1795** (thirteenth plan, batch 1). **Every one has a figure
+and every one is a valid reading** — dials matched the brief, `compacted=no`, `rescoped=no`,
+`finished=yes`, eleven for eleven. That has not happened before.
 
-**SIX PLANNED STREAMS IN TWO BATCHES, ALL MERGED, FIVE BAND READINGS AND EVERY ONE INSIDE.** He agreed
-batch 1 and chose option A for the Drive scope in the same message; batches 2 and 3 were set up without
-asking, as step 8 requires.
+**TWO PRs ARE DELIBERATELY NOT COUNTED, ON HIS OWN RULING:** #1783 and #1787 were one unplanned session
+with two PRs, and *"anything outside of your plan does not count"* (below).
 
 ## FOR YOUR FIRST TURN
 
-1. **Read `.plan-day.md` first.** Gitignored, 358 lines, and the only record of today's batch tables and
-   figures.
-2. **A session is live on `C:\Development\Animal_Shelter_platform-drive-folder`** (port 3001,
-   sonnet-5-5/low, `#shfil`). **Do not plan into its files** — `scripts/sync-home-icons.mjs`,
-   `scripts/drive-partition-tree.mjs`, `scripts/lib/runtime-config.mjs`, `scripts/pi/`.
-3. **Production is healthy on `0.47.8` and owes nothing.** All four hosts agree on **both** version
-   endpoints. Production and UAT each hold 428 migrations, 0 pending, 0 drift.
-4. **Twelve items on `0.47.8`'s record are `pending: Lutan`**, every one a press only a signed-in person
-   on a deployed host can make. **The one worth asking for first is the release's own headline:** start
-   from a link that bounces you to sign-in, sign in with Google, and land on the page you asked for.
-5. **`#drvtk` still blocks every `--secrets` deploy.** Narrow and exact: this PC's `.env.deploy.uat`
-   holds a **revoked** Drive refresh token. A plain Worker deploy is unaffected and **three were run
-   today**.
+1. **Read `.plan-day.md` first.** Gitignored, 250 lines, and the only record of the thirteenth plan's
+   batch tables, actuals and reasoning.
+2. **TWO SESSIONS ARE LIVE, batch 2 of the thirteenth plan.** `public-views-shelter-scope` on
+   **port 3005** (`#pvws4`, migration `0433`, 190-230k) and `shelter-logo-proof` on **port 3006**
+   (`#shlog`, no migration, 145-180k). **Do not plan into their files:** `scripts/check-public-views.mjs`,
+   the `public_*` views, `src/app/adopt/PublicHeader.tsx`, `src/app/api/photos/`, `src/lib/mirror-read.ts`.
+3. **BATCH 1'S THREE WORKTREES ARE STILL HELD** by their own sessions (ports 3001-3003). All three PRs are
+   merged and **all three usage comments were read before any clearing was attempted**, so nothing is at
+   risk. `done` them once he closes those sessions; **do not force it.**
+4. **The release window is still shut, by his answer, not by an oversight.** He chose *"streams first,
+   release later"* on 2026-11-21. Batch 1 drained but batch 2 went live in the same turn, so the clean
+   moment is **after batch 2 merges.** Flag it in one line then. Do not nag.
+5. **The Lanna logo upload is HIS, AFTER the release, and he set that timing himself** (*"After the
+   release"*, 2026-11-20). Admin → Website → Home tab → Shelter logo → Upload logo,
+   `public/lca-logo-transparent.png`. **It must not appear on a "waiting on Lutan" list before the
+   release ships.**
 
-## THE LESSON OF THE DAY: A VERSION NUMBER AGREEING EVERYWHERE IS NOT A DEPLOYED RELEASE
+## THE LESSON OF THE DAY: THE INSTRUMENT THAT COST TWO STREAMS NOW EXISTS — STOP BRIEFING THE OLD WAY
 
-**`767`'s own instruction was "read BOTH endpoints on all four hosts", and the fault still happened** —
-so the warning as written was not enough. Here is the sharper version, and it is the same class as `767`'s
-nine-instance lesson: **the layer a reading covers is part of what the reading means.**
+**On 2026-11-20 two streams hit the same wall on the same afternoon and only one got past it.**
+`shelter-logo-upload` (#1790) wrote *"NOT DONE … the driven browser proofs. My dev sign-in kept
+expiring"* and left its item open; `console-enquiry-queue` (#1791) got through with `playwright-core` and
+**overran its band by 15k doing it.** Same root cause, two different prices, and **neither was written
+down anywhere a brief would find it.**
 
-**`/api/version` is answered by the app on the Pi. `/api/releases/current` is answered by the Worker.** A
-Pi build does **not** deploy the Worker, and the Worker holds the static assets. After the production
-deploy and **three** Pi builds, all four hosts reported `0.47.8` on `/api/version` and the release looked
-finished. **Test's Worker was still `0.47.6` and UAT's `0.47.7`.**
+**`#bprf7` (#1795) measured the cause and it was never expiry.** The paste snippet is ~2.7 KB of base64;
+one paste lost 180 characters (2,689 against 2,509), the app read the broken cookie as no session, and
+showed `/login?error=expired` about two minutes after signing in. **A model retyping 2.7 KB of base64
+drops characters — that is the whole fault.**
 
-**THE CHEAPEST PROBE OF A WORKER'S AGE IS A NEW STATIC ASSET**, and this is the technique to copy:
+**So the instrument now exists and `CLAUDE.md` names it:** `scripts/lib/driven-session.mjs`'s
+`signedInPage`, documented with a copy-paste snippet at **`CLAUDE.md:582-600`**. It runs `dev-signin.mjs`
+and loads the cookies straight into headless Chrome, **so nothing is retyped**. `playwright-core` is
+already in `node_modules`; no install, no dependency.
 
-```bash
-curl -s -o /dev/null -w '%{http_code}' https://test.lannacare.org/icon-192.png   # 307 = stale Worker
-```
+**WHAT THIS CHANGES FOR YOU, CONCRETELY:**
 
-**`/icon-192.png` answered 200 on production and 307 on test and UAT**, because a stale Worker does not
-know the file exists. **It was caught while writing the record, by two numbers disagreeing — not by any
-check. Nothing asserts that an environment's Worker and its Pi app are on the same release**, and that
-guard is filed in `0.47.8`'s defect table.
+- **Stop writing "paste the snippet into the pane" into a brief that asks a stream to PRESS something.**
+  The pane is for reading a page. A proof that presses is driven.
+- **A driven proof is now ~30k of apparatus you can price with confidence**, instead of each stream
+  inventing a method at an unpredictable cost. The `+30k for real browser verification` row is now
+  **buying a known instrument** rather than a gamble.
+- **It has been driven exactly ONCE, by the stream that wrote it.** `shelter-logo-proof` on port 3006 is
+  its second user and is explicitly asked whether the snippet worked as written. **Read that answer** —
+  an instrument with one user is not yet proven.
+- **The pane's own fault was NOT fixed, and that was a judged call**, recorded in
+  `docs/decisions/2026-11-21-driving-a-browser-proof.md`: a relay would be a second instrument. Residual
+  unknowns are stated there honestly — whether #1790's session broke the same way, and whether a faithful
+  paste holds the full 50 minutes.
 
-### THE SAME SHAPE, CHEAPER: A GREP THAT MATCHES PART OF A DOCUMENT IS NOT A READING OF IT
+## A SECOND LESSON, AND IT IS WHY `768`'S COUNT WAS WRONG: A BRANCH IS NOT A STREAM
 
-A search for `Result: fail` across 17 test plans appeared to find a failing one. **It had matched the
-template's own prose quoted inside the plan** — the line listing what makes the checker go red. Its
-verdict was `pass`. **Read the sign-off section.**
+**The planner told him nine streams had merged. He said *"no it hasn't been 9 streams yet"*, and he was
+right.** #1783 and #1787 were counted as two. They are **one session**: both usage comments report the
+same session start (`13:51:15Z`), and #1787 changed only #1783's own test plan.
 
-**This is `767`'s `drive-scope-read` lesson in a second instrument:** there, a filename grep over 300
-decision files **could not fail**; here, a content grep **could not help but match**. **Name the line to
-open, not the pattern to search.**
+**The unit is the SESSION, not the branch and not the slug.** A slug is only what a session called
+itself. **One stream, one count, however many PRs it opened** — the skill already said so and the planner
+still miscounted, because a branch list looks exactly like a stream list.
 
-## A RELEASE CUT AND A MERGING BATCH RACE, AND THE CUT LOSES — NEW PLANNING RULE
+**Then he settled the harder half himself:** *"no it's 9 streams that you plan, anything outside of your
+plan does not count"*. **Both of those PRs count for nothing at all**, planned or not. `SKILL.md` step 7
+now carries it with the superseded clause struck in place, so a successor meeting the old wording can see
+which way it went (#1792).
 
-**It cost two cuts in one hour and one of Lutan's three touches.** `0.47.7` was cut to unblock UAT;
-**#1774 then merged a release note between that cut and its production deploy, so the deploy refused**,
-and `0.47.8` had to be cut. **No rule was broken by either side:** the stream was right to write a note,
-and `deploy.mjs` was right to refuse rather than ship user-visible code with nothing written down.
+**The practical consequence for you: `gh pr list` cannot tell planned from unplanned.** Recover the count
+from **this document's covered list**, never from a PR listing.
 
-**CUT AFTER A BATCH HAS DRAINED, NOT DURING IT.** And its two neighbours, both met today:
+## FIGURES — ELEVEN READINGS, ALL VALID: SIX INSIDE, THREE OVER, TWO UNDER
 
-- **`deploy.mjs` refuses UAT and production while `unreleased` holds anything.** It is why a one-command
-  UAT fix became a release cut. **Check `unreleased` before promising anyone a deploy.**
-- **UAT also refuses while `main` and `origin/main` differ** (*"3 behind / 0 ahead"*). **Pull immediately
-  before the deploy** — and know that pulling may bring in a new note, putting you back in the first trap.
+| PR | slug | band | tokens | floor | verdict |
+|---|---|---|---|---|---|
+| #1784 | `dev-signin-shelter-default` | 143-170k | 149,533 | 88,248 | inside |
+| #1785 | `platform-product-page` | 150-195k | 159,793 | 87,525 | inside |
+| #1786 | `shelter-state-schema` | 175-215k | 195,500 | 91,573 | inside |
+| #1788 | `shelter-logo-schema` | 140-160k | **209,262** | 87,251 | **OVER by 49k** |
+| #1789 | `console-cards-redesign` | 185-225k | **263,451** | 90,085 | **OVER by 38k** |
+| #1790 | `shelter-logo-upload` | 170-210k | 181,323 | 88,198 | inside |
+| #1791 | `console-enquiry-queue` | 175-205k | **220,368** | 88,263 | **OVER by 15k** |
+| #1792 | `plan-day-skill-edits` | 143-170k | 138,327 | 87,974 | **under by 5k** |
+| #1793 | `hero-photo-shelter-scope` | 175-215k | 153,973 | 87,540 | **under by 21k** |
+| #1794 | `closed-shelter-jobs` | 145-190k | 154,934 | 87,974 | inside |
+| #1795 | `browser-proof-instrument` | 145-185k | 162,417 | 88,263 | inside |
 
-## ONE SESSION OWNS A BRANCH; A SECOND SESSION ASKED TO HELP REPORTS RATHER THAN COMMITS
+**ALL THREE OVERRUNS WERE THE PLANNER'S, AND ALL THREE HAVE THE SAME SHAPE: a band that priced the code
+and not the FINDING OUT.** #1788 had to establish how an existing mechanism behaved; #1789 crossed a
+layer the band never priced; #1791 had to invent a browser proof with no instrument. **Read your own band
+paragraph back: if it names an unknown, the band must contain it.** Naming a risk is not pricing it.
 
-**From #1773's own usage comment, which is the most useful thing a stream has ever written for a planner.**
-That branch cost **three full gates runs and four CI runs** because two sessions were driven on it at
-once: the stream kept being asked for one more fix while the other session was mid-build, so each commit
-landed underneath a run already in flight. **No commit was wrong and the stream flagged every one**, which
-is why nothing stale shipped. **The waste was in the arrangement, not the conduct.** Lutan settled it with
-*"You finish it"*.
+**#1788's 49k overrun bought two findings and a migration** (`0430`, plus `#pvws4` and `#h3ro9`), so it
+was a cheap overrun — but it was not forecast, and that is the defect.
 
-**It is also why #1773's figure is not a reading** — see the table.
+### THE DISCOUNT FOR HANDING EVERYTHING OVER IS NOW MEASURED AT ABOUT 21k
 
-## FIGURES — EIGHT STREAMS, FIVE READINGS, THREE SET ASIDE, ALL FIVE INSIDE
+**`hero-photo-shelter-scope` (#1793) came in 21k under a band built on `#1786`'s own 195,500 for the same
+shape** — a definer function, a harness, a registry declaration. **The difference was the brief**: it
+handed over the cause, the decision AND the written fix, quoting `0431:22` by line, and the stream copied
+it rather than deriving it.
 
-| slug | PR | band | actual | verdict |
-|---|---|---|---|---|
-| `shelter-enquiry-schema` | #1770 | 160-190k | **171,280** | inside |
-| `callback-allowlist-check` | #1771 | 145-190k | **158,237** | inside |
-| `login-next-callback` | #1773 | 150-185k | **184,132** | **NOT A READING — `rescoped=yes`, two sessions** |
-| `product-icon` | #1774 | — | **414,500** | **NOT A READING — no band, `compacted=yes`, `rescoped=yes`, opus-5/medium** |
-| `platform-lockup` | #1776 | — | **122,402** | **NOT A READING — unplanned, no band** |
-| `worker-settings-registry` | #1777 | 150-190k | **168,556** | inside |
-| `step-up-returns` | #1778 | 146-180k | **173,526** | inside |
-| `shelter-enquiry-form` | #1779 | 200-250k | **205,343** | inside — **the specification discount's first verdict** |
+**DO NOT PUSH THIS INTO THE TABLE.** It is a discount on a brief that hands everything over, not a
+correction to the schema rows — **exactly the inference the floor row's own warning forbids.** `#pvws4`
+was deliberately left at 190-230k for that reason: nothing is written for it, the surface is twenty-three
+views rather than one function, and it also changes an instrument. **If it lands near #1793's figure,
+THAT is the second reading that justifies revising the schema rows. One is not.**
 
-**FIVE READINGS, FIVE INSIDE.** Thirty-two readings now stand across all editions and **nothing has ever
-landed below 142,750.**
+### THE FLOOR — ELEVEN READINGS, AND NOW FOUR EXACT REPEATS
 
-### THE SPECIFICATION DISCOUNT FIRED, AND THE HYPOTHESIS WAS WRITTEN DOWN BEFORE THE ANSWER WAS KNOWN
-
-**The skill says a schema half that writes the app half a SPECIFICATION — not a column list — discounts
-the app half to the bottom of its row.** `shelter-enquiry-form` is *"creates one new surface people submit
-data through"* (200-270k) and was banded **200-250k** on that basis, at setup, in writing.
-
-**It came in at 205,343: 5.3k above the bottom of the row and 65k below its top.** **The discount held.**
-
-**One data point, but the mechanism is testable rather than lucky:** #1770's decision file named all ten
-columns, the insert shape, the duplicate behaviour and the one-answer rule, and **that section was quoted
-verbatim into the form stream's brief**, so the stream re-derived nothing. **Keep writing specifications
-in schema halves and keep quoting them into briefs.** This is the first instrument in the band table with
-evidence behind it rather than a guess.
-
-**A second prediction held quietly:** #1778 and #1779 were each told `src/app/platform/page.tsx` was the
-one file they might both need, and each was told to keep its edit small and name it. **Neither reported a
-conflict.**
-
-### `414,500` IS A SENTINEL, NOT A COST — CHECK IT BEFORE YOU QUOTE IT
-
-**#1774 reports `tokens=414500`. So did #1765 in `767`'s table.** The same total to the digit, from two
-unrelated streams; **both `compacted=yes`, both opus-5/medium, both long-lived.** A compacted window
-reports a remainder, so neither figure measures its stream.
-
-**OFFER NO CAUSE** — that instruction is about the planner, not the number, and `767` watched three
-explanations of the floor die in a day. **What to DO: treat `414,500` as a tell that the window was reset,
-and set the figure aside rather than reasoning from it.**
-
-### THE FLOOR — SEVEN MORE READINGS, AND A SECOND EXACT REPEAT WITHIN ONE DAY
-
-`tokens − messages`, today's eight: **91,573 · 88,248 · 88,748 · 94,625¹ · 87,525 · 88,175 · 87,525 ·
-87,460** — ¹#1774, compacted, set aside.
-
-**87,525 appeared TWICE today, to the token, from `step-up-returns` (#1778) and `platform-lockup`
-(#1776)** — a planned batch-2 stream and an unplanned role-session stream, different work, different
-branches. **88,248 recurred again** (#1771) and has now appeared on **three separate days**.
-
-**Range across all editions: 87.2-91.6k.** The repeats are the durable finding; **every account of them so
-far has been wrong, so record the range and the repeats and stop.**
+**87.3–91.6k**, from `tokens − messages` across all eleven. Essentially identical to `768`'s 87.2–91.6k
+from seven. **Four exact repeats now:** `87,974` twice (#1792, #1794) and `88,263` twice (#1791, #1795).
+**Record the repeats; offer no cause.** Nine of the eleven sit between 87.2k and 88.3k.
 
 ## HIS DECISIONS OF THE DAY — SETTLED, DO NOT RE-OPEN
 
-- **The Drive scope: OPTION A — two Google apps.** The existing Desktop client keeps full `drive` for
-  internal tools; **a new Web client carries the narrow scope for the shelter-facing screen.** Recorded on
-  `#drvcl`. Asked as one question alongside batch 1 and answered in the same breath: *"yes all three, and
-  option A for the drive scope"*.
-- **`0.47.7` and `0.47.8` are both PATCHES — neither mailed anybody.** Asked each time as *"should this
-  release email you?"*, never as the two words. `majorReleasesSince("0.47.6")` was read directly as `[]`,
-  with a control call still finding `0.47.0`, so the empty answer was the flag and not a broken function.
-- **`#shfil` — the icon library moves to the platform folder too**, which is what made that item
-  buildable rather than a question. Briefed as batch 3.
+- **Only streams a plan created count toward a handover** (above). *"Anything outside of your plan does
+  not count."*
+- **Streams first, release later** (2026-11-21), asked directly with the cost stated — one note in
+  `unreleased`, nothing in flight, and the Lanna logo upload waiting behind it. **He chose the streams.**
+- **The Lanna logo upload waits for the release** (*"After the release"*). His timing, his hands.
+- **He took all three of batch 1 as offered**, in one `AskUserQuestion` that also carried the release
+  decision. **One question, two answers, no interruptions all day.**
 
 ## FILED, TICKED AND CORRECTED
 
-**`#hostx` IS CLOSED, AND A PRESS IS WHAT CLOSED IT.** `#uatsb` is its mirror, and together they are one
-sentence you should not have to re-derive: **`#hostx` was the rows being missing; `#uatsb` was the Worker
-not reading them.** A `resolve_shelter_site()` read **and** `check-deployed-hosts.mjs` both passed while
-every UAT sign-in was still refused. **Only a pressed sign-in tells those apart** — *"I have successfully
-logged in"*.
+- **Ticked by their streams:** `#h3ro9`, `#clsjb`, `#bprf7`, and `#shlog` retitled rather than ticked
+  (#1790 was honest that its proofs were undriven — **that honesty is why `#bprf7` exists at all**).
+- **FILED BY THE PLANNER — `#swout`** (Architecture): `check-scheduled-writers.mjs` cannot catch the next
+  job that runs for a closed shelter, because it has no way to say a job **acts outside the database**.
+  **#1794 handed this back explicitly** and it is the distinction it had to draw by hand — a sweep that
+  tidies rows is harmless for a closed shelter, **a job that SENDS something on its behalf is a different
+  class of wrong.**
+- **#1793's sweep found a SECOND wrong function** nobody briefed it for, `approve_website_draft` (`0315`),
+  and `0432` fixed both. **The class-not-the-instance brief shape has now paid twice in two days.**
+- **FOUND BY THE PLANNER WHILE BRIEFING, so a stream did not have to:** the photo proxy's non-webp path
+  ends `.jpeg({ quality: 82 })` (`src/lib/mirror-read.ts:152`), **and JPEG has no alpha channel** — so a
+  transparent logo IS flattened on that path. It was handed to `shelter-logo-proof` **as evidence to test
+  rather than as a conclusion**, with a warning that the item's guess of a *white* box is probably wrong
+  (sharp's default flatten is black) and that **two serving paths exist**, so measuring one proves
+  nothing about the other.
 
-**It also answered a setting that cannot be read back.** `SUPABASE_SERVICE_ROLE_KEY` for `uat` was
-unprovable; a **plain** deploy fixed sign-in, so it is set, and **no `--secrets` deploy is needed for it**.
+## STILL OWED — ONE ITEM, AND IT IS THE SAME ONE
 
-**`#uatsb`'s registry half shipped as #1777** — `SUPABASE_URL` is now declared in
-`scripts/lib/runtime-config.mjs` and the host check derives from it. **It merged AFTER `0.47.8`'s cut, so
-it is not in that release.** The item's title was rewritten to name only what remains.
+**`768`'s list is otherwise closed by #1792.** What remains:
 
-**Open and not planned:** `#drvtk`, `#tstsh` (the inert `test123` shelter on production; **asked once,
-never answered, do not re-ask unprompted**), `#stpbk`, `#aucbk`, `#pacon` (his own direction, briefed from
-his words), `#egq18` (needs a deploy, so not a worktree job — still the one real gap against his ranked
-list) and `#34a30`. **`#shsup` is partly shipped**: #1770 and #1779 built the enquiry schema and form.
-**42 open items on `main`.**
-
-## STILL OWED — the skill-file edits, now a SIXTH edition
-
-**Nothing in `.claude/skills/plan-day/` has been touched since 2026-11-19, so all of `767`'s list stands
-unchanged.** Carried forward rather than reworded, because rewording it five times is how it became
-invisible:
-
-- **DONE (plan-day-skill-edits):** floor row narrowed to ~87.2–91.6k, no cause offered.
-- **STRUCK, PHANTOM:** "two bottoms nearer 135k" and "the +10k for looking" never existed in the skill files. `grep -n "135k|for looking" .claude/skills/plan-day/*.md` is empty and `git log -S` finds neither across history. Nothing to drop or to give a verdict.
-- **STILL OPEN, conditional:** lowering "Reads very widely and edits many call sites" toward the audit row. The only reading found (`silent-empty-reads`, 133,986, older floor and dials) is not enough; needs readings at current dials.
-- **DONE:** specification discount written in as measured (two held, one unrelated overrun).
-- **DONE:** step 7 counts only planned streams (Lutan, 2026-11-20).
+- **STILL OPEN, conditional:** lowering *"Reads very widely and edits many call sites"* (185-250k) toward
+  the audit row. **Still only one reading** (`silent-empty-reads`, 133,986, older floor and dials), which
+  is not enough. **Needs readings at current dials.** `#pvws4` is not one — it is a schema row.
+- **CONFIRMED STRUCK, AND `768` HAD IT RIGHT:** the *"two bottoms nearer 135k"* and *"the +10k for
+  looking"* edits never existed in the skill files. **The planner re-proved this with `git log -S` before
+  reading `768`'s own entry**, which is wasted work and worth avoiding: **read the predecessor's owed list
+  before re-deriving its contents.**
 
 ## PROCESS NOTES
 
-- **The hard sequence was kept at both setups:** sync, `new` per stream, briefs, `streams`, then the list.
-  **Nothing was cleared and no PR body was read before the list went out.**
-- **The briefs were ASSEMBLED BY SCRIPT**, from `brief-blocks.md`'s nine fenced blocks, with guards that
-  throw if a block is missing, if a middle lacks `STEP ZERO`, if `.port` disagrees with the band header, or
-  **if any of the eight verbatim blocks is not byte-identical in the output.** That last guard is the
-  Backlog manager's byte-identical principle from `767`, applied to the planner's own output. **Keep it.**
-- **He had to ask twice for the links.** *"Where are the links to the streams"* — a folder path is not a
-  link. **Give `[slug](#local_…)` from `list_sessions` the moment he says a session is open**, and say
-  plainly at setup that there is no session yet because the planner does not start them.
-- **Transient `git fetch` failures hit `worktree.mjs done` twice** and cleared on a plain retry. **One of
-  them left a merged branch alive on `origin`** after its folder and local branch were gone: check
-  `git ls-remote origin refs/heads/claude/<slug>` after a failed `done`, and confirm the commit is an
-  ancestor of `origin/main` before deleting it.
-- **Meshnet dropped mid-day and came back on its own.** Two SSH attempts timed out **while the Pi was
-  serving happily**. **Do not diagnose the Pi from a failed ssh; check what it is serving first.**
-- **Every usage comment was read BEFORE its worktree was cleared**, as the 2026-11-17 decision requires.
-  Eight for eight; none had to be recovered from a transcript.
+- **The hard sequence was kept at both of today's setups.** Sync, `new` per stream, briefs, `streams`,
+  then the list. **Nothing was cleared and no PR body was read before the list went out** — the usage
+  comments and PR bodies were read in (e), after.
+- **THE BRIEF HEADER MUST BE THE LITERAL FIRST LINE, and this cost a fix this morning.**
+  `worktree.mjs streams` matches `/^<!--\s*stream:/` **on line 1 only** (`scripts/worktree.mjs:637`) and
+  otherwise reports *"no metadata line"* for every brief. The assembler now lifts the header out of the
+  middle and prepends it to the whole document, with a guard that throws if the output does not start
+  with it. **Keep that guard.**
+- **The briefs are still ASSEMBLED BY SCRIPT** from `brief-blocks.md`'s nine fenced blocks, with the
+  byte-identical guard on all eight verbatim blocks. **Five briefs written today, no block drift.**
+- **A plain recursive `grep -rl` over this repo TIMED OUT at 120 seconds.** The Grep tool (ripgrep)
+  answered the same question immediately. **Do not run a recursive shell grep here.**
+- **The backlog pre-commit hook refuses a commit message that does not name the changed item ids.** Write
+  `Backlog: file #swout — …`, not `Backlog: file a finding`.
+- **A push was rejected mid-sync yesterday** (*"cannot lock ref refs/heads/main"*) because a PR merged
+  between the pull and the hook's push. **`git fetch` + `git pull` and carry on — it is a race, not a
+  broken hook.**
+- **Every usage comment was read BEFORE any worktree was cleared**, as the 2026-11-17 decision requires.
+  **Eleven for eleven; none had to be recovered from a transcript.**
 
 ## INTERRUPTIONS
 
-**NONE WERE DEFECTS, AND THAT IS THE CHANGE FROM `767`.** His four messages that redirected work were
-**his own decisions being taken**: batch 1 plus the Drive scope, two release-email answers, and the
-production go-ahead. **Three touches against a target of two, and the extra one was the cut/batch race's
-fault, not his.**
+**ZERO DEFECTS, AND ONE CORRECTION THAT WAS HIS TO MAKE.** His messages today were his own decisions
+being taken — batch 1 plus the release timing in one answer, and *"Yes, write 769"*.
 
-**He asked for progress twice** (*"how are we tracking"*, *"where are the links"*), and the second was a
-planner failure to hand over what step (d) requires.
+**The one exception is instructive and is the planner's fault, not his:** he had to correct the stream
+count **twice in one turn**, first on the arithmetic (*"no it hasn't been 9 streams yet"*) and then on the
+rule (*"anything outside of your plan does not count"*). **Both corrections were cheap for him and both
+were avoidable by reading the usage comments' session starts before believing a branch list.**
