@@ -209,7 +209,6 @@ const worker = {
     await reportStage(env, "report-photo-retention", await runReportPhotoRetention(env, ctx, controller), stages);
     // Machine-drafted translations (worker/translations.mjs) share the trigger.
     // After the alerts so they can never delay one; runTranslations does not throw.
-    // writer-outside-db: no-archived-skip — NOT ESTABLISHED: it calls a translation engine for every shelter's drafts and never reads archived_at; recorded so the check passes, to be judged (#swout)
     await runTranslations(env);
     // Labels: signs in as the machine login if one is configured, else does nothing.
     // Its outcome is recorded (0408) so a failure shows on System status and in the alert mail, not just in this log.
