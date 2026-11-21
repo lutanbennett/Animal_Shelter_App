@@ -30,3 +30,17 @@ test("callback allow-list: a glob entry admits, a query-bearing or other-host en
   assert.deepEqual(missingCallbacks(["a.org"], "https://b.org/**,https://a.org/other"), ["a.org"]);
   assert.deepEqual(missingCallbacks(["a.org"], ""), ["a.org"]);
 });
+
+import { choosePrimaries } from "./lib/deployed-hosts.mjs";
+test("choosePrimaries picks PUBLIC_HOST only, never a tie-break, never a shelter already flagged", () => {
+  const rows = [
+    { shelter_id: "a", key: "lanna", host: "cooperjaidee.org", is_primary: false },
+    { shelter_id: "a", key: "lanna", host: "www.lannacareforanimals.org", is_primary: false },
+    { shelter_id: "a", key: "lanna", host: "lannacareforanimals.org", is_primary: false },
+    { shelter_id: "b", key: "x", host: "x.example", is_primary: true },
+    { shelter_id: "c", key: "y", host: "y.example", is_primary: false },
+  ];
+  const r = choosePrimaries(rows, "lannacareforanimals.org");
+  assert.deepEqual(r.set, [{ shelter_id: "a", key: "lanna", host: "lannacareforanimals.org" }]);
+  assert.deepEqual(r.undecided.map((u) => u.key), ["y"]);
+});

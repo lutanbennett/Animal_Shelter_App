@@ -42,6 +42,20 @@ await runMain(async () => {
     return 1;
   }
   const registered = (text ? JSON.parse(text) : []).map((r) => r.host);
+  // #9l7xf: a live shelter with addresses and none flagged primary is left out of my_shelters(), so the chooser lists nothing for it.
+  const pr = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${env.SUPABASE_ACCESS_TOKEN}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ query: "select s.key from public.shelters s where s.archived_at is null and exists (select 1 from public.shelter_hosts h where h.shelter_id = s.id) and not exists (select 1 from public.shelter_hosts h where h.shelter_id = s.id and h.is_primary)" }),
+    signal: AbortSignal.timeout(30_000),
+  });
+  const prText = await pr.text();
+  if (!pr.ok) { console.error(`FAIL: could not read primary hosts (HTTP ${pr.status}): ${prText.slice(0, 200)}`); return 1; }
+  const noPrimary = (prText ? JSON.parse(prText) : []).map((r) => r.key);
+  if (noPrimary.length) {
+    console.error(`FAIL: shelter(s) with addresses but no primary one in ${name}: ${noPrimary.join(", ")}. The chooser omits them. Run: node scripts/set-primary-hosts.mjs --env ${name}`);
+    return 1;
+  }
   const missing = missingHosts(deployed, registered);
   for (const h of deployed) console.log(`  ${missing.includes(h) ? "MISSING" : "ok     "} ${h}`);
   if (missing.length) {

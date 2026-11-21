@@ -37,3 +37,29 @@ export function missingCallbacks(addresses, allowList) {
   const entries = String(allowList ?? "").split(",").map((e) => e.trim()).filter(Boolean).map(globToRegExp);
   return addresses.filter((h) => !entries.some((re) => re.test(`https://${h}/auth/callback`)));
 }
+
+/**
+ * Which host to flag is_primary for each shelter that has addresses and no primary one (#9l7xf).
+ * `rows` = [{shelter_id, key, host, is_primary}] (one per shelter_hosts row of a shelter with a shelter_id).
+ * The ONLY evidence the table cannot give, and the deployment can, is the website address: `publicHost`
+ * (wrangler.jsonc PUBLIC_HOST). Created_at cannot decide it (production's rows tie to the microsecond), and a
+ * www. form must never be chosen. So: a shelter is set only when `publicHost` is one of its own hosts;
+ * every other shelter lacking a primary is returned in `undecided`, untouched, for a person to choose.
+ */
+export function choosePrimaries(rows, publicHost) {
+  const want = clean(publicHost);
+  const byShelter = new Map();
+  for (const r of rows) {
+    const s = byShelter.get(r.shelter_id) ?? { key: r.key, hosts: [], primary: false };
+    s.hosts.push(clean(r.host));
+    if (r.is_primary) s.primary = true;
+    byShelter.set(r.shelter_id, s);
+  }
+  const set = [], undecided = [];
+  for (const [shelter_id, s] of byShelter) {
+    if (s.primary) continue;
+    if (want && s.hosts.includes(want)) set.push({ shelter_id, key: s.key, host: want });
+    else undecided.push({ shelter_id, key: s.key, hosts: s.hosts });
+  }
+  return { set, undecided };
+}
