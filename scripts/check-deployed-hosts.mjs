@@ -10,7 +10,7 @@
 // and `site_url`; every address needs an /auth/callback entry there, or Supabase silently sends that sign-in to site_url.
 // Changes no setting. Different from scripts/check-site-hosts.mjs, which asserts a host is pinned into the BUILD, not that it has a ROW.
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
-import { readWranglerConfig } from "./lib/wrangler.mjs";
+import { readWranglerConfig, routeHosts } from "./lib/wrangler.mjs";
 import { addressesAnsweredOn, missingHosts, missingCallbacks } from "./lib/deployed-hosts.mjs";
 import { runMain } from "./lib/exit.mjs";
 
@@ -18,7 +18,7 @@ await runMain(async () => {
   const { name } = parseEnvArg(process.argv.slice(2));
   const wranglerEnv = name === "test" ? "test" : name;
   const vars = readWranglerConfig().env?.[wranglerEnv]?.vars ?? {};
-  const deployed = addressesAnsweredOn(vars);
+  const deployed = addressesAnsweredOn(vars, routeHosts(readWranglerConfig(), wranglerEnv));
   const env = loadEnv(name);
   const ref = projectRef(env);
   console.log(`check-deployed-hosts: ${name} (project ${ref})`);
