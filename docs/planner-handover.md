@@ -180,6 +180,63 @@ catches a **new view nobody re-owns** at the commit, where the nightly lint catc
   hand-back. **The window is open now and the timing is still his.**
 - **The Lanna logo upload waits for the release.** His timing, his hands.
 
+## HIS PRIORITIES HAVE CLOSED NONE IN TWENTY-ODD STREAMS, AND HE ASKED WHY — THE ANSWER IS A PLANNING FAULT
+
+**He put it directly on 2026-11-21:** *"we have done over 20 streams now and have not closed out any of the
+priorities, what is needed to start closing out some of these priorities"*. **He is right, and the cause is
+the planner's, not the backlog's: NOT ONE of his eight can be closed by a worktree**, so every plan carried
+them forward with a reason attached instead of moving them. **A stream cannot deploy, cannot reach his home
+network, cannot read Cloudflare and cannot talk to the Director.** The planner optimised for what briefs
+cleanly.
+
+**AND ONE OF THE EIGHT WAS MIS-FILED AS HIS FOR A DAY. CORRECT THIS FIRST.** **`#aaqtl` IS A STREAM'S JOB
+AND HAS BEEN SINCE 2026-11-20.** Every plan, and the first draft of this handover, said *"his three
+production steps"* and *"none of the eight is a stream"*. **Both are wrong.** The item's own title says so:
+*"THE THIRD IS NOT LUTAN'S AT ALL AND CANNOT BE DONE BY HAND — IT NEEDS A SMALL CODE CHANGE FIRST, AND THIS
+ITEM AND ITS DECISION FILE ARE BOTH WRONG ABOUT THAT."* Two of three steps are done (the role and the
+machine login exist on production, verified). **What is left is small and buildable:** register
+`LABEL_DRAFT_EMAIL`, `LABEL_DRAFT_PASSWORD` and `SUPABASE_ANON_KEY` as worker-side entries with
+`required: false` in `scripts/lib/runtime-config.mjs`, and add the two `LABEL_DRAFT_*` values to
+`.env.deploy.production`. **`LABEL_DRAFT_EMAIL` must be a SECRET, not a `wrangler.jsonc` var — this repo is
+public and a var would publish the machine login's address.** Only then is the deploy his. **The cause of
+the mis-filing was reading a stale summary instead of the item, which is the same fault as the swapped ids
+above.**
+
+**WHAT THE OTHER SEVEN ACTUALLY NEED, read from each item on 2026-11-21 rather than carried forward:**
+
+- **`#egq18` IS THE ONE THAT UNBLOCKS THE MOST AND IT IS THE PLANNER'S.** One number: each public page's
+  CPU rendered in a Worker with `ORIGIN_HOST` empty, against the free plan's 10 ms. **It releases `#34a30`,
+  and those two complete `#ykefa`'s thirteen parts — three of the eight hinge on it.** The deploy half is
+  the planner's (`scripts/deploy.mjs --env test`); **the Observability read is not, because no Cloudflare
+  credential is visible to this session** (checked: no `CLOUDFLARE_API_TOKEN` or `CF_*` in the
+  environment). **So it is his dashboard, or driving his Chrome where he is signed in. Say that rather than
+  promising the whole job.** Offered 2026-11-20 and not taken up; **he has now asked, so the no-re-offer
+  rule no longer applies.**
+- **`#34a30`** waits on `#egq18` and **must not be started before it**. If the pages do not fit it needs
+  Workers Paid, **which breaks the zero-ongoing-cost rule and is his decision, not a build.**
+- **`#ykefa`** is the index and the design record. Parts 1-11 are closed; it closes when 12 and 13 do, plus
+  its go-live step, which is his.
+- **`#pirow`** is half done. The Pi exercise needs the home network (**he is back 29 November**), and
+  `node scripts/check-scheduled-writers.mjs --env production` **was attempted from here on 2026-11-21 and
+  REFUSED by the auto-mode classifier** — it needs a bare exact-match allow rule in his user settings, the
+  same shape he declined for `remove-shelter.mjs`. **State it; do not press it.**
+- **`#3qmzt` CANNOT BE CLOSED BY WORK AND SAYS SO ITSELF:** *"there is nothing left to read, so clause (a)
+  is unanswerable for ever on those two"*, *"a standing watch, not a job"*, *"do not brief this as a stream
+  until mechanism A happens again"*. **It can only leave the list by his decision to retire it.**
+- **`#chpap`** — wording agreed 2026-11-20, nothing left for Claude; **the Director puts the line on the
+  form.**
+- **`#gcnst`** — decided 2026-11-20 that **the rename is NOT the fix and should not be done.** It is an
+  answered question sitting on a priority list.
+
+**SO THREE OF THE EIGHT ARE NOT WORK AT ALL** (`#gcnst`, `#chpap`, `#3qmzt`) **and will sit at the top of
+his ranking for ever unless they come off it.** The list is his, so **do not edit the artifact** — put it to
+him once and let him decide.
+
+**THE LESSON FOR A SUCCESSOR, AND IT IS NOT "PLAN HARDER":** when an item needs a deploy, a network, a
+person or a decision, **the planner's own hands are the critical path, and a day spent briefing streams
+around it is a day his list does not move.** Read the eight at every plan and ask *who* each one is waiting
+for — not whether it would make a good stream.
+
 ## STILL OWED — ONE ITEM, AND IT IS THE SAME ONE `769` LEFT
 
 - **STILL OPEN, conditional:** lowering *"Reads very widely and edits many call sites"* (185-250k) toward
