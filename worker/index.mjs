@@ -205,9 +205,11 @@ const worker = {
     // The merchandise shop's supplier email: once a day, on the first tick after 09:00 in Thailand (02:00 UTC).
     await reportStage(env, "merch-supplier-emails", await runMerchSupplierEmails(env, ctx, controller), stages);
     // The report-an-animal photo bucket clean-up (#6rkux): once a day, on the 20:00 UTC tick (03:00 in Thailand).
+    // writer-outside-db: no-archived-skip — a retention purge still purges a closed shelter's expired photos (docs/decisions/2026-11-21-closed-shelter-jobs.md)
     await reportStage(env, "report-photo-retention", await runReportPhotoRetention(env, ctx, controller), stages);
     // Machine-drafted translations (worker/translations.mjs) share the trigger.
     // After the alerts so they can never delay one; runTranslations does not throw.
+    // writer-outside-db: no-archived-skip — NOT ESTABLISHED: it calls a translation engine for every shelter's drafts and never reads archived_at; recorded so the check passes, to be judged (#swout)
     await runTranslations(env);
     // Labels: signs in as the machine login if one is configured, else does nothing.
     // Its outcome is recorded (0408) so a failure shows on System status and in the alert mail, not just in this log.

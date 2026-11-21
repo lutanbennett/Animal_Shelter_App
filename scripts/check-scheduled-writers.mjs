@@ -11,6 +11,8 @@
 // One SELECT (cron.job, pg_proc and information_schema together) and nothing else: no writes, no DDL, no --apply path.
 // It judges function BODIES by pattern, which is evidence but not proof: anything it cannot decide is printed under its own
 // heading, never folded into "ok". It cannot see the Pi, production, or a writer that is not in the database.
+// The jobs the Worker dispatches (worker/index.mjs scheduled()) are NOT cron.job rows: node scripts/check-scheduled-jobs.mjs reads
+// them from source, no database, and goes red on a job that acts outside the database and ignores archived_at (#swout).
 // Exit 0 always for a reading; exit 1 only when the query itself fails, or with --strict when a writer sends no shelter.
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 import { exitWith } from "./lib/exit.mjs";
