@@ -9,6 +9,7 @@ import { cookies } from "next/headers";
 import { NEXT_COOKIE, callbackUrl, nextCookieOptions } from "@/lib/auth/next-cookie";
 import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
 import { getPublicSiteState } from "@/lib/public-site-request";
+import { CHOOSER_PATH, isChooserPath } from "@/lib/auth/chooser-path";
 import { safeNextPath } from "@/lib/auth/next-path";
 import { ADOPTER_PATH, loadAdopterScope } from "@/lib/adopter/scope";
 import { getT } from "@/lib/i18n/get-t";
@@ -46,6 +47,8 @@ export async function login(
   // locked site it would still get past the lock.
   const role = await loadSessionRole(supabase);
   if (!role?.entersApp && (await loadAdopterScope(supabase))) redirect(ADOPTER_PATH);
+  // The shelter chooser (#apxld) is the one place a login with no role here may go: it holds roles at shelters, not at this host.
+  if (!role && isChooserPath(safeNextPath(formData.get("next") as string)) && !(await actingShelterId())) redirect(CHOOSER_PATH);
   if (!role) {
     await supabase.auth.signOut();
     const { t } = await getT();
