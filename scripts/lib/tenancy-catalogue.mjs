@@ -31,6 +31,10 @@ export const ALLOWED = {
     reason:
       "reads auth.users, which a re-owned role is refused (42501), so it stays owned by postgres, as login_display_name does. Gated by is_product_admin() and aal2 (docs/decisions/2026-11-19-product-admin-state-schema.md).",
   },
+  "function:public.product_admin_permit_first_login": {
+    reason:
+      "reads auth.users, which a re-owned role is refused (42501), so it stays owned by postgres, as login_display_name does (0425 line 67, precedents 0417 and 0370). Re-owning it would break first login (docs/decisions/2026-11-21-tenancy-catalogue-flags.md).",
+  },
   "function:public.login_display_name": {
     reason:
       "reads auth.users (RLS on, no policy; postgres cannot add one), so a re-owned role reads 0 rows. Stays owned by postgres; " +

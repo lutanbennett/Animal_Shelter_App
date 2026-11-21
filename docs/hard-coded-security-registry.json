@@ -1010,6 +1010,11 @@
         "reason": "Policy for the rls_definer role only, the convention 0375 set for every RLS table (docs/decisions/2026-11-14-tenancy-reown.md). rls_definer is a NOLOGIN owner role for definer functions, not a login, so it grants no person anything; no card could apply to it. No login holds any grant on this table."
       },
       {
+        "migration": "0434_tenancy_catalogue_flags.sql",
+        "item": "policy public.product_admin_login_grants.definer_all",
+        "reason": "Policy for the rls_definer role only, the convention 0375 set for every RLS table (docs/decisions/2026-11-14-tenancy-reown.md, docs/decisions/2026-11-21-tenancy-catalogue-flags.md), copied from 0375. rls_definer is a NOLOGIN owner role for definer functions, not a login, so it grants no person anything; no card could apply to it. 0425 enabled RLS on this table with no policy, so views over it read 0 rows."
+      },
+      {
         "migration": "0409_shelter_calendar_credentials.sql",
         "item": "policy public.shelter_calendar_credentials.definer_all",
         "reason": "Policy for the rls_definer role only, the convention 0375 set for every RLS table (docs/decisions/2026-11-14-tenancy-reown.md), copied from 0404. rls_definer is a NOLOGIN owner role for definer functions, not a login, so it grants no person anything; no card could apply to it. No login holds any grant on this table."
