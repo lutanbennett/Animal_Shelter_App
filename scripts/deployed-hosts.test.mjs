@@ -44,3 +44,20 @@ test("choosePrimaries picks PUBLIC_HOST only, never a tie-break, never a shelter
   assert.deepEqual(r.set, [{ shelter_id: "a", key: "lanna", host: "lannacareforanimals.org" }]);
   assert.deepEqual(r.undecided.map((u) => u.key), ["y"]);
 });
+
+test("#wwwcb: an invented www. form that is not routed is not an address; a routed one still is", () => {
+  const v = { APP_HOST: "uat.org", PUBLIC_HOST: "uat.org" };
+  assert.deepEqual(addressesAnsweredOn(v, ["uat.org"]), ["uat.org"]);
+  const prod = { APP_HOST: "a.org", PLATFORM_HOST: "p.org" };
+  assert.deepEqual(addressesAnsweredOn(prod, ["a.org", "www.a.org", "p.org", "www.p.org"]), ["a.org", "www.a.org", "p.org", "www.p.org"]);
+});
+
+test("#wwwcb: a routed www. form with no row or no callback still fails", () => {
+  const a = addressesAnsweredOn({ APP_HOST: "a.org" }, ["a.org", "www.a.org"]);
+  assert.deepEqual(missingHosts(a, ["a.org"]), ["www.a.org"]);
+  assert.deepEqual(missingCallbacks(a, "https://a.org/auth/callback"), ["www.a.org"]);
+});
+
+test("#wwwcb: a literally configured host is kept even if no route names it", () => {
+  assert.deepEqual(addressesAnsweredOn({ APP_HOST: "a.org" }, ["other.org"]), ["a.org"]);
+});
