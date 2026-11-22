@@ -1636,6 +1636,32 @@ const en = {
         failed: "Vet-visit calendar is not working: visits are not reaching the calendar until it is reconnected.",
         calendarLabel: "Calendar",
       },
+      googleConnect: {
+        title: "Connect your Google account",
+        intro:
+          "Photos and vet-visit dates are kept in your shelter's own Google account. You sign in to Google and say yes; nothing is copied or pasted. The app can only see files and events it makes itself.",
+        driveTitle: "Photo storage (Google Drive)",
+        calendarTitle: "Vet-visit calendar (Google Calendar)",
+        connect: "Connect",
+        reconnect: "Connect again",
+        notSetUp: "Connecting is not switched on for this system yet. Ask the person who looks after the system.",
+        done: {
+          drive: "Google Drive is connected. A folder for your shelter was made in that Drive.",
+          calendar: "Google Calendar is connected. Vet visits will appear in that calendar.",
+        },
+        problems: {
+          state: "That sign-in did not match the button that was pressed, so nothing was saved. Please press Connect again.",
+          cancelled: "Google was not allowed in, so nothing was saved.",
+          scopes: "Not every box was ticked on Google's screen, so nothing was saved. Press Connect again and leave every box ticked.",
+          no_refresh_token: "Google did not give lasting permission, so nothing was saved. Press Connect again and choose Allow.",
+          google: "Google refused or did not answer, so nothing was saved. Try again in a minute.",
+          not_set_up: "Connecting is not switched on for this system yet. Ask the person who looks after the system.",
+          no_key: "This system cannot store the connection safely yet, so nothing was saved. Ask the person who looks after the system.",
+          store: "The connection worked but could not be saved, so nothing was changed. Try again.",
+          fallback_calendar: "That calendar already belongs to another shelter, so nothing was saved. Use a different Google account.",
+          calendar_taken: "That calendar is already in use by another shelter, so nothing was saved. Use a different Google account.",
+        },
+      },
       subtitle:
         "System configuration: the public website, the places residents live, and the type lists the rest of the app picks from.",
       tiles: {

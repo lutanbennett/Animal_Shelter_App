@@ -449,6 +449,11 @@
       "file": "src/lib/google/shelter-drive-tokens.ts",
       "for": "The 15-minute alert run checks each shelter's own Google token, records ok/dead on its shelter_drive_credentials row and mails that shelter's admins once when it dies and once when it recovers.",
       "guard": "Called only from POST /api/status/alerts, which is bearer-authenticated with the service-role key. Mails only the shelter's own admins, writes only status columns of that table, returns no secret. Grants no access to anyone."
+    },
+    {
+      "file": "src/lib/google/shelter-google-connect.ts",
+      "for": "Stores the shelter being served's own Google Drive or Calendar credentials (shelter_drive_credentials 0404, shelter_calendar_credentials 0409; no login holds a grant on either) after an Admin completes Google's consent, and writes that shelter's Drive folder id.",
+      "guard": "Called only from GET /admin/google/callback, which requires perms.isAdmin (the Admin bypass, outside the card system) and a state matching its own cookie. Acts only on actingShelterId(); never takes a shelter id from the caller; proves the token against Google before storing; secrets are encrypted with DRIVE_CREDENTIALS_KEY before they are written; returns no secret. Grants no access to anyone."
     }
   ],
   "serviceRoleHelpers": [],
@@ -663,6 +668,14 @@
     {
       "name": "DRIVE_CREDENTIALS_KEY",
       "gates": "The key that decrypts each shelter's stored Google credentials (shelter_drive_credentials, 0404). Chooses which Google account the server acts as; not a role or card rule."
+    },
+    {
+      "name": "GOOGLE_CONNECT_CLIENT_ID",
+      "gates": "Which Google Web client the Settings Connect buttons send an Admin to (#drvcl). Whether the buttons are offered at all, never who may press them: that is Admin alone, decided by perms.isAdmin. Not a role or card rule."
+    },
+    {
+      "name": "GOOGLE_CONNECT_CLIENT_SECRET",
+      "gates": "The secret half of the same Web client, used on the server to swap a consent code for a token (#drvcl). Not a role or card rule."
     },
     {
       "name": "PUBLIC_SITE",
