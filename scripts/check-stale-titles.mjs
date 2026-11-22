@@ -32,6 +32,24 @@ open.forEach((l, i) => {
     console.log(`line ${i + 1}: ${title.slice(0, 110)}`);
   }
 });
+// Second listing (#tg5vh): items in the "built, proof owed" middle state. Lists
+// only; it never asserts an item is done, because that error costs more.
+const MARKED = [];
+const UNMARKED = [];
+open.forEach((l, i) => {
+  if (!l.startsWith("- [ ]")) return;
+  const title = (l.match(/\*\*(.+?)\*\*/) ?? [, l.slice(6, 120)])[1];
+  if (/^PROOF OWED:/.test(title)) MARKED.push(`line ${i + 1}: ${title.slice(0, 110)}`);
+  else if (/ONLY A HUMAN PRESS REMAINS|PRESS REMAINS|ONLY A PRESS/i.test(l))
+    UNMARKED.push(`line ${i + 1}: ${title.slice(0, 110)}`);
+});
+console.log(`
+PROOF OWED (built, a person's proof left): ${MARKED.length}`);
+MARKED.forEach((m) => console.log("  " + m));
+if (UNMARKED.length) {
+  console.log(`Body says a press remains but the title is not marked (read it; add the prefix if the code is right): ${UNMARKED.length}`);
+  UNMARKED.forEach((m) => console.log("  " + m));
+}
 console.log(
   hits
     ? `\n${hits} possibly stale title(s). Read each: if the answer is in the body, rewrite the title (CLAUDE.md, "Answering a decision").`
