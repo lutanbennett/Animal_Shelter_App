@@ -1,8 +1,14 @@
 import type { MetadataRoute } from "next";
 import { isPlatformSearchOpen } from "./public-site";
+import { PRODUCT_PAGES_EN, PRODUCT_PAGES_TH, productAlternates } from "./platform-features";
 
-/** The product pages a search engine may index: English and its Thai twin (#cjseo). Nothing else on the platform host. */
-export const PLATFORM_INDEXABLE = ["/platform/about", "/th/platform/about"];
+/**
+ * The product pages a search engine may index (#cjseo, widened by #psubp): the home page and each feature page, English and its
+ * Thai twin. #cjseo first settled "the product page is the only page under /platform"; that is now "only the product pages".
+ * The rule it protects is unchanged: no console, no shelter listing and no sign-in page is ever indexable. The list is built
+ * from src/lib/platform-features.ts, so a new product page is added in one place.
+ */
+export const PLATFORM_INDEXABLE = [...PRODUCT_PAGES_EN, ...PRODUCT_PAGES_TH];
 
 /** robots.txt for the platform host. Closed (the default) forbids everything; open allows only the product page. */
 export function platformRobots(origin: URL | null, open = isPlatformSearchOpen()): MetadataRoute.Robots {
@@ -13,10 +19,14 @@ export function platformRobots(origin: URL | null, open = isPlatformSearchOpen()
   };
 }
 
-/** The platform host's sitemap: the product page in both languages and nothing from any shelter table. Empty while closed. */
+/** The platform host's sitemap: every product page in both languages and nothing from any shelter table. Empty while closed. */
 export function platformSitemap(origin: URL | null, open = isPlatformSearchOpen()): MetadataRoute.Sitemap {
   if (!open || !origin) return [];
   const abs = (p: string) => new URL(p, origin).toString();
-  const alternates = { languages: { en: abs("/platform/about"), th: abs("/th/platform/about"), "x-default": abs("/platform/about") } };
-  return PLATFORM_INDEXABLE.map((p) => ({ url: abs(p), changeFrequency: "monthly" as const, priority: 1, alternates }));
+  return PLATFORM_INDEXABLE.map((p) => {
+    // Each page gets ITS OWN language links, not the home page's.
+    const en = p.startsWith("/th/") ? p.slice(3) : p;
+    const alt = productAlternates(en);
+    return { url: abs(p), changeFrequency: "monthly" as const, priority: en === "/platform/about" ? 1 : 0.8, alternates: { languages: { en: abs(alt.en), th: abs(alt.th), "x-default": abs(alt.en) } } };
+  });
 }

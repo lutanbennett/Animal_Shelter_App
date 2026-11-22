@@ -31,6 +31,7 @@
  * locked environments too. Exact path only. It is not an isPublicPage()
  * page, so the Worker never edge-caches it.
  */
+
 export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/sitemap.xml", "/lca-logo.jpg", "/lca-logo-160.jpg", "/lca-logo.png", "/lca-logo-transparent.png", "/api/version", "/platform/enquire", "/platform/about"];
 
 /**
@@ -64,6 +65,7 @@ export const EDGE_CACHED_PAGE_PREFIXES = PUBLIC_PAGE_PREFIXES.filter((p) => !NOT
 export const PUBLIC_PATH_PREFIXES = [
   "/api/photos/",
   "/api/videos/",
+  "/platform/features/", // the product site's feature pages (#psubp); /platform/about is an exact entry above
   ...PUBLIC_PAGE_PREFIXES.map((p) => (PER_ITEM_PAGE_PREFIXES.includes(p) ? `${p}/` : p)),
 ];
 
@@ -80,7 +82,7 @@ export const PUBLIC_PATH_PREFIXES = [
  */
 export const LOCKED_PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/sitemap.xml", "/lca-logo.jpg", "/lca-logo-160.jpg", "/lca-logo.png", "/lca-logo-transparent.png", "/api/version", "/platform/enquire", "/platform/about"];
 
-export const LOCKED_PUBLIC_PATH_PREFIXES = ["/privacy"];
+export const LOCKED_PUBLIC_PATH_PREFIXES = ["/privacy", "/platform/features/"];
 
 /**
  * Whether `pathname` is under `prefix` at a segment boundary: "/adopt" and
@@ -137,7 +139,7 @@ export function thPathRest(pathname: string): string | null {
   if (pathname !== "/th" && !pathname.startsWith("/th/")) return null;
   const rest = pathname.slice(3) || "/";
   // The product page's Thai twin (#cjseo): not a shelter public page, but it has a Thai address for search engines.
-  if (rest === "/platform/about") return rest;
+  if (rest === "/platform/about" || rest.startsWith("/platform/features/")) return rest;
   return isPublicPage(rest) ? rest : null;
 }
 
