@@ -64,8 +64,8 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { readFileSync } from "node:fs";
 import { SITE_ORIGINS, envFile, loadEnv, loadLayers, parseEnvArg, projectRef } from "./lib/env.mjs";
-import { ALLOW_FLAG, fallthroughRefusal, localOnly, sourcesFor } from "./lib/secret-sources.mjs";
-import { WORKER_BUILD_VARS, WORKER_OPTIONAL_SECRETS, WORKER_REQUIRED_SECRETS } from "./lib/runtime-config.mjs";
+import { ALLOW_FLAG, fallthroughRefusal, localOnly, planLines, sourcesFor } from "./lib/secret-sources.mjs";
+import { DELIBERATE_DEV_FALLTHROUGH, WORKER_BUILD_VARS, WORKER_NOT_PUSHED, WORKER_OPTIONAL_SECRETS, WORKER_REQUIRED_SECRETS } from "./lib/runtime-config.mjs";
 import { appliedMigrations } from "./lib/deploy-schema.mjs";
 import { releaseProblems, schemaVerdict } from "./lib/release-guards.mjs";
 import { strayEnvFiles } from "./lib/env-leak.mjs";
@@ -245,7 +245,7 @@ let secretNames = [];
 if (pushSecrets) {
   secretNames = [...RUNTIME_SECRETS, ...OPTIONAL_SECRETS.filter((k) => env[k])];
   const sources = sourcesFor(secretNames, loadLayers(envName), envFile(envName));
-  console.log("deploy: secrets to push (name <- source):\n" + sources.map((s) => `  ${s.name} <- ${s.source}`).join("\n"));
+  console.log(`deploy: --secrets plan for ${envName} (every registry name, pushed or skipped, and why):\n` + planLines({ sources, required: RUNTIME_SECRETS, notPushed: WORKER_NOT_PUSHED, unsetOptional: OPTIONAL_SECRETS.filter((k) => !env[k]), deliberate: DELIBERATE_DEV_FALLTHROUGH, overlayName: envFile(envName) }).join("\n"));
   // UAT has its own database: a Supabase secret that exists only in .env.local is dev's, and no flag
   // may push it to UAT (the Drive set may still fall through until #rqv5c).
   const devDb = envName === "uat" ? localOnly(sources).filter((n) => /SUPABASE/.test(n)) : [];
@@ -254,7 +254,7 @@ if (pushSecrets) {
     bail(2);
   }
   const refusal = GUARDED
-    ? fallthroughRefusal({ envName, sources, overlayName: envFile(envName), allowed: rest.includes(ALLOW_FLAG) })
+    ? fallthroughRefusal({ envName, sources, overlayName: envFile(envName), allowed: rest.includes(ALLOW_FLAG), deliberate: DELIBERATE_DEV_FALLTHROUGH })
     : null;
   if (refusal) {
     console.error(`deploy: ${refusal}`);

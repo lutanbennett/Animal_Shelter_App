@@ -141,6 +141,10 @@ confused with folders `done` handled. Count app-cut worktrees with `git worktree
 - **Any other `HELD`** (`HELD by node.exe (pid …)`, bare `HELD`) or `?`: a
   terminal, editor or process `list` cannot place. Never propose it. Name
   it, with what `list` printed, so the user can look.
+- **`reserved`:** a `.brief.md` is in the folder and no session is in it. A stream was planned here and
+  its session has not opened yet (`#wtres`). It also reads `nothing beyond main`, so it looks like a
+  leftover and is not one. Treat it as `free` only if `gh pr list --head claude/<slug> --state all`
+  shows a `MERGED` PR; with no PR, or an open one, never propose it, name it and say it is reserved.
 - **`nothing beyond main` and `free`:** a candidate. Check its PR:
 
   ```
