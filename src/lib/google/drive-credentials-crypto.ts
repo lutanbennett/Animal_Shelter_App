@@ -6,9 +6,14 @@
  * Format: "v1:<iv>:<ciphertext+tag>", both base64. A fresh random 12-byte iv per value.
  */
 
+/** "ours": our configuration or key, which a shelter can do nothing about. "theirs": the shelter's own stored connection, which reconnecting fixes. Unset reads as ours: when we cannot tell, we do not alarm anyone. */
+export type DriveCredentialsFault = "ours" | "theirs";
+
 export class DriveCredentialsError extends Error {
-  constructor(message: string) {
+  readonly fault: DriveCredentialsFault;
+  constructor(message: string, fault: DriveCredentialsFault = "ours") {
     super(message);
+    this.fault = fault;
     this.name = "DriveCredentialsError";
   }
 }
@@ -44,7 +49,7 @@ export async function encryptSecret(plain: string, keyB64: string | undefined = 
 export async function decryptSecret(stored: string, keyB64: string | undefined = process.env.DRIVE_CREDENTIALS_KEY): Promise<string> {
   const key = await importKey(keyB64);
   const [v, iv, ct] = stored.split(":");
-  if (v !== "v1" || !iv || !ct) throw new DriveCredentialsError("A stored Google credential is not in the expected format.");
+  if (v !== "v1" || !iv || !ct) throw new DriveCredentialsError("A stored Google credential is not in the expected format.", "theirs");
   try {
     const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) as BufferSource }, key, unb64(ct) as BufferSource);
     return new TextDecoder().decode(plain);

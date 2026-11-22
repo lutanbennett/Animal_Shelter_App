@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { redactSecrets } from "@/lib/status/run";
 import { send, type Skipped } from "@/lib/status/alerts";
-import { DriveCredentialsError } from "./drive-credentials-crypto";
+import { classifyCredentialError, deadAlertBody } from "./shelter-drive-alert";
 import { credentialsFromRow, type DriveCredentialRow } from "./shelter-drive-credentials";
 
 /**
@@ -25,8 +25,10 @@ async function probe(row: DriveCredentialRow): Promise<{ status: "ok" | "dead" |
   try {
     creds = await credentialsFromRow(row);
   } catch (err) {
-    // An incomplete row or an undecryptable value cannot work, whatever Google thinks.
-    return { status: "dead", error: err instanceof DriveCredentialsError ? err.message : String(err) };
+    // Ours (key missing or wrong) is "unknown": nothing stamped, nobody mailed. Theirs (their stored connection is bad) is "dead".
+    const v = classifyCredentialError(err);
+    if (v.status === "unknown") console.error(`drive-tokens: shelter ${row.shelter_id}: cannot read its credentials, not alerting: ${redactSecrets(v.error)}`);
+    return v;
   }
   try {
     const res = await fetch(TOKEN_URL, {
@@ -84,7 +86,7 @@ export async function checkShelterDriveTokens(origin: string): Promise<ShelterTo
     const settingsUrl = `${origin}/admin`;
     if (result.status === "dead" && !row.dead_alerted_at) {
       const to = await adminEmailsOf(row.shelter_id).catch(() => []);
-      const body = `${name}'s Google Drive connection has stopped working, so photo and file uploads will fail until it is reconnected.\n\nGoogle said: ${r.error}\n\nSettings: ${settingsUrl}\nYou get this once when it goes wrong, and once when it works again.`;
+      const body = deadAlertBody(name, settingsUrl);
       const sent = to.length ? await send({ subject: `${name}: Google Drive is disconnected`, text: body, html: `<p>${body.replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br>")}</p>` }, to, origin) : { sent: [], skipped: [], note: null };
       r.mailed = sent.sent;
       r.skipped = sent.skipped;
