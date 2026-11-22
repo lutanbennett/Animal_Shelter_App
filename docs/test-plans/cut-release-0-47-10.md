@@ -72,7 +72,16 @@ Defects and in *Left for manual verification* below**, and is carried into the r
 - [x] `node scripts/gates.mjs` ends with four gates each at exit code `0` — **all four numbers read, not three**
 
 ```
-GATESBLOCK
+=== gates: typecheck — npm run typecheck
+=== gates: typecheck exited 0 after 69s
+=== gates: lint — npm run lint
+=== gates: lint exited 0 after 178s
+=== gates: test — npm test
+=== gates: test exited 0 after 49s
+=== gates: build — npm run build
+=== gates: build exited 0 after 152s
+
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [x] `node scripts/check-release-guards.mjs` — exit **0**
