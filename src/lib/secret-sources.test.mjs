@@ -20,7 +20,7 @@ test("localOnly lists only names that fell through to the dev file", () => {
 });
 
 test("a push with a secret missing from the production file is refused, naming it", () => {
-  const msg = fallthroughRefusal({ envName: "production", sources, overlayName: FILE, allowed: false });
+  const msg = fallthroughRefusal({ envName: "production", sources, overlayName: FILE, allowed: false, deliberate: ["GOOGLE_OAUTH_CLIENT_ID"] });
   assert.match(msg, /GOOGLE_DRIVE_ROOT_FOLDER_ID/);
   assert.match(msg, /GOOGLE_OAUTH_CLIENT_ID/);
   assert.doesNotMatch(msg, /SUPABASE_SERVICE_ROLE_KEY/);
