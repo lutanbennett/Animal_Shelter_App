@@ -121,3 +121,14 @@ test("scheduled-writers says so plainly for a job with no row, and fails only wh
   const skipped = { ...base, writers: [{ job: "label-drafts", last_outcome: "skipped", last_detail: "x", last_ran_at: now, last_ok_at: null, fail_runs: 0 }] };
   assert.ok(!CHECKS["scheduled-writers"].failed(skipped), "skipped is a legitimate outcome");
 });
+
+test("canary-planted-triggers fails only on a trigger on a planted table that reaches out, and its SQL keeps its word-boundary escapes", () => {
+  const c = CHECKS["canary-planted-triggers"];
+  const quiet = { triggers: [{ table: "residents", name: "t", enabled: "O", calls: "public.f", reaches_out: false, via: "" }], extensions: [], event_triggers: 6, outbound_functions: [] };
+  assert.equal(c.failed(quiet), false);
+  assert.equal(c.failed({ ...quiet, triggers: [{ ...quiet.triggers[0], reaches_out: true, via: "g" }] }), true);
+  assert.ok(c.render({ ...quiet, triggers: [{ ...quiet.triggers[0], reaches_out: true, via: "g" }] }).some((l) => /REACHES OUT via g/.test(l)));
+  // The two escapes that were lost once in an edit (a bare m and M then match nothing): in the SQL text they must be a backslash then m / M.
+  assert.ok(c.sql.includes(String.fromCharCode(92) + "mnotify" + String.fromCharCode(92) + "M"));
+  assert.ok(c.sql.includes("net" + String.fromCharCode(92) + ".http"));
+});
