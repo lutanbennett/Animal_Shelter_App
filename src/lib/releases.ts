@@ -70,6 +70,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "The Shelter logo card on Admin → Website now accepts a logo up to 1 MB (it was 15 MB). A logo only shows about 64 pixels wide, and every visitor to your public website downloads it, so a big file just slows the pages. A larger file is refused with a message saying so, in English and Thai.",
+    cards: ["website_photos"],
+  },
 ];
 
 /** Newest first. */

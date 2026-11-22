@@ -19,6 +19,17 @@
 export const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 
 /**
+ * A shelter logo is served to every visitor of every public page as the
+ * ORIGINAL file (a width would make Drive flatten transparency onto black,
+ * docs/decisions/2026-11-21-logo-served-as-original.md), into a slot 52-64 px
+ * wide. 1 MB is about 50x a 256 px logo (19 KB) and far above anything the
+ * slot can show. Refused, not resized: sharp is not an app dependency and
+ * does not run on the Worker. A NEW constant: MAX_UPLOAD_BYTES stays 15 MB
+ * for every other upload.
+ */
+export const MAX_LOGO_BYTES = 1024 * 1024;
+
+/**
  * Request-body allowance for the framework limits: the file plus the
  * boundaries, part headers and the action's other fields. Next's docs
  * suggest 10–20 KB of overhead; a full megabyte leaves no doubt.
