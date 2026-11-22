@@ -1,260 +1,161 @@
-# Feature test plan: shelter-drive-connect
+# Feature test plan
 
 ## Header
 
 | | |
 |---|---|
-| Feature | A script that connects a shelter to its own Google account (writes the credentials row and the folder id) |
-| Backlog item | `docs/backlog.md` → #cn7gk (left open, with a progress note) |
+| Feature | A shelter Admin connects its own Google Drive and Calendar from Settings (build; first real consent is Lutan's) |
+| Backlog item | `docs/backlog.md` → `#drvcl` (left open: the consent round trip is unproven without the connect client's secret) |
 | Branch / worktree | `claude/shelter-drive-connect` @ `C:\Development\Animal_Shelter_shelter-drive-connect` |
-| Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3003` (not needed: no screen) |
-| PR | see the PR |
-| Tested by / date | Claude, 2026-11-18 |
-| Carries a migration? | no |
-| Tested at SHA | bbbf1b4f7 |
+| Dev server | `http://localhost:3001` |
+| PR | opened with this plan |
+| Tested by / date | Claude, 2026-11-22 |
+| Carries a migration? | no (Admin-only with no card; writes go through a registered service-role file) |
+| Tested at SHA | b09e56526 |
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what the backlog item asked for
-- [x] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs)
-- [ ] Cards affected identified (the cards whose behaviour changes; who holds them today is labelled context only), plus whether admin and the … — n/a: no card, page or button changes; a script and two pure decision functions; admin and the public unaffected
-- [x] Anything explicitly **out of scope** written down, so the release manager is not surprised
+- [x] Change is described in one sentence, and it matches what the backlog item asked for: two Connect buttons on Settings, start and callback routes, an encrypted write through the existing connect libraries
+- [x] Files/areas touched: `src/app/admin/google/{start,callback}/route.ts`, `src/app/admin/GoogleConnect.tsx`, `src/app/admin/page.tsx`, `src/lib/google/shelter-google-connect*.ts`, both dictionaries, `scripts/lib/runtime-config.mjs`, `.env.example`, `eslint.config.mjs`, `docs/hard-coded-security-registry.json`
+- [x] Cards affected: none (Admin only through `perms.isAdmin`, decision file explains why no card); signed-out public unaffected
+- [x] Out of scope: the real Google consent, the product-admin console, `docs/google-cloud-inventory.md`, any Google console change
 
 ## 2. Automated gates
 
-Run in the feature worktree, after `node scripts/worktree.mjs sync`, with
-`node scripts/gates.mjs`. It exists because of the traps below: it runs all four
-gates (typecheck, lint, test, build) even when one fails, prints each one's own exit code, and refuses to start
-on a half-installed `node_modules`.
-
-**Tick these on the exit code, not on output that looks plausible.** Two ways a
-gate reads green without having run: `npm run build | tail` reports the exit
-status of `tail`, not of the build; and in a worktree where `npm ci` has not
-finished linking `node_modules/.bin`, every script fails with "'next' is not
-recognized" — which scrolls past as noise. Check each command's own status, and
-wait for `worktree.mjs new` to exit before trusting the tree. A gate ticked
-because nothing looked wrong is worse than one left unticked, because it is
-indistinguishable from one that passed.
-
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [x] `node scripts/gates.mjs` ends with `gates: typecheck=0 lint=0 test=0 build=0`; the run is pasted below, unedited
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (already up to date)
+- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`, all zero. Closing lines as printed:
 
 ```
-=== gates: typecheck — npm run typecheck
-=== gates: typecheck exited 0 after 13s
-=== gates: lint — npm run lint
-=== gates: lint exited 0 after 216s
-=== gates: test — npm test
-=== gates: test exited 0 after 65s
-=== gates: build — npm run build
-=== gates: build exited 0 after 116s
+=== gates: typecheck exited 0 after 50s
+=== gates: lint exited 0 after 220s
+=== gates: test exited 0 after 54s
+=== gates: build exited 0 after 207s
+
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same four gates, among its other checks). **This one cannot be true in the commit that creates the PR**, so write … — n/a: not yet — the PR does not exist at this commit
+- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
 
-Per `CLAUDE.md`, schema lands as its own PR before the feature.
-
-- [ ] Migration number is one above the highest on `main`, and no other in-flight branch carries one — n/a: no migration: the table and RPC already exist (0404 to 0406)
+- [ ] Migration number is one above the highest on `main`, and no other in-flight branch carries one — n/a: no migration
 - [ ] `node scripts/apply-migrations.mjs --status` reviewed before applying — n/a: no migration
 - [ ] `node scripts/apply-migrations.mjs --dry-run` reviewed — n/a: no migration
-- [ ] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` — n/a: no migration
-- [ ] File is re-runnable (`if not exists` / `or replace` / `drop … if exists`) — n/a: no migration
-- [ ] Existing rows still read correctly after the change (checked against real dev data) — n/a: no migration
-- [ ] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness — the `do $$ … $$` block CLAUDE.md describes under … — n/a: no migration; the script's one statement was run against dev rows instead, see section 4
+- [ ] Applied to **dev** and recorded in `schema_migrations` — n/a: no migration
+- [ ] File is re-runnable — n/a: no migration
+- [ ] Existing rows still read correctly after the change — n/a: no migration
+- [ ] Constraints and defaults exercised against real rows — n/a: no migration
 - [ ] Down-migration written, or the reason one is not needed is stated — n/a: no migration
-- [ ] Production apply plan stated for the release manager (which file, which project, when) — n/a: no migration
+- [ ] Production apply plan stated for the release manager — n/a: no migration
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — n/a: the Google half is untested against a real account; the database half ran on dev: row written with ciphertext, folder id set, decrypts, mistyped key writes nothing. The part that needs a person is pending in the list below
-- [x] Data persists — reload the page and the change is still there
-- [ ] Create / edit / delete all exercised (whichever the feature has) — n/a: create and re-run (replace) exercised in unit logic and on dev; no delete path
-- [ ] Empty state renders sensibly (no rows yet) — n/a: no UI surface
-- [x] Invalid input is rejected with a readable message, not a crash
-- [x] Boundary cases checked (long text, zero, negative, missing optional fields, dates)
+- [ ] Happy path works end to end — pending: needs the connect client's secret, which Lutan holds; the consent, code exchange, folder creation and writes are unproven
+- [ ] Data persists — reload the page and the change is still there — pending: nothing is written until a real consent completes
+- [ ] Create / edit / delete all exercised — n/a: the screen only connects; there is no edit or delete
+- [x] Empty state renders sensibly: with no connect client set, Admin sees the section with "not switched on yet" and no buttons (driven with playwright, dev)
+- [x] Invalid input is rejected with a readable message: a callback with a bad state redirects to `/admin?google=state` and the page shows the "did not match" sentence; `?google=drive-scopes` shows the unticked-box sentence
+- [x] Boundary cases checked: state cookie missing, short or mismatched; unknown kind; missing or partial scopes (unit tests, 4 passing)
 
 ### Role access matrix
 
-Sign in as each login that matters and record what they see. Unauthorised access
-must be refused by the server, not merely hidden in the UI — hit the URL
-directly rather than checking whether the nav entry is hidden. That distinction
-is what found the cashflow money bug: the page redirected correctly, and the RPC
-behind it did not.
+| Login (card(s) held) | Can reach | Expected | Result |
+|---|---|---|---|
+| admin | `/admin`, `/admin/google/start?kind=drive` | section shown; with a client set, 2 buttons and a 307 to accounts.google.com with the narrow scope, offline, consent, state; with none set, 307 to `?google=drive-not_set_up` | as expected |
+| exactly `view_residents` | `/admin`, `/admin/google/start` | no Settings access (sent to `/no-access`); start route 307s to `/admin` | as expected |
+| signed out | n/a | the proxy sends signed-out requests to sign-in | not driven; the routes also call `loadPermissions` and refuse without Admin |
 
-Analyse by CARD, not by role (`CLAUDE.md`, *All analysis is by CARD, never by role*): roles are
-a transient grouping of cards and get rebuilt, so a row naming one stops being true. Test a
-login holding exactly the card under test (`node scripts/dev-signin.mjs --cards <card> --port <yours>`,
-card keys, not activity names), plus admin (outside the card system) and signed out. Where a page
-needs two cards together, put both on one row. Do not name `staff` (retired, `0173`) or `resident`
-(not a role: a resident is an animal). Read card keys from `/admin/who-does-what`.
-
-| (none) | no screen and no page changed | n/a | n/a |
-
-- [ ] Every login above tested — n/a: no screen; nothing a login can reach changed
-- [ ] A login that should not have access is blocked server-side (hitting the URL directly fails) — n/a: no screen; the table has no grant for any login (0404) and the script runs with the Supabase management token
+- [x] Every login above tested (signed out: see its row)
+- [x] A login that should not have access is blocked server-side: the start route was called directly as the cards-only login and redirected away
 
 ## 5. Cross-cutting
 
-- [ ] Nav entry correct (`src/app/NavLinks.tsx`) — appears for the right cards, no dead links — n/a: no UI surface
-- [ ] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual` — n/a: no UI surface; an operator script
-- [ ] Translatable strings go through the translation path, checked at `/management/translations` — n/a: no UI strings
-- [ ] Mobile viewport (375px) — no overflow, controls reachable — n/a: no UI surface
-- [ ] Browser console clean — no errors or React warnings — n/a: no screen, so no browser check (brief deliverable 11)
-- [ ] Network clean — no unexpected 4xx/5xx on the feature's pages — n/a: no screen
+- [ ] Nav entry correct — n/a: no nav entry; the buttons sit on the existing Settings page
+- [ ] Manual updated — n/a: pending the first working consent; the topic should describe a flow that has run once
+- [x] Translatable strings go through the dictionaries: `admin.landing.googleConnect` in both `en.ts` and `th.ts` (the type forces both)
+- [ ] Mobile viewport (375px) — pending: not looked at; plain stacked links, no fixed widths
+- [x] Browser console clean — no errors during the driven runs (the dev log showed none)
+- [ ] Network clean — n/a: the only external call is Google's consent redirect, which was not followed
 
 ## 6. Regression
 
-- [ ] The pages nearest the change still work (list the ones checked) — n/a: no page changed; Drive callers go through the same two functions, whose behaviour the new tests pin
-- [ ] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — **by loading that page, not by … — n/a: shelter-settings.ts and shelter-drive-credentials.ts only delegate to the new pure module; typecheck and build pass and the decisions are unit-tested
-- [x] Nothing merged from `main` during `sync` was broken by this branch
+- [x] The pages nearest the change still work: `/admin` loads for Admin with both status lines and the tiles beside the new section
+- [x] Shared files touched (`en.ts`, `th.ts`, `page.tsx`, `runtime-config.mjs`) checked by loading `/admin` and by `check-runtime-config` ("39 names, agree") and `check-hard-coded-security` ("no coded security outside the Admin bypass")
+- [x] Nothing merged from `main` during `sync` was broken (nothing was merged)
 
 ## 7. Documentation
 
-- [ ] Backlog item ticked in `docs/backlog.md` **on this branch** (follow-ups go on the `backlog` branch instead) — n/a: deliberately left open: its done-when needs two real Google accounts; a progress note was added to #cn7gk instead
-- [x] Non-obvious design choices added as a new file in `docs/decisions/` (`<date>-<slug>.md`)
-- [ ] `README.md` still accurate — n/a: README does not describe this script
-- [ ] **Release notes.** Would a shelter user notice this change? If so, `unreleased` in `src/lib/releases.ts` has a line for it, **in this PR**, … — n/a: a shelter cannot connect yet: the two-account proof and the calendar follow-up are outstanding, so a note would promise something that does not work; it belongs to the PR that closes #cn7gk
+- [ ] Backlog item ticked in `docs/backlog.md` — n/a: left open on purpose, the consent round trip is not yet proved
+- [x] Non-obvious design choices recorded in `docs/decisions/2026-11-22-shelter-google-connect-screen.md` (the card answer and the three questions)
+- [x] `README.md` still accurate (it does not describe Settings' Google lines)
+- [ ] **Release notes.** n/a: the connect flow cannot be completed until Lutan's first consent with the connect client's secret; the note ships in the PR that closes that step
 - [x] Commit messages say why, not just what
-- [x] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned.** No gate reads prose: `typecheck`, `lint`, `build` and this checklist all pass with a confidently wrong explanation in the commit that ships the fix, and the wrong explanation is what the next person inherits. Worth real attention on timezone, concurrency and floating-point work, where intuition is unusually unreliable and a plausible story is easy to tell
+- [x] Claims in commit messages and the decision file were measured: the redirect, the gating and the messages were driven; the untried parts are listed as unproven
 
 ## 8. Pre-production gate
 
-Owned jointly with the release manager. **The three hosts, as they stand since
-2026-11-08:**
-
-| Host | What it is | Database |
-|---|---|---|
-| `lannacareforanimals.org` | **production** | `dbkodyyxxhtygxcxmfcu` |
-| `test.lannacare.org` | **test** | the **dev** project, `qxkmhwybjggxvsfxsxbd` |
-| `uat.lannacare.org` | **UAT**, the customer's acceptance-test site | its own project, `fsjagxmxjosauwmxwype`, on a second Supabase account |
-
-**`lannacare.org` is now a 301 to production and is a check of nothing.** It was
-production until 2026-11-05 and UAT from then until 2026-11-08, so a plan written
-from this template before today may name it as either, and both readings were
-correct when written. **UAT is deployed on every release since 2026-11-08**
-(`docs/release-procedure.md`, step 6), last of the three.
-
 ### Tested build
 
-- [ ] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — deferred: release manager, at deploy time
-- [ ] Deployed SHA matches the tested SHA — `deploy.mjs` prints both the target project and the short SHA; read that line, do not assume it — deferred: release manager, at deploy time
+- [ ] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — deferred: release manager
+- [ ] Deployed SHA matches the tested SHA — deferred: release manager
 
 ### On the deployed build
 
-- [ ] Deployed to test: `npm run deploy:test` — deferred: release manager, at deploy time
-- [ ] Smoke-tested on `test.lannacare.org` — the happy path works on the deployed Workers build, not just `next dev` — deferred: release manager, at deploy time
-- [ ] **Timezone-sensitive behaviour proved, not observed at a convenient hour.** Workers run in UTC wherever they are, so anything deriving "today" … — n/a: no date logic
-  - *Does the logic handle the boundary?* Where the code lets an instant be injected, assert it rather than waiting for the clock: run the **real exported** function against fixed instants — both sides of 17:00Z, the 00:00 and 06:59 Thai ends of the broken window, month-end, year-end, a leap day — and then the same suite under `TZ=UTC`, which is the Workers case. Deterministic, and it does not depend on what hour you happened to be testing. Prefer this where it is available, and never re-type the logic into the test; a copy proves only that the copy works
-  - *Does the deployed build behave as the source does?* A different claim, and only `test.lannacare.org` answers it — during 00:00–07:00 Thai, when the two dates differ. If you cannot be there at that hour, put it in **Left for manual verification** rather than ticking it
-- [ ] **For a boundary or banding change, the assertions cover both edges of the band and both sides of the boundary — not only the case the bug … — n/a: no boundary or banding change
-- [x] **Evidence pasted into this plan is the tool's actual output, unedited.** A hand-maintained table of results is prose about a measurement rather than the measurement, and it drifts from the run without anyone noticing — which is precisely what the evidence was there to prevent. Regenerate it; do not tidy it
-- [ ] Public pages (`/`, `/adopt`, `/our-work`, `/donate`) re-checked after a cache purge or a 10-minute wait — anonymous GETs are edge-cached per … — n/a: no public page touched
+- [ ] Deployed to test: `npm run deploy:test` — deferred: release manager
+- [ ] Smoke-tested on `test.lannacare.org` — deferred: release manager
+- [ ] Timezone-sensitive behaviour proved — n/a: nothing here derives a date
+- [ ] Boundary or banding change covers both edges — n/a: no threshold or band
+- [x] Evidence pasted into this plan is the tool's actual output, unedited (the gates block)
+- [ ] Public pages re-checked after a cache purge — n/a: no public page changed
 
 ### Deploy safety
 
-- [ ] `deploy: production → Supabase project <ref>` line read and the ref **matches production**. `scripts/lib/env.mjs` resolves shell over … — deferred: release manager, at deploy time
-- [ ] `strip-baked-env: removed N env var(s) from the Worker bundle` seen in the deploy output — without it the bundle still carries a snapshot of … — deferred: release manager, at deploy time
-- [ ] Any new secret/env var exists in the production Cloudflare environment — deferred: release manager, at deploy time
+- [ ] `deploy: production → Supabase project <ref>` line read — deferred: release manager
+- [ ] `strip-baked-env` line seen — deferred: release manager
+- [ ] Any new secret/env var exists in the production Cloudflare environment — deferred: release manager; `GOOGLE_CONNECT_CLIENT_ID` and `GOOGLE_CONNECT_CLIENT_SECRET` are registered, and Lutan holds the secret; unset, the screen says it is not switched on
 
 ### Migration ordering — *skip if no migration*
 
-- [ ] **Does this PR contain both a migration and code that reads it?** If yes, the production apply must happen *before* the deploy, and that … — n/a: no migration
-- [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — it executes the real DDL inside `begin…rollback` against … — n/a: no migration
-- [ ] For a **destructive or rewriting** migration only: a production backup exists and is fresh. (Additive nullable columns do not need this gate. … — n/a: no migration
-- [ ] Apply plan stated: which file, which project, and whether it runs before or after the deploy — n/a: no migration
+- [ ] Migration and code ordering — n/a: no migration
+- [ ] `--env production --dry-run` — n/a: no migration
+- [ ] Production backup for a destructive migration — n/a: no migration
+- [ ] Apply plan stated — n/a: no migration
 
 ### Rollback
 
-- [ ] Rollback position stated, **including what it does not cover**. Production is served by the Pi, so the rollback is `./scripts/pi/deploy-pi.sh … — deferred: release manager, at deploy time
+- [ ] Rollback position stated — deferred: release manager; the change is additive code with no schema, so a rebuild at the previous SHA reverts it, and nothing is stored until a consent completes
 
 ## Defects found
 
-| 1 | note | The part 9 decision says dev already holds `DRIVE_CREDENTIALS_KEY`; it did not (`.env.local` had none). A dev value was added to this worktree's `.env.local`; other worktrees have none | reported in the PR |
+| # | Severity | What | Status (fixed / accepted / deferred to backlog) |
+|---|---|---|---|
+| | | | |
 
 ## Left for manual verification
 
-Anything above that Claude could not honestly verify, listed here so it is a
-short, concrete handover rather than a vague "please check it". Empty is a valid
-answer when the change has no surface a person needs to look at.
-
-**Do not repeat a section 8 deploy-time check here.** Applying a migration,
-reading the deploy output, smoke-testing the deployed build and running
-`--drift production` all have their own state in section 8 — `deferred: <owner>` —
-which passes the checker and names who picks it up. Listing them again in this
-table gives them a second home that nothing ever closes: the check gets done at
-deploy time, section 8 is satisfied, and this row stays open for good. Five
-release-cut plans accumulated permanently-open rows exactly that way before it
-was noticed (2026-09-27).
-
-The test for whether something belongs here: **would a person have to go and look
-at it, separately from deploying?** A doctor's view of a page, a real phone, whether
-wording reads well — yes. Anything the deploy itself performs — no, that is
-section 8's.
-
-| 1 | Two shelters upload to two different real Google accounts and neither reads the other's folder | pending: two real Google accounts; a guided step with Lutan |
+| # | What to check | Where |
+|---|---|---|
+| 1 | Lutan's first real consent: press Connect on Drive and on Calendar once, with the connect client's secret set, and read the result on Settings. This also proves the 19 registered redirect URIs include the one used | dev Settings |
 
 ## Sign-off
 
-Two signatures, because they certify different things and neither covers the
-other. A sign-off line that does not correspond to someone having actually
-looked is worse than no sign-off, because it turns an unknown into a false
-assurance.
-
 ### Automated and scripted checks
-
-Gates, scripts, server-side behaviour, and any browser check that was actually
-driven rather than assumed. Signed by whoever ran them — Claude may sign this.
 
 - [x] Everything in this checklist that could be verified without human eyes was run, not assumed
 - [x] Nothing is ticked that was not actually executed
 
-Automated checks by: Claude  Date: 2026-11-18
+Automated checks by: Claude  Date: 2026-11-22
 
 ### Manual verification
 
-<!-- guidance:start -->
-The items in **Left for manual verification** above. Signed by the person who
-looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
-Three valid states:
+- [ ] The manual list above is empty, or every item in it was checked by a person — pending: Lutan's first consent
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
-- `n/a: <reason>` — there was nothing to look at.
-- `pending: <what is outstanding>` — the work is done and something genuinely
-  needs a person who has not got to it yet. **This does not fail the check**
-  (changed 2026-09-24): it is the normal state for most of a PR's life, and a
-  check that is permanently red is one people learn to filter. The checker prints
-  *awaiting manual verification: <what>* and exits 0, so the outstanding item is
-  on the record without drowning the signal. What still fails is a plan that is
-  missing, incomplete or self-contradictory. Use `pending:` rather than reaching
-  for `n/a` — green is no longer something you have to buy, and an `n/a` over a
-  real outstanding item is a false assurance about the one thing you could not
-  verify. **Nothing ships on a `pending:`** — the release manager's pre-deploy
-  pass is what holds that line, not CI.
-
-`n/a:` and `pending:` take **no `Date:` segment** — there is no date to record, so
-write the line and stop. A trailing `Date: —` is accepted too, since existing
-plans use it. A bare *name* with no date is still rejected, which is what stops an
-empty signature quietly passing.
-<!-- guidance:end -->
-
-A red `test-plan` that says what it is waiting for is a red people act on. An
-illegible one is a red people learn to ignore.
-
-- [ ] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** … — n/a: not empty: one item is pending, so the signature below stays pending
-
-Manual verification by: pending: two real Google accounts; a guided step with Lutan
+Manual verification by: pending: Lutan's first real Google consent
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [x] Checklist pasted into the PR
-- [ ] Handed to the production release manager — pending: release manager reads it before deploy
+- [ ] Checklist pasted into the PR — n/a: it is committed with the PR
+- [ ] Handed to the production release manager — pending: after merge
 
 Result: pass
-
-Release manager acknowledgement: pending: release manager, at deploy time

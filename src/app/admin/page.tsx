@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { Activity, CalendarClock, Grid3x3, History } from "lucide-react";
 import { DriveStatus } from "./DriveStatus";
 import { CalendarStatus } from "./CalendarStatus";
+import { GoogleConnect } from "./GoogleConnect";
 import { canOpen, routeFor } from "@/lib/permissions/routes";
 import { WHO_DOES_WHAT_PATH, opensWhoDoesWhat } from "@/lib/permissions/who-does-what";
 import { requireAnyPageIn } from "@/lib/permissions/require";
@@ -27,7 +28,8 @@ import {
  * rather than an activity. The page opens for whoever can open one of them,
  * which today is Admin alone.
  */
-export default async function AdminPage() {
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ google?: string }> }) {
+  const { google } = await searchParams;
   const { perms } = await requireAnyPageIn("settings");
   const { t } = await getT();
   const allTiles: SectionTile[] = [
@@ -163,6 +165,10 @@ export default async function AdminPage() {
           <CalendarStatus />
         </Suspense>
       )}
+
+      <Suspense fallback={null}>
+        <GoogleConnect canConnect={perms?.isAdmin === true} result={google} />
+      </Suspense>
 
       <SectionTiles tiles={tiles} />
     </main>
