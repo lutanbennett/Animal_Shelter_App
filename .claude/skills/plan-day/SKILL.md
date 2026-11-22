@@ -255,7 +255,7 @@ unranked. Per candidate:
   whether the behaviour the item describes can still happen, not whether the code it names still exists.
 - **After every batch, re-read the TITLE of every item a stream touched, alone**, and ask whether it
   still says what is open. A stale title is worse than an open one, because nobody re-reads a ticked
-  item. This has caught six.
+  item. Run `node scripts/check-stale-titles.mjs`: it lists `PROOF OWED:` items (built; a person's proof left, so neither buildable nor done) and stale titles. It lists, never decides.
 - **A count, a conclusion or a prior pass has a CLOCK on it.** Ask which database a count came from, what
   method counted it, and what had been read when a conclusion was written. *"Nothing to build"* and
   *"X is ruled out"* are findings with a date, not facts — and ruling out one mechanism is not ruling out
