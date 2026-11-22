@@ -63,6 +63,8 @@ const ENV_KEEP = new Set([
   "DEV_SHELTER_ID",
   // the running server: Drive uploads (src/lib/google/drive.ts) and the form key built into next build
   "GOOGLE_DRIVE_ROOT_FOLDER_ID", "GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_OAUTH_REFRESH_TOKEN",
+  // the shelter Drive connect flow (/admin/google/start): one Google client serves every environment (#rqv5c)
+  "GOOGLE_CONNECT_CLIENT_ID", "GOOGLE_CONNECT_CLIENT_SECRET",
   "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY",
   // src/lib/clinics/calendar-sync.ts runs in the dev server; not established that no worktree path reaches it
   "GOOGLE_CALENDAR_ID", "GOOGLE_CALENDAR_REFRESH_TOKEN",
