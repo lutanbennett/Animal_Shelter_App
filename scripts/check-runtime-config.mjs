@@ -37,7 +37,7 @@ for (const c of CLASSIFICATION) for (const t of ["worker", "pi"]) if (!ROLES.inc
 const wrangler = readFileSync("wrangler.jsonc", "utf8");
 const known = new Set([...names, ...WORKER_DEFAULTED_KNOBS]);
 for (const f of readdirSync("worker").filter((f) => f.endsWith(".mjs") && !f.endsWith(".test.mjs"))) {
-  const reads = new Set([...readFileSync(`worker/${f}`, "utf8").matchAll(/env.([A-Z][A-Z0-9_]{3,})/g)].map((m) => m[1]));
+  const reads = new Set([...readFileSync(`worker/${f}`, "utf8").matchAll(/\benv\.([A-Z][A-Z0-9_]{3,})/g)].map((m) => m[1]));
   for (const n of reads) if (!known.has(n) && !wrangler.includes(`"${n}"`)) problems.push(`worker/${f} reads env.${n}, which is in no list: add it to scripts/lib/runtime-config.mjs (or wrangler.jsonc vars)`);
 }
 for (const n of WORKER_DEFAULTED_KNOBS) if (names.includes(n)) problems.push(`${n} is in the manifest, so drop it from WORKER_DEFAULTED_KNOBS`);
