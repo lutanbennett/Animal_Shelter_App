@@ -10,16 +10,18 @@ Production is `lannacareforanimals.org`, now on **`0.47.10`** — **a release th
 `cooperjaidee.org` and `uat.lannacare.org` are fully on it too, and **all four Pi apps report one SHA,
 `7a1aae4ea`**. Both endpoints were read on all four hosts and `/icon-192.png` answers 200 on each.
 
-**ONE EXCEPTION, AND IT IS THE RELEASE'S HEADLINE: `test.lannacare.org`'s WORKER IS STILL `0.47.9`.**
-Its Pi app is `0.47.10`, so test's **pages** are the release and only the fallback is behind. The cause is
-named below; it is not an oversight, and nothing will fix it without one new value.
+**`test.lannacare.org` IS ON IT TOO — BUT ONLY AT THE THIRD ATTEMPT, AND THAT IS THIS RELEASE'S HEADLINE.**
+Its Worker sat on `0.47.9` for about an hour while its Pi app served `0.47.10`, because the test deploy's
+authentication had expired. Closing it took **a browser login from Lutan: the third touch on a release
+whose target is two.** The cause is below, and `#tstok` is what stops it recurring.
 
 **Production and UAT both hold every migration on `main`: 435 applied, 0 pending, `No drift` both ways.**
 Dev still has its one extra `schema_migrations` row for the renumbered `0422_keep_an_admin_per_shelter.sql`
 — known since `0.47.6`, 0 missing, **not drift**.
 
-**`0.47.10` cost Lutan two touches: one answer and one command. That is target** — and a **third is owed**,
-below, which is the one thing to settle before the next release.
+**`0.47.10` cost Lutan three touches: one answer, one command, one browser login.** Two is target. The
+third was **not avoidable on the day** and is `#tstok`'s to remove — the one thing to settle before the
+next release.
 
 **Re-measure before trusting any of this.**
 
@@ -56,19 +58,20 @@ because *"test's deploys are Claude's and a retry costs nobody's attention."* **
 login still exists to refresh.** Once it has expired outright there is no retry, and the release manager
 is left reporting a Worker a release behind. **That is the finding, not the missing token.**
 
-- **Two answers, and they are not the same size. (1) Now, no secret on disk and no code:**
-  `npx.cmd wrangler login` once restores the path that decision intends, and
-  `node scripts/deploy.mjs --env test` then works. It will expire again. **(2) Durable:** teach
-  `envFile()` to read a gitignored `.env.deploy.test` and put a token there. Both are in `#tstok`.
+- **Two answers, and (1) WAS TAKEN THE SAME DAY AND WORKED.** `npx.cmd wrangler login` once restores the
+  path that decision intends; `node scripts/deploy.mjs --env test` then deployed cleanly (Version ID
+  `8edc3ef1…`) and test answers `0.47.10` on both endpoints. **It will expire again**, which leaves
+  **(2), the durable one:** teach `envFile()` to read a gitignored `.env.deploy.test`. That is all `#tstok`
+  has left. **Worth copying from the run:** read `wrangler whoami` *before* starting a ten-minute build.
 - **Before choosing (2), know the permission limit:** `Workers Scripts → Edit` is **account-level** and
   cannot be narrowed to one Worker, so a test token can deploy production too. That is why the 2026-11-16
   decision says one token for all three rather than three, and why a further copy on disk is a real cost.
 - **Borrowing production's or UAT's token was considered and deliberately not done.** It would have
   worked. It would also have put a production credential to work in another environment with nothing
   recording it, which is the quiet kind of fault.
-- **`--skip-build` was the right call for the retry, and it is worth knowing why:** the leftover
-  `.open-next` was the build that had just failed to upload, from that same run, pointing at the dev
-  project. The runbook's caution is about reusing a bundle belonging to *another* environment.
+- **`--skip-build` was right for the second attempt and wrong for the third**, which is the whole of that
+  flag's rule: on the retry the leftover `.open-next` was that run's own test build; by the third, UAT had
+  built over it, so reusing it would have pointed test at UAT's database.
 
 ## WHAT `0.47.9` LEFT OPEN AND THIS RELEASE CLOSED — STOP CARRYING EITHER
 
@@ -93,24 +96,23 @@ run bare with the exit code read from the command, not through a pipe. The cause
 
 ## Traps that cost nothing this time but will
 
-- **An SSH call that starts a detached Pi build can still outlive the tool's 120-second timeout**, even with
-  `setsid nohup … &` and a short `sleep`. It happened on the first of the three and returned normally for
-  the other two. **Nothing was lost and the build completed** — the check is the log on the Pi, not the SSH
-  call's exit. Read it as a quirk of this machine, not a hung Pi.
+- **An SSH call that starts a detached Pi build can outlive the tool's 120-second timeout**, even with
+  `setsid nohup … &`. It happened on the first of the three, nothing was lost, and the build completed —
+  **the check is the log on the Pi, not the SSH call's exit.** A quirk of this machine, not a hung Pi.
 - **`check-deferred-notes.mjs` over-listed for the SIXTH release running:** 12 candidates across 43 plans
-  for a 12-PR release, 5 of them the test-plan template's own guidance printed as the "reason". The review
-  table is in #1820's test plan. Budget one lookup per candidate and do not narrow the script.
-- **A cut PR runs `audit` for real**, because it changes `package.json`. Do not read it as skipped; this one
-  passed with the registered `glob` advisory, fifth release running.
-- **UAT answered one empty `/api/version`** during the baseline read, then correctly twice. Written down
-  rather than ignored, because a repeat after the deploy would have meant something else. There was none.
+  for a 12-PR release, 5 of them the template's own guidance printed as the "reason". The review table is
+  in #1820's test plan. Budget one lookup per candidate and do not narrow the script.
+- **A cut PR runs `audit` for real** (it changes `package.json`), so do not read it as skipped; it passed
+  with the registered `glob` advisory. And **UAT answered one empty `/api/version`** during the baseline
+  read, then correctly twice — written down because a repeat after the deploy would have meant something
+  else. There was none.
 
 ## What is still open
 
-- **`#tstok` — the test deploy depends on an interactive login that has expired.** `wrangler login` once
-  gets it going again; a `.env.deploy.test` the env loader can read is the fix. **Do not put a token in
-  `.env.local`** — see above. **Until one of the two is done, every release leaves test's Worker behind,
-  and the release manager has to say so rather than let it be discovered.**
+- **`#tstok` — the test deploy still depends on an interactive login, which was refilled today and will
+  expire again.** The fix left is a `.env.deploy.test` the env loader can read. **Do not put a token in
+  `.env.local`** — see above. **Until it is done, expect this to cost Lutan a login in the middle of some
+  future release**, and say so rather than letting it be discovered.
 - **13 items on `0.47.10`'s record are `pending: Lutan`**, every one a press only a signed-in person on a
   deployed host can make. **The one worth asking for first is this release's own note:** Admin → Website, a
   logo **over** 1 MB refused with a message in English and Thai, then one under it showing on the public
