@@ -136,6 +136,8 @@ export function isEdgeCachedPage(pathname: string): boolean {
 export function thPathRest(pathname: string): string | null {
   if (pathname !== "/th" && !pathname.startsWith("/th/")) return null;
   const rest = pathname.slice(3) || "/";
+  // The product page's Thai twin (#cjseo): not a shelter public page, but it has a Thai address for search engines.
+  if (rest === "/platform/about") return rest;
   return isPublicPage(rest) ? rest : null;
 }
 
