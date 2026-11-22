@@ -15,9 +15,9 @@ one served by the Pi.** Production and UAT both hold every migration on `main`: 
 `No drift` both ways. The tenancy catalogue lint `--strict` is **exit 0 on all three databases**, second
 release running.
 
-**MAILSTATUS**
+**THE MAIL WENT OUT AND WAS READ IN THE INBOX, NOT TAKEN FROM `sent 1`. `#w4k9n` (e) IS CLOSED.** Subject: `[Production] Lanna Care release 0.48.0: …`. Sender name: **`Lanna Care Production`**. Both notes verbatim in the body. Delivered 10:50:21 UTC to Lutan, with `lannacareforanimals@gmail.com` skipped `E_RECIPIENT_NOT_ALLOWED` as expected. **Sixteen days of not knowing whether the 2026-11-06 fix worked: it does. Stop carrying it.**
 
-**Cost to Lutan: COSTLINE.**
+**Cost to Lutan: two touches, the target — and four progress checks he should not have had to make.** The release asked him for the email answer (given unprompted in his first sentence) and the deploy command, and nothing else. It then went more than twenty minutes without a status note while three builds ran, and he asked twice where it was. **That is an avoidable cost in the runbook's own terms, and the cause was silence rather than the release.** The fix is to say, at each build boundary, what finished and what is next.
 
 **Re-measure before trusting any of this.** Every figure here was read on 2026-11-22.
 
