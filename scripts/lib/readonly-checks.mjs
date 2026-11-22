@@ -104,6 +104,31 @@ export function scheduledWriterLines(r) {
 }
 
 export const CHECKS = {
+  "canary-planted-triggers": {
+    asks: "For the tables the tenancy canary plants rows into (shelters, residents, attachments): what triggers does each carry and what does each call, and does any of them (or a public function its body names) reach pg_net, net.http, an HTTP or dblink call, pg_notify/NOTIFY or a similar path that leaves the database? A rolled-back transaction undoes everything inside Postgres and nothing outside it, so a hit means planting a row is NOT harmless. Also lists the installed extensions that could send anything out and the event triggers. Informational on the extensions; exits 1 only on a trigger on a planted table that reaches out. (docs/decisions/2026-11-22-tenancy-canary-production-flag.md)",
+    // Names and counts only, no row data. The pattern is spliced in once here so the 'hot' list and the trigger test use the same words.
+    sql: `with hot as (
+        select p.proname, p.prosrc from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+         where n.nspname = 'public' and p.prosrc ~* '(pg_net|net\\.http|http_(post|get|request)|pg_notify|\\mnotify\\M|dblink|pg_background|supabase_functions|lo_export|to program)'),
+      trg as (
+        select c.relname as tbl, t.tgname, t.tgenabled::text as enabled, n.nspname || '.' || p.proname as fn,
+               (p.prosrc ~* '(pg_net|net\\.http|http_(post|get|request)|pg_notify|\\mnotify\\M|dblink|pg_background|supabase_functions|lo_export|to program)') as direct,
+               coalesce((select string_agg(h.proname, ',') from hot h where p.prosrc ~ ('\\m' || h.proname || '\\M') and h.proname <> p.proname), '') as via
+          from pg_trigger t join pg_class c on c.oid = t.tgrelid join pg_namespace cn on cn.oid = c.relnamespace
+          join pg_proc p on p.oid = t.tgfoid join pg_namespace n on n.oid = p.pronamespace
+         where not t.tgisinternal and cn.nspname = 'public' and c.relname in ('shelters', 'residents', 'attachments'))
+      select json_build_object(
+        'triggers', coalesce((select json_agg(json_build_object('table', tbl, 'name', tgname, 'enabled', enabled, 'calls', fn, 'reaches_out', direct or via <> '', 'via', via) order by tbl, tgname) from trg), '[]'::json),
+        'extensions', coalesce((select json_agg(extname order by extname) from pg_extension where extname in ('pg_net', 'http', 'dblink', 'postgres_fdw', 'pg_background')), '[]'::json),
+        'event_triggers', (select count(*) from pg_event_trigger),
+        'outbound_functions', coalesce((select json_agg(proname order by proname) from hot), '[]'::json))`,
+    render: (r) => [
+      ...(r.triggers.length ? r.triggers.map((t) => `${t.table}: trigger ${t.name} (${t.enabled === "D" ? "disabled" : "enabled"}) calls ${t.calls}${t.reaches_out ? `  <-- REACHES OUT${t.via ? ` via ${t.via}` : ""}` : "; reaches nothing outside the database"}`) : ["no triggers on shelters, residents or attachments"]),
+      `outbound-capable extensions installed: ${r.extensions.length ? r.extensions.join(", ") : "none"}; event triggers: ${r.event_triggers}`,
+      `public functions whose body names an outbound path: ${r.outbound_functions.length ? r.outbound_functions.join(", ") : "none"} (informational; only a trigger on a planted table matters)`,
+    ],
+    failed: (r) => r.triggers.some((t) => t.reaches_out),
+  },
   "scheduled-writers": {
     asks: "For every scheduled job the System status page watches (the pg_cron jobs and the Worker writers): what was its last outcome, in what words, when did it last run, and how many failed runs in a row? (Exits 1 only on what the page shows red.)",
     // Two sources, one answer: pg_cron jobs through scheduled_job_status (0238), Worker writers from scheduled_writer_runs (0408).
