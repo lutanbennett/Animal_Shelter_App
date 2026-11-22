@@ -1,0 +1,36 @@
+{
+  "_about": "What is RECORDED about Google identity, checked by scripts/check-google-identity.mjs against a refresh probe. Verdicts: refreshes | revoked | absent | partial | client-rejected. Keys and verdicts only, never a value. Change an entry in the same change that changes the state it describes. Decision: docs/decisions/2026-11-21-google-identity-check.md",
+  "expected": {
+    "test": {
+      "app": {
+        "verdict": "refreshes",
+        "note": "dev Drive client"
+      },
+      "backup": {
+        "verdict": "refreshes",
+        "note": "platform (Cooper Jaidee) account, BACKUP_GOOGLE_OAUTH_*"
+      }
+    },
+    "uat": {
+      "app": {
+        "verdict": "revoked",
+        "backlog": "#drvtk",
+        "note": "known: UAT app token expired or revoked, awaiting re-mint"
+      },
+      "backup": {
+        "verdict": "refreshes",
+        "note": "inherited from .env.local"
+      }
+    },
+    "production": {
+      "app": {
+        "verdict": "refreshes",
+        "note": "inherited from .env.local (Drive still on the dev account)"
+      },
+      "backup": {
+        "verdict": "refreshes",
+        "note": "inherited from .env.local"
+      }
+    }
+  }
+}
