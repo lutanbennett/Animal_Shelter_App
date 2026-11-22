@@ -31,8 +31,9 @@ export async function resolveDriveCredentials(): Promise<DriveCredentials> {
     .select("shelter_id, oauth_client_id, oauth_client_secret_enc, refresh_token_enc, staged")
     .eq("shelter_id", shelterId)
     .maybeSingle();
-  if (row) return decideCredentials(row as DriveCredentialRow, null);
+  // A staged row (#rqv5c) is read as no row, so the shelter's key is needed even when a row exists: the fallback shelter stays on the environment.
+  if (row && !(row as DriveCredentialRow).staged) return decideCredentials(row as DriveCredentialRow, null);
 
   const { data: shelter } = await db.from("shelters").select("key").eq("id", shelterId).maybeSingle();
-  return decideCredentials(null, shelter?.key);
+  return decideCredentials((row as DriveCredentialRow | null) ?? null, shelter?.key);
 }

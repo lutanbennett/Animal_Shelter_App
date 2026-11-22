@@ -56,7 +56,9 @@ function tokenSource(creds) {
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 async function fetchRetry(tok, url, init = {}, tries = 5) {
   for (let i = 1; ; i++) {
-    const res = await fetch(url, { ...init, headers: { ...(init.headers ?? {}), Authorization: `Bearer ${await tok()}` } });
+    let res;
+    try { res = await fetch(url, { ...init, headers: { ...(init.headers ?? {}), Authorization: `Bearer ${await tok()}` } }); }
+    catch (e) { if (i < tries) { await wait(1000 * 2 ** i); continue; } throw e; } // a dropped connection or a DNS blip: retry, do not fail the file
     if (res.ok) return res;
     if (i < tries && (res.status === 429 || res.status >= 500 || res.status === 403)) { await wait(1000 * 2 ** i); continue; }
     throw new Error(`Drive ${init.method ?? "GET"} ${url.replace(/\?.*/, "").replace(/\/files\/[^/]+/, "/files/<id>")} -> ${res.status} ${(await res.text()).slice(0, 160)}`);
@@ -147,7 +149,9 @@ async function main() {
     let done = 0, failed = 0, doneBytes = 0;
     for (const f of files) {
       if (mapped.has(f.id)) continue;
-      try {
+      let err;
+      for (let a = 1; a <= 3; a++) try {
+        err = null;
         const src = await fetchRetry(oldTok, `${API}/files/${f.id}?alt=media&supportsAllDrives=true`);
         const start = await fetchRetry(newTok, `${UPLOAD}/files?uploadType=resumable&fields=id`, {
           method: "POST", headers: { "Content-Type": "application/json; charset=UTF-8", "X-Upload-Content-Type": f.mime, "X-Upload-Content-Length": String(f.size) },
@@ -162,7 +166,9 @@ async function main() {
         record({ from: f.id, to: id, kind: "file", path: f.path });
         doneBytes += f.size;
         if (++done % 25 === 0) console.log(`  ${done} files copied (${gb(doneBytes)})…`);
-      } catch (e) { failed++; console.error(`  FAILED ${f.path}: ${e.message}`); }
+        break;
+      } catch (e) { err = e; await wait(2000 * a); }
+      if (err) { const e = err; failed++; console.error(`  FAILED ${f.path}: ${e.message}${e.cause ? " (" + (e.cause.code ?? e.cause.message) + ")" : ""}`); }
     }
     console.log(`Copied ${done} files this run; ${failed} failed. Map ${MAP} has ${mapped.size} entries. Re-run to retry or to pick up new files.`);
     if (failed) return 1;
