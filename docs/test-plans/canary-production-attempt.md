@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | Feature | Record the attempt to run the tenancy canary against production, and the UAT run that was possible instead |
-| Backlog item | `docs/backlog.md` → `#ykefa` — **deliberately NOT ticked**; its closing condition is unmet |
+| Backlog item | `docs/backlog.md` → `#ykefa` — **deliberately NOT ticked**; its closing condition is unmet and it is now blocked on **`#cnypd`**, the flag work Lutan chose the same day |
 | Branch / worktree | `claude/canary-production-attempt` @ `C:\Development\Animal_Shelter_canary-production-attempt` |
 | Dev server | n/a: one decision file, nothing to run |
 | PR | opened after this commit |
@@ -72,7 +72,7 @@ written down"*; one of the two did not happen.
 
 ## 7. Documentation
 
-- [ ] Backlog item ticked on this branch — **n/a: deliberately not ticked.** `#ykefa`'s condition is unmet, and its wording belongs to the backlog manager, who was sent the finding and the three routes
+- [ ] Backlog item ticked on this branch — **n/a: there is nothing to tick.** `#ykefa`'s condition is unmet and it is now blocked on `#cnypd`, which Lutan chose the same day and which is a stream's job; both items' wording belongs to the backlog manager, who filed `#cnypd` and corrected `#ykefa`'s UAT clause after this PR's finding
 - [x] Non-obvious design choices as a new file in `docs/decisions/` — **this PR is that file**
 - [x] `README.md` still accurate
 - [ ] **Release notes.** Would a shelter user notice this change? — n/a: **nobody at a shelter sees a decision file, and nothing about the app changed.** No database kept a single row from either run
@@ -101,7 +101,7 @@ written down"*; one of the two did not happen.
 
 | # | What to check | Where | State |
 |---|---|---|---|
-| 1 | **Which of the three routes to take** — amend the guard behind an explicit flag, close `#ykefa` on UAT plus a stated limit, or leave it open | `#ykefa` | **Lutan's or the planner's.** Put to him in chat the same day |
+| 1 | **Which of the three routes to take** — amend the guard behind an explicit flag, close `#ykefa` on UAT plus a stated limit, or leave it open | `#ykefa` | **ANSWERED the same day: Lutan chose the flag**, the strongest of the three, filed as `#cnypd`. Nothing is left for a person in this PR |
 
 **Nothing in this PR itself needs a person to look at it.**
 

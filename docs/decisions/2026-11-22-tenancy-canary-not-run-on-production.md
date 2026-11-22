@@ -86,25 +86,39 @@ Both were handed over by the backlog manager and both were re-read here, bare, b
   row **and** an `/auth/callback` entry: `lannacareforanimals.org`, `www.lannacareforanimals.org`,
   `cooperjaidee.org`, `www.cooperjaidee.org`.
 
-**One claim in the handover could not be supported from the repository.** It says the canary *"was
-exercised on UAT"* before today; a `grep` across `docs/decisions/`, `docs/test-plans/` and
-`docs/releases/` finds no record of any UAT run. It may well have happened unrecorded — but `#ykefa` must
-not rest on it, and today's run above is now the first recorded one.
+**One claim in the handover could not be supported from the repository, and it turned out to be an
+inference.** `#ykefa` said the canary *"was exercised on UAT"*; a `grep` across `docs/decisions/`,
+`docs/test-plans/` and `docs/releases/` found no record of any UAT run. Raised with the backlog manager,
+who checked and confirmed it was inferred rather than observed and has corrected that clause in those
+words. **The UAT run above is therefore the first on record.**
 
-## What this leaves open, and whose it is
+## What this leaves open — DECIDED THE SAME DAY: `#cnypd`
 
-**`#ykefa` is NOT ticked, and `docs/backlog.md` was not edited.** Its closing condition is *"that run is
-green and written down"*, and the run did not happen. The item's wording belongs to the backlog manager,
-who holds it and its thirteen parts and has been told.
+**`#ykefa` is NOT ticked, and `docs/backlog.md` was not edited by this PR.** Its closing condition is
+*"that run is green and written down"*, and the run did not happen.
 
-Three routes, and the choice is Lutan's or the planner's rather than a release manager's:
+**Lutan was shown three routes with their costs and took the strongest, 2026-11-22: make production opt-in
+behind an explicit flag, with the decision file, rather than closing `#ykefa` on UAT.** It is filed as
+**`#cnypd`** (Architecture, immediately after `#ykefa`), which is now `#ykefa`'s only blocker. The two
+routes he did not take — closing on the UAT run with a stated limit, or leaving it open — are recorded
+here only so nobody re-derives the choice.
 
-1. **Amend the guard deliberately** — make production opt-in behind an explicit flag, with a decision file
-   saying why a plant-and-rollback is acceptable against the live database. That is a stream plus a
-   decision, not a release step.
-2. **Close `#ykefa` on the UAT run plus a stated limit** — the untrusted pass is green on a database
-   carrying production's rows, and production's own anon path is recorded as unproven.
-3. **Leave it open** until someone wants route 1.
+**`#cnypd` is a stream's job, not a release step**, and it ends at a flag provable on dev and UAT. The
+production run stays Lutan's afterwards. Three things it carries, from the item:
 
-**What nobody should do:** run the plain (trusted) pass against production if the guard is ever lifted and
-read it as a pass. It would exit 0 having stood every per-shelter policy aside.
+- **The flag must be typed, named so it cannot be passed by accident, and must refuse unless `--untrusted`
+  is given too** — a trusted run against production would plant rows for nothing. Every other limit
+  stays, including that it cannot run on the pull-request path (a write-capable token on a public repo).
+- **The expensive half is a question, not the flag: what does planting a row set off that a rollback does
+  NOT undo?** The rollback is total *inside* the database. It does not recall a trigger that sends mail or
+  calls a webhook — and this schema has the status-alert mailer from `0098` — nor a `pg_net` request,
+  nor a `NOTIFY` something is listening for. **To be established by reading the triggers on `residents`
+  and `attachments` and whatever they call, on production's own schema, not reasoned from dev.** If
+  anything does leave the database, **the flag is the wrong answer and the item changes shape rather than
+  being forced through.**
+- **It is not permission to delete the guard**, and **not a precedent for editing a refusal so that a task
+  can be ticked.**
+
+**What nobody should do, once the flag exists:** run the plain (trusted) pass against production and read
+it as a pass. It would exit 0 having stood every per-shelter policy aside — which is the whole reason
+`--untrusted` exists.
