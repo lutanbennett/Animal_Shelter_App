@@ -151,6 +151,8 @@
         // The platform front door (src/lib/site-hosts.ts): maps to NO shelter, serves sign-in and the
         // product-administrator console only. The deploy creates its two routes and certificates.
         "PLATFORM_HOST": "cooperjaidee.org",
+        // The product site's search switch (#psreg): only the exact word "open" admits search engines. Closed until Lutan decides (2026-11-22).
+        "PLATFORM_SEARCH": "closed",
         "ORIGIN_TIMEOUT_MS": "20000",
         "RELEASE_MAIL_ENV": "Production",
         "RELEASE_MAIL_FROM": "releases@lannacareforanimals.org",
