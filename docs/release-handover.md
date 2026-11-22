@@ -40,13 +40,29 @@ expires, **test and only test cannot deploy** — which is today.
 **THAT IS NOT THE `0.47.1` FAILURE, AND THE PRESCRIBED REMEDY DOES NOT APPLY.** `docs/release-procedure.md`
 says an `Authentication error [code: 10000]` mid-upload is a token expiring part-way through and *"the
 remedy is the same command again — NOT `wrangler login`"*. That is still right for that failure. **Here the
-retry is what proved the login is gone**, and no non-interactive shell can redo a browser login. The
-runbook's own line *"the durable fix is a scoped `CLOUDFLARE_API_TOKEN`"* is the answer — it has simply
-never been done for test.
+retry is what proved the login is gone**, and no non-interactive shell can redo a browser login.
 
-- **The third touch this release owes him: one Cloudflare API token for the test deploy**, the same three
-  permissions as 2026-11-16's production one, pasted into `.env.local` as `CLOUDFLARE_API_TOKEN`. Then
-  `node scripts/deploy.mjs --env test` brings test's Worker up in one command. Filed as `#tstok`.
+**AND THE OBVIOUS FIX IS THE ONE THAT IS ALREADY RULED OUT — CORRECTED HERE THE SAME DAY, BEFORE ANY TOKEN
+WAS CREATED.** The first edition of this section said to paste a `CLOUDFLARE_API_TOKEN` into `.env.local`.
+**`docs/decisions/2026-11-16-deploy-cloudflare-api-token.md` forbids precisely that, in those words** —
+*"It goes in `.env.deploy.production` and `.env.deploy.uat`, and NOT in `.env.local`"* — because
+`scripts/worktree.mjs new` copies `.env.local` into every worktree, so a deploy token there is duplicated
+onto disk once per workstream and outlives each one. **`scripts/lib/env.mjs` line 39 hard-wires it**:
+`envFile("test")` returns `.env.local`, and there is no `.env.deploy.test`. So **there is nowhere correct
+to put a test token today without a one-line code change.**
+
+**What that decision assumed, and what today disproved:** it left test on the OAuth login on purpose,
+because *"test's deploys are Claude's and a retry costs nobody's attention."* **That holds only while the
+login still exists to refresh.** Once it has expired outright there is no retry, and the release manager
+is left reporting a Worker a release behind. **That is the finding, not the missing token.**
+
+- **Two answers, and they are not the same size. (1) Now, no secret on disk and no code:**
+  `npx.cmd wrangler login` once restores the path that decision intends, and
+  `node scripts/deploy.mjs --env test` then works. It will expire again. **(2) Durable:** teach
+  `envFile()` to read a gitignored `.env.deploy.test` and put a token there. Both are in `#tstok`.
+- **Before choosing (2), know the permission limit:** `Workers Scripts → Edit` is **account-level** and
+  cannot be narrowed to one Worker, so a test token can deploy production too. That is why the 2026-11-16
+  decision says one token for all three rather than three, and why a further copy on disk is a real cost.
 - **Borrowing production's or UAT's token was considered and deliberately not done.** It would have
   worked. It would also have put a production credential to work in another environment with nothing
   recording it, which is the quiet kind of fault.
@@ -68,15 +84,12 @@ never been done for test.
 - **The per-environment Server Actions key** was promoted into the runbook last release and needed no
   thought this time. Three pairs, all matching: `cbd55beae8d8` / `ecc41837fc0b` / `cdeca9cbc4de`.
 
-## A READING THAT CONTRADICTS THE LAST RECORD, AND IT IS WORTH NOT SMOOTHING OVER
+## A READING THAT CONTRADICTS THE LAST RECORD
 
-`sync-home-icons.mjs --env production` drew 67 pages and 536 images, uploaded none because
-`PLATFORM_DRIVE_FOLDER_ID` is unset for production, and **exited 1**. `0.47.9`'s record says it exited **0**,
-and `git log` shows the script unchanged since 2026-11-20, before that release. **One of the two readings is
-wrong.** Today's was run bare, with its exit code read from the command rather than through a pipe, which is
-the form the runbook asks for. The cause is unchanged either way: #1781's Drive move is pending the platform
-account's credentials and is the planner's, not a release step, and the app still draws every icon in the
-browser.
+`sync-home-icons.mjs --env production` uploaded nothing (`PLATFORM_DRIVE_FOLDER_ID` unset) and **exited 1**;
+`0.47.9`'s record says **0**, from a script unchanged since 2026-11-20. **One reading is wrong** — today's was
+run bare with the exit code read from the command, not through a pipe. The cause is the same either way:
+#1781's Drive move is the planner's, and the app still draws every icon in the browser.
 
 ## Traps that cost nothing this time but will
 
@@ -94,9 +107,10 @@ browser.
 
 ## What is still open
 
-- **`#tstok` — the test deploy has no credential.** One value in `.env.local`, then one command. **Until
-  then every release leaves test's Worker behind, and the release manager has to say so rather than let it
-  be discovered.**
+- **`#tstok` — the test deploy depends on an interactive login that has expired.** `wrangler login` once
+  gets it going again; a `.env.deploy.test` the env loader can read is the fix. **Do not put a token in
+  `.env.local`** — see above. **Until one of the two is done, every release leaves test's Worker behind,
+  and the release manager has to say so rather than let it be discovered.**
 - **13 items on `0.47.10`'s record are `pending: Lutan`**, every one a press only a signed-in person on a
   deployed host can make. **The one worth asking for first is this release's own note:** Admin → Website, a
   logo **over** 1 MB refused with a message in English and Thai, then one under it showing on the public
@@ -117,19 +131,13 @@ browser.
 
 ## Now routine — stop treating these as open
 
-Everything in this list did what the runbook says it does, first time. **It is here only so the next editor
-deletes it rather than re-investigating it.**
-
-- **No cut/batch race.** `main` moved once under the cut, `docs/backlog.md` only, and the code-identity diff
-  between the tested and the deployed SHA is **empty**, so nothing was chased.
-- **UAT second, before his command** (the 2026-11-16 reversal) — clean, and nothing of ours ran after his.
-- **Three Pi builds, one at a time, pinned with `--ref`** — all three logged `restarting under the script
-  from 7a1aae4ea`, with 2.5 GiB available and `.next/cache` under its ceiling.
-- **`lanna-pi-mesh` worked first time** for all three. Do not put the route to him as a question.
-- **His log's UTF-16 decode** worked exactly as the runbook's three steps say, and `strip-baked-env: removed
-  20` was read — which `0.47.8` could not do.
-- **Both purges and all three after-checks** — one zone each for production and `lannacare.org`, every
-  stylesheet *identical to the build*.
+Everything here did what the runbook says, first time. **It is listed only so the next editor deletes it
+rather than re-investigating it.** No cut/batch race (`main` moved once, `docs/backlog.md` only, and the
+code-identity diff is **empty**). UAT second, before his command. Three Pi builds one at a time, pinned
+with `--ref`, all logging `restarting under the script from 7a1aae4ea` with 2.5 GiB free. `lanna-pi-mesh`
+first time for all three — do not put the route to him as a question. His log's UTF-16 decode exactly as
+the runbook's three steps say, so `strip-baked-env: removed 20` was read where `0.47.8` could not. Both
+purges and all three after-checks *identical to the build*.
 
 ## The two touches that are his, and stay his
 
