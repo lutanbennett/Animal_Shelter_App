@@ -692,7 +692,10 @@ function cmdList() {
     let h = "-";
     if (t.branch.startsWith(BRANCH_PREFIX) && t.dir !== repo) {
       const v = held(t.dir);
-      h = v === null ? "?" : v ? "HELD" : "free";
+      // free = no session AND no brief. A folder with a .brief.md and nobody in
+      // it is a planned stream nobody has opened yet: reserved, not available
+      // (2026-11-22, #wtres). A signal only, never a lock.
+      h = v === null ? "?" : v ? "HELD" : existsSync(path.join(t.dir, ".brief.md")) ? "reserved" : "free";
       // A named session wins below, so only a folder nobody named is worth the
       // process scan.
       if (v && !who(t.dir)) {
@@ -720,7 +723,9 @@ function cmdList() {
     console.log("      HELD by a dev server = only a next dev server, which 'done --stop-servers' can end; no session is in there.");
     console.log("      HELD by <process> / bare HELD = something we cannot place (a terminal, editor, or a brief handle from");
     console.log("      git or an indexer that is gone on the next run): look before tearing it down.");
-    console.log("      free = nothing has it open right now. A session can still attach a moment later.");
+    console.log("      reserved = a .brief.md is in the folder and nothing has it open: a stream was planned here and its session");
+    console.log("      has not opened yet. NOT available: do not check out another branch in it or reuse it.");
+    console.log("      free = no brief and nothing has it open right now: reusable (a session can still attach a moment later).");
   }
 
   // A folder that no longer carries its own name is how a husk happened: cleanup
