@@ -682,6 +682,10 @@
       "gates": "Whether the public website is open to strangers or locked behind sign-in on this Worker. Not a role or card rule."
     },
     {
+      "name": "PLATFORM_SEARCH",
+      "gates": "Whether search engines may index the product site (the platform host's one page), closed unless exactly 'open' (#cjseo). Not a role or card rule."
+    },
+    {
       "name": "ORIGIN_HOST",
       "gates": "The Worker's origin host for the photo cache. Not a role or card rule."
     },
