@@ -63,9 +63,8 @@ address 307s too and looks fine. **The day the site unlocks, every `/th/` addres
   page is in English and Thai is TRUE.**
 - **The edge is fine.** `served-by: pi` on every reading, three times over, and both zones purged with
   every asset byte-identical to the build.
-- **It is `/th`, not `/th/`.** `/th/` answers **308** on all four hosts and the 500 is where that redirect
-  lands. A script testing `/th/` alone reads a clean redirect and concludes nothing is wrong, which is
-  plausibly how this went unnoticed. The first write-up got this backwards and was corrected the same hour.
+- **It is `/th`, not `/th/`.** `/th/` answers **308** and the 500 is where that redirect lands, so a script
+  testing `/th/` alone reads a clean redirect — plausibly how this went unnoticed.
 
 Filed as `#thpfx` under *Public website* with the full measurement. **Not held for, and not this
 release's to fix** — a release ships what the build gave it. Nobody is waiting on Lutan.
@@ -120,9 +119,12 @@ happened on 2026-11-22 was on dev.
 ## What is still open
 
 - **`#thpfx`** — above. Nobody is waiting on Lutan.
-- **`#cnypd`** — the tenancy canary's production run. Built (#1831); the expensive half is establishing
-  what a planted row sets off that a rollback does not undo, read from production's own triggers. **His.**
-- **`#ykefa`** — blocked on `#cnypd`, and correctly still open.
+- **`#cnypd` and `#ykefa` are BOTH DONE, and they closed within the hour after this handover was first
+  written.** The flag shipped (#1831), **Lutan ran the canary against production himself that afternoon**
+  — `--untrusted --strict`, project `dbkodyyxxhtygxcxmfcu`, `is_trusted_caller: false`, two rows planted
+  and rolled back, 23 anon-reachable objects read, **0 leaks, 0 unstable** — and the multi-tenancy
+  programme is complete. The result, its limits and **how it is known** are in
+  `docs/decisions/2026-11-22-tenancy-canary-run-on-production.md`. **Stop carrying either item.**
 - **The product page's Thai *wording* has not been read by anyone who reads Thai.** 5,418 Thai characters
   render; whether they say the right thing is **his**, and it is this release's headline test gap.
 - **#1829's third unchecked line:** a signed-in page after `proxy.ts` changed. `updateSession`'s
@@ -134,10 +136,8 @@ happened on 2026-11-22 was on dev.
 
 ## Now routine — stop treating these as open
 
-UAT's three one-time needs (its own Supabase token, the Pi's sudo rule for `lanna-care-uat`, its own purge
-token) have all been done since 2026-11-09. The mesh route to the Pi is in place with an `~/.ssh/config`
-alias; `lanna-pi.local` works only from the home network, and asking about it is what cost a third touch
-on `0.47.0`. `test-plan` is **advisory, permanently** — never list it as a decision he owes.
+UAT's three one-time needs are done (since 2026-11-09), the mesh alias to the Pi is in place, and
+`test-plan` is **advisory, permanently**. All three are in the runbook; none is a decision he owes.
 
 ## The two touches that are his, and stay his
 

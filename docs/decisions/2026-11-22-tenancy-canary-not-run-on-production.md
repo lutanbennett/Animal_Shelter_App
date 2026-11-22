@@ -1,5 +1,12 @@
 # The tenancy canary cannot be run against production: the script refuses it, by design
 
+> **SUPERSEDED THE SAME DAY — AND IT IS A SUCCESSOR, NOT A CORRECTION. THE RUN HAPPENED.**
+> Everything below was true when written: the guard had no override, the run could not happen, and the
+> route was chosen.  then shipped the flag (#1831) and **Lutan ran the canary against production
+> that afternoon — untrusted, strict, and it found nothing.**
+> **Read `docs/decisions/2026-11-22-tenancy-canary-run-on-production.md` for the result**, its limits, and
+> how it is known. Do not read this file as the current state of the question.
+
 **2026-11-22.** `#ykefa`'s one remaining step — *"the canary against production as the real anon path"* —
 **was attempted with Lutan's authorisation and did not run.** `scripts/check-tenancy-canary.mjs` refuses
 `--env production` itself. This file exists so the next session does not re-derive that, and so the item
