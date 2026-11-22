@@ -25,3 +25,7 @@ A second Worker var, `PLATFORM_SEARCH`; only the exact word `open` opens it, so 
 ## Metadata and keywords
 
 Title "Animal shelter management software | CooperJaidee" / "โปรแกรมจัดการศูนย์พักพิงสัตว์ | CooperJaidee", canonical, hreflang, Open Graph, Twitter card, `SoftwareApplication` JSON-LD. Starter phrases used: *software to manage an animal shelter* (English h1), *animal shelter management software* (title), *shelter management software* (kicker), Thai *โปรแกรมจัดการศูนย์พักพิงสัตว์* (h1, title), *ระบบจัดการศูนย์พักพิงสัตว์* (kicker, description). No Open Graph image: the only logo on the host is the shelter's.
+
+## Amended 2026-11-23 (#psubp): "the product page" is now "the product pages"
+
+#cjseo's rule was that the product page is the only page under `/platform` ever offered to search engines. It is now **only the product pages**: the home page and each page under `/platform/features/`. What the rule protects is unchanged: the console, `/platform/shelters`, sign-in and the enquiry form stay `noindex` and off the sitemap. The list lives in `src/lib/platform-features.ts` and the comment in `src/lib/platform-seo.ts` says the same. Record: `docs/decisions/2026-11-23-product-site-feature-pages.md`.

@@ -5,12 +5,13 @@ import { getT } from "@/lib/i18n/get-t";
 import { isPlatformSearchOpen } from "@/lib/public-site";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { isPlatformHostname, platformHost, requestHost } from "@/lib/site-hosts";
+import { productFeaturePath } from "@/lib/platform-features";
 import { ProductMockup } from "./ProductMockup";
 
 /**
  * The product page (#apxld, rebuilt as a product introduction in #cjlnd): what a stranger at cooperjaidee.org lands on.
  * Static words only. It reads no table and lists no shelter or account, so it cannot be used to find out which exist.
- * Every link is a plain link; none is an action that needs a card. It is the only page under /platform that is ever
+ * Every link is a plain link; none is an action that needs a card. With the feature pages under /platform/features/ (#psubp) it is one of the only pages under /platform that are ever
  * for search engines, and only when PLATFORM_SEARCH says "open" (src/lib/public-site.ts, #cjseo): its own robots
  * metadata follows that switch, so the page and robots.txt always agree. Closed is the default.
  */
@@ -80,6 +81,11 @@ export default async function AboutPage() {
               <div className={i % 2 === 1 ? "md:order-2" : ""}>
                 <h2 className="text-2xl font-semibold text-foreground">{b.name}</h2>
                 <p className="mt-3 text-foreground">{b.text}</p>
+                {b.slug && (
+                  <a href={productFeaturePath(b.slug, locale === "th")} className="mt-4 inline-block text-sm font-medium text-primary underline">
+                    {a.readMore}
+                  </a>
+                )}
               </div>
               <div className={i % 2 === 1 ? "md:order-1" : ""}>
                 <ProductMockup mock={b.mock} />
