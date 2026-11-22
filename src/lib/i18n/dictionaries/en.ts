@@ -2925,7 +2925,8 @@ const en = {
       logo: {
         heading: "Shelter logo",
         subtitle:
-          "The small picture beside your shelter's name at the top of every page of your public website. A transparent PNG is best, so it sits cleanly on the page; a JPG, WebP or HEIC photo also works, up to 15 MB.",
+          "The small picture beside your shelter's name at the top of every page of your public website. A transparent PNG is best, so it sits cleanly on the page; a JPG, WebP or HEIC photo also works, up to 1 MB. A logo only shows about 64 pixels wide, so a small file is all it needs.",
+        tooLarge: "That logo is over 1 MB. It only shows about 64 pixels wide, so please use a smaller copy (a 256-pixel-wide PNG is plenty).",
         noLogo: "No logo set. Your website shows the shelter's name on its own.",
         upload: "Upload logo",
         replace: "Replace logo",

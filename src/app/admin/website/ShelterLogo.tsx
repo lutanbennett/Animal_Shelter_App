@@ -10,6 +10,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useWriteCall } from "@/lib/use-write-form";
 import { WRITE_REQUEST_FIELD } from "@/lib/write-requests";
 import { PendingPuppy } from "@/components/PuppyLoader";
+import { MAX_LOGO_BYTES } from "@/lib/uploads/limits";
 import { runUploadAction } from "@/lib/uploads/run-upload-action";
 import { removeShelterLogo, uploadShelterLogo } from "./actions";
 
@@ -35,6 +36,10 @@ export function ShelterLogo({
   function handleFile(file: File | undefined) {
     if (!file) return;
     setMessage(null);
+    if (file.size > MAX_LOGO_BYTES) {
+      setMessage({ type: "error", text: t.admin.website.logo.tooLarge });
+      return;
+    }
     const formData = new FormData();
     formData.append("file", file);
     startTransition(async () => {

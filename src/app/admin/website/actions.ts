@@ -11,7 +11,7 @@ import {
 import { writeRequestIdFrom } from "@/lib/write-requests";
 import { mapLinkLeadsSomewhere } from "@/lib/contacts/map-preview";
 import { createClient } from "@/lib/supabase/server";
-import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
+import { MAX_LOGO_BYTES, MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
 import { dbRefusal } from "@/lib/db-refusal";
@@ -655,6 +655,8 @@ export async function uploadShelterLogo(formData: FormData): Promise<ActionResul
     if (!(file instanceof File) || file.size === 0) {
       return refuse(t.admin.website.errors.noFile);
     }
+
+    if (file.size > MAX_LOGO_BYTES) return refuse(t.admin.website.logo.tooLarge);
 
     const before = await readLogoId(supabase);
     if (before.error || !before.row) return refuse(t.admin.website.logo.noRow);
