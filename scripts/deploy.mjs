@@ -209,8 +209,8 @@ function cfAuthNote() {
       (account ? `, account id from ${account.from}` : ", no account id set (wrangler infers it)")
     );
   }
-  // Deduped: for `test` there is no overlay file, so envFile() IS `.env.local` and naming both
-  // would read "in .env.local, the shell or .env.local".
+  // Deduped defensively: should two of these ever name the same file, naming both
+  // would read "in X, the shell or X".
   const looked = [...new Set([envFile(envName), "the shell", ".env.local"])];
   return (
     `wrangler's own OAuth login — no CLOUDFLARE_API_TOKEN in ${looked.slice(0, -1).join(", ")} or ${looked.at(-1)}. ` +

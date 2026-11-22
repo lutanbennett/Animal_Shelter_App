@@ -105,3 +105,19 @@ test("activities-grantable passes on the ruled set exactly and fails naming an a
   // The real allow-list, against the check's own failed(): a gap nobody recorded fails it.
   assert.equal(c.failed({ catalogue: ["zz.planted"], gaps: ["zz.planted@edit"] }), true);
 });
+
+test("scheduled-writers says so plainly for a job with no row, and fails only where the status page is red", async () => {
+  const { scheduledWriterLines, CHECKS } = await import("./lib/readonly-checks.mjs");
+  const now = "2026-11-22T12:00:00Z";
+  const cronOk = (jobname) => ({ jobname, job_exists: true, active: true, last_status: "succeeded", last_started_at: now, last_message: "1 row" });
+  const base = { now, cron: ["purge-assistant-actions", "purge-donation-tax-ids", "purge-write-requests"].map(cronOk), writers: [] };
+  const empty = scheduledWriterLines(base);
+  assert.equal(empty.filter((x) => /no row: this job has never reported itself here/.test(x.line)).length, 4);
+  assert.ok(!empty.some((x) => x.red), "never reported is amber on the page, so it must not fail");
+  const failing = (n) => ({ ...base, writers: [{ job: "calendar-sweep", last_outcome: "failed", last_detail: "boom", last_ran_at: now, last_ok_at: null, fail_runs: n }] });
+  assert.ok(!CHECKS["scheduled-writers"].failed(failing(1)), "one failed run is a blip");
+  assert.ok(CHECKS["scheduled-writers"].failed(failing(2)), "two in a row is red, as health.ts has it");
+  assert.ok(CHECKS["scheduled-writers"].render(failing(2)).some((l) => /RED.*boom/.test(l)));
+  const skipped = { ...base, writers: [{ job: "label-drafts", last_outcome: "skipped", last_detail: "x", last_ran_at: now, last_ok_at: null, fail_runs: 0 }] };
+  assert.ok(!CHECKS["scheduled-writers"].failed(skipped), "skipped is a legitimate outcome");
+});

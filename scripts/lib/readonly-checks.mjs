@@ -13,6 +13,8 @@
 import { sqlCodeOnly } from "./sql-code-only.mjs";
 import { liveUnlisted } from "../check-translations-unlisted.mjs";
 import { compareToAllowlist } from "./ungranted-allowlist.mjs";
+// The job lists and thresholds live once, in a server-free module the status page also reads (Node strips the types).
+import { CRON_STALE_HOURS, DAILY_WORKER_WRITERS, EXPECTED_CRON_JOBS, EXPECTED_WORKER_WRITERS, WORKER_WRITER_RED_AFTER, WORKER_WRITER_STALE_HOURS } from "../../src/lib/status/scheduled-jobs.ts";
 
 const FORBIDDEN = /\b(insert|update|delete|truncate|drop|alter|create|grant|revoke|copy|call|do|vacuum|reindex|set|nextval|setval|pg_terminate_backend|pg_cancel_backend)\b/i;
 
@@ -76,7 +78,45 @@ const TRANSLATION_ARMS = [
 const TAUGHT_PAIRS = [...new Set(TRANSLATION_ARMS.map(([t, c]) => `('${t}', '${c}')`))].join(", ");
 const ARM_SELECTS = TRANSLATION_ARMS.map(([t, c, en, th], i) => `${i ? "union all " : ""}select '${t}', '${c}', id::text, ${en}, nullif(btrim(${th}), '') from ${t}`).join(String.fromCharCode(10) + "        ");
 
+/** One line per watched job, with whether the status page would show it red. Pure, so the test can feed it rows. */
+export function scheduledWriterLines(r) {
+  const now = Date.parse(r.now);
+  const ago = (t) => (t ? `${Math.round((now - Date.parse(t)) / 3_600_000)}h ago` : "never");
+  const out = [];
+  for (const name of EXPECTED_CRON_JOBS) {
+    const c = r.cron.find((x) => x.jobname === name);
+    if (!c || !c.job_exists) { out.push({ red: true, line: `${name} (pg_cron): RED, job is not installed` }); continue; }
+    if (c.active === false) { out.push({ red: true, line: `${name} (pg_cron): RED, switched off` }); continue; }
+    if (!c.last_status) { out.push({ red: false, line: `${name} (pg_cron): never run since it was installed` }); continue; }
+    const stale = now - Date.parse(c.last_started_at) > CRON_STALE_HOURS * 3_600_000;
+    const red = c.last_status === "failed";
+    out.push({ red, line: `${name} (pg_cron): ${red ? "RED, " : stale ? "stale, " : ""}last status ${c.last_status}, ran ${ago(c.last_started_at)}; message: ${c.last_message ?? "(none)"}` });
+  }
+  for (const name of EXPECTED_WORKER_WRITERS) {
+    const w = r.writers.find((x) => x.job === name);
+    if (!w) { out.push({ red: false, line: `${name} (worker): no row: this job has never reported itself here` }); continue; }
+    const red = w.last_outcome === "failed" && w.fail_runs >= WORKER_WRITER_RED_AFTER;
+    const limit = DAILY_WORKER_WRITERS.includes(name) ? CRON_STALE_HOURS : WORKER_WRITER_STALE_HOURS;
+    const stale = now - Date.parse(w.last_ran_at) > limit * 3_600_000;
+    out.push({ red, line: `${name} (worker): ${red ? "RED, " : stale ? "stale, " : ""}last outcome ${w.last_outcome}, ran ${ago(w.last_ran_at)}, ${w.fail_runs} failed in a row; detail: ${w.last_detail ?? "(none)"}` });
+  }
+  return out;
+}
+
 export const CHECKS = {
+  "scheduled-writers": {
+    asks: "For every scheduled job the System status page watches (the pg_cron jobs and the Worker writers): what was its last outcome, in what words, when did it last run, and how many failed runs in a row? (Exits 1 only on what the page shows red.)",
+    // Two sources, one answer: pg_cron jobs through scheduled_job_status (0238), Worker writers from scheduled_writer_runs (0408).
+    // The names are the status page's own lists, spliced in as constants: no argv value reaches this string.
+    sql: `select json_build_object(
+        'cron', (select coalesce(json_agg(row_to_json(c) order by c.jobname), '[]'::json) from scheduled_job_status(array[${EXPECTED_CRON_JOBS.map((n) => `'${n}'`).join(", ")}]) c),
+        'writers', (select coalesce(json_agg(row_to_json(w) order by w.job), '[]'::json) from (select job, last_outcome, last_detail, last_ran_at, last_ok_at, fail_runs from scheduled_writer_runs where job in (${EXPECTED_WORKER_WRITERS.map((n) => `'${n}'`).join(", ")})) w),
+        'now', now())`,
+    render: (r) => scheduledWriterLines(r).map((x) => x.line),
+    // Red exactly where health.ts's checkCronJobs is red: pg_cron job missing, off or last run failed; a Worker writer failed
+    // WORKER_WRITER_RED_AFTER runs in a row. Never reported, stale and skipped are amber on the page, so they report but do not fail.
+    failed: (r) => scheduledWriterLines(r).some((x) => x.red),
+  },
   "schema-version": {
     asks: "Which migration was applied last, and how many are applied?",
     sql: `select json_build_object('applied', count(*), 'latest', max(filename)) from schema_migrations`,
