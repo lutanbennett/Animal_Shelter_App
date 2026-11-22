@@ -44,14 +44,13 @@ says an `Authentication error [code: 10000]` mid-upload is a token expiring part
 remedy is the same command again — NOT `wrangler login`"*. That is still right for that failure. **Here the
 retry is what proved the login is gone**, and no non-interactive shell can redo a browser login.
 
-**AND THE OBVIOUS FIX IS THE ONE THAT IS ALREADY RULED OUT — CORRECTED HERE THE SAME DAY, BEFORE ANY TOKEN
-WAS CREATED.** The first edition of this section said to paste a `CLOUDFLARE_API_TOKEN` into `.env.local`.
-**`docs/decisions/2026-11-16-deploy-cloudflare-api-token.md` forbids precisely that, in those words** —
-*"It goes in `.env.deploy.production` and `.env.deploy.uat`, and NOT in `.env.local`"* — because
-`scripts/worktree.mjs new` copies `.env.local` into every worktree, so a deploy token there is duplicated
-onto disk once per workstream and outlives each one. **`scripts/lib/env.mjs` line 39 hard-wires it**:
-`envFile("test")` returns `.env.local`, and there is no `.env.deploy.test`. So **there is nowhere correct
-to put a test token today without a one-line code change.**
+**AND THE OBVIOUS FIX IS THE ONE ALREADY RULED OUT — CORRECTED THE SAME DAY, BEFORE ANY TOKEN WAS MADE.**
+The first edition said to paste a `CLOUDFLARE_API_TOKEN` into `.env.local`.
+**`docs/decisions/2026-11-16-deploy-cloudflare-api-token.md` forbids precisely that** — *"NOT in
+`.env.local`"* — because `scripts/worktree.mjs new` copies that file into every worktree, so a token there
+is duplicated onto disk once per workstream. **`scripts/lib/env.mjs` line 39 hard-wires `envFile("test")`
+to it** and there is no `.env.deploy.test`, so **there is nowhere correct to put a test token today
+without a one-line code change.**
 
 **What that decision assumed, and what today disproved:** it left test on the OAuth login on purpose,
 because *"test's deploys are Claude's and a retry costs nobody's attention."* **That holds only while the
@@ -64,8 +63,8 @@ is left reporting a Worker a release behind. **That is the finding, not the miss
   **(2), the durable one:** teach `envFile()` to read a gitignored `.env.deploy.test`. That is all `#tstok`
   has left. **Worth copying from the run:** read `wrangler whoami` *before* starting a ten-minute build.
 - **Before choosing (2), know the permission limit:** `Workers Scripts → Edit` is **account-level** and
-  cannot be narrowed to one Worker, so a test token can deploy production too. That is why the 2026-11-16
-  decision says one token for all three rather than three, and why a further copy on disk is a real cost.
+  cannot be narrowed to one Worker, so a test token can deploy production too — which is why a further
+  copy on disk is a real cost, and why 2026-11-16 chose one token for all three rather than three.
 - **Borrowing production's or UAT's token was considered and deliberately not done.** It would have
   worked. It would also have put a production credential to work in another environment with nothing
   recording it, which is the quiet kind of fault.
