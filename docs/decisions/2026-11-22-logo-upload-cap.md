@@ -8,3 +8,4 @@ The logo already on production is small (256 px / 19 KB, resized by hand), so th
 - **Strings, both languages:** new `t.admin.website.logo.tooLarge`; `logo.subtitle` said "up to 15 MB" and now says 1 MB, in en and th.
 - **Elsewhere at full size?** Only the public header and the admin preview serve the logo original (`PublicHeader.tsx`, `ShelterLogo.tsx`). Shelter Friend logos are a different path and not touched.
 - **Driven proof (2026-11-22, headless Chrome, dev, admin):** a 1.5 MB file refused with the new sentence in English and in Thai; subtitle reads 1 MB in both.
+- **An already-uploaded oversized logo:** none exists (the one in play is 19 KB). The cap applies to new uploads only; an older big file keeps serving until replaced.
