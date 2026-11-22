@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "The CooperJaidee product page now has a page about the money side of a shelter (numbered receipts, expenses your accountant can read, and a cashflow forecast), in English and Thai.",
 ];
 
 /** Newest first. */

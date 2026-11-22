@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { isPlatformSearchOpen, isSearchClosed } from "./public-site.ts";
 import { platformRobots, platformSitemap } from "./platform-seo.ts";
+import { isPublicPath, thPathRest } from "./public-paths.ts";
 import { platformRedirect } from "./site-hosts.ts";
 
 const env = { PLATFORM_HOST: "cooperjaidee.example" };
@@ -27,19 +28,48 @@ test("on a shelter host the platform switch changes nothing", () => {
 test("robots.txt: closed forbids everything, open allows only the product page", () => {
   assert.deepEqual(platformRobots(origin, false), { rules: { userAgent: "*", disallow: "/" } });
   const open = platformRobots(origin, true);
-  assert.deepEqual(open.rules.allow, ["/$", "/platform/about", "/th/platform/about"]);
+  assert.deepEqual(open.rules.allow, ["/$", "/platform/about", "/platform/features/money", "/th/platform/about", "/th/platform/features/money"]);
   assert.equal(open.rules.disallow, "/");
   assert.equal(open.sitemap, "https://cooperjaidee.example/sitemap.xml");
 });
 
-test("sitemap: empty while closed; open lists only the two product pages", () => {
+test("sitemap: empty while closed; open lists every product page, each with its own language links", () => {
   assert.deepEqual(platformSitemap(origin, false), []);
-  const urls = platformSitemap(origin, true).map((e) => e.url);
-  assert.deepEqual(urls, ["https://cooperjaidee.example/platform/about", "https://cooperjaidee.example/th/platform/about"]);
+  const map = platformSitemap(origin, true);
+  assert.deepEqual(map.map((e) => e.url), [
+    "https://cooperjaidee.example/platform/about",
+    "https://cooperjaidee.example/platform/features/money",
+    "https://cooperjaidee.example/th/platform/about",
+    "https://cooperjaidee.example/th/platform/features/money",
+  ]);
+  const money = map.find((e) => e.url.endsWith("/th/platform/features/money"));
+  assert.equal(money.alternates.languages.en, "https://cooperjaidee.example/platform/features/money");
+  assert.equal(money.alternates.languages.th, "https://cooperjaidee.example/th/platform/features/money");
+});
+
+test("the switch closes every product page at once, and opens only product pages", () => {
+  const closed = platformRobots(origin, false);
+  assert.equal(closed.rules.allow, undefined);
+  assert.deepEqual(platformSitemap(origin, false), []);
+  for (const p of platformRobots(origin, true).rules.allow.slice(1)) assert.match(p, /^(\/th)?\/platform\/(about|features\/[a-z-]+)$/);
+});
+
+test("public path lists carry the feature pages, and the Thai address rewrites", () => {
+  for (const locked of [false, true]) {
+    assert.equal(isPublicPath("/platform/features/money", locked), true);
+    assert.equal(isPublicPath("/platform/about", locked), true);
+    assert.equal(isPublicPath("/platform", locked), false);
+    assert.equal(isPublicPath("/platform/shelters", locked), false);
+  }
+  assert.equal(thPathRest("/th/platform/features/money"), "/platform/features/money");
+  assert.equal(thPathRest("/th/platform/shelters"), null);
 });
 
 test("the platform host serves its sitemap and the Thai product page instead of redirecting", () => {
   assert.equal(platformRedirect("cooperjaidee.example", "/sitemap.xml", env), null);
   assert.equal(platformRedirect("cooperjaidee.example", "/th/platform/about", env), null);
+  assert.equal(platformRedirect("cooperjaidee.example", "/th/platform/features/money", env), null);
+  assert.equal(platformRedirect("cooperjaidee.example", "/platform/features/money", env), null);
+  assert.equal(platformRedirect("cooperjaidee.example", "/th/platform/shelters", env), "/platform");
   assert.equal(platformRedirect("cooperjaidee.example", "/residents", env), "/platform");
 });
