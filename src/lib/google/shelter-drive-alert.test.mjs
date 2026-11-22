@@ -27,8 +27,8 @@ test("a malformed stored value and an incomplete row are the shelter's connectio
 });
 
 test("the mail says what to do and names no internal identifier or Google", () => {
-  const body = deadAlertBody("Lanna Care", "https://x.example/admin");
-  assert.match(body, /Lanna Care/);
+  const body = deadAlertBody("Example Shelter", "https://x.example/admin");
+  assert.match(body, /Example Shelter/);
   assert.match(body, /reconnect/i);
   assert.match(body, /https:\/\/x\.example\/admin/);
   assert.doesNotMatch(body, /DRIVE_CREDENTIALS_KEY|Google said|invalid_grant|secret|base64/i);
