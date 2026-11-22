@@ -1,284 +1,184 @@
-# Planner handover — edition `770`, 2026-11-21
+# Planner handover — edition `771`, 2026-11-22
 
-**This is a DELTA against `769`.** It says what changed, corrects its predecessor, and reports what `769`
+**This is a DELTA against `770`.** It says what changed, corrects its predecessor, and reports what `770`
 left owed. Figures, batch composition and ports live in `.plan-day.md`.
 
 **It outranks nothing.** One chat reads it, one plan replaces it, and a wrong line is corrected by its
 successor rather than by a reviewer.
 
-**IT COVERS NINE STREAMS AND ALL NINE HAVE A VALID FIGURE:** #1796, #1798 (thirteenth plan, batch 2);
-#1799, #1800, #1801 (fourteenth, batch 1); #1802 (fourteenth, batch 2); #1803, #1804 (fifteenth, batch 1);
-#1805 (fifteenth, batch 2). **Dials matched the brief, `compacted=no`, `rescoped=no`, `finished=yes`, nine
-for nine.** The counter resets to 0 when this PR merges.
+**IT COVERS NINE STREAMS AND EIGHT HAVE A USABLE FIGURE:** #1809, #1811, #1812, #1813, #1814 (fifteenth
+plan, batch 1); #1815, #1816 (fifteenth, batch 2); #1818, #1823 (sixteenth plan). **The ninth, #1823, is
+`rescoped=yes` because the planner changed its brief twice mid-flight, so it is recorded and kept out of
+the band evidence.** Dials matched the brief on all nine. The counter resets to 0 when this PR merges.
 
-**THREE PLANS IN ONE CALENDAR DAY, ALL IN ONE CHAT.** The thirteenth finished; he was then offered the
-release or a new plan and **chose the plan three times running**. So `769`'s *"streams first, release
-later"* decision has been exercised three times and still stands.
+**`#1817` IS NOT ONE OF THE NINE.** Lutan created that worktree and ran that stream himself. Only a stream
+a plan created counts (his ruling, 2026-11-20).
 
 ## FOR YOUR FIRST TURN
 
-1. **Read `.plan-day.md` first.** Gitignored, 271 lines, and the only record of the fourteenth and
-   fifteenth plans' batch tables, actuals and reasoning.
-2. **NOTHING IS IN FLIGHT.** No open PRs, no live streams. **The release window is open and has been since
-   #1805 merged at 08:00Z.** His timing, not yours — he was offered it and chose the handover.
-3. **SEVEN MERGED WORKTREES ARE HELD** by their own sessions (ports 3001-3003, 3005-3007, and 3009 for
-   this handover). `done` was refused on every one, repeatedly: *"Windows cannot delete a folder a process
-   is sitting in"*. **All PRs merged and all figures read before any attempt**, so nothing is at risk.
-   **`done` them once he closes those sessions. Do not force it.**
-4. **TWO PRODUCTION READS ARE YOURS AND BOTH BLOCK SOMETHING:** (a) **`#9l7xf`** — does production's
-   `lanna` row have an `is_primary` host? `my_shelters()` omits a shelter without one, and on dev that is
-   the real Lanna row. **Nothing else in that item can start until this is answered.** (b) **`#1804`'s
-   logo proof** — `curl -sI /api/photos/<logo id>` on production after the release, expecting `image/png`.
-5. **THE LANNA LOGO UPLOAD IS STILL HIS, AFTER THE RELEASE, and he set that timing himself**
-   (*"After the release"*, 2026-11-20). **Two things to tell him at that moment and not before:** the
-   black square is **fixed on dev and unproven on the Worker and the Pi** (item 4b), and **`#oga26`** means
-   a very large logo is now a slow public page, so a word about file size before he picks one.
-   **It must not appear on a "waiting on Lutan" list before the release ships.**
-6. **The allow rules for `remove-shelter.mjs` were OFFERED AND DECLINED** — he said *"Not yet"*. The script
-   is merged and ready. **DO NOT ADD THEM OR RE-OFFER UNPROMPTED.**
+1. **Read `.plan-day.md` first.** Gitignored, ~900 lines, and the only record of the sixteenth plan's
+   reasoning, the day's production work and the measurements taken during it.
+2. **Check what is in flight before you believe anything here.** At writing: no open PRs, and the two
+   sixteenth-plan sessions are idle and done.
+3. **TWO MERGED WORKTREES NEED CLEARING** once he closes their sessions: `shelter-drive-connect` (3001)
+   and `backlog-proof-state` (3002). All PRs merged, all figures read. **`done` them; do not force.**
+4. **`0.47.10` SHIPPED TODAY** (the 1 MB logo cap, and `0434`). The release manager cut it; you did not.
+5. **THE SIXTEENTH PLAN WAS TWO STREAMS, NOT NINE, AND THAT WAS CORRECT.** Of 37 open items only two were
+   work a stream could do. **Do not pad a plan to reach nine** — the skill says so and this day proves it.
 
-## THE LESSON OF THE DAY: READ THE INSTRUMENTS, NOT JUST THE ITEM — IT FIRED FOUR TIMES
+## THE LESSON OF THE DAY, AND IT FIRED THREE TIMES BEFORE LUNCH: THE BACKLOG'S OWN PROSE IS NOT EVIDENCE
 
-**Four items read as open, buildable and unstarted. Three were already built and the fourth was the wrong
-shape, and every one was caught by the planner READING before briefing rather than by a stream.**
+**Three items said work was outstanding when it was not, and each one cost something different:**
 
-- **`#apxld`'s product page** had shipped hours earlier (#1785), **and the enquiry form with it**. Only
-  the chooser was left — which became two streams and closed the item.
-- **`#shfil`'s registry and check** had shipped in `6ed546721`. **A worktree was created for it and
-  withdrawn**, which is the honest cost of finding out late.
-- **`#m52yp`'s owner check largely EXISTED** — `scripts/lib/tenancy-catalogue.mjs:63` lints it and
-  `.github/workflows/tenancy-catalogue.yml:34` runs it nightly, strict. **That turned a build into a
-  diagnosis and moved the band 25k.**
-- **`#swout` had sized itself *"S, one script"***; the checker reads only the database and **the three jobs
-  it names are not in the database at all** (`worker/index.mjs`, calling out over HTTP). Rebanded
-  160-200k; **it came in at 182,141, where the quick-win band would have read as a 12k overrun.**
+- **`#stpbk`** — offered to Lutan as a buildable stream, **agreed by him**, and found already fixed while
+  its brief was being written. Every step-up link already passes `stepUpHref(from)` and both redirect
+  points honour it through `stepUpDestination()`. **The batch had to be corrected in front of him.**
+- **`#tstsh`** — the planner put its "two things to decide" to him. **He had decided it two days earlier
+  and it was already built**: `0428` added `shelters.archived_at`, live on production since `0.47.9`, and
+  the console draws **Close** and **Reopen**. His answer was short: *"We agreed this yesterday."*
+- **`#nxtqs`** — the item claimed its release note was *"deliberately left n/a under the truth rule"* and
+  still owed. **It had shipped in `0.47.8` on 2026-11-20.** The planner briefed a stream to write it; the
+  stream read `releases.ts`, **refused, and was right**.
 
-**THE ORDERING FIX, AND IT IS THE WHOLE LESSON: READ THE TREE FOR EVERY CANDIDATE BEFORE THE QUESTION, NOT
-BEFORE THE BRIEF.** The withdrawn worktree happened because the already-built check came after the
-`AskUserQuestion`. **`check-stale-titles.mjs` caught `#shfil` and did NOT catch `#apxld`** — the heuristic
-cannot see an item whose body never claimed to be done. **Reading the directory caught all four.**
+**THE ANSWER IS FILED AND HALF BUILT. `#tg5vh`** (filed this morning from the first instance) says the
+backlog has two states on the page — `- [ ]` and `- [x]` — while the work has **three**: not built; built
+with a proof or a press owed by a person; done. **The middle state is the common one here**, because no
+session can reach production, the Pi or the Google console. `claude/backlog-proof-state` built the
+**PROOF OWED** marker in #1819. **Read what it chose before your first plan.**
 
-## A SECOND LESSON, MEASURED THREE TIMES: WRITE YOUR OPEN QUESTIONS IN AS QUESTIONS
+**AND THE CHEAP INSTRUMENT IS STILL THE SAME ONE: `grep` the code before you believe a title.** All three
+were settled in under a minute each by reading the file the item named.
 
-**The skill's rule paid three times in one day, and twice it was the PLANNER who was wrong.**
+## THE PLANNER'S OWN DEFECTS, BOTH WORTH NOT REPEATING
 
-- **`#apxld`'s schema brief asserted that `shelter_hosts` had no primary-host flag.** It has one —
-  `is_primary`, from `0428`. **Written as a numbered question, so the stream checked it and corrected it.**
-- **`#m52yp`'s brief offered a restrictive-policy hypothesis** — that a policy naming only
-  `anon, authenticated` might not apply to a query running as `rls_definer`. **It does apply.** Written as
-  a question it cost one paragraph; **written as a finding it would have been built on.**
-- **`#swout`'s brief told its stream to establish where scheduled jobs are declared** rather than asserting
-  the item's answer. It found a **fifth** job nobody had named.
+**(1) A SESSION WAS OPENED ON WORK THAT HAD ALREADY MERGED.** The planner started a session on
+`shelter-drive-connect` without first running `gh pr list --state all --head claude/<slug>`. PR #1818 had
+merged an hour earlier, from a session Lutan opened himself. **Step zero caught it and the session built
+nothing**, which is the guard working — but it cost a session start. **Check for an existing PR before
+starting a session on a folder you did not just create.**
 
-**"A brief that says what the planner has not established gets corrected; one that asserts gets obeyed."**
-Three for three.
-
-## AND THE PLANNER'S OWN DEFECT, WHICH A STREAM CAUGHT: TWO ITEM IDS SWAPPED
-
-**`#m52yp` is the `public_*` view owner check. `#gyw6m` was the black logo.** The planner filed both and
-then wrote them the other way round, in two briefs and in `.plan-day.md`. **The backlog was always right.**
-
-**`claude/logo-alpha-serving` (#1804) caught it at step zero**, ticked the correct item and said so in its
-PR. **The batch-2 brief was corrected before its session opened**, with a note naming both ids.
-
-**THE CAUSE AND THE FIX, because it is one line:** `backlog-ids.mjs` assigns ids in **file order**, and the
-planner read two ids out of one `grep` and paired them with the wrong items — Security sits at line 21 and
-Public website at line 299, so **the first id printed was the owner check, not the logo.** **Read each id
-back out of `docs/backlog.md` individually before using it in prose.**
-
-## FIGURES — NINE READINGS, ALL VALID, AND NOT ONE OVERRUN
-
-| PR | slug | band | tokens | floor | verdict |
-|---|---|---|---|---|---|
-| #1796 | `public-views-shelter-scope` | 190-230k | 184,179 | 88,823 | **under by 6k** |
-| #1798 | `shelter-logo-proof` | 145-180k | 161,475 | 88,599 | inside |
-| #1799 | `remove-one-shelter-script` | 150-185k | 161,422 | 87,876 | inside |
-| #1800 | `scheduled-writer-outside-db` | 160-200k | 182,141 | 89,112 | inside |
-| #1801 | `shelter-chooser-schema` | 150-180k | 166,543 | 88,823 | inside |
-| #1802 | `shelter-chooser-page` | 165-205k | 183,017 | 88,888 | inside |
-| #1803 | `translations-closed-shelter` | 145-175k | 155,707 | 88,100 | inside |
-| #1804 | `logo-alpha-serving` | 175-220k | 163,509 | 87,876 | **under by 11.5k** |
-| #1805 | `public-views-owner-check` | 185-235k | 182,612 | 91,209 | **under by 2.4k** |
-
-**SEVEN INSIDE, TWO UNDER, NONE OVER — against `769`'s three overruns in eleven.** `769` diagnosed all
-three of those as *"a band that priced the code and not the FINDING OUT"*. **This set is what happens when
-the planner does the finding out first**, and the four catches above are the mechanism.
-
-### THREE BAND LESSONS, AND ONE OF THEM IS HONESTLY INCONCLUSIVE
-
-1. **THE SCHEMA-SPECIFICATION DISCOUNT IS CONDITIONAL, AND THIS IS THE READING THAT SHOWS IT.**
-   `shelter-chooser-page` was handed `my_shelters()`'s full specification — name, signature, return
-   columns, a worked call — and the hypothesis written down was *"this should land near 165k, the bottom of
-   its band"*. **It landed at 183,017, mid-band**, because it still had to stand up a login holding roles
-   at two shelters and drive a browser. **A specification does NOT pull a stream to the bottom of its row
-   when it must still build apparatus. Do not apply that discount to a stream that needs a fixture.**
-2. **WHEN THE PLANNER DOES THE FINDING OUT, CUT HARDER THAN FEELS SAFE.** `logo-alpha-serving`'s band was
-   cut 185-235k to 175-220k on the strength of tracing the two resize mechanisms before briefing. **It came
-   in 11.5k under the LOWERED band, so the trace was worth about 20k, not 10.** **One reading. A second
-   would justify a row change; one does not.**
-3. **`translations-closed-shelter` IS INCONCLUSIVE AND SAYING SO IS THE POINT.** Banded 145-175k as an
-   ordinary stream rather than 143-170k as a quick win; **155,707 is inside both**, so the reading does not
-   discriminate and **no lesson may be drawn either way.**
-
-### THE FLOOR — NINE READINGS, TWO EXACT REPEATS AND ONE OUTLIER
-
-**87.9k - 91.2k**, from `tokens − messages`. **Eight of the nine cluster at 87.9-89.1k**; #1805's
-**91,209** is the outlier and sits at the very top of `769`'s 87.2-91.6k. **Two exact repeats, each across
-different kinds of work:** `88,823` (#1796 a views audit, #1801 a schema function) and `87,876` (#1799 a
-one-off script, #1804 two call sites). **Record the repeats and the outlier; offer no cause.**
-
-## THE FINDING THAT MATTERS MOST: A MIGRATION WAS WRITTEN ON BAD EVIDENCE
-
-**`#m52yp` (#1805) set out to explain why `public_site_content` leaked at #1788 while correctly owned. The
-answer is that IT NEVER LEAKED TO ANON.**
-
-Measured on dev inside a rolled-back transaction: an **untrusted** anon read of an `rls_definer`-owned view
-returned **0 rows with no shelter header and 1 with one** (7 from a `postgres`-owned one), while a
-**trusted** read — one carrying **no jwt claims at all** — saw **all 7 whatever the owner**. `0429`'s
-harness and the Management API both send no claims, so `is_trusted_caller()` was true and every policy
-correctly stood aside. **Ownership does scope these views. The six rows were an artefact of the
-instrument.**
-
-**SO `0430_public_site_content_scoped.sql` WAS WRITTEN TO FIX A LEAK ANON COULD NOT SEE.** It is **not**
-being undone — scoping a public view explicitly is harmless and arguably better than relying on its owner —
-**but a migration was written on bad evidence and nothing in the toolchain objected.** Filed as
-**`#701vn`**: a `begin … rollback` harness that claims to prove scoping must set `request.jwt.claims` with
-`role=anon`, or say in its own comment that it proves nothing about anon. **`CLAUDE.md`'s migration section
-recommends that harness pattern without this caveat.**
-
-**`#pvws4`'s tick HOLDS** — its verdict was right; only its stated *mechanism* (*"recreated as
-`postgres`"*) was not what happened to that view. **The gap was still real, so #1805 built
-`scripts/check-view-owners.mjs`** (plus lib and test) into `npm run lint`, proved red on fixtures: it
-catches a **new view nobody re-owns** at the commit, where the nightly lint catches it the next morning.
-
-## FILED, TICKED AND CORRECTED
-
-- **FILED BY THE PLANNER — six items, five of them from a stream's hand-back:** **`#fu86i`** (the fifth
-  scheduled job, `runTranslations`, exempted as *"NOT ESTABLISHED"*), **`#m52yp`** (now done),
-  **`#gyw6m`** (now done), **`#oga26`** (the logo fix's bill: the original is served on every public page
-  and uploads accept up to 15 MB, so a cap plus refusal wording in **both** dictionaries), **`#9l7xf`**
-  (`my_shelters()` omits a shelter with no primary host) and **`#701vn`** (above).
-- **EVERY ONE OF THE FIRST THREE FILINGS BECAME A STREAM WITHIN THE HOUR.** A stream reports, only the
-  planner files, the next plan builds it — **and today that loop closed twice in one day.**
-- **TITLES REWRITTEN BECAUSE THEY HAD GONE FALSE:** `#apxld` (the product page shipped) and `#shfil`
-  (the code half shipped; what remains waits on `#gidty`'s Google account). Old wording kept as
-  `SUPERSEDED`.
-- **TICKED BY THEIR STREAMS:** `#swout`, `#fu86i`, `#gyw6m`, `#m52yp`, `#apxld`. **`#tstsh` was NOT
-  ticked** — the script exists, the run is his.
-- **THE DRIVEN-PROOF INSTRUMENT NOW HAS FOUR USERS AND ALL REPORT IT WORKING AS WRITTEN.** `769` asked
-  for the second user's answer; it came back *"The `CLAUDE.md` snippet worked as written"*, and
-  `shelter-chooser-page` and `logo-alpha-serving` drove it too. **An instrument with one user is no longer
-  the risk `769` flagged.**
+**(2) THE PLANNER TOLD A STREAM TO WRITE A RELEASE NOTE THAT ALREADY EXISTED**, from `#nxtqs`'s stale
+prose. Had the stream obeyed, users would have been told twice about one change. **It refused and said so
+plainly. That is the brief working as intended** — *"if a numbered deliverable genuinely needs X, do it
+and say so in your PR"* has a mirror image, and this was it.
 
 ## HIS DECISIONS OF THE DAY — SETTLED, DO NOT RE-OPEN
 
-- **The `test123` shelter goes by a ONE-OFF REMOVAL** (asked with the three shapes the item named). **The
-  script is a stream's, the run is his**, and whether the console should ever remove a shelter was
-  deliberately left with `#pacon`.
-- **The allow rules for that script: *"Not yet"*.** Declined, recorded, **do not re-offer.**
-- **Streams first, release later**, exercised three times — he chose a new plan over the release at every
-  hand-back. **The window is open now and the timing is still his.**
-- **The Lanna logo upload waits for the release.** His timing, his hands.
+- **A shelter is only ever CLOSED (archived) and reopenable, NEVER deleted.** His words: *"Only ever
+  archive - switch off access - and ability to unarchive later."* Already built (`0428`, Close/Reopen in
+  the console). **`scripts/remove-shelter.mjs` is not the path, and its declined allow rules are not
+  needed.**
+- **The hosts check runs on all three environments at his go.** Done 2026-11-22, all three clean, which
+  closed `#aucbk` and `#wwwcb`.
 
-## HIS PRIORITIES HAVE CLOSED NONE IN TWENTY-ODD STREAMS, AND HE ASKED WHY — THE ANSWER IS A PLANNING FAULT
+### ONE THING HE SAID THAT IS **NOT** SETTLED — ASK HIM BEFORE YOU ACT ON IT
 
-**He put it directly on 2026-11-21:** *"we have done over 20 streams now and have not closed out any of the
-priorities, what is needed to start closing out some of these priorities"*. **He is right, and the cause is
-the planner's, not the backlog's: NOT ONE of his eight can be closed by a worktree**, so every plan carried
-them forward with a reason attached instead of moving them. **A stream cannot deploy, cannot reach his home
-network, cannot read Cloudflare and cannot talk to the Director.** The planner optimised for what briefs
-cleanly.
+**He answered "Open them" when offered the day's two streams, and the planner started both sessions** —
+reversing his decision of 2026-11-03 that the planner hands back folder, port and dials and **does not
+start sessions**, because his plan bills by turns. **He was told plainly that this reversed it and asked
+whether he meant it. He had not answered when this was written.**
 
-**AND ONE OF THE EIGHT WAS MIS-FILED AS HIS FOR A DAY. CORRECT THIS FIRST.** **`#aaqtl` IS A STREAM'S JOB
-AND HAS BEEN SINCE 2026-11-20.** Every plan, and the first draft of this handover, said *"his three
-production steps"* and *"none of the eight is a stream"*. **Both are wrong.** The item's own title says so:
-*"THE THIRD IS NOT LUTAN'S AT ALL AND CANNOT BE DONE BY HAND — IT NEEDS A SMALL CODE CHANGE FIRST, AND THIS
-ITEM AND ITS DECISION FILE ARE BOTH WRONG ABOUT THAT."* Two of three steps are done (the role and the
-machine login exist on production, verified). **What is left is small and buildable:** register
-`LABEL_DRAFT_EMAIL`, `LABEL_DRAFT_PASSWORD` and `SUPABASE_ANON_KEY` as worker-side entries with
-`required: false` in `scripts/lib/runtime-config.mjs`, and add the two `LABEL_DRAFT_*` values to
-`.env.deploy.production`. **`LABEL_DRAFT_EMAIL` must be a SECRET, not a `wrangler.jsonc` var — this repo is
-public and a var would publish the machine login's address.** Only then is the deploy his. **The cause of
-the mis-filing was reading a stale summary instead of the item, which is the same fault as the swapped ids
-above.**
+**So: default to the 2026-11-03 rule — hand back the list and stop — unless he says otherwise in words.**
+The button he pressed said "Open them", which was the planner's own wording, so it is weak evidence of a
+change of mind. **Do not treat this paragraph as permission.**
 
-**WHAT THE OTHER SEVEN ACTUALLY NEED, read from each item on 2026-11-21 rather than carried forward:**
+## WHAT WAS DONE *TO PRODUCTION* TODAY, AND THE ONE THING THAT NEARLY WENT WRONG
 
-- **`#egq18` IS THE ONE THAT UNBLOCKS THE MOST AND IT IS THE PLANNER'S.** One number: each public page's
-  CPU rendered in a Worker with `ORIGIN_HOST` empty, against the free plan's 10 ms. **It releases `#34a30`,
-  and those two complete `#ykefa`'s thirteen parts — three of the eight hinge on it.** The deploy half is
-  the planner's (`scripts/deploy.mjs --env test`); **the Observability read is not, because no Cloudflare
-  credential is visible to this session** (checked: no `CLOUDFLARE_API_TOKEN` or `CF_*` in the
-  environment). **So it is his dashboard, or driving his Chrome where he is signed in. Say that rather than
-  promising the whole job.** Offered 2026-11-20 and not taken up; **he has now asked, so the no-re-offer
-  rule no longer applies.**
-- **`#34a30`** waits on `#egq18` and **must not be started before it**. If the pages do not fit it needs
-  Workers Paid, **which breaks the zero-ongoing-cost rule and is his decision, not a build.**
-- **`#ykefa`** is the index and the design record. Parts 1-11 are closed; it closes when 12 and 13 do, plus
-  its go-live step, which is his.
-- **`#pirow`** is half done. The Pi exercise needs the home network (**he is back 29 November**), and
-  `node scripts/check-scheduled-writers.mjs --env production` **was attempted from here on 2026-11-21 and
-  REFUSED by the auto-mode classifier** — it needs a bare exact-match allow rule in his user settings, the
-  same shape he declined for `remove-shelter.mjs`. **State it; do not press it.**
-- **`#3qmzt` CANNOT BE CLOSED BY WORK AND SAYS SO ITSELF:** *"there is nothing left to read, so clause (a)
-  is unanswerable for ever on those two"*, *"a standing watch, not a job"*, *"do not brief this as a stream
-  until mechanism A happens again"*. **It can only leave the list by his decision to retire it.**
-- **`#chpap`** — wording agreed 2026-11-20, nothing left for Claude; **the Director puts the line on the
-  form.**
-- **`#gcnst`** — decided 2026-11-20 that **the rename is NOT the fix and should not be done.** It is an
-  answered question sitting on a priority list.
+**Seven blockers closed, most of them by one press of his.** Signing in with Google from the bare
+`cooperjaidee.org` landed him on `/platform`, and because that button is a form submission to a Server
+Action — the exact thing that used to be refused — **one press settled `#plhbd`, `#nxtqs` and two of
+`#cjred`'s four clauses.** Both fixes were verified as ancestors of the deployed SHA **before** he pressed.
 
-**SO THREE OF THE EIGHT ARE NOT WORK AT ALL** (`#gcnst`, `#chpap`, `#3qmzt`) **and will sit at the top of
-his ranking for ever unless they come off it.** The list is his, so **do not edit the artifact** — put it to
-him once and let him decide.
+**THE LABEL DRAFTER RUNS (`#aaqtl`).** `scheduled_writer_runs` reports `label-drafts: ok, fail_runs=0`.
 
-**THE LESSON FOR A SUCCESSOR, AND IT IS NOT "PLAN HARDER":** when an item needs a deploy, a network, a
-person or a decision, **the planner's own hands are the critical path, and a day spent briefing streams
-around it is a day his list does not move.** Read the eight at every plan and ask *who* each one is waiting
-for — not whether it would make a good stream.
+**AND THE NEAR MISS, WHICH IS NOW `#83137`: `node scripts/deploy.mjs --env production --secrets` WOULD
+HAVE PUSHED SEVEN DEV VALUES OVER PRODUCTION'S LIVE SECRETS**, one of them `DRIVE_CREDENTIALS_KEY`, which
+decrypts every shelter's stored Drive credentials. **A `--plan` run first is the only reason this was
+seen.** The script refused and offered `--allow-dev-fallthrough`; **the flag was not taken**, and the three
+new secrets went up through `wrangler secret bulk`, which touches only the keys it is given.
 
-## STILL OWED — ONE ITEM, AND IT IS THE SAME ONE `769` LEFT
+**THE RULE THIS PROVES, FROM HIS OWN `CLAUDE.md`: a tool's suggested remedy is not advice.** Read what the
+override would do before taking it. **Dry-run anything that writes to production.**
 
-- **STILL OPEN, conditional:** lowering *"Reads very widely and edits many call sites"* (185-250k) toward
-  the audit row. **Still only one reading** (`silent-empty-reads`, 133,986, older floor and dials).
-  **Nothing in these nine was a second** — none of them reads widely and edits many call sites.
-  **Needs readings at current dials.**
-- **`769`'s list is otherwise closed.**
+## A SECOND INSTRUMENT GAP, FOUND THE HARD WAY
+
+**Why a scheduled writer skipped or failed is recorded on production and NOTHING CAN READ IT.** The System
+status page shows only *when* a job last ran; no check script reads `scheduled_writer_runs.last_outcome`
+or `last_detail`. **Twenty minutes went on inferring the answer from the colour of a green dot**, and it
+was finally settled with a hand-written Management API read. **It is a small addition to
+`check-production.mjs` and it would have answered the question in one command.** Not yet filed as its own
+item; `#tg5vh`'s stream was told about it.
+
+## FIGURES — NINE STREAMS, EIGHT USABLE READINGS, NONE OVER
+
+| PR | slug | tokens | band | verdict |
+|---|---|---|---|---|
+| #1809 | `shelter-primary-host` | 156.9k | 145-180k | in band |
+| #1811 | `label-draft-runtime-config` | 152.5k | 143-170k | in band |
+| #1812 | `tenancy-catalogue-flags` | 143.9k | 150-180k | **6.1k UNDER** |
+| #1813 | `deployed-hosts-www-check` | 147.1k | 145-175k | in band |
+| #1814 | `google-identity-check` | 169.3k | 145-180k | in band |
+| #1815 | `scoping-harness-rule` | 143.5k | 148-180k | **4.5k UNDER** |
+| #1816 | `logo-upload-cap` | 158.5k | 150-185k | in band |
+| #1818 | `shelter-drive-connect` | 227.9k | 200-260k | in band |
+| #1823 | `backlog-proof-state` | 159.2k | 170-210k | **rescoped — not a reading** |
+
+**Six in band, two under, none over, one excluded.** Dials matched the brief on all nine.
+
+**THE TWO UNDERSHOOTS SUPPORT THE STANDING HYPOTHESIS AND DO NOT PROVE IT.** Both briefs handed over the
+cause, the decision and the shape of the fix; both came in under. **The hypothesis remains: a trace
+discounts, an unmade decision does not.** `#1818` is the counterweight — its brief deliberately left three
+questions open **and the card question unanswered**, and it landed mid-band at the top of the day's range.
+**No band row was changed on this evidence.**
+
+**#1823 IS THE PLANNER'S FAULT, NOT THE STREAM'S.** Its brief gained four deliverables after it was
+written and was then corrected again mid-flight. **It is marked `rescoped=yes` honestly and must stay out
+of any band revision.**
+
+### THE FLOOR — NINE READINGS, 88.3k TO 91.4k
+
+`88,337 · 88,836 · 88,982 · 89,125 · 89,494 · 90,053 · 90,869 · 91,294 · 91,368`
+
+**Tighter than `770`'s and slightly higher at the bottom. Record the range, offer no cause, re-measure.**
+
+## FILED, TICKED AND CORRECTED
+
+**Filed:** `#tg5vh` (the backlog cannot say *built, proof owed*); `#83137` (the `--secrets` deploy would
+push seven dev values to production).
+
+**Ticked:** `#aucbk`, `#wwwcb` (hosts check clean on all three); `#plhbd` (his press); `#aaqtl` (the
+drafter runs); `#nxtqs` (the press, and the note had already shipped); `#tncy3` (by #1812).
+
+**Corrected without ticking:** `#tstsh` (retitled — decided and built, he presses Close); `#cjred`
+(retitled — two clauses met, the suspected setting was innocent, two small clauses left); `#gidty` (the
+`hinge probe` client deleted by him; the four older registrations remain).
+
+**An SEO item for `cooperjaidee.org` was drafted and NOT filed** — he said *"please disregard"* and gave it
+to the backlog manager. **Do not file it.** One real finding from that reading, if it comes back: the
+platform host has **one** indexable page and **no `robots.txt` or sitemap of its own**, and the shelter
+site's would misfire there.
+
+## STILL OWED
+
+1. **`#9l7xf`'s production read** — `770` listed it; it was answered on 2026-11-21 and the fix shipped in
+   #1809. **Closed. `770` is superseded on this point.**
+2. **`#drvcl`'s first Google consent is HIS**, with the connect client's secret. The screen, both OAuth
+   routes and the env names shipped in #1818; **the release note was correctly left `n/a` naming exactly
+   that step.** It ships in the PR that closes it.
+3. **`#cjred`'s last clause** needs a signed-in login that is **not** a product administrator. He is one,
+   so his press could not exercise it.
+4. **The `scheduled_writer_runs` read** (above), unfiled.
 
 ## PROCESS NOTES
 
-- **The hard sequence was kept at all four of the day's setups.** Sync, merge check, `new` per stream,
-  briefs, `streams`, then the list. **Nothing was cleared and no PR body was read before any list went
-  out.** Seven briefs written, no block drift.
-- **THE BRIEF ASSEMBLER IS WORTH KEEPING AND ITS GUARDS EARNED THEIR SPACE.** Nine fenced blocks from
-  `brief-blocks.md`, byte-identical guard on the eight verbatim ones, per-stream fill of block D's three
-  holes, **and a guard that line 1 is exactly the `<!-- stream: -->` header** (`worktree.mjs streams`
-  matches it **on line 1 only**, `scripts/worktree.mjs:637`).
-- **A GUARD THAT IS TOO STRICT REFUSES A CORRECT EDIT.** The first attempt at the id correction asserted
-  *no* `#gyw6m` anywhere in the output — which the correction note itself legitimately mentions. **It
-  exited non-zero and wrote nothing, which is the guard working.** **Write the guard against what the
-  output should contain, not against a string being absent.**
-- **TWO SHELL TRAPS, both cheap once known.** A `\|` inside a JSON string reached `node` as an invalid
-  escape and `JSON.parse` refused the whole file — **reword to avoid the backslash.** And apostrophes
-  inside a single-quoted `node -e` break Git Bash — **write the script to a file and run it by path**,
-  which is what the skill already says for `.plan-day.md`.
-- **A SECTION REGEX TRAP:** a lookahead ending `|\n*$` under the `m` flag matches at the end of the FIRST
-  line, so every block came back empty. **Split on the heading rather than lookahead-bounding it.**
-- **`worktree.mjs done` FAILED ONCE AND SUCCEEDED ON AN IMMEDIATE RETRY** (a file lock during folder
-  removal, not a broken command). **Read the second run before reporting a failure.**
-- **Every usage comment was read BEFORE any worktree was cleared or any clearing attempted.** Nine for
-  nine; none had to be recovered from a transcript.
-- **The backlog pre-commit hook refuses a commit message that does not name the changed item ids.** Four
-  commits today named eight ids between them.
-- **Do not run a plain recursive `grep -rl` here** — it timed out at 120 seconds. The Grep tool (ripgrep)
-  answers at once.
+- **The nine were not one plan.** Seven came from the fifteenth plan, two from the sixteenth. **The
+  counter is nine merged PLANNED streams since the last edition, across plans and chats.**
+- **`worktree.mjs streams` reports a hand-made worktree as `no metadata line`.** That is not a fault and
+  not a leftover: check `gh pr list --state all --head`, then **ask**. Lutan makes his own worktrees.
+- **A stream that refuses an instruction may be right.** Check before you insist.
 
 ## INTERRUPTIONS
 
-**ZERO DEFECTS AND ZERO MID-TURN MESSAGES, across three plans and nine merged streams.** Every message of
-his was a decision being taken: the plan over the release (three times), *"Yes, all three"*, *"I'll do a
-one-off removal"*, *"Not yet"*, *"Yes, both"*, *"Yes, write 770"*.
-
-**TWO SELF-INFLICTED COSTS, BOTH THE PLANNER'S AND NEITHER REACHING HIM:** the withdrawn `#shfil`
-worktree, and the swapped item ids. **Both have a stated fix above, and both were caught inside the
-system** — one by reading the tree, one by a stream at step zero.
+**One, and it was a briefing defect:** `#stpbk` was offered, agreed and withdrawn within the hour. **Cost:
+one worktree created and removed, and his confidence in the day's plan.** The brief was never written, so
+the step-zero guard never got the chance — **the planner's own reading was the thing that failed.**
