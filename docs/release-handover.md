@@ -86,8 +86,10 @@ lives in the runbook (§6, *Worker, production*); it no longer needs a handover 
 
 `0435_shelter_drive_staged.sql` adds `staged boolean not null default false` to
 `shelter_drive_credentials`. **No code on `main` reads it** — `git grep "staged" origin/main -- src/lib/google/`
-returns nothing, and the five files that do are still unmerged on `claude/shelter-drive-move`, whose
-session is live. `apply-migrations.mjs` warned that the declared consumer is *"not on origin/main at all"*.
+returned nothing when this was measured, and `apply-migrations.mjs` warned that the declared consumer was
+*"not on origin/main at all"*. **CORRECTED: #1835 merged at 10:48:55 UTC, two minutes before the mail, so
+the five readers ARE on `main` now — but they are NOT in `050b44b0f`, so no deployed host runs them.** The
+column sits unread on production exactly as intended; the reader ships next release.
 
 **That warning is correct.** Schema first, reader later, with a default equal to today's behaviour. The
 runbook already says an unsurprising warning is the point; this is what one looks like.
