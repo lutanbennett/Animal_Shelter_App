@@ -8,6 +8,8 @@
 `/platform/about` was one page, no `features/` directory, and `PLATFORM_INDEXABLE` the hard-coded two-entry array. Built, not skipped.
 
 ## Address
+**Settled by Lutan, 2026-11-23:** asked whether to take the recommended address or choose his own, he answered *"Use yours"* (relayed by the Planner; the backlog line itself still reads as a recommendation until the backlog branch lands). Not re-opened here.
+
 `/platform/features/<subject>`, English and `/th/platform/features/<subject>`. The home page stays at `/platform/about`, which `platformRedirect()` serves at the bare `/`. Nothing on the host is indexed yet, so the choice costs no redirects.
 
 ## The six hard-coded places, made one list
