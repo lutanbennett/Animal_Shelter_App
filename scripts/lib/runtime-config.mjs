@@ -105,3 +105,42 @@ export const WORKER_ROUTED_VARS = RUNTIME_CONFIG.filter((c) => onWorker(c) && c.
 export const PI_FORBIDDEN = names((c) => c.neverOnPi);
 /** Names to strip out of status-tile error text. */
 export const SCRUB_NAMES = names((c) => c.scrub);
+
+// ---------------------------------------------------------------------------
+// Every name, per target, with the reason (docs/decisions/2026-11-23-deploy-secrets-registry.md).
+// The lists above answer "what IS pushed". These answer "what is NOT, and why", so a name
+// that reaches a machine by no list is a gap the check reports rather than a silence.
+// Names and reasons only, never a value.
+
+/**
+ * How one name reaches one machine. target: "worker" | "pi".
+ * role: secret-required | secret-optional | build-var | wrangler-var | own-module | not-here.
+ */
+export function classify(c, target) {
+  const here = target === "worker" ? onWorker(c) : onPi(c);
+  const label = target === "worker" ? "the Worker" : "the Pi";
+  if (!here) return { role: "not-here", reason: `read only by ${c.where === "tools" ? "dev-machine scripts" : c.where === "pi" ? "the Pi" : "the Worker"}, never ${label}` };
+  if (c.own) return { role: "own-module", reason: `built and checked by ${c.own}, not pushed as a secret` };
+  if (c.source === "wrangler") return { role: "wrangler-var", reason: "a var committed in wrangler.jsonc, not a secret" };
+  if (target === "worker") {
+    if (c.secret) return { role: c.required ? "secret-required" : "secret-optional", reason: c.required ? "required: --secrets refuses without it" : "optional: pushed when set in the values file" };
+    return { role: "build-var", reason: "inlined into the build, not a Worker secret" };
+  }
+  return { role: c.required ? "secret-required" : "secret-optional", reason: c.required ? "required: write-env refuses without it" : "optional: written when set in the values file" };
+}
+
+/** [{ name, worker: {role, reason}, pi: {role, reason} }] for every name. */
+export const CLASSIFICATION = RUNTIME_CONFIG.map((c) => ({ name: c.name, worker: classify(c, "worker"), pi: classify(c, "pi") }));
+/** Names a --secrets deploy never pushes, each with why. */
+export const WORKER_NOT_PUSHED = CLASSIFICATION.filter((c) => !c.worker.role.startsWith("secret")).map((c) => ({ name: c.name, reason: c.worker.reason }));
+/** Names the Pi's env file never carries as secrets, each with why. */
+export const PI_NOT_APPLICABLE = CLASSIFICATION.filter((c) => !c.pi.role.startsWith("secret")).map((c) => ({ name: c.name, reason: c.pi.reason }));
+
+/**
+ * Worker `env.X` reads that are in neither this manifest nor wrangler.jsonc: tuning knobs the
+ * code defaults when unset. Listed so a NEW read is a gap check-runtime-config reports.
+ */
+export const WORKER_DEFAULTED_KNOBS = ["TRANSLATE_MODEL", "TRANSLATE_ENGINE", "OLLAMA_URL", "RELEASE_MAIL_SENDER_NAME", "LABEL_DRAFT_BATCH"];
+
+/** Why a Drive-set name resolving from .env.local is deliberate, not a fault (#rqv5c ends it). */
+export const DELIBERATE_DEV_FALLTHROUGH = ["GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_OAUTH_REFRESH_TOKEN"];
