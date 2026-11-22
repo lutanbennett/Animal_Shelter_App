@@ -472,6 +472,11 @@
       "reason": "Reads the acting shelter's own shelter_drive_credentials row, .eq(shelter_id, actingShelterId()), and its shelters.key by id; no login holds a grant on either table."
     },
     {
+      "id": "src/lib/google/shelter-google-connect.ts#completeConnect",
+      "classification": "filtered",
+      "reason": "Acts only on actingShelterId(): reads that shelter's shelters row by id, writes its own shelter_drive_credentials / shelter_calendar_credentials row (shelter_id = that id) and its shelters.drive_root_folder_id by id; no login holds a grant on either credentials table. Reached only from the Admin-only callback route."
+    },
+    {
       "id": "src/lib/google/shelter-calendar-credentials.ts#resolveShelterCalendar",
       "classification": "filtered",
       "reason": "Reads the given shelter's own shelter_calendar_credentials row, .eq(shelter_id, shelterId), and its shelters.key by id; the id is the visit's own shelter; no login holds a grant on either table."
