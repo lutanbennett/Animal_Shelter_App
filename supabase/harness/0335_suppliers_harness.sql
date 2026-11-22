@@ -1,4 +1,5 @@
 -- Rollback harness for 0335 / 0336 / 0337 (suppliers). Dev only.
+-- Scoping: sets no request.jwt.claims, so is_trusted_caller() is true; proves nothing about shelter scoping as anon (CLAUDE.md, migrations).
 --   node scripts/run-harness.mjs supabase/harness/0335_suppliers_harness.sql
 -- Success is the HARNESS-OK message, raised on purpose so nothing commits.
 begin;

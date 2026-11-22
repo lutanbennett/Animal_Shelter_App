@@ -874,6 +874,11 @@ dev server running, none of it matters.
 - To exercise a migration against real rows without keeping anything, run
   a `begin; … rollback;` block through the same API with a `do $$ … $$`
   harness whose `raise exception` assertions surface as errors.
+  **A harness that claims to prove shelter scoping must set `request.jwt.claims` with `role=anon`
+  (as `shelter_logo.sql` does), or say in its own comment that it proves nothing about anon.** A
+  harness and the Management API send no claims, so `is_trusted_caller()` is true and every
+  per-shelter policy stands aside; the 6 rows seen at #1788 were that artefact, and `0430` was
+  written to fix a leak anon never had (`docs/decisions/2026-11-22-scoping-harness-claims.md`).
 
 ## Finishing a feature
 

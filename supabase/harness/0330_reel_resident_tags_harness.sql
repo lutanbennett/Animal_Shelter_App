@@ -1,4 +1,5 @@
 -- Harness for 0330_reel_resident_tags.sql. Rolled back; success is the final message. Needs two disposable dev logins:
+-- Scoping: sets no request.jwt.claims, so is_trusted_caller() is true; proves nothing about shelter scoping as anon (CLAUDE.md, migrations).
 --   node scripts/dev-signin.mjs --cards reel_view --port <p>    and    node scripts/dev-signin.mjs --cards reel_add --port <p>
 -- Run: node scripts/run-harness.mjs supabase/harness/0330_reel_resident_tags_harness.sql
 begin;
