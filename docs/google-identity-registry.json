@@ -13,9 +13,8 @@
     },
     "uat": {
       "app": {
-        "verdict": "revoked",
-        "backlog": "#drvtk",
-        "note": "known: UAT app token expired or revoked, awaiting re-mint"
+        "verdict": "refreshes",
+        "note": "inherited from .env.local: same OAuth client, same account; UAT keeps its own GOOGLE_DRIVE_ROOT_FOLDER_ID (#drvtk fixed 2026-11-22)"
       },
       "backup": {
         "verdict": "refreshes",

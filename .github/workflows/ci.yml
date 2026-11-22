@@ -195,6 +195,8 @@ jobs:
       # Lutan's Customer priority from it — weeks-later damage from a commit that
       # looked fine. `node scripts/backlog-ids.mjs docs/backlog.md` fixes it.
       - run: node scripts/check-backlog-ids.mjs
+      # Every open item says who it waits on and keeps a stable name (#bkwai).
+      - run: node scripts/check-backlog-waiting.mjs
       # Public hostnames (site-hosts.ts) and public pages (public-paths.ts) are each one list.
       - run: node scripts/check-site-hosts.mjs
       - run: node scripts/check-no-lanna-literal.mjs

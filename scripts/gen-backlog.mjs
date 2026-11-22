@@ -13,6 +13,11 @@ const REPO = process.argv[2] ?? "C:/Development/Animal_Shelter_App";
 const OUT = process.argv[3] ?? "backlog.html";
 
 const md = readFileSync(`${REPO}/docs/backlog.md`, "utf8");
+// Waiting state and stable names (#bkwai). The tag is machine-readable and is STRIPPED from the
+// rendered body: this page escapes HTML, so a left-in comment would print as clutter.
+import { parseTag, stripTag } from "./lib/backlog-waiting.mjs";
+let NAMES = {};
+try { NAMES = JSON.parse(readFileSync(`${REPO}/docs/backlog-names.json`, "utf8")); } catch { /* page still renders without names */ }
 const sha = execSync("git rev-parse --short HEAD", { cwd: REPO }).toString().trim();
 const stamp = new Date().toLocaleString("sv-SE", { timeZone: "Asia/Bangkok" }).slice(0, 16);
 
@@ -91,7 +96,8 @@ const uniqueId = (base) => {
  * in this file are always a numbered sub-list (the guided-tour item).
  */
 function itemHtml(item, idPrefix) {
-  const m = item.head.match(ITEM_RE);
+  const tag = parseTag(item.head);
+  const m = stripTag(item.head).match(ITEM_RE);
   if (!m) return "";
   const [, tick, itemId, title, rest] = m;
   const done = tick === "x";
@@ -109,9 +115,12 @@ function itemHtml(item, idPrefix) {
   // falls back to the old title slug, which still works and still collides —
   // `noId` below counts them so that never passes unnoticed.
   if (!itemId) noId++;
+  const stable = itemId && NAMES[itemId];
+  const stateKey = tag ? tag.state : "";
+  const badge = tag ? `<span class="wstate w-${esc(tag.state)}">${esc(tag.state === "decision" ? "decision · " + (tag.by || "?") : tag.state)}</span>` : "";
   const anchor = itemId ? `i-${itemId}` : uniqueId(idPrefix + "-" + slug(title));
   return (
-    `<li class="item${done ? " done" : ""}" id="${anchor}">\n` +
+    `<li class="item${done ? " done" : ""}" id="${anchor}"${stateKey ? ` data-wstate="${esc(stateKey)}"` : ""}>\n` +
     `  <details>\n` +
     `    <summary><span class="box" aria-hidden="true"></span>` +
     // The permanent id, on the row rather than only in the anchor: it is how
@@ -119,7 +128,8 @@ function itemHtml(item, idPrefix) {
     // cannot follow a reference to it. An item with no id yet shows nothing
     // rather than a placeholder — `noId` above is what reports those.
     (itemId ? `<code class="iid">#${itemId}</code>` : "") +
-    `<span class="ttl">${inline(title)}</span>` +
+    (stable ? `<span class="ttl"><b class="nm">${esc(stable)}</b><span class="lt">${inline(title)}</span></span>` : `<span class="ttl">${inline(title)}</span>`) +
+    badge +
     `<span class="chev" aria-hidden="true"></span></summary>\n` +
     `    <div class="body">${body}</div>\n` +
     `  </details>\n</li>`
@@ -252,6 +262,14 @@ const head = readFileSync(new URL("./lib/backlog-page/head.html", import.meta.ur
 // live in the artifact's own db, so they survive every republish.
 const priorities = readFileSync(new URL("./lib/backlog-page/priorities.html", import.meta.url), "utf8");
 
+const STATES = ["buildable", "stream", "lutan", "director", "decision", "purchasing", "person", "event", "parked"];
+const filterBar =
+  `<div class="wfilter"><button data-f="" class="on">All</button>` +
+  STATES.map((s) => `<button data-f="${s}">${s}</button>`).join("") +
+  `</div>
+<script>document.querySelectorAll(".wfilter button").forEach(function(b){b.onclick=function(){document.querySelectorAll(".wfilter button").forEach(function(x){x.classList.toggle("on",x===b)});document.querySelectorAll("li.item[data-wstate]").forEach(function(li){li.hidden=!!b.dataset.f&&li.dataset.wstate!==b.dataset.f})}})</script>
+`;
+
 const html =
   head +
   `<div class="wrap">\n<header>\n` +
@@ -263,6 +281,7 @@ const html =
   `  <div class="bar"><i style="width:${pct}%"></i></div>\n` +
   `  <nav><a href="#priorities">Priorities</a>${nav}</nav>\n</header>\n` +
   finishedJson +
+  filterBar +
   priorities +
   sections +
   `\n<p class="foot">Rendered from <code>docs/backlog.md</code> at <code>${sha}</code>. ` +
