@@ -85,7 +85,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [x] Backlog item ticked in `docs/backlog.md` on this branch (#cjlnd ticked; #cjseo marked `PROOF OWED:`)
 - [x] Decision file `docs/decisions/2026-11-22-cooperjaidee-product-page.md`
 - [x] `README.md` still accurate (it does not mention the product page)
-- [x] Release notes: `unreleased` gained one line for the redesigned product page
+- [x] **Release notes.** `unreleased` gained one line for the redesigned product page
 - [x] Commit messages say why, not just what
 - [x] Claims were measured: the closed and open behaviour of robots, sitemap and the header were run, not reasoned
 
