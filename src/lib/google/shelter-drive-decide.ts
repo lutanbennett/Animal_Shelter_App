@@ -38,7 +38,7 @@ export function fromEnv(): DriveCredentials {
 /** Decrypts one stored row. Throws DriveCredentialsError if any of the three values is missing or unreadable. */
 export async function credentialsFromRow(row: DriveCredentialRow): Promise<DriveCredentials> {
   if (!row.oauth_client_id || !row.oauth_client_secret_enc || !row.refresh_token_enc) {
-    throw new DriveCredentialsError("This shelter's Google connection is incomplete: a client id, client secret or refresh token is missing.");
+    throw new DriveCredentialsError("This shelter's Google connection is incomplete: a client id, client secret or refresh token is missing.", "theirs");
   }
   return {
     cacheKey: row.shelter_id,
