@@ -1,150 +1,148 @@
-# Release handover — written 2026-11-22 after `0.47.10`
+# Release handover — written 2026-11-22 after `0.48.0`
 
-A **delta**. The durable rules are in `docs/release-procedure.md` and this release's own record is
-`docs/releases/2026-11-22-0-47-10.md`. **Both outrank this file.** Its predecessor was written after
-`0.47.9` the previous day.
+This is a **delta** on the last edition, not a runbook. `docs/release-procedure.md` is the runbook and
+outranks this file; `docs/releases/2026-11-22-0-48-0.md` is this release's record and holds the figures.
+Where this file and either of those disagree, they are right.
 
 ## START HERE
 
-Production is `lannacareforanimals.org`, now on **`0.47.10`** — **a release that mailed nobody.**
-`cooperjaidee.org` and `uat.lannacare.org` are fully on it too, and **all four Pi apps report one SHA,
-`7a1aae4ea`**. Both endpoints were read on all four hosts and `/icon-192.png` answers 200 on each.
+**`0.48.0` is live on all four hosts, and it MAILED** — the first release to send mail in sixteen days.
+Lutan asked for it in words (*"lets do a major release, email to be sent and note any gaps in test"*), so
+the flag came from his answer and was then asserted, never inferred from the word "major".
 
-**`test.lannacare.org` IS ON IT TOO — BUT ONLY AT THE THIRD ATTEMPT, AND THAT IS THIS RELEASE'S HEADLINE.**
-Its Worker sat on `0.47.9` for about an hour while its Pi app served `0.47.10`, because the test deploy's
-authentication had expired. Closing it took **a browser login from Lutan: the third touch on a release
-whose target is two.** The cause is below, and `#tstok` is what stops it recurring.
+**Production, `cooperjaidee.org`, test and UAT are all on `0.48.0` @ `050b44b0f`, both endpoints, every
+one served by the Pi.** Production and UAT both hold every migration on `main`: `436 applied, 0 pending`,
+`No drift` both ways. The tenancy catalogue lint `--strict` is **exit 0 on all three databases**, second
+release running.
 
-**Production and UAT both hold every migration on `main`: 435 applied, 0 pending, `No drift` both ways.**
-Dev still has its one extra `schema_migrations` row for the renumbered `0422_keep_an_admin_per_shelter.sql`
-— known since `0.47.6`, 0 missing, **not drift**.
+**THE MAIL WENT OUT AND WAS READ IN THE INBOX, NOT TAKEN FROM `sent 1`. `#w4k9n` (e) IS CLOSED.** Subject: `[Production] Lanna Care release 0.48.0: …`. Sender name: **`Lanna Care Production`**. Both notes verbatim in the body. Delivered 10:50:21 UTC to Lutan, with `lannacareforanimals@gmail.com` skipped `E_RECIPIENT_NOT_ALLOWED` as expected. **Sixteen days of not knowing whether the 2026-11-06 fix worked: it does. Stop carrying it.**
 
-**`0.47.10` cost Lutan three touches: one answer, one command, one browser login.** Two is target. The
-third was **not avoidable on the day** and is `#tstok`'s to remove — the one thing to settle before the
-next release.
+**Cost to Lutan: two touches, the target — and four progress checks he should not have had to make.** The release asked him for the email answer (given unprompted in his first sentence) and the deploy command, and nothing else. It then went more than twenty minutes without a status note while three builds ran, and he asked twice where it was. **That is an avoidable cost in the runbook's own terms, and the cause was silence rather than the release.** The fix is to say, at each build boundary, what finished and what is next.
 
-**Re-measure before trusting any of this.**
+**Re-measure before trusting any of this.** Every figure here was read on 2026-11-22.
 
-## THE LESSON OF THIS RELEASE: TEST IS THE ONLY ENVIRONMENT WITH NO DEPLOY CREDENTIAL OF ITS OWN
+## THE LESSON OF THIS RELEASE: A GAP IN A TEST PLAN IS A PLACE TO LOOK, NOT A PLACE TO SIGN
 
-`deploy.mjs --env test` reads `.env.local`, which has **no `CLOUDFLARE_API_TOKEN`**, so it falls back to
-wrangler's own browser login. Production reads `.env.deploy.production` and UAT reads `.env.deploy.uat`,
-and **each of those holds its own token** (counted, never printed). So the day wrangler's stored login
-expires, **test and only test cannot deploy** — which is today.
+He asked for the test gaps to be noted. Noting them is what found the release's only real fault.
 
-**Two errors, and the second one is the tell. Read it before reaching for the runbook's remedy:**
+**#1829's plan left three functional lines unchecked** — the browser console not read, a shelter-host
+`/robots.txt` and a public page not loaded, and a signed-in page not loaded after `proxy.ts` and
+`public-paths.ts` changed. **Two of the three could be closed from here, so they were** — and loading the
+`/robots.txt` pair is exactly what turned up the fault below.
 
-1. `wrangler deploy --env test` exited 1 with *"Your auth token has expired and could not be refreshed
-   because the Cloudflare auth server could not be reached."*
-2. The retry — correctly reusing the same `.open-next`, which was demonstrably test's own build — exited 1
-   with *"In a non-interactive environment, it's necessary to set a `CLOUDFLARE_API_TOKEN`."*
+So: when a plan in the release says a line was not checked, ask whether **you** can check it before
+writing it down as somebody else's. On this release, two of three could be, and it paid.
 
-**THAT IS NOT THE `0.47.1` FAILURE, AND THE PRESCRIBED REMEDY DOES NOT APPLY.** `docs/release-procedure.md`
-says an `Authentication error [code: 10000]` mid-upload is a token expiring part-way through and *"the
-remedy is the same command again — NOT `wrangler login`"*. That is still right for that failure. **Here the
-retry is what proved the login is gone**, and no non-interactive shell can redo a browser login.
+## `#thpfx` — THE `/th` ADDRESSES 500, AND THE PUBLIC-SITE LOCK IS HIDING IT
 
-**AND THE OBVIOUS FIX IS THE ONE ALREADY RULED OUT — CORRECTED THE SAME DAY, BEFORE ANY TOKEN WAS MADE.**
-The first edition said to paste a `CLOUDFLARE_API_TOKEN` into `.env.local`.
-**`docs/decisions/2026-11-16-deploy-cloudflare-api-token.md` forbids precisely that** — *"NOT in
-`.env.local`"* — because `scripts/worktree.mjs new` copies that file into every worktree, so a token there
-is duplicated onto disk once per workstream. **`scripts/lib/env.mjs` line 39 hard-wires `envFile("test")`
-to it** and there is no `.env.deploy.test`, so **there is nowhere correct to put a test token today
-without a one-line code change.**
+**Found on production, after the Pi was already serving the release.** `thPathRest()` in
+`src/lib/public-paths.ts` maps `/th/<rest>` onto the page at `<rest>`, so the Thai site has its own
+addresses for search engines.
 
-**What that decision assumed, and what today disproved:** it left test on the OAuth login on purpose,
-because *"test's deploys are Claude's and a retry costs nobody's attention."* **That holds only while the
-login still exists to refresh.** Once it has expired outright there is no retry, and the release manager
-is left reporting a Worker a release behind. **That is the finding, not the missing token.**
+**Where that rewrite has to RENDER a page it returns 500. Where the target merely redirects, `/th`
+redirects identically.** That pattern is the diagnosis — one cause, not several:
 
-- **Two answers, and (1) WAS TAKEN THE SAME DAY AND WORKED.** `npx.cmd wrangler login` once restores the
-  path that decision intends; `node scripts/deploy.mjs --env test` then deployed cleanly (Version ID
-  `8edc3ef1…`) and test answers `0.47.10` on both endpoints. **It will expire again**, which leaves
-  **(2), the durable one:** teach `envFile()` to read a gitignored `.env.deploy.test`. That is all `#tstok`
-  has left. **Worth copying from the run:** read `wrangler whoami` *before* starting a ten-minute build.
-- **Before choosing (2), know the permission limit:** `Workers Scripts → Edit` is **account-level** and
-  cannot be narrowed to one Worker, so a test token can deploy production too — which is why a further
-  copy on disk is a real cost, and why 2026-11-16 chose one token for all three rather than three.
-- **Borrowing production's or UAT's token was considered and deliberately not done.** It would have
-  worked. It would also have put a production credential to work in another environment with nothing
-  recording it, which is the quiet kind of fault.
-- **`--skip-build` was right for the second attempt and wrong for the third**, which is the whole of that
-  flag's rule: on the retry the leftover `.open-next` was that run's own test build; by the third, UAT had
-  built over it, so reusing it would have pointed test at UAT's database.
+| address | result |
+|---|---|
+| `lannacareforanimals.org/th` | **500** (bare `/` → 200) |
+| `cooperjaidee.org/th/platform/about` | **500** (bare `/platform/about` → 200) |
+| `/th/adopt`, `/th/donate`, `/th/foster`, `/th/volunteer`, `/th/our-work`, `/th/contact` | 307, same as their bare forms |
 
-## WHAT `0.47.9` LEFT OPEN AND THIS RELEASE CLOSED — STOP CARRYING EITHER
+**It is NOT this release's, and that matters:** `/th` answered 500 on **all three** environments at one
+minute, including test and UAT while both still served `0.47.10` @ `7a1aae4ea`. What `0.48.0` added was a
+second instance in a visible place — `#cjseo` gave the product page a Thai address, and on
+`cooperjaidee.org` that target renders rather than redirecting, so the 500 shows instead of being masked.
 
-- **`#tncy3` is fixed and proven.** `0434_tenancy_catalogue_flags.sql` (#1812) adds the missing
-  `definer_all` policy on `product_admin_login_grants` and re-owns `set_shelter_logo` to `rls_definer`;
-  #1812 also put `product_admin_permit_first_login` in the lint's allow-list with its `auth.users` reason.
-  **`check-tenancy-catalogue.mjs --strict` now exits 0 on production, UAT and dev** — `0 flagged, 7 allowed
-  by name, 0 stale` — the first green since `0.47.2`. The mechanism that handover named (*a check that
-  exits 1 on a known-correct object is a check people stop running*) is closed at source.
-- **`#wwwcb` is fixed and proven.** #1813 stopped `check-deployed-hosts.mjs` synthesising a `www.` form for
-  an address that is not deployed. **All three environments now report `ok` on both halves**, where test and
-  UAT each exited 1 last release. There is no override left to decide.
-- **The per-environment Server Actions key** was promoted into the runbook last release and needed no
-  thought this time. Three pairs, all matching: `cbd55beae8d8` / `ecc41837fc0b` / `cdeca9cbc4de`.
+**THE MASK IS `PUBLIC_SITE=locked`.** Almost every public page 307s to the gate, so almost every `/th/`
+address 307s too and looks fine. **The day the site unlocks, every `/th/` address starts answering 500.**
 
-## A READING THAT CONTRADICTS THE LAST RECORD
+**Three things ruled out by reading rather than reasoning**, so nobody re-derives them:
 
-`sync-home-icons.mjs --env production` uploaded nothing (`PLATFORM_DRIVE_FOLDER_ID` unset) and **exited 1**;
-`0.47.9`'s record says **0**, from a script unchanged since 2026-11-20. **One reading is wrong** — today's was
-run bare with the exit code read from the command, not through a pipe. The cause is the same either way:
-#1781's Drive move is the planner's, and the app still draws every icon in the browser.
+- **Thai rendering is fine.** `/platform/about` with a `locale=th` cookie: 200, `<html lang="th">`, 5,418
+  Thai characters, a Thai `<h1>`, 65,500 bytes against English's 55,009. **So the release note saying the
+  page is in English and Thai is TRUE.**
+- **The edge is fine.** `served-by: pi` on every reading, three times over, and both zones purged with
+  every asset byte-identical to the build.
+- **It is `/th`, not `/th/`.** `/th/` answers **308** on all four hosts and the 500 is where that redirect
+  lands. A script testing `/th/` alone reads a clean redirect and concludes nothing is wrong, which is
+  plausibly how this went unnoticed. The first write-up got this backwards and was corrected the same hour.
+
+Filed as `#thpfx` under *Public website* with the full measurement. **Not held for, and not this
+release's to fix** — a release ships what the build gave it. Nobody is waiting on Lutan.
+
+## WHAT `0.47.10` LEFT OPEN AND THIS RELEASE CLOSED — STOP CARRYING IT
+
+**`#tstok` is DONE.** The last edition's headline was *"test is the only environment with no deploy
+credential of its own"*. It has one now: Lutan created the token, `.env.deploy.test` holds it (gitignored
+by `.gitignore:13`), and **this release's test deploy is the proof** — `--plan` printed `wrangler auth:
+API token from .env.deploy.test` **before** a ten-minute build was committed to, then the real deploy
+finished and `test.lannacare.org` answers `0.48.0` on both endpoints. `wrangler whoami` separately showed
+the OAuth login still valid, so test now has **two** working paths where that morning it had none.
+
+**Delete the long `.env.local` passage the last edition carried.** The prohibition still stands and now
+lives in the runbook (§6, *Worker, production*); it no longer needs a handover section.
+
+## A MIGRATION AHEAD OF ITS READER, AND WHY THAT IS THE SAFE DIRECTION
+
+`0435_shelter_drive_staged.sql` adds `staged boolean not null default false` to
+`shelter_drive_credentials`. **No code on `main` reads it** — `git grep "staged" origin/main -- src/lib/google/`
+returns nothing, and the five files that do are still unmerged on `claude/shelter-drive-move`, whose
+session is live. `apply-migrations.mjs` warned that the declared consumer is *"not on origin/main at all"*.
+
+**That warning is correct.** Schema first, reader later, with a default equal to today's behaviour. The
+runbook already says an unsurprising warning is the point; this is what one looks like.
+
+**For the planner, not for the next release manager:** the Drive move is owed and is **not** in this
+release. `shelter-drive-connect`'s note still waits on a real consent **on production** — the one that
+happened on 2026-11-22 was on dev.
 
 ## Traps that cost nothing this time but will
 
-- **An SSH call that starts a detached Pi build can outlive the tool's 120-second timeout**, even with
-  `setsid nohup … &`. It happened on the first of the three, nothing was lost, and the build completed —
-  **the check is the log on the Pi, not the SSH call's exit.** A quirk of this machine, not a hung Pi.
-- **`check-deferred-notes.mjs` over-listed for the SIXTH release running:** 12 candidates across 43 plans
-  for a 12-PR release, 5 of them the template's own guidance printed as the "reason". The review table is
-  in #1820's test plan. Budget one lookup per candidate and do not narrow the script.
-- **A cut PR runs `audit` for real** (it changes `package.json`), so do not read it as skipped; it passed
-  with the registered `glob` advisory. And **UAT answered one empty `/api/version`** during the baseline
-  read, then correctly twice — written down because a repeat after the deploy would have meant something
-  else. There was none.
+- **`main` moved under the release three times** (four backlog commits, two of them this session's own
+  `#thpfx` work). The code-identity allow-list diff was **empty every time**, so the Pi builds stayed
+  pinned and nothing was chased. Doing nothing was correct.
+- **The three Server Actions keys look like a fault if compared across environments.** Production
+  `cbd55beae8d8`, test `ecc41837fc0b`, UAT `cdeca9cbc4de`, each matching its own Pi build. Compare within
+  an environment only.
+- **`audit:register` passing is not `audit:prod` passing.** The register admits high and critical only, so
+  a **moderate** can sit outside it and never show: `GHSA-g3hv-75wg-m249`, `minimatch`, via
+  `@node-minify/core` → `@opennextjs/aws` → `@opennextjs/cloudflare`. Build-time tooling, in nothing the
+  Worker or the Pi serves — so its absence from the register is correct, not an omission. Read both.
+- **The `.open-next` liveness window must be minutes, not seconds.** UAT's bundling stage wrote **0 files
+  in 120 s** while perfectly healthy: 15 in 180 s, 26 in 300 s, 212 in 600 s, with two node processes at
+  1.9 GB and 918 MB. A 60-second window reads a working build as a stall.
+- **`npm ci` can be answered by reading instead of running, but only by reading all four places.**
+  `package-lock.json` byte-identical to the last release's SHA, and `next` at **16.4.6** in
+  `package.json`, in the lockfile, in the installed tree and in the build banner. Any one alone is not it.
 
 ## What is still open
 
-- **`#tstok` — the test deploy still depends on an interactive login, which was refilled today and will
-  expire again.** The fix left is a `.env.deploy.test` the env loader can read. **Do not put a token in
-  `.env.local`** — see above. **Until it is done, expect this to cost Lutan a login in the middle of some
-  future release**, and say so rather than letting it be discovered.
-- **13 items on `0.47.10`'s record are `pending: Lutan`**, every one a press only a signed-in person on a
-  deployed host can make. **The one worth asking for first is this release's own note:** Admin → Website, a
-  logo **over** 1 MB refused with a message in English and Thai, then one under it showing on the public
-  header.
-- **This release's test gap is one plan:** #1818's shelter Drive and Calendar connect flow is unproven end
-  to end and waits on **Lutan's first real Google consent** with the connect client's secret. All twelve
-  plans read `Result: pass`; nothing failed.
-- **`PLATFORM_DRIVE_FOLDER_ID` is unset for production**, so the icon sync is a no-op until it is set.
-- **`#83137` — `.env.deploy.production` is missing seven of the eighteen secrets a `--secrets` deploy would
-  push, and seven resolve to this machine's DEV values.** Filed today by another stream. **Do not run
-  `--secrets` against production**, and `#drvtk` says the same for UAT, where the Drive token is revoked.
-  Plain Worker deploys are unaffected and three were run today.
-- **The Thai sign-off, twelfth release running** (`#y1dqu`). **Still the largest standing gap.**
-- **`dev-signin.mjs <role>` still breaks (`PGRST116`)** once two shelters each hold a role keyed `admin`,
-  which is the state dev is in, so a signed-in `/releases` read on dev is not available.
-- **The public site is still locked** (`#pl7aq`), so the signed-out half of the smoke test is vacuous by
-  design. Record it that way rather than as unchecked.
+- **`#thpfx`** — above. Nobody is waiting on Lutan.
+- **`#cnypd`** — the tenancy canary's production run. Built (#1831); the expensive half is establishing
+  what a planted row sets off that a rollback does not undo, read from production's own triggers. **His.**
+- **`#ykefa`** — blocked on `#cnypd`, and correctly still open.
+- **The product page's Thai *wording* has not been read by anyone who reads Thai.** 5,418 Thai characters
+  render; whether they say the right thing is **his**, and it is this release's headline test gap.
+- **#1829's third unchecked line:** a signed-in page after `proxy.ts` changed. `updateSession`'s
+  signed-out branch was exercised on every host; its signed-in branch was not, and Claude has no
+  production account.
+- **Dev carries one extra `schema_migrations` row**, `0422_keep_an_admin_per_shelter.sql`, for which no
+  file has ever existed in git under that name. Known, dev-only, **unchanged since `0.47.10`** — not new
+  drift, and `--drift test` will keep reporting it until the row is removed.
 
 ## Now routine — stop treating these as open
 
-Everything here did what the runbook says, first time. **It is listed only so the next editor deletes it
-rather than re-investigating it.** No cut/batch race (`main` moved once, `docs/backlog.md` only, and the
-code-identity diff is **empty**). UAT second, before his command. Three Pi builds one at a time, pinned
-with `--ref`, all logging `restarting under the script from 7a1aae4ea` with 2.5 GiB free. `lanna-pi-mesh`
-first time for all three — do not put the route to him as a question. His log's UTF-16 decode exactly as
-the runbook's three steps say, so `strip-baked-env: removed 20` was read where `0.47.8` could not. Both
-purges and all three after-checks *identical to the build*.
+UAT's three one-time needs (its own Supabase token, the Pi's sudo rule for `lanna-care-uat`, its own purge
+token) have all been done since 2026-11-09. The mesh route to the Pi is in place with an `~/.ssh/config`
+alias; `lanna-pi.local` works only from the home network, and asking about it is what cost a third touch
+on `0.47.0`. `test-plan` is **advisory, permanently** — never list it as a decision he owes.
 
 ## The two touches that are his, and stay his
 
-**Major versus minor** — asked as *"should this release email you?"*, never as the two words — and the
-**production Worker deploy**.
+**The email question** — put as *"should this release email you?"*, never as the two words — and the
+**production Worker deploy**. He answered the first unprompted again, in his opening sentence.
 
-**He answered it unprompted again** (*"lets do a minor release, no email, gaps in test noted"*), which
-settled both halves in one message and cost no round trip. **The second half of that sentence is an
-instruction worth keeping:** the gaps go in the record, named and attributed, rather than absorbed.
+**And tell him the mail reaches one person.** The shelter's own address is not on the production admin
+list and `lannacareforanimals@gmail.com` is skipped by the relay with `E_RECIPIENT_NOT_ALLOWED`, so
+"mails every admin" overstates the lever and makes the choice a false one. He knows; say it anyway rather
+than implying a wider audience.
