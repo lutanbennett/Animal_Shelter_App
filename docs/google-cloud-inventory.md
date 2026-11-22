@@ -109,9 +109,8 @@ second `My First Project` is a different, later project, not the renamed one.
 | Lanna Care - Dev | Lanna Care Drive Access | Desktop | `1036347359893-dfbupbdp60l8ukicc08dhf0jipafinb6` | none (Desktop clients use a loopback address) | 2026-09-18 | 1 (2026-09-18) | **All Drive access**: photos, attachments, archive PDFs, backups, for every environment. `GOOGLE_OAUTH_CLIENT_ID` in `.env.local` [repo] |
 | **`cooperjaidee`** (not `lanna-care-dev`; see below) | Cooper Jaidee Backups | Desktop | `559913308840-i64t…` (rest not copied: read it in the console) | none (loopback) | 2026-11-19 | not read |  **Backups only** (`BACKUP_GOOGLE_OAUTH_*`, `scripts/backup.mjs`). **Created 2026-11-19, not "not yet created" as this row said until 2026-11-22** [seen 2026-11-21]. One client per identity (`docs/decisions/2026-11-19-backups-own-client.md`) |
 | `cooperjaidee` | Shelter Drive and Calendar connect | **Web** | `559913308840-ob8a7om7j621mkd1g0kaekk059vo1iqv` | 19 values, each `<host>/admin/google/callback`, for `lannacareforanimals.org`, `uat.lannacare.org`, `test.lannacare.org` and `localhost:3000`–`3009`. **The 19 values were NOT read** [see below] | 2026-11-21 (20:16 GMT+7) | 1 (2026-11-21), ending `LzIH` | **`#drvcl`'s connect screen, not yet built** |
-| Lanna Care - Dev | hinge probe (delete me) | Desktop | not copied here | none (loopback) | 2026-11-19 | not read | **Nothing: a leftover** from the `drive.file` hinge measurement (`docs/decisions/2026-11-19-drive-file-hinge-proved.md`). **Lutan deletes it in the console**; not a stream's to delete |
 
-`lanna-care-dev` holds five clients since 2026-11-19. Four match this document's earlier record; only `hinge probe` is new to it.
+`lanna-care-dev` holds four clients. A fifth, `hinge probe`, existed from 2026-11-19 and was deleted by Lutan in the console on 2026-11-22 (not re-read by a stream).
 
 **No client has authorised JavaScript origins**, the `cooperjaidee` Web client included [seen 2026-11-21]. Client IDs and the last four
 characters of a secret are identifiers, not secrets. The console no longer shows
@@ -146,7 +145,7 @@ What the stocktake found, and what became of it:
 - **Project `cooperjaidee` ("CooperJaidee")**, a project this document did not list before today. It was the **only** project under authuser=0 and last accessed 2026-11-21. It holds the two clients marked `cooperjaidee` in the table above: the Desktop backups client and the Web connect client.
 - **Not verified: the 19 redirect URIs.** The console renders them in lazily-loaded inputs the browser tools could not reach, so the count (19) and the host list are what the page showed, and the values themselves were not read. The first consent round trip is what will prove them.
 - **Secret:** the Web client has one enabled secret ending `LzIH`. Only the last four are recorded here, as everywhere in this document; the secret never belongs in this repository, which is public.
-- **`lanna-care-dev`** was refused at authuser 0 and 1 and served at **authuser=2**. It has **five** clients: the four above plus `hinge probe`.
+- **`lanna-care-dev`** was refused at authuser 0 and 1 and served at **authuser=2**. It had five clients on 2026-11-21; `hinge probe` was deleted by Lutan on 2026-11-22, leaving four.
 - **`endless-bonus-458210-d4` and `project-36366f84-5606-437c-869`** did not appear in Manage resources at authuser=0 on 2026-11-21. That establishes only that they are not under that account; they may sit under an account that was not signed in, so the rows are marked, not deleted.
 - The consent screen of neither project was touched or opened for editing. `lanna-care-dev`'s is verified and editing it can put the branding back under review (`docs/domain-checklist.md` P3).
 
