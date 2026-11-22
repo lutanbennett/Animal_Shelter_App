@@ -34,10 +34,17 @@ export const SITE_ORIGINS = Object.fromEntries(
   ["test", "uat", "production"].map((n) => [n, `https://${wranglerEnvs[n]?.vars?.APP_HOST}`]),
 );
 
-/** The file an environment's own values live in; test has none beyond .env.local. */
+/**
+ * The file an environment's own values live in. Test's is OPTIONAL (see OPTIONAL_OVERLAY): a
+ * gitignored `.env.deploy.test` that holds a deploy token when someone has made one. Every other
+ * environment already works this way. docs/decisions/2026-11-22-test-deploy-token-file.md.
+ */
 export function envFile(name) {
-  return name === "test" ? ".env.local" : `.env.deploy.${name}`;
+  return `.env.deploy.${name}`;
 }
+
+/** Environments whose own file may be absent: the run then uses .env.local alone, silently. */
+const OPTIONAL_OVERLAY = new Set(["test"]);
 
 /** Pull `--env <name>` out of argv; returns the name (default "test") and the rest. */
 export function parseEnvArg(argv) {
@@ -70,7 +77,7 @@ function readDotEnv(file) {
 export function loadLayers(name) {
   return {
     base: readDotEnv(".env.local"),
-    overlay: name === "test" ? {} : readDotEnv(envFile(name)),
+    overlay: readDotEnv(envFile(name)),
     shell: process.env,
   };
 }
@@ -100,8 +107,8 @@ export function mergeLayers(base, overlay, shell) {
 /** The merged variables for an environment: shell > .env.deploy.<env> > .env.local (see ACCOUNT_KEYS). */
 export function loadEnv(name) {
   const base = readDotEnv(".env.local");
-  const overlay = name === "test" ? {} : readDotEnv(envFile(name));
-  if (name !== "test" && !Object.keys(overlay).length) {
+  const overlay = readDotEnv(envFile(name));
+  if (!OPTIONAL_OVERLAY.has(name) && !Object.keys(overlay).length) {
     console.error(`${envFile(name)} is missing or empty — see README, "Environments".`);
     process.exit(2);
   }

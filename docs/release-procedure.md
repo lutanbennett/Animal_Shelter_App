@@ -753,6 +753,15 @@ and says why it must not go in `.env.local`. And **do not offer `--skip-build` t
 quicker** unless the leftover `.open-next` can be shown to belong to *this* environment: a test
 deploy in the same checkout leaves one that would point production at the dev database.
 
+**A DIFFERENT FAILURE, NOT TO BE CONFUSED WITH THE ONE ABOVE: the stored login is GONE (`--env test`).**
+If a retry fails *harder* — *"In a non-interactive environment, it's necessary to set a
+`CLOUDFLARE_API_TOKEN`"* — wrangler's browser login has expired outright and no retry can recover it
+(met on `0.47.10`). Since 2026-11-22 test can have a token of its own: a gitignored
+**`.env.deploy.test`** holding `CLOUDFLARE_API_TOKEN=…` (same three permissions as production's;
+`docs/decisions/2026-11-22-test-deploy-token-file.md`). **The file is optional**: without it
+`--env test` runs on `.env.local` and the OAuth login exactly as before, so `npx.cmd wrangler login`
+is still the fallback. Lutan creates the token; Claude never does. Never put it in `.env.local`.
+
 Hand it over **with a `tee`**, because the lines worth reading print before a
 three-minute build and scroll out of the terminal buffer:
 
