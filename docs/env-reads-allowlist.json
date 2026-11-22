@@ -1,0 +1,17 @@
+{
+  "rule": "A process.env.X read in src/ whose name is in neither scripts/lib/runtime-config.mjs nor wrangler.jsonc is a value that can never arrive at any server (#psreg: PLATFORM_SEARCH was read for two pages and registered nowhere). scripts/check-env-registered.mjs fails on any such name not listed here. Each record is a NAMED, DATED verdict with the reason it is safe, never a count. A record whose name has since been registered, or is no longer read, fails the check until deleted. A NEW environment read must be registered in the same change that introduces it; list it here only after reading what sets it. openFaults are real gaps already filed: they are printed every run and do not fail.",
+  "allowed": [
+    { "name": "BUILD_VERSION", "ruled": "2026-11-22", "reason": "Inlined at build time by next.config.ts (env block), from package.json. Never set at run time." },
+    { "name": "BUILD_SHA", "ruled": "2026-11-22", "reason": "Inlined at build time by next.config.ts, from git. Never set at run time." },
+    { "name": "BUILD_MIGRATIONS", "ruled": "2026-11-22", "reason": "Inlined at build time by next.config.ts, from supabase/migrations." },
+    { "name": "NEXT_PUBLIC_SITE_URL", "ruled": "2026-11-22", "reason": "Optional fallback for the request's own host. deploy.mjs deliberately keeps it out of env files so it cannot leak a host (scripts/deploy.mjs, check-env-leak.mjs); unset, the app uses the host the Worker sends." },
+    { "name": "PHOTO_CACHE_DIR", "ruled": "2026-11-22", "reason": "Pi-local: written into the Pi's own env by scripts/pi/write-env.mjs (a per-environment path computed there, not a copied value). Unset on the Worker means the cache is off, by design." },
+    { "name": "PHOTO_CACHE_MAX_MB", "ruled": "2026-11-22", "reason": "Optional cap with a default of 1024 (src/lib/photo-cache.ts); nothing needs to set it." },
+    { "name": "MIRROR_DEST", "ruled": "2026-11-22", "reason": "Pi-local: write-env.mjs writes it for production only, from the Pi's own shell. Unset means the mirror read is off, by design." },
+    { "name": "MIRROR_SHELTER", "ruled": "2026-11-22", "reason": "Optional sub-folder with a default (src/lib/mirror-read.ts); nothing needs to set it." },
+    { "name": "STATUS_ALERT_SIMULATE_FAIL", "ruled": "2026-11-22", "reason": "A deliberate simulation hook, honoured on the dev database only (src/lib/status/alerts.ts). Must never be set in a deployment." }
+  ],
+  "openFaults": [
+    { "name": "SHELTER_ENQUIRY_MAIL_TO", "filed": "#enqml", "reason": "Read in src/app/platform/enquire/actions.ts and registered nowhere, so no server can hold it. Not fixed here; #enqml owns it. Delete this record when it is registered." }
+  ]
+}
