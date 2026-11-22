@@ -38,6 +38,8 @@ secret exposed on 2026-10-01. In order:
 LCA App now holds no clients and is unused. Deleting the project itself is still
 open (section 3, step 10).
 
+**Corrected 2026-11-22 against a console reading of 2026-11-21** (stream `google-client-record`). Lutan said more than once that a Google OAuth client already existed and this document kept saying it did not. He was right: the backups client was created on 2026-11-19, and a second client for the Drive and Calendar connect screen on 2026-11-21, both in a project this document did not list at all. See "Reading of 2026-11-21" below. Read from Lutan's own Chrome, read only; nothing was changed in the console.
+
 **How to read the confidence marks.** **[seen 2026-10-09]** was read in the Google
 Cloud console that day. **[repo]** was read from this repository. **[recorded]**
 comes from a backlog or decisions entry written by someone who was looking at the
@@ -62,6 +64,8 @@ if accounts are signed in or out [seen 2026-10-09].
 | 2 | `lannaanimalfoundationbwm@gmail.com` | **Lanna Care - Dev** only |
 | 3 | `lutan.bennett3@gmail.com` | none |
 
+**Superseded in part on 2026-11-21 (see "Reading of 2026-11-21").** The console then served `cooperjaidee` at **authuser=0** and `lanna-care-dev` at **authuser=2**, refusing it at 0 and 1. The numbering above is the 2026-10-09 one and has moved. Which email sits at authuser=0 was **not read from the console on 2026-11-21**; the table above says `lutan.bennett2@gmail.com` for 2026-10-09 and has not been re-checked.
+
 `lannacareforanimals@gmail.com`, the shelter's own account, is not signed in and
 was not checked.
 
@@ -77,13 +81,13 @@ clients and refresh tokens were not part of the block. Only the console was. If
 | | **LCA App** | **Lanna Care - Dev** | My First Project |
 |---|---|---|---|
 | Owning account | `lutan.bennett2@gmail.com` | `lannaanimalfoundationbwm@gmail.com` | `lutan.bennett2@gmail.com` |
-| Project id | `endless-bonus-458210-d4` | `lanna-care-dev` | `project-36366f84-5606-437c-869` |
+| Project id | `endless-bonus-458210-d4` (**not visible at authuser=0 on 2026-11-21**) | `lanna-care-dev` | `project-36366f84-5606-437c-869` (**not visible at authuser=0 on 2026-11-21**) |
 | Project number | **`104841707674`** | **`1036347359893`** | `802572408195` |
 | Organisation | none | none | `lutan-bennett2-org` (`500079492508`) |
 | Consent screen | **In production**, External | **In production**, External | never configured |
 | API keys | none | none | none |
 | Service accounts | none | none | none |
-| OAuth clients | **none** (2 deleted 2026-10-09) | **3** (below) | none |
+| OAuth clients | **none** (2 deleted 2026-10-09) | **5** since 2026-11-19 (below; 3 on 2026-10-09) | none |
 | Branding | verified (2026-09-22) | **verified and published 2026-10-09** | — |
 | Used for | **Nothing since 2026-10-09** | Drive storage everywhere; staff sign-in on **every** Supabase project (production, dev/test and, since 2026-11-08, UAT's own `fsjagxmxjosauwmxwype`) | Nothing; unused |
 
@@ -103,9 +107,13 @@ second `My First Project` is a different, later project, not the renamed one.
 | Lanna Care - Dev | Lanna Care sign-in (UAT Supabase) | Web | not copied here: read it in the console | `https://fsjagxmxjosauwmxwype.supabase.co/auth/v1/callback` | 2026-11-08 | 1 (2026-11-08) | **UAT sign-in** (`uat.lannacare.org`). Created by Lutan as `lannaanimalfoundationbwm` on 2026-11-08 (`docs/uat-finalisation.md` Part 4, step 2), pasted into Supabase `fsjagxmxjosauwmxwype` → Providers → Google, secret in `.env.deploy.uat` as `GOOGLE_SIGNIN_CLIENT_SECRET` [reported by Lutan, 2026-11-08] |
 | Lanna Care - Dev | LCA Application | Web | `1036347359893-tk4qklicq40o496onnqan8j8mf1od331` | `https://qxkmhwybjggxvsfxsxbd.supabase.co/auth/v1/callback` | 2026-09-20 | 1 (2026-09-20) | **Dev/test sign-in.** Supabase `qxkmhwybjggxvsfxsxbd` uses this client [recorded: Management API, 2026-10-07] |
 | Lanna Care - Dev | Lanna Care Drive Access | Desktop | `1036347359893-dfbupbdp60l8ukicc08dhf0jipafinb6` | none (Desktop clients use a loopback address) | 2026-09-18 | 1 (2026-09-18) | **All Drive access**: photos, attachments, archive PDFs, backups, for every environment. `GOOGLE_OAUTH_CLIENT_ID` in `.env.local` [repo] |
-| not yet created (project and owning account to be chosen by Lutan; backlog #gidty says new registrations start on the platform's own account, not the shelter's) | Backups (name to be chosen) | Desktop | `<to be filled when Lutan creates it>` | none (loopback) | not yet created | none | **Backups only** (`BACKUP_GOOGLE_OAUTH_*`, `scripts/backup.mjs`); owning Google account: the one Lutan consents with when he creates it, recorded in his Desktop notes, not here. One client per identity (`docs/decisions/2026-11-19-backups-own-client.md`) |
+| **`cooperjaidee`** (not `lanna-care-dev`; see below) | Cooper Jaidee Backups | Desktop | `559913308840-i64t…` (rest not copied: read it in the console) | none (loopback) | 2026-11-19 | not read |  **Backups only** (`BACKUP_GOOGLE_OAUTH_*`, `scripts/backup.mjs`). **Created 2026-11-19, not "not yet created" as this row said until 2026-11-22** [seen 2026-11-21]. One client per identity (`docs/decisions/2026-11-19-backups-own-client.md`) |
+| `cooperjaidee` | Shelter Drive and Calendar connect | **Web** | `559913308840-ob8a7om7j621mkd1g0kaekk059vo1iqv` | 19 values, each `<host>/admin/google/callback`, for `lannacareforanimals.org`, `uat.lannacare.org`, `test.lannacare.org` and `localhost:3000`–`3009`. **The 19 values were NOT read** [see below] | 2026-11-21 (20:16 GMT+7) | 1 (2026-11-21), ending `LzIH` | **`#drvcl`'s connect screen, not yet built** |
+| Lanna Care - Dev | hinge probe (delete me) | Desktop | not copied here | none (loopback) | 2026-11-19 | not read | **Nothing: a leftover** from the `drive.file` hinge measurement (`docs/decisions/2026-11-19-drive-file-hinge-proved.md`). **Lutan deletes it in the console**; not a stream's to delete |
 
-No client has authorised JavaScript origins. Client IDs and the last four
+`lanna-care-dev` holds five clients since 2026-11-19. Four match this document's earlier record; only `hinge probe` is new to it.
+
+**No client has authorised JavaScript origins**, the `cooperjaidee` Web client included [seen 2026-11-21]. Client IDs and the last four
 characters of a secret are identifiers, not secrets. The console no longer shows
 full secrets.
 
@@ -132,6 +140,15 @@ What the stocktake found, and what became of it:
   The app does not read either.
 - **Production and dev/test sign-in are now different clients in the same
   project.** Rotating one still cannot break the other.
+
+### Reading of 2026-11-21 (console, Lutan's Chrome, read only)
+
+- **Project `cooperjaidee` ("CooperJaidee")**, a project this document did not list before today. It was the **only** project under authuser=0 and last accessed 2026-11-21. It holds the two clients marked `cooperjaidee` in the table above: the Desktop backups client and the Web connect client.
+- **Not verified: the 19 redirect URIs.** The console renders them in lazily-loaded inputs the browser tools could not reach, so the count (19) and the host list are what the page showed, and the values themselves were not read. The first consent round trip is what will prove them.
+- **Secret:** the Web client has one enabled secret ending `LzIH`. Only the last four are recorded here, as everywhere in this document; the secret never belongs in this repository, which is public.
+- **`lanna-care-dev`** was refused at authuser 0 and 1 and served at **authuser=2**. It has **five** clients: the four above plus `hinge probe`.
+- **`endless-bonus-458210-d4` and `project-36366f84-5606-437c-869`** did not appear in Manage resources at authuser=0 on 2026-11-21. That establishes only that they are not under that account; they may sit under an account that was not signed in, so the rows are marked, not deleted.
+- The consent screen of neither project was touched or opened for editing. `lanna-care-dev`'s is verified and editing it can put the branding back under review (`docs/domain-checklist.md` P3).
 
 ### Where the Drive values are consumed
 
@@ -313,4 +330,5 @@ Still open after the 2026-10-09 stocktake:
 - Whether anything other than Supabase used the deleted LCA App clients. Nothing in the repo does, and sign-in worked after they were disabled. If something unexpected breaks before 2026-11-08, restoring them from LCA App's deleted-credentials page is the quick way back.
 - ~~What `.env.deploy.uat` holds.~~ Answered 2026-11-08: it exists, and `node scripts/check-uat-ready.mjs` checks its Google keys (the three `GOOGLE_OAUTH_*` shared with every environment, UAT's own Drive root, no calendar keys) without printing a value.
 - Where the 90-day expiry lives.
+- The 19 redirect URIs of the `cooperjaidee` Web client (above), and the email of the account at authuser=0 on 2026-11-21.
 - Anything owned by `lannacareforanimals@gmail.com`, which is not signed in to Lutan's Chrome.
