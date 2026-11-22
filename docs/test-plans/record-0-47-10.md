@@ -116,7 +116,7 @@ recopying paperwork rule 4 exists to stop.
 | # | What to check | Where | State |
 |---|---|---|---|
 | 1 | **The release's 13 `pending: Lutan` production items**, the logo cap above all — a file over 1 MB refused in both languages, then one under it on the public header | `lannacareforanimals.org`, signed in | **Lutan's.** Tracked in the record, not here, because they belong to the release rather than to this documents PR |
-| 2 | **`#tstok`: one Cloudflare API token in `.env.local`**, then one command brings test's Worker to `0.47.10` | Cloudflare dashboard | **Lutan's.** The third touch this release owes him, and the only thing standing between test's fallback and the release |
+| 2 | **`#tstok`: restore the test deploy's authentication**, then one command brings test's Worker to `0.47.10`. **Corrected the same day: NOT a token in `.env.local`**, which the 2026-11-16 decision forbids — `wrangler login` now, or a gitignored `.env.deploy.test` as the durable fix | this machine | **Lutan's** for the login press; the durable fix is a one-line code change and anybody's |
 
 **Nothing in this PR itself needs a person to look at it**, which is why the signature below is `n/a`
 rather than `pending`. Both rows are carried for visibility and are owned by the record.
