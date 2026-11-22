@@ -28,7 +28,7 @@ export async function resolveDriveCredentials(): Promise<DriveCredentials> {
   const db = createAdminClient({ shelterId });
   const { data: row } = await db
     .from("shelter_drive_credentials")
-    .select("shelter_id, oauth_client_id, oauth_client_secret_enc, refresh_token_enc")
+    .select("shelter_id, oauth_client_id, oauth_client_secret_enc, refresh_token_enc, staged")
     .eq("shelter_id", shelterId)
     .maybeSingle();
   if (row) return decideCredentials(row as DriveCredentialRow, null);

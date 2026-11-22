@@ -55,7 +55,7 @@ export function missingScopes(kind: ConnectKind, granted: string | undefined): s
 }
 
 export type ConnectOutcome =
-  | { ok: true }
+  | { ok: true; staged?: boolean }
   | { ok: false; reason: "not_set_up" | "cancelled" | "state" | "scopes" | "no_refresh_token" | "google" | "fallback_calendar" | "calendar_taken" | "no_key" | "store" };
 
 /** Folder name for a shelter's own Drive: the shelter's own name, so a director recognises it in her Drive. */

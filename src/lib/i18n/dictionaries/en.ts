@@ -1650,6 +1650,7 @@ const en = {
         notSetUp: "Connecting is not switched on for this system yet. Ask the person who looks after the system.",
         done: {
           drive: "Google Drive is connected. A folder for your shelter was made in that Drive.",
+          driveStaged: "Your Google account is connected and checked. Your existing photos and documents stay where they are until they have been moved over; nothing changes for anyone until then.",
           calendar: "Google Calendar is connected. Vet visits will appear in that calendar.",
         },
         problems: {
