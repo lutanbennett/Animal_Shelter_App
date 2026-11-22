@@ -1,4 +1,5 @@
 -- Harness for 0328. Rolls back; success is the exception message it ends with.
+-- Scoping: this harness sets no request.jwt.claims, so is_trusted_caller() is true and it proves nothing about shelter scoping as anon (CLAUDE.md, migrations).
 begin;
 do $$
 declare
