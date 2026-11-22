@@ -8,7 +8,7 @@
 |---|---|
 | Feature | Correct the Google Cloud inventory against the 2026-11-21 console reading |
 | Backlog item | `docs/backlog.md` → none ticked; clauses on #drvcl and #gidty struck on the backlog branch |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/google-client-record` @ `C:\Development\Animal_Shelter_google-client-record` |
 | Dev server | `node scripts/worktree.mjs dev` → n/a: no UI |
 | PR | |
 | Tested by / date | Claude / 2026-11-22 |
