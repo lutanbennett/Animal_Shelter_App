@@ -151,6 +151,6 @@ Automated checks by: Claude  Date: 2026-11-22
 
 ### Manual verification
 
-pending: Lutan runs the production canary with a write-capable token, after the production read of canary-planted-triggers
+Manual verification by: pending: Lutan runs the production canary with a write-capable token, after the production read of canary-planted-triggers
 
 Result: pass
