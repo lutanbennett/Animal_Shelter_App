@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { isPlatformSearchOpen } from "./public-site.ts";
+import { isPlatformSearchOpen } from "./public-site";
 
 /** The product pages a search engine may index: English and its Thai twin (#cjseo). Nothing else on the platform host. */
 export const PLATFORM_INDEXABLE = ["/platform/about", "/th/platform/about"];
