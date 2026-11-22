@@ -71,3 +71,28 @@ export function isPublicSiteLocked(state: PublicSiteState): boolean {
 export function isPublicSiteOff(state: PublicSiteState): boolean {
   return state === "off";
 }
+
+/**
+ * The PRODUCT site's own search switch (#cjseo, docs/decisions/2026-11-22-cooperjaidee-product-page.md). The platform
+ * host (cooperjaidee.org) is a different site from any shelter's, but it is served by the same Worker, so it used to
+ * borrow the shelter's lock: unlocking a shelter at go-live would have opened the product site as a side effect.
+ * It now has a switch of its own, the Worker var PLATFORM_SEARCH. **Anything but the exact word "open" is closed**,
+ * so unset, empty and a typo all mean closed. Only the product page is ever for search engines; the rest of /platform
+ * stays noindex by its own metadata whichever way this sits.
+ */
+export function isPlatformSearchOpen(value: string | undefined = process.env.PLATFORM_SEARCH): boolean {
+  return value === "open";
+}
+
+/**
+ * Whether search engines are told to keep out of a request. On the platform host ONLY the platform switch counts (the
+ * shelter's lock says nothing about the product site, in either direction); on every other host it is the shelter's
+ * lock, exactly as before.
+ */
+export function isSearchClosed(
+  onPlatformHost: boolean,
+  shelterLocked: boolean,
+  platformValue: string | undefined = process.env.PLATFORM_SEARCH,
+): boolean {
+  return onPlatformHost ? !isPlatformSearchOpen(platformValue) : shelterLocked;
+}

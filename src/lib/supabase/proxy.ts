@@ -12,7 +12,8 @@ import { DEFAULT_SIGNED_IN_PATH, NO_ACCESS_PATH, safeNextPath } from "@/lib/auth
 import { CHOOSER_PATH } from "@/lib/auth/chooser-path";
 import { isPublicPath as isPublicPathname, isWebsitePageWhenOff } from "@/lib/public-paths";
 import { ADOPTER_PATH, loadAdopterScope } from "@/lib/adopter/scope";
-import { PUBLIC_SITE_HEADER, isPublicSiteLocked, isPublicSiteOff, publicSiteStateFor } from "@/lib/public-site";
+import { PUBLIC_SITE_HEADER, isPublicSiteLocked, isPublicSiteOff, isSearchClosed, publicSiteStateFor } from "@/lib/public-site";
+import { isPlatformHostname, requestHost } from "@/lib/site-hosts";
 
 /**
  * Refreshes the Supabase auth cookie on every request (required so server
@@ -61,6 +62,8 @@ export async function updateSession(request: NextRequest, rewriteTo?: URL) {
   // "off" is locked and more: no website for a signed-in login either
   // (src/lib/public-site.ts, #br3f3).
   const off = isPublicSiteOff(site);
+  // What search engines are told. On the platform host that is the product site's own switch, not the shelter's lock (#cjseo).
+  const searchClosed = isSearchClosed(isPlatformHostname(requestHost((n) => request.headers.get(n)) ?? ""), locked);
   const isPublicPath = isPublicPathname(request.nextUrl.pathname, locked);
 
   // Signed out: to /login, remembering where they were going so the
@@ -78,7 +81,7 @@ export async function updateSession(request: NextRequest, rewriteTo?: URL) {
     // timeout, a revoked refresh token) is told so, and the redirect carries
     // the cleared cookies so /login does not retry the dead token.
     if (hadSession) url.searchParams.set("error", "expired");
-    return noindex(withCookies(NextResponse.redirect(url), response), locked);
+    return noindex(withCookies(NextResponse.redirect(url), response), searchClosed);
   }
 
   // "/" is the public home page for everyone — a signed-in staff member
@@ -87,18 +90,18 @@ export async function updateSession(request: NextRequest, rewriteTo?: URL) {
     const role = await loadSessionRole(supabase);
     // An adopter (verified email = a live contact, no staff card) lands on the page for sending news (#l5gxn).
     if (!role?.entersApp && (await loadAdopterScope(supabase))) {
-      return noindex(NextResponse.redirect(new URL(ADOPTER_PATH, request.nextUrl.origin)), locked);
+      return noindex(NextResponse.redirect(new URL(ADOPTER_PATH, request.nextUrl.origin)), searchClosed);
     }
     // A session that opens nothing (archived since it signed in, or never
     // given a role) is ended here, so /login offers a fresh sign-in.
     if (!role) {
       await supabase.auth.signOut();
-      return noindex(response, locked);
+      return noindex(response, searchClosed);
     }
     const next = safeNextPath(request.nextUrl.searchParams.get("next"));
     return noindex(
       NextResponse.redirect(new URL(signedInLandingPath(role, next, site), request.nextUrl.origin)),
-      locked,
+      searchClosed,
     );
   }
 
@@ -112,7 +115,7 @@ export async function updateSession(request: NextRequest, rewriteTo?: URL) {
     const url = request.nextUrl.clone();
     url.pathname = signedInLandingPath(role, null, site);
     url.search = "";
-    return noindex(withCookies(NextResponse.redirect(url), response), locked);
+    return noindex(withCookies(NextResponse.redirect(url), response), searchClosed);
   }
 
   // An account on a temporary password (src/lib/auth/password-change.ts)
@@ -134,7 +137,7 @@ export async function updateSession(request: NextRequest, rewriteTo?: URL) {
       const url = request.nextUrl.clone();
       url.pathname = PASSWORD_CHANGE_PATH;
       url.search = "";
-      return noindex(NextResponse.redirect(url), locked);
+      return noindex(NextResponse.redirect(url), searchClosed);
     }
   }
 
@@ -164,10 +167,10 @@ export async function updateSession(request: NextRequest, rewriteTo?: URL) {
       const url = request.nextUrl.clone();
       url.pathname = DEFAULT_SIGNED_IN_PATH;
       url.search = "";
-      return noindex(withCookies(NextResponse.redirect(url), response), locked);
+      return noindex(withCookies(NextResponse.redirect(url), response), searchClosed);
     }
     if (off && role && !role.entersApp && request.nextUrl.pathname === NO_ACCESS_PATH) {
-      return noindex(response, locked);
+      return noindex(response, searchClosed);
     }
     // The one page a login with no staff card may use besides the public site: the adopter's own (#l5gxn). It is let
     // through only for a verified email that is a live contact, and the page and its action ask again.
@@ -176,12 +179,12 @@ export async function updateSession(request: NextRequest, rewriteTo?: URL) {
       (request.nextUrl.pathname === ADOPTER_PATH || request.nextUrl.pathname.startsWith(ADOPTER_PATH + "/")) &&
       (await loadAdopterScope(supabase))
     ) {
-      return noindex(response, locked);
+      return noindex(response, searchClosed);
     }
     // Any other route (a staff page typed or bookmarked): an adopter is sent to their own page, kept signed in, and is
     // never signed out as "no role" (the portal spec, docs/decisions/2026-11-13-adopter-portal-schema.md, item 1).
     if (!role?.entersApp && (await loadAdopterScope(supabase))) {
-      return noindex(withCookies(NextResponse.redirect(new URL(ADOPTER_PATH, request.nextUrl.origin)), response), locked);
+      return noindex(withCookies(NextResponse.redirect(new URL(ADOPTER_PATH, request.nextUrl.origin)), response), searchClosed);
     }
     if (!role?.entersApp) {
       const url = request.nextUrl.clone();
@@ -194,11 +197,11 @@ export async function updateSession(request: NextRequest, rewriteTo?: URL) {
         // No shelter on the request: the host is not registered, so say so rather than blame the account (#hostx).
         url.searchParams.set("error", SHELTER_HEADER in requestShelterHeaders(request.headers.get(SHELTER_HEADER)) ? "no_role" : "no_site");
       }
-      return noindex(withCookies(NextResponse.redirect(url), response), locked);
+      return noindex(withCookies(NextResponse.redirect(url), response), searchClosed);
     }
   }
 
-  return noindex(response, locked);
+  return noindex(response, searchClosed);
 }
 
 /**
@@ -217,7 +220,7 @@ function withCookies(redirect: NextResponse, from: NextResponse): NextResponse {
  * page so nothing can be missed; robots.txt (src/app/robots.ts) says the
  * same to crawlers that read it first.
  */
-function noindex(response: NextResponse, locked: boolean): NextResponse {
-  if (locked) response.headers.set("X-Robots-Tag", "noindex, nofollow");
+function noindex(response: NextResponse, closed: boolean): NextResponse {
+  if (closed) response.headers.set("X-Robots-Tag", "noindex, nofollow");
   return response;
 }
