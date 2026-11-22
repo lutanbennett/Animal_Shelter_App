@@ -1116,16 +1116,19 @@ const en = {
       },
       /** The product page at the platform front door: what CooperJaidee is, for a shelter deciding whether to join. */
       about: {
-        metaDescription: "CooperJaidee is shared software for animal shelters: resident records, medical care, adoptions, volunteers and a public website, all in one place.",
-        heading: "Software that runs an animal shelter",
+        searchTitle: "Animal shelter management software | CooperJaidee",
+        metaDescription: "CooperJaidee is animal shelter management software: resident records, medical care, adoptions and fostering, volunteers and staff, and a public website, all in one place.",
+        kicker: "Shelter management software",
+        heading: "Software to manage an animal shelter",
         lead: "CooperJaidee brings a shelter’s daily work into one place, so staff and volunteers spend their time on the animals rather than on paperwork.",
-        whatTitle: "What it does",
-        features: [
-          "Resident records: every animal’s profile, photos, history and movements.",
-          "Medical care: vet visits, treatments, blood tests and reminders that something is due.",
-          "Adoptions and fostering: who an animal went to, and how it is getting on.",
-          "Volunteers and staff: tasks, rotas and clear control over who can see and change what.",
-          "A public website: show the animals that need homes, under your own name and address.",
+        seeMore: "See what it does",
+        sampleNote: "Pictures show sample data, not a real shelter.",
+        bands: [
+          { name: "Resident records", text: "Every animal’s profile, photos, history and movements in one record. Find any resident in seconds, and see where they are and how they are doing.", mock: { title: "Mali", sub: "Dog · Female · about 3 years", rows: [["Status","In the shelter"],["Location","Kennel block A"],["Weight","14.2 kg"],["Photos","6"]], tags: ["Ready for adoption","Vaccinated"] } },
+          { name: "Medical care", text: "Vet visits, treatments, blood tests and weight, with a reminder when something is due, so nothing is missed.", mock: { title: "Vet visit", sub: "Mali · annual check-up", rows: [["Next visit","12 Dec"],["Vaccination","Due in 5 days"],["Medication","None active"],["Blood tests","1 on file"]], tags: ["Reminder set"] } },
+          { name: "Adoptions and fostering", text: "Record who an animal went to and follow how it is getting on, with updates from the carer after the move.", mock: { title: "Foster or adopt", sub: "Mali · placement", rows: [["Placement","Foster"],["Carer","Sample carer"],["From","1 Nov"],["Latest update","Eating well"]], tags: ["Awaiting approval"] } },
+          { name: "Volunteers and staff", text: "Tasks, rotas and clear control over who can see and change what, so each person sees only what their work needs.", mock: { title: "Today’s tasks", sub: "Kennel block A", rows: [["Morning feed","Done"],["Clean enclosures","In progress"],["Walk dogs","Open"],["Medication round","Open"]], tags: ["3 volunteers on shift"] } },
+          { name: "A public website", text: "Show the animals that need homes, under your own name and address, and take adoption enquiries directly.", mock: { title: "Animals needing homes", sub: "Your shelter’s own website", rows: [["Mali","Dog · 3 years"],["Tiger","Cat · 1 year"],["Biscuit","Dog · 5 years"],["Enquiries","Adopt today"]], tags: ["Your own address"] } },
         ],
         whoTitle: "Who it is for",
         who: "Animal shelters and rescues that want one dependable system. Each shelter’s information is kept separate and is never visible to another shelter.",
