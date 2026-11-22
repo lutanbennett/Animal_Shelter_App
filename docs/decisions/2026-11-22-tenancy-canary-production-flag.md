@@ -81,3 +81,13 @@ Every other limit is unchanged. **The guard was not deleted or weakened:** witho
 and the nightly workflow neither passes the flag nor can (4). Run bare from the main checkout, the production run is
 `node scripts/check-tenancy-canary.mjs --env production --untrusted --strict --i-understand-this-plants-rows-in-production`;
 **it is Lutan's, with a write-capable token, and nobody should read the plain (trusted) pass on production as a pass.**
+
+## The flag, proved (dev and UAT, 2026-11-22)
+
+`--env test` and `--env uat`, each with and without the flag and with and without `--untrusted`: all eight runs exit 0,
+`0 new leak finding(s), 0 unstable` (the flag is ignored off production; the plain run is the TRUSTED pass, the
+`--untrusted` one prints `Pass: UNTRUSTED`). `--prove-red untrusted-drop-restrictive` on dev still goes red (exit 1,
+`residents: anon output changed after planting shelter B`). The four production refusals (no flag; flag without
+`--untrusted`; flag with `--prove-red`; flag with `GITHUB_ACTIONS` set) each exit 2 with their own message, before any
+network call, so none of them touched production. **The one run that would reach production (flag + `--untrusted`,
+outside CI) was not made: it is Lutan's.**

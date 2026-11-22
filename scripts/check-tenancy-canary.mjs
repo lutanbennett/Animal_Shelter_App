@@ -3,7 +3,7 @@
 // Also makes a cross-tenant call for every anon-executable function that takes an id: shelter B's id must look exactly like
 // an id that does not exist.
 //
-//   node scripts/check-tenancy-canary.mjs [--env test|uat|production] [--strict] [--untrusted] [--prove-red leak-table|leak-attachments|drop-restrictive]
+//   node scripts/check-tenancy-canary.mjs [--env test|uat|production] [--strict] [--untrusted] [--i-understand-this-plants-rows-in-production (production only)] [--prove-red leak-table|leak-attachments|drop-restrictive]
 //
 // Conventions copied from check-tenancy-catalogue.mjs: report-only (exit 0) by default, exit 1 only under --strict,
 // exit 2 when it could not read at all.
@@ -32,6 +32,8 @@ import { exitWith } from "./lib/exit.mjs";
 
 const argv = process.argv.slice(2);
 const { name: envName } = parseEnvArg(argv);
+// Production is opt-in behind this flag, typed in full (docs/decisions/2026-11-22-tenancy-canary-production-flag.md). It is not a way round the guard: it still needs --untrusted, refuses --prove-red and refuses CI.
+const PRODUCTION_FLAG = "--i-understand-this-plants-rows-in-production";
 const strict = argv.includes("--strict");
 // --untrusted: read as PostgREST really sends it (jwt claims role=anon), so is_trusted_caller() is false and the 0392 per-shelter clause decides. Without it: the TRUSTED pass.
 const untrusted = argv.includes("--untrusted");
@@ -58,8 +60,17 @@ const KNOWN_TODAY = {
 if (proveRed && !SABOTAGE[proveRed]) {
   console.error(`--prove-red takes one of: ${Object.keys(SABOTAGE).join(", ")}`);
   await exitWith(2);
-} else if (envName === "production") {
-  console.error("Never against production: the canary plants rows (rolled back) and a worktree cannot read it. NOT CHECKED.");
+} else if (envName === "production" && !argv.includes(PRODUCTION_FLAG)) {
+  console.error(`Not against production without ${PRODUCTION_FLAG}: the canary plants rows (rolled back) in the real database. Read docs/decisions/2026-11-22-tenancy-canary-production-flag.md first. NOT CHECKED.`);
+  await exitWith(2);
+} else if (envName === "production" && !untrusted) {
+  console.error("Against production the canary must be --untrusted too: a trusted run stands every per-shelter policy aside, proves nothing about the path PostgREST uses, and plants rows for nothing. NOT CHECKED.");
+  await exitWith(2);
+} else if (envName === "production" && proveRed) {
+  console.error("--prove-red sabotages the schema and has no place in production, even rolled back. NOT CHECKED.");
+  await exitWith(2);
+} else if (envName === "production" && process.env.GITHUB_ACTIONS) {
+  console.error("Never on the pull-request path: this repository is public and the token this needs can write. NOT CHECKED.");
   await exitWith(2);
 } else {
   await main();
