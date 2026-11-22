@@ -70,12 +70,20 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  "The CooperJaidee product page now reads as a proper introduction to the software: a headline, a call to action, and each main feature described and pictured, in English and Thai.",
-  { text: "Thai label proposals now work in the live app. Management → Translations can draft a Thai label for you to read and approve, instead of leaving the English showing.", cards: ["view_translations", "translations"] },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.48.0",
+    date: "2026-11-22",
+    title: "The product site introduces the software, and Thai label drafts work in the app",
+    major: true,
+    notes: [
+      "The CooperJaidee product page now reads as a proper introduction to the software: a headline, a call to action, and each main feature described and pictured, in English and Thai.",
+      { text: "Thai label proposals now work in the live app. Management → Translations can draft a Thai label for you to read and approve, instead of leaving the English showing.", cards: ["view_translations", "translations"] },
+    ],
+  },
   {
     version: "0.47.10",
     date: "2026-11-22",
