@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { encryptSecret } from "./drive-credentials-crypto";
+import { stageConsent } from "./shelter-drive-decide";
 import { folderNameFor, missingScopes, type ConnectKind, type ConnectOutcome } from "./shelter-google-connect-decide";
 // The same checks the connect scripts make, called as they stand (not copied): validate the shape, prove it against Google
 // BEFORE anything is stored, and refuse the fallback shelter's own calendar.
@@ -58,6 +59,21 @@ export async function completeConnect(kind: ConnectKind, code: string, origin: s
 
   try {
     if (kind === "drive") {
+      const { data: existing } = await db.from("shelter_drive_credentials").select("shelter_id, staged").eq("shelter_id", shelterId).maybeSingle();
+      // A row that is already staged stays staged on a reconnect: the move has not happened, so the folder must not be repointed either.
+      if (existing?.staged || stageConsent(!!existing, shelterKey)) {
+        // The shelter already has files in the environment's account. Prove the token, store it STAGED, and touch nothing else: no folder is
+        // made and drive_root_folder_id is not changed (that would repoint every read at an account that cannot see the files).
+        // scripts/drive-move-to-shelter-account.mjs copies the files, remaps the ids and makes this row live in one statement (#rqv5c).
+        const who = await fetch("https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)", { headers: auth });
+        const email = ((await who.json().catch(() => ({}))) as { user?: { emailAddress?: string } }).user?.emailAddress;
+        if (!who.ok || !email) return { ok: false, reason: "google" };
+        const st = await db.from("shelter_drive_credentials").upsert({
+          shelter_id: shelterId, oauth_client_id: c.clientId, oauth_client_secret_enc: await encryptSecret(c.clientSecret), refresh_token_enc: await encryptSecret(tok.refresh_token),
+          drive_account_email: email, token_status: "ok", last_checked_at: now, last_error: null, dead_alerted_at: null, updated_at: now, staged: true,
+        }, { onConflict: "shelter_id" });
+        return st.error ? { ok: false, reason: "store" } : { ok: true, staged: true };
+      }
       // Reuse the shelter's folder when this account can still open it; otherwise make one, so nobody is ever asked for a folder id.
       let folderId = (shelter.drive_root_folder_id as string | null) ?? null;
       let verified: { email: string } | null = null;

@@ -23,6 +23,7 @@
     { "file": "scripts/lib/google-identity.mjs", "reason": "Read-only: a token refresh and one Drive about GET to tell whether two tokens are the same account; writes nothing." },
     { "file": "scripts/check-drive-token.mjs", "reason": "Read-only probe of one token and its root folder; writes nothing." },
     { "file": "scripts/drive-copy-tree.mjs", "reason": "Operator copy of a whole shelter tree into another shelter root (UAT/dev); shelter data, not platform files." },
+    { "file": "scripts/drive-move-to-shelter-account.mjs", "reason": "Operator move of a shelter's whole tree into the shelter's own Google account (dev/UAT; production is a deliberate later run); shelter data, not platform files. Reads the old account only." },
     { "file": "scripts/drive-partition-tree.mjs", "reason": "Operator split of one shelter tree between prod and test roots; shelter data. The icon prefix is classified leave (a platform file) since #shfil." },
     { "file": "scripts/drive-sharing.mjs", "reason": "Reads and changes sharing on a shelter's own files." },
     { "file": "scripts/google-drive-verify.mjs", "reason": "Diagnostic that writes and trashes a probe file in the shelter root it is pointed at." },

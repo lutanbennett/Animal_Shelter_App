@@ -34,3 +34,21 @@ remapped. It was hit live on the shared dev database on 2026-11-22 within the ho
 ## Production still needs (not the stream's)
 The Director's consent in her own browser, and Lutan's run of the move. `drive-remap-ids.mjs` refuses `--env production` and
 is not changed. Production lacks `DRIVE_CREDENTIALS_KEY` (`#83137`). The production tree has never been measured.
+
+## What was built (PR 2) and what the dev run showed
+- Reader: a staged row is read as no row, **and the shelter's key is still looked up**, because the first version passed a null key
+  when any row existed, so the fallback shelter was refused while staged (the Settings banner went red). Fixed and tested.
+- Connect flow: stages for the fallback shelter with no row yet, and a row already staged stays staged on a reconnect, so a
+  second consent cannot repoint the folder. It makes no folder and changes no `drive_root_folder_id` while staged.
+- `scripts/drive-move-to-shelter-account.mjs`: dry run / `--apply` (copy) / `--go-live` (remap + root + unstage in ONE request;
+  a multi-statement request runs as one implicit transaction). Refuses production, refuses a live connection, refuses go-live
+  while the old tree holds anything unmapped. Streams bytes, retries dropped connections per call and per file.
+- **Dev run (2026-11-22, `--env test`, shelter `lanna`, old account to a personal Google account):** dry run 41 folders, 36
+  files, 0.64 GB, 0 Google-native skipped; copy completed to 78 map entries (root + 41 + 36), 0 failed after retries. The first
+  runs lost files to `ENOTFOUND` / `ECONNRESET` (network blips, one large video); the retries fixed it and the map made each
+  re-run pick up only what was missing. `--go-live` was NOT run on dev: it rewrites ids in the database every stream shares.
+- **Not done:** the UAT rehearsal (needs a consent given on UAT, which is Lutan's Google sign-in), so `--go-live` and
+  `check-drive-leftovers.mjs` have not yet run against real volume. Residual race: a file uploaded between the last copy and
+  `--go-live` is refused by go-live's check, so run `--apply` then `--go-live` back to back in a quiet hour.
+- Production's tree is unmeasured; the script reports its own count and size in the dry run.
+- A new `process.env` read: none added (`DRIVE_CREDENTIALS_KEY`, `GOOGLE_CONNECT_*` already registered).

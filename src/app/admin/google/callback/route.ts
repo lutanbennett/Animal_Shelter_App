@@ -23,5 +23,5 @@ export async function GET(request: NextRequest) {
   const code = p.get("code");
   if (p.get("error") || !code) return done(`${kind}-cancelled`);
   const out = await completeConnect(kind, code, origin);
-  return done(`${kind}-${out.ok ? "ok" : out.reason}`);
+  return done(`${kind}-${out.ok ? (out.staged ? "staged" : "ok") : out.reason}`);
 }
