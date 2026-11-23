@@ -126,6 +126,11 @@ const RULE_2_ALLOWED = {
  */
 const ALLOWED = {
   // The product site's feature pages (#psubp): an address segment and a sample receipt code, neither a word.
+  "admin.productAdmin.about.bands[0].slug": "an address segment (/platform/features/residents), not a translatable word",
+  "admin.productAdmin.about.bands[1].slug": "an address segment (/platform/features/medical), not a translatable word",
+  "admin.productAdmin.about.bands[2].slug": "an address segment (/platform/features/adoptions), not a translatable word",
+  "admin.productAdmin.about.bands[3].slug": "an address segment (/platform/features/volunteers), not a translatable word",
+  "admin.productAdmin.about.bands[4].slug": "an address segment (/platform/features/website), not a translatable word",
   "admin.productAdmin.about.bands[5].slug": "an address segment (/platform/features/money), not a translatable word",
   "admin.productAdmin.about.features.money.sections[0].mock.rows[1].1": "a sample receipt number, a code the same in both languages",
   // The foundation's own name, and the short forms of it. Used untranslated
