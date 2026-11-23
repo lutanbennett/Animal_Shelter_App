@@ -1,4 +1,5 @@
 {
+  "83137": "Per-environment deploy secrets",
   "rcwrg": "Reconnect to wrong account",
   "nmcol": "Shelter name stored three ways",
   "hstau": "Adding a host makes it answer",
@@ -12,7 +13,6 @@
   "pihst": "Pi host mismatch breaks absolute URLs",
   "utcds": "Check refuses today's local date",
   "ckcia": "New checks verified in CI",
-  "83137": "Per-environment deploy secrets",
   "rqv5c": "Move photos to shelter Drive",
   "00e3u": "Fuller financial and tax report",
   "gcnst": "Shelter sees Cooper Jaidee Google name",
@@ -52,5 +52,7 @@
   "fnbnd": "Money side on product page",
   "psubp": "Product site home and detail pages",
   "pnote": "Product site note audience",
-  "rlprg": "Reel upload looks frozen"
+  "rlprg": "Reel upload looks frozen",
+  "o5glo": "Who can run a proof line",
+  "a4k2p": "Mark an outsider's change"
 }
