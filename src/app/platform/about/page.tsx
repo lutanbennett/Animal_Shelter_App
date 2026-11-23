@@ -7,6 +7,7 @@ import { getSiteOrigin } from "@/lib/site-origin";
 import { isPlatformHostname, platformHost, requestHost } from "@/lib/site-hosts";
 import { productFeaturePath } from "@/lib/platform-features";
 import { ProductMockup } from "./ProductMockup";
+import { ProductNav } from "./ProductNav";
 
 /**
  * The product page (#apxld, rebuilt as a product introduction in #cjlnd): what a stranger at cooperjaidee.org lands on.
@@ -57,6 +58,7 @@ export default async function AboutPage() {
   return (
     <main className="flex flex-1 flex-col">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
+      <ProductNav bands={a.bands} homeLabel={a.navHome} navLabel={a.navLabel} current="home" th={locale === "th"} />
       <section className="mx-auto grid w-full max-w-6xl items-center gap-10 px-6 py-12 lg:grid-cols-2 lg:py-20">
         <div>
           <p className="text-sm font-medium uppercase tracking-wide text-primary">{a.kicker}</p>
@@ -82,8 +84,8 @@ export default async function AboutPage() {
                 <h2 className="text-2xl font-semibold text-foreground">{b.name}</h2>
                 <p className="mt-3 text-foreground">{b.text}</p>
                 {b.slug && (
-                  <a href={productFeaturePath(b.slug, locale === "th")} className="mt-4 inline-block text-sm font-medium text-primary underline">
-                    {a.readMore}
+                  <a href={productFeaturePath(b.slug, locale === "th")} className="mt-4 inline-block rounded border border-border bg-surface px-4 py-2 text-sm font-medium text-primary hover:underline">
+                    {a.readMore} →
                   </a>
                 )}
               </div>

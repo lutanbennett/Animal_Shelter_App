@@ -7,6 +7,7 @@ import { PRODUCT_FEATURE_SLUGS, PRODUCT_HOME, productFeaturePath } from "@/lib/p
 import { getSiteOrigin } from "@/lib/site-origin";
 import { isPlatformHostname, platformHost, requestHost } from "@/lib/site-hosts";
 import { ProductMockup } from "../../about/ProductMockup";
+import { ProductNav } from "../../about/ProductNav";
 
 /**
  * A product feature page (#psubp): the detail behind one band of the product home page (/platform/about).
@@ -83,6 +84,7 @@ export default async function FeaturePage({ params }: Props) {
   return (
     <main className="flex flex-1 flex-col">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
+      <ProductNav bands={a.bands} homeLabel={a.navHome} navLabel={a.navLabel} current={slug} th={locale === "th"} />
       <section className="mx-auto w-full max-w-6xl px-6 pt-8">
         <a href={home} className="text-sm font-medium text-foreground underline hover:text-primary">
           ← {a.backHome}
