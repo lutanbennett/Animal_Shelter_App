@@ -531,6 +531,7 @@ for (const k of known) console.log(`KNOWN ${k}`);
 const GUARD = /\b(?:can|requirePermission|requireAdminUser|assertAdminRole|hasAdminRole|canEditItemSettings|refuseUnlessAdmin)\(/;
 const ADMIN_CHECK = /\b(?:requireAdminUser|assertAdminRole|hasAdminRole|refuseUnlessAdmin)\(/;
 const NO_ACTIVITY = {
+  "platform/access-actions.ts": "a shelter's access as a backup to its own Admin (#shsec): PADMIN is a list of people outside the card system, so there is no activity to ask; each action re-checks is_product_admin() and aal2, and the 0438 functions raise for anyone else. It only hands out roles the shelter already has and touches no card",
   "platform/actions.ts": "add and remove a product administrator (#shmgt): PADMIN is a list of people outside the card system, so there is no activity to ask; each action re-checks is_product_admin() and aal2, and 0411's policies (is_product_admin() plus a restrictive aal2 policy) are the security",
   "services/report-animal/actions.ts": "the public report-an-animal form, signed out by definition: written as the anon role with insert-only column grants (0372), so the database decides; it never reads a report back",
   "shop/merch/checkout/actions.ts": "the public checkout, signed out by definition: placeOrder (src/lib/merch/checkout.ts, recorded in the hard-coded-security registry) takes only variant ids and quantities and re-reads every price from the tables",
