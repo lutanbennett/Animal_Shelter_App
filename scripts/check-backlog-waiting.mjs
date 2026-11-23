@@ -17,7 +17,7 @@
  */
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { STATES, DECIDERS, parseTag, validDate, openItems, parseNames, sinceInFuture, needsProof, hasProof } from "./lib/backlog-waiting.mjs";
+import { STATES, DECIDERS, parseTag, validDate, openItems, parseNames, sinceInFuture, needsProof, hasProof, proofText, proofClass } from "./lib/backlog-waiting.mjs";
 
 const STAGED = process.argv.includes("--staged");
 const FILE = "docs/backlog.md";
@@ -59,6 +59,18 @@ const problems = [];
 const seen = new Map();
 const items = openItems(text);
 if (!items.length) { console.error("check-backlog-waiting: no open items found — that cannot be right"); process.exit(1); }
+// --proofs [#id ...]: PRINT (never run) the proof line of every waiting:lutan item, or of the ids named,
+// split into "run it" and "not a command - read it". The planner runs this before any list names Lutan.
+if (process.argv.includes("--proofs")) {
+  const want = process.argv.filter((a) => /^#?[a-z0-9]{5}$/.test(a) && a !== "--proofs").map((a) => a.replace(/^#/, ""));
+  const rows = items.filter((it) => (want.length ? want.includes(it.id) : needsProof(parseTag(it.line)))).map((it) => ({ ...it, cls: proofClass(it.line), text: proofText(it.line) }));
+  const show = (title, list) => { if (!list.length) return; console.log(title); for (const r of list) console.log("  #" + r.id + " (line " + r.lineNo + "): " + r.text.slice(0, 400)); console.log(""); };
+  show("RUN IT (a command, a screen or a query) - run it before naming him, and say what it showed:", rows.filter((r) => r.cls === "run"));
+  show("NOT A COMMAND - READ IT (a physical or human wait; do not present it as a failed check):", rows.filter((r) => r.cls === "read"));
+  show("NO PROOF LINE (strict check would refuse these):", rows.filter((r) => r.cls === "none"));
+  if (!rows.length) console.log("no matching waiting:lutan items");
+  process.exit(0);
+}
 
 for (const { lineNo, id, line } of items) {
   const who = `line ${lineNo}${id ? ` (#${id})` : ""}`;
