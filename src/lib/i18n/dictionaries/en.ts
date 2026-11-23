@@ -1673,7 +1673,7 @@ const en = {
         done: {
           drive: "Google Drive is connected. A folder for your shelter was made in that Drive.",
           driveStaged: "Your Google account is connected and checked. Your existing photos and documents stay where they are until they have been moved over; nothing changes for anyone until then.",
-          calendar: "Google Calendar is connected. Vet visits will appear in that calendar.",
+          calendar: "Google Calendar is connected. The app made a new calendar in that account for your vet visits, so they will appear there, in Google Calendar's left-hand list, and not on your main calendar. Visits already on another calendar stay where they are.",
         },
         problems: {
           state: "That sign-in did not match the button that was pressed, so nothing was saved. Please press Connect again.",

@@ -12,11 +12,11 @@ export const CONNECT_PATH = "/admin/google/callback";
 export const CONNECT_START_PATH = "/admin/google/start";
 export const CONNECT_COOKIE = "google_connect";
 
-/** Drive: only files the app itself creates (non-sensitive, so no "unverified app" wall; #dscop option A). Calendar: events; `email`
- *  names the account, which is also the id of its primary calendar. */
+/** Drive: only files the app itself creates (non-sensitive, so no "unverified app" wall; #dscop option A). Calendar: only calendars the app itself creates (#calsc; no "unverified
+ *  app" wall if Google classes it non-sensitive, which Lutan confirms in the console); `email` names the account. */
 export const SCOPES: Record<ConnectKind, string[]> = {
   drive: ["https://www.googleapis.com/auth/drive.file"],
-  calendar: ["https://www.googleapis.com/auth/calendar.events", "https://www.googleapis.com/auth/userinfo.email"],
+  calendar: ["https://www.googleapis.com/auth/calendar.app.created", "https://www.googleapis.com/auth/userinfo.email"],
 };
 
 export function isConnectKind(v: unknown): v is ConnectKind {
@@ -57,6 +57,12 @@ export function missingScopes(kind: ConnectKind, granted: string | undefined): s
 export type ConnectOutcome =
   | { ok: true; staged?: boolean }
   | { ok: false; reason: "not_set_up" | "cancelled" | "state" | "scopes" | "no_refresh_token" | "google" | "fallback_calendar" | "calendar_taken" | "no_key" | "store" };
+
+/** Name of the calendar the app creates in a shelter's own Google account (#calsc). */
+export function calendarNameFor(shelterName: string | null | undefined): string {
+  const n = (shelterName ?? "").replace(/[\u0000-\u001f]/g, " ").trim();
+  return n ? `${n} vet visits (animal shelter app)` : "Vet visits (animal shelter app)";
+}
 
 /** Folder name for a shelter's own Drive: the shelter's own name, so a director recognises it in her Drive. */
 export function folderNameFor(shelterName: string | null | undefined): string {
