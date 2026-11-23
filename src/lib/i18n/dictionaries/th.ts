@@ -5825,6 +5825,7 @@ const th: Dictionary = {
       batchHint: "หลายคลิป: แต่ละคลิปจะเป็นรีลของตัวเอง เมื่ออัปโหลดครบแล้วจะมีรายการให้ใส่คำอธิบาย วันที่ และแท็กสัตว์ของแต่ละคลิป",
       clipOf: (n: number, total: number) => `คลิปที่ ${n} จาก ${total} `,
       clipDone: "เสร็จแล้ว",
+      clipWaiting: "รอคิว",
       rowsHeading: "อธิบายแต่ละคลิป",
       rowSaved: "บันทึกแล้ว",
       saveRows: "บันทึกคำอธิบาย",
