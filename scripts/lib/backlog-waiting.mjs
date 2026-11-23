@@ -39,3 +39,22 @@ export function openItems(text) {
   });
   return out;
 }
+
+// docs/backlog-names.json, validated. A file that is PRESENT but corrupt is a finding, not a
+// crash: the names are what every open item is checked against, so a check that cannot read them
+// has verified nothing, and the pre-commit hook lets a crash through on purpose. Throws an Error
+// whose message names what is wrong with the file.
+export function parseNames(raw) {
+  let value;
+  try {
+    value = JSON.parse(raw);
+  } catch (err) {
+    throw new Error(`it is not valid JSON — ${err.message}`);
+  }
+  if (value === null || typeof value !== "object" || Array.isArray(value))
+    throw new Error(`it is ${Array.isArray(value) ? "an array" : value === null ? "null" : typeof value}, not a flat object of item id to name`);
+  for (const [id, name] of Object.entries(value)) {
+    if (typeof name !== "string") throw new Error(`"${id}" is ${Array.isArray(name) ? "an array" : name === null ? "null" : typeof name}, not a name`);
+  }
+  return value;
+}

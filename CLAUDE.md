@@ -795,7 +795,9 @@ yesterday's merges visible to them. `/plan-day` does this step.
 ## The backlog branch
 
 `backlog` is the one permanent branch besides `main`, and it only ever
-touches `docs/backlog.md`. It is checked out as a git worktree at
+touches the two backlog data files: `docs/backlog.md` and
+`docs/backlog-names.json`, which holds one short name per open item. It
+is checked out as a git worktree at
 `C:\Development\Animal_Shelter_Backlog` (a fresh clone recreates it with
 `git worktree add ../Animal_Shelter_Backlog backlog`), so backlog edits
 never depend on what any workstream is doing — mid-feature, dirty tree,
@@ -806,6 +808,16 @@ dev server running, none of it matters.
   and commit there (`git -C ../Animal_Shelter_Backlog commit -am
   "Backlog: <what>"`); the post-commit hook pushes it. No `claude/*`
   branch, no PR. Never edit `docs/backlog.md` on `main` directly.
+  **A new item also needs a name in `docs/backlog-names.json`** (three to
+  six words, unique among open items), and that file is committed on this
+  branch with it — `node scripts/check-backlog-waiting.mjs` refuses an open
+  item that has none. **Those two files are the whole allowance.** Everything
+  else is still refused there, because the daily `git merge backlog` reaches
+  `main` with no PR, no CI and no review: a `CLAUDE.md` rule rode along that
+  way on 2026-10-07 and a misfiled line on 2026-10-19. The names file is let
+  through because it is backlog *data* in the same risk class as the backlog
+  itself — a flat map of id to name, read by the checks and executed by
+  nothing (`docs/decisions/2026-11-23-backlog-names-on-the-backlog-branch.md`).
   New items go **in the section their subject belongs to**, and above `## Completed`.
   **Appending to the end of the file is ALWAYS WRONG**, however well it satisfies "above
   `## Completed`": `## Fundraising` is the last section, so an item appended there lands in

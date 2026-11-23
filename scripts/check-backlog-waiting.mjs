@@ -9,11 +9,15 @@
  * deliberate rename — the lock exists so a rename is a decision, not drift).
  * Does NOT fail on staleness: an item can wait on a person for months; `backlog-waiting.mjs --stale`
  * warns instead. CANNOT catch: whether the state is TRUE — that is a reading, not a pattern.
+ * A docs/backlog-names.json that is PRESENT but corrupt is a finding too, not a crash: the names are
+ * what every open item is checked against, so a check that cannot read them has verified nothing,
+ * and the hook is built to let a crash through. Only a file it cannot READ at all is a crash, so a
+ * branch cut before #bkwai, and a git that will not answer, still commit.
  * Exit 0 clean, 1 on a crash, 3 on a real finding (what .githooks/pre-commit reads).
  */
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { STATES, DECIDERS, parseTag, validDate, openItems } from "./lib/backlog-waiting.mjs";
+import { STATES, DECIDERS, parseTag, validDate, openItems, parseNames } from "./lib/backlog-waiting.mjs";
 
 const STAGED = process.argv.includes("--staged");
 const FILE = "docs/backlog.md";
@@ -21,16 +25,25 @@ const NAMES = "docs/backlog-names.json";
 const git = (...a) => execFileSync("git", a, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024, stdio: ["ignore", "pipe", "ignore"] });
 const read = (f) => (STAGED ? git("show", `:${f}`) : readFileSync(f, "utf8"));
 
-let text, names;
+let text, raw;
 try {
   text = read(FILE);
-  names = JSON.parse(read(NAMES));
+  raw = read(NAMES);
 } catch (err) {
   console.error(`check-backlog-waiting: could not read ${FILE} or ${NAMES} — ${err.message}`);
   process.exit(1);
 }
+let names;
+try {
+  names = parseNames(raw);
+} catch (err) {
+  console.error(`check-backlog-waiting: 1 problem(s)\n`);
+  console.error(`  ${NAMES} is unusable: ${err.message}`);
+  console.error(`\nEvery open item is checked against that file, so nothing at all was verified. Fix the file rather than committing past this.\n`);
+  process.exit(3);
+}
 let before = null;
-try { before = JSON.parse(git("show", `HEAD:${NAMES}`)); } catch { /* new file: nothing to lock yet */ }
+try { before = parseNames(git("show", `HEAD:${NAMES}`)); } catch { /* new file, or a HEAD copy that is no use: nothing to lock against */ }
 
 const today = new Date().toISOString().slice(0, 10);
 const problems = [];
