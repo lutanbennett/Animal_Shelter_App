@@ -22,7 +22,9 @@ const inputClass =
 const labelClass = "text-sm font-medium text-muted";
 const hintClass = "text-xs text-muted";
 
-type ClipItem = { file: File; status: "queued" | "done" | "failed"; error?: string };
+type ClipItem = { file: File; status: "queued" | "done" | "failed"; error?: string; reelId?: string };
+/** What is typed against one uploaded clip in the per-clip list, keyed by its reel id. */
+type RowFields = { description: string; dateTaken: string; picks: NoteTag[]; saved?: boolean; error?: string };
 
 /** The per-file size and type checks, as a message for that one clip or null. */
 function clipProblem(file: File, m: { wrongType: (n: string) => string; tooBig: (n: string) => string }): string | null {
@@ -66,6 +68,40 @@ export function ReelForm({
   const [items, setItems] = useState<ClipItem[]>([]);
   const [sending, setSending] = useState<{ n: number; total: number } | null>(null);
   const batch = mode === "new" && items.length > 1;
+  const [rows, setRows] = useState<Record<string, RowFields>>({});
+  const doneClips = items.filter((it) => it.status === "done" && it.reelId);
+  const allDone = batch && items.length > 0 && items.every((it) => it.status === "done");
+  const rowOf = (id: string): RowFields => rows[id] ?? { description: "", dateTaken: today, picks: [] };
+  const setRow = (id: string, patch: Partial<RowFields>) =>
+    setRows((cur) => ({ ...cur, [id]: { ...(cur[id] ?? { description: "", dateTaken: today, picks: [] }), ...patch, saved: false, error: undefined } }));
+
+  /** Save each described row with updateReel. An untouched row is skipped: it is the reel as it already stands. */
+  function saveRows() {
+    setError(null);
+    startTransition(async () => {
+      const next = { ...rows };
+      let failed = 0;
+      for (const it of doneClips) {
+        const id = it.reelId!;
+        const r = next[id];
+        if (!r || r.saved || (r.description === "" && r.dateTaken === today)) continue;
+        const data = new FormData();
+        data.set("description", r.description);
+        data.set("dateTaken", r.dateTaken);
+        if (canTag) data.set("description__tags", JSON.stringify(r.picks));
+        const result = await updateWrite((wid) => {
+          data.set(WRITE_REQUEST_FIELD, wid);
+          return updateReel(id, data);
+        });
+        next[id] = result.ok ? { ...r, saved: true, error: undefined } : { ...r, error: result.error };
+        if (!result.ok) failed++;
+      }
+      setRows(next);
+      if (failed) return setError(f.rowsSomeFailed(failed));
+      router.push("/reels");
+      router.refresh();
+    });
+  }
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
   const [retrying, setRetrying] = useState(false);
@@ -76,6 +112,7 @@ export function ReelForm({
     setError(null);
     const problem = checkReelFields({ description, dateTaken });
     if (problem) return setError(f.errors[problem]);
+    if (allDone) return saveRows();
     if (mode === "new" && items.length === 0) return setError(f.errors.noFile);
     if (mode === "new" && !batch) {
       const bad = clipProblem(items[0].file, t.photos.videos.errors);
@@ -102,15 +139,12 @@ export function ReelForm({
             queue[i] =
               result.error || !result.reelId
                 ? { file: queue[i].file, status: "failed", error: result.error ?? f.errors.saveFailed }
-                : { file: queue[i].file, status: "done" };
+                : { file: queue[i].file, status: "done", reelId: result.reelId };
           }
           setItems([...queue]);
         }
         setSending(null);
-        if (queue.every((it) => it.status === "done")) {
-          router.push("/reels");
-          router.refresh();
-        } else {
+        if (!queue.every((it) => it.status === "done")) {
           setError(f.batchSomeFailed(queue.filter((it) => it.status === "done").length, queue.length));
         }
         return;
@@ -195,6 +229,43 @@ export function ReelForm({
         </div>
       )}
 
+      {batch && doneClips.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <span className={labelClass}>{f.rowsHeading}</span>
+          <ul className="flex flex-col gap-4">
+            {doneClips.map((it) => {
+              const id = it.reelId!;
+              const r = rowOf(id);
+              return (
+                <li key={id} className="flex flex-col gap-2 rounded border border-border p-3">
+                  <span className="text-sm font-medium text-foreground">{it.file.name}</span>
+                  <TagNoteField
+                    name={"description-" + id}
+                    id={"reel-description-" + id}
+                    rows={3}
+                    maxLength={REEL_DESCRIPTION_MAX}
+                    defaultValue=""
+                    className={textareaClass}
+                    canTag={canTag}
+                    searchUrl="/api/reels/resident-search"
+                    initialTags={[]}
+                    onTextChange={(v: string) => setRow(id, { description: v })}
+                    onTagsChange={(v: NoteTag[]) => setRow(id, { picks: v })}
+                  />
+                  <label htmlFor={"reel-date-" + id} className={labelClass}>
+                    {f.dateTaken}
+                  </label>
+                  <DateInput id={"reel-date-" + id} value={r.dateTaken} onChange={(e) => setRow(id, { dateTaken: e.target.value })} max={today} className={inputClass} required />
+                  {r.saved && <span className="text-xs text-muted">{f.rowSaved}</span>}
+                  {r.error && <span className="text-xs text-danger">{r.error}</span>}
+                </li>
+              );
+            })}
+          </ul>
+          <span className={hintClass}>{f.rowsLeaveHint}</span>
+        </div>
+      )}
+
       {!batch && (
         <>
       <div className="flex flex-col gap-1">
@@ -241,7 +312,7 @@ export function ReelForm({
 
       <div className="flex flex-wrap gap-2">
         <ActionButton type="submit" icon={ACTION_ICONS.add} variant="primary" disabled={pending}>
-          {pending ? f.saving : f.save}
+          {pending ? f.saving : allDone ? f.saveRows : f.save}
         </ActionButton>
         <ActionButton icon={ACTION_ICONS.back} onClick={() => router.back()} disabled={pending}>
           {f.cancel}
