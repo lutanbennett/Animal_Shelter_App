@@ -45,9 +45,15 @@ try {
 let before = null;
 try { before = parseNames(git("show", `HEAD:${NAMES}`)); } catch { /* new file, or a HEAD copy that is no use: nothing to lock against */ }
 
-// Dates are the SHELTER's day (Asia/Bangkok, UTC+7), not UTC (#utcds). Proof lines (#prvln) are REPORTED, not failed:
-// flip PROOF_STRICT to true (or set BACKLOG_PROOF_STRICT=1) once every waiting:lutan item carries one.
-const PROOF_STRICT = process.env.BACKLOG_PROOF_STRICT === "1" || false;
+// Dates are the SHELTER's day (Asia/Bangkok, UTC+7), not UTC (#utcds).
+// Proof lines (#prvln) now FAIL rather than report. Flipped 2026-11-23 by the planner, once all
+// thirteen `waiting:lutan` items carried one (`898d42499` on `backlog`) AND this check had been run
+// with BACKLOG_PROOF_STRICT=1 against main and seen to pass — read first, so it could not go red
+// about data nobody had filled in. That last trap is #ckcia's own fault one layer along.
+// WHY IT BLOCKS RATHER THAN REPORTS: the item exists because an item that reads as waiting on Lutan is
+// never re-asked, so it sits. A report is skipped exactly when a list is being assembled in a hurry,
+// which is when all four of his examples went wrong. BACKLOG_PROOF_STRICT=0 turns it back into a report.
+const PROOF_STRICT = process.env.BACKLOG_PROOF_STRICT !== "0";
 const noProof = [];
 const problems = [];
 const seen = new Map();
