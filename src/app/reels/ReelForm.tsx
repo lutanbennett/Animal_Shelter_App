@@ -22,6 +22,15 @@ const inputClass =
 const labelClass = "text-sm font-medium text-muted";
 const hintClass = "text-xs text-muted";
 
+type ClipItem = { file: File; status: "queued" | "done" | "failed"; error?: string };
+
+/** The per-file size and type checks, as a message for that one clip or null. */
+function clipProblem(file: File, m: { wrongType: (n: string) => string; tooBig: (n: string) => string }): string | null {
+  if (!VIDEO_MIME_TYPES.has(file.type)) return m.wrongType(file.name);
+  if (file.size > MAX_VIDEO_BYTES) return m.tooBig(file.name);
+  return null;
+}
+
 /**
  * Add a reel (video, description, date taken) or edit its description and date. The video is fixed once saved: a
  * different clip is a different reel. A new video goes to Google Drive from the browser in chunks, never through the
@@ -52,7 +61,11 @@ export function ReelForm({
   const [description, setDescription] = useState(initial.description);
   const [dateTaken, setDateTaken] = useState(initial.dateTaken);
   const [picks, setPicks] = useState<NoteTag[]>(initialTags);
-  const [file, setFile] = useState<File | null>(null);
+  // New reels only: the clips picked so far. One clip is the ordinary form; two or more is a batch (serial upload,
+  // blank description, today's date, edited afterwards). Edit never touches this.
+  const [items, setItems] = useState<ClipItem[]>([]);
+  const [sending, setSending] = useState<{ n: number; total: number } | null>(null);
+  const batch = mode === "new" && items.length > 1;
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
   const [retrying, setRetrying] = useState(false);
@@ -63,16 +76,48 @@ export function ReelForm({
     setError(null);
     const problem = checkReelFields({ description, dateTaken });
     if (problem) return setError(f.errors[problem]);
-    if (mode === "new") {
-      if (!file) return setError(f.errors.noFile);
-      if (!VIDEO_MIME_TYPES.has(file.type)) return setError(t.photos.videos.errors.wrongType(file.name));
-      if (file.size > MAX_VIDEO_BYTES) return setError(t.photos.videos.errors.tooBig(file.name));
+    if (mode === "new" && items.length === 0) return setError(f.errors.noFile);
+    if (mode === "new" && !batch) {
+      const bad = clipProblem(items[0].file, t.photos.videos.errors);
+      if (bad) return setError(bad);
     }
 
     startTransition(async () => {
+      if (batch) {
+        // One after another, never in parallel: five 500 MB clips on a phone connection would stall each other.
+        // A clip that fails is marked and the rest carry on; saving again retries only the ones not done.
+        const queue = items.map((it): ClipItem => (it.status === "done" ? it : { file: it.file, status: "queued" }));
+        const toSend = queue.map((_, i) => i).filter((i) => queue[i].status !== "done");
+        for (let k = 0; k < toSend.length; k++) {
+          const i = toSend[k];
+          setSending({ n: k + 1, total: toSend.length });
+          const bad = clipProblem(queue[i].file, t.photos.videos.errors);
+          if (bad) {
+            queue[i] = { file: queue[i].file, status: "failed", error: bad };
+          } else {
+            setProgress(0);
+            const result = await uploadReelVideo(t, queue[i].file, { dateTaken: today, description: "", picks: [] }, setProgress, setRetrying);
+            setProgress(null);
+            setRetrying(false);
+            queue[i] =
+              result.error || !result.reelId
+                ? { file: queue[i].file, status: "failed", error: result.error ?? f.errors.saveFailed }
+                : { file: queue[i].file, status: "done" };
+          }
+          setItems([...queue]);
+        }
+        setSending(null);
+        if (queue.every((it) => it.status === "done")) {
+          router.push("/reels");
+          router.refresh();
+        } else {
+          setError(f.batchSomeFailed(queue.filter((it) => it.status === "done").length, queue.length));
+        }
+        return;
+      }
       if (mode === "new") {
         setProgress(0);
-        const result = await uploadReelVideo(t, file!, { dateTaken, description, picks: canTag ? picks : [] }, setProgress, setRetrying);
+        const result = await uploadReelVideo(t, items[0].file, { dateTaken, description, picks: canTag ? picks : [] }, setProgress, setRetrying);
         setProgress(null);
         setRetrying(false);
         if (result.error || !result.reelId) return setError(result.error ?? f.errors.saveFailed);
@@ -109,18 +154,49 @@ export function ReelForm({
             ref={fileInput}
             type="file"
             name="file"
+            multiple
             accept="video/mp4,video/quicktime"
             className="sr-only"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            onChange={(e) => {
+              // Accumulate, so clips from the camera and from the library can be added in turn.
+              const picked = Array.from(e.target.files ?? []);
+              e.target.value = "";
+              setError(null);
+              setItems((cur) => [
+                ...cur,
+                ...picked.map((file): ClipItem => {
+                  const bad = clipProblem(file, t.photos.videos.errors);
+                  return bad ? { file, status: "failed", error: bad } : { file, status: "queued" };
+                }),
+              ]);
+            }}
           />
           <ActionButton icon={Film} onClick={() => fileInput.current?.click()} disabled={pending}>
-            {file ? f.changeVideo : f.chooseVideo}
+            {items.length ? f.addMoreVideos : f.chooseVideo}
           </ActionButton>
-          {file && <span className="text-sm text-foreground">{file.name}</span>}
+          {items.length > 0 && (
+            <ul className="flex flex-col gap-1">
+              {items.map((it, i) => (
+                <li key={`${it.file.name}-${i}`} className="flex flex-wrap items-center gap-2 text-sm text-foreground">
+                  <span>{it.file.name}</span>
+                  {batch && it.status === "done" && <span className="text-muted">{f.clipDone}</span>}
+                  {it.error && <span className="text-danger">{it.error}</span>}
+                  {it.status !== "done" && (
+                    <button type="button" className="text-xs text-muted underline" disabled={pending} onClick={() => setItems((cur) => cur.filter((_, j) => j !== i))}>
+                      {f.removeClip}
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
           <span className={hintClass}>{f.videoHint}</span>
+          {batch && <span className={hintClass}>{f.batchHint}</span>}
         </div>
       )}
 
+      {!batch && (
+        <>
       <div className="flex flex-col gap-1">
         <label htmlFor="reel-description" className={labelClass}>
           {f.description}
@@ -148,9 +224,12 @@ export function ReelForm({
         <DateInput id="reel-date" value={dateTaken} onChange={(e) => setDateTaken(e.target.value)} max={today} className={inputClass} required />
         <span className={hintClass}>{f.dateTakenHint}</span>
       </div>
+        </>
+      )}
 
       {progress !== null && (
         <p role="status" className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground">
+          {batch && sending && <strong>{f.clipOf(sending.n, sending.total)}</strong>}
           {retrying ? f.retrying : f.uploading(progress)}
         </p>
       )}
