@@ -174,7 +174,7 @@ needs two cards together, put both on one row. Do not name `staff` (retired, `01
 - [ ] Nav entry correct (`src/app/NavLinks.tsx`) — appears for the right cards, no dead links — n/a: the product site has no app nav; the home band links to the page
 - [ ] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual` — n/a: the product site is outside the in-app manual
 - [x] Translatable strings go through the translation path, checked at `/management/translations`
-- [ ] Mobile viewport (375px) — no overflow, controls reachable — pending: not viewed at 375px
+- [x] Mobile viewport (375px) — no overflow, controls reachable — **driven and read at 375x812 on PRODUCTION, in BOTH languages, 2026-11-23.** `document.documentElement.scrollWidth` equals the 375px viewport on each, and **no element anywhere on either page is wider than it**. The mock-up panels sit at 327px with their figures in a 2x2, the *Ask about joining* button is full tap size, and the smallest type is 12px. English page 3,273px tall, Thai 2,957px. **One reading was taken before the page had finished hydrating and under-reported the height; it was re-taken after `requestAnimationFrame` fired rather than recorded as a fault** (`CLAUDE.md`, the browser-pane note)
 - [x] Browser console clean — no errors or React warnings
 - [ ] Network clean — no unexpected 4xx/5xx on the feature's pages — n/a: console clean and pages load; network panel not separately audited
 
@@ -322,16 +322,16 @@ empty signature quietly passing.
 A red `test-plan` that says what it is waiting for is a red people act on. An
 illegible one is a red people learn to ignore.
 
-- [ ] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the … — n/a: the only manual item is the 375px view, which is pending
+- [x] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the … — both manual items are now checked, and by different people on purpose. **The 375px view was driven and read by Claude** on production (section 5). **The Thai wording was read by Lutan**, which is the half Claude cannot do: it could establish the translation is COMPLETE — 1,753 Thai characters, and the only Latin word anywhere in the body is `CooperJaidee`, the product name — but not whether it READS well, which is a judgement only a Thai reader can give. He gave it in chat on 2026-11-23. **Also checked and not filed as a fault:** a caption says *"Pictures show sample data, not a real shelter"* while the page holds no image files; the "pictures" are `aria-hidden` HTML mock-ups of the app's own screens, so the caption is accurate and nothing is missing
 
-Manual verification by: pending: the 375px view and a Thai reader on the money page
+Manual verification by: Lutan Bennett — the Thai wording; confirmed in chat ("Yes, it reads well") after reading the page's Thai section by section, line written by Claude at their request  Date: 2026-11-23
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR — n/a: pasted when the PR opens
-- [ ] Handed to the production release manager — n/a: release manager acts at release time
+- [x] Handed to the production release manager — shipped in `0.49.0` on 2026-11-23; the release's own record lists this page's two manual items as its largest test gap, and this PR closes both
 
 Result: pass
 
-Release manager acknowledgement: pending: at release
+Release manager acknowledgement: Claude Opus 5 (release manager session)  Date: 2026-11-23 — read at release time as the pre-deploy pass, and the two manual items carried into `docs/releases/2026-11-23-0-49-0.md` as gap 1 rather than absorbed
