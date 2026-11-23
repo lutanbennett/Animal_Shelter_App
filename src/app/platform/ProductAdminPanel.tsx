@@ -18,6 +18,7 @@ import {
   createShelterAdminLogin,
   loginExists,
   mapShelterHost,
+  setShelterSite,
   removeProductAdmin,
   seedShelterDefaults,
   setShelterAccountHolder,
@@ -111,6 +112,7 @@ function websiteOf(s: ShelterRow): { host: string | null; isPrimary: boolean } {
   return { host: s.hosts?.[0] ?? null, isPrimary: false };
 }
 
+const siteRank = { open: 0, locked: 1, off: 2 } as const;
 const input = "min-h-11 rounded border border-border bg-background px-3 md:min-h-9";
 
 /**
@@ -130,6 +132,7 @@ export function ProductAdminPanel({
   stepUpPath,
   systemDatabase,
   consoleHost,
+  siteFloor,
 }: {
   enquiries: EnquiryRow[];
   shelters: ShelterRow[];
@@ -140,6 +143,8 @@ export function ProductAdminPanel({
   systemDatabase: SystemState;
   /** This console's own address (PLATFORM_HOST): never offered a Remove. */
   consoleHost: string | null;
+  /** The deployment-wide PUBLIC_SITE floor: it wins when more closed than a shelter's own setting (#wbopn). */
+  siteFloor: "open" | "locked" | "off";
 }) {
   const { t } = useI18n();
   const p = t.admin.productAdmin;
@@ -716,6 +721,34 @@ export function ProductAdminPanel({
 
             {tab === "website" && (
             <section className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 pb-2">
+                <h3 className={h4}>{p.siteTitle}</h3>
+                <p className="text-sm text-foreground">{siteWords}</p>
+                {siteRank[siteFloor] > siteRank[(s.public_site ?? "locked") as keyof typeof siteRank] && <p className="max-w-prose text-xs text-warning">{p.siteFloorWins(p.siteState[siteFloor])}</p>}
+                {canWrite && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {(["open", "locked", "off"] as const).filter((v) => v !== (s.public_site ?? "locked")).map((v) => (
+                      <ActionButton
+                        key={v}
+                        icon={ACTION_ICONS.add}
+                        variant={v === "open" ? "primary" : "secondary"}
+                        compact
+                        disabled={pending}
+                        onClick={() =>
+                          startTransition(async () => {
+                            const r = await call((id) => setShelterSite(s.id, v, id));
+                            say(`site:${s.id}`, r.ok, r.ok ? p.siteSet : (r.error ?? ""));
+                          })
+                        }
+                      >
+                        {p.siteAction[v]}
+                      </ActionButton>
+                    ))}
+                  </div>
+                )}
+                {note(`site:${s.id}`)}
+                <p className="max-w-prose text-xs text-muted">{p.siteHelp}</p>
+              </div>
               <h3 className={h4}>{p.addressesTitle}</h3>
               {s.hosts && s.hosts.length > 0 && <p className="text-xs text-muted">{p.websiteUnchecked}</p>}
               <p className="max-w-prose text-xs text-muted">{p.addressesNote}</p>

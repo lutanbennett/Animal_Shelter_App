@@ -248,6 +248,25 @@ export async function mapShelterHost(shelterId: string, host: string, requestId:
   });
 }
 
+/** Open, lock or switch off one shelter's website (product_admin_set_shelter_site, 0436; #wbopn). The deployment's PUBLIC_SITE floor still wins when more closed. */
+export async function setShelterSite(shelterId: string, site: "open" | "locked" | "off", requestId: string | null): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.productAdmin.errors;
+  const supabase = await createClient();
+  return runWriteAction("productAdmin.setSite", write(t), { id: requestId, action: "productAdmin.setSite", db: supabase }, async () => {
+    if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
+    if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
+    if (!UUID.test(shelterId) || (site !== "open" && site !== "locked" && site !== "off")) return { ok: false, error: e.badHost };
+    const { error } = await supabase.rpc("product_admin_set_shelter_site", { p_shelter: shelterId, p_site: site });
+    if (error) {
+      const msg = shelterError(e, error.code, e.badHost, e.badHost, "changing the website");
+      return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.setSite", error, t.common);
+    }
+    revalidatePath("/platform");
+    return { ok: true };
+  });
+}
+
 export async function unmapShelterHost(host: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.admin.productAdmin.errors;
