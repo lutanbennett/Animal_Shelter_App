@@ -10,10 +10,10 @@
 | Backlog item | `docs/backlog.md` → none: filing one would have needed the very commit this change unblocks (`docs/decisions/2026-11-23-backlog-names-on-the-backlog-branch.md`) |
 | Branch / worktree | `claude/backlog-names-filing` @ `C:\Development\Animal_Shelter_backlog-names-filing` |
 | Dev server | n/a: no app surface — the change is a git hook and a check script |
-| PR | |
+| PR | [#1843](https://github.com/lutanbennett/Animal_Shelter_App/pull/1843), merged 2026-11-23 as `0eb3266df` |
 | Tested by / date | Claude (backlog manager) / 2026-11-23 |
 | Carries a migration? | no |
-| Tested at SHA | |
+| Tested at SHA | `54fe780bae76eb451fe0bdc6cfa2726d476fc5d1` — the head CI ran against (16 passing, 0 failing, `audit` skipped with no dependency change), confirmed by `headSha` before merging |
 
 ## 1. Scope and risk
 
@@ -134,7 +134,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | That filing a real backlog item now works end to end — add an item with its name on the `backlog` branch and watch the commit be accepted. It could not be checked from here because the real backlog worktree still runs the **old** hook until this merges and the daily sync carries the new one in; the equivalent was proved in a throwaway repository instead (section 4) | `C:\Development\Animal_Shelter_Backlog`, after this merges |
+| — | Empty. **One row was here when this plan was written and it has been removed rather than ticked, because it was misfiled.** It read "file a real item on the `backlog` branch and watch it be accepted", which is not a person looking at anything — it was waiting on the **merge**, after which a script can drive it, and it was. It is recorded under *Automated and scripted checks* below, where it belongs. The test for this table is whether somebody has to go and look, separately from deploying; this failed that test | — |
 
 ## Sign-off
 
@@ -142,19 +142,25 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 - [x] Everything in this checklist that could be verified without human eyes was run, not assumed
 - [x] Nothing is ticked that was not actually executed
+- [x] **Driven on the real `backlog` branch after the merge (2026-11-23), which is the one thing the plan could not do before it.** The daily sync carried the new hook into `C:\Development\Animal_Shelter_Backlog` and all three outcomes were run there, in that worktree, not a throwaway copy:
+  - `docs/backlog-names.json` staged **alone** → the hook exits **0**. That exact staging was refused before this change, so this is the wedge actually opening.
+  - the same file **corrupted** → **refused**, the check exiting 3 and the hook 1, printing `docs/backlog-names.json is unusable: it is not valid JSON` and *"nothing at all was verified"*.
+  - `CLAUDE.md` staged **alongside** the two → **refused by name**, so the rule did not widen beyond the two data files.
+
+  The worktree was restored to clean afterwards (`git status --porcelain` empty, the probe name gone). A real commit then went in under the new rule: `18075316e`, giving `#pimir`'s waiting tag the 29 Nov date its siblings carry.
 
 Automated checks by: Claude (backlog manager)  Date: 2026-11-23
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: the one row needs the new hook to be in the backlog worktree, which happens when this merges
+- [x] The manual list above is empty, or every item in it was checked by a person — the list is empty, and its one row was removed as misfiled rather than ticked, for the reason written in the table itself
 
-Manual verification by: pending: filing a real item on the `backlog` branch once this has merged and the sync has carried the new hook into `C:\Development\Animal_Shelter_Backlog`
+Manual verification by: n/a: nothing in this change has a surface a person can look at — it is a git hook and a check script, and the one check that waited on the merge was driven by script and signed above, not looked at
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above — defect 1 is fixed in this PR, defect 2 is accepted with the evidence that it was already closed on `main`
-- [ ] Checklist pasted into the PR — pending: the PR does not exist at this commit
+- [x] Checklist pasted into the PR — PR #1843, whose body carries the proof and the two measured exit codes
 - [x] Handed to the production release manager — n/a as a handover: nothing in this change reaches a deployed build or the production database, and the one outstanding row is a developer check rather than a release one
 
 Result: pass with accepted defects
