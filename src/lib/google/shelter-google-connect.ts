@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { encryptSecret } from "./drive-credentials-crypto";
 import { stageConsent } from "./shelter-drive-decide";
-import { folderNameFor, missingScopes, type ConnectKind, type ConnectOutcome } from "./shelter-google-connect-decide";
+import { calendarNameFor, folderNameFor, missingScopes, type ConnectKind, type ConnectOutcome } from "./shelter-google-connect-decide";
 // The same checks the connect scripts make, called as they stand (not copied): validate the shape, prove it against Google
 // BEFORE anything is stored, and refuse the fallback shelter's own calendar.
 import { validateInputs as validateDrive, verifyWithGoogle as verifyDrive } from "../../../scripts/lib/connect-shelter-drive.mjs";
@@ -105,16 +105,34 @@ export async function completeConnect(kind: ConnectKind, code: string, origin: s
       return { ok: true };
     }
 
-    // Calendar: the account's own primary calendar, whose id is the account's email address.
+    // Calendar (#calsc): the app makes its own secondary calendar in the account and stores ITS id; the account's email is kept apart.
+    // The narrow scope cannot see the primary calendar at all. A reconnect keeps the calendar already made when this account can still read it.
     const who = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: auth });
     const email = ((await who.json().catch(() => ({}))) as { email?: string }).email;
     if (!who.ok || !email) return { ok: false, reason: "google" };
-    const input = { shelterKey, calendarId: email, accountEmail: email, ...base };
+    const { data: prior } = await db.from("shelter_calendar_credentials").select("calendar_id").eq("shelter_id", shelterId).maybeSingle();
+    let calendarId = (prior?.calendar_id as string | null) ?? null;
+    if (calendarId && calendarId !== email) {
+      // Only a calendar this app made can be read with this scope, so a stored id that is not the account email is tried first.
+      const still = await verifyCalendar({ shelterKey, calendarId, accountEmail: email, ...base }).catch(() => null);
+      if (!still) calendarId = null;
+    } else calendarId = null; // the old primary-calendar connection is NOT kept: visits move to a calendar the app makes (deliberate, said on the screen)
+    if (!calendarId) {
+      const made = await fetch("https://www.googleapis.com/calendar/v3/calendars", {
+        method: "POST",
+        headers: { ...auth, "Content-Type": "application/json" },
+        body: JSON.stringify({ summary: calendarNameFor(shelter.name as string | null) }),
+      });
+      const cal = (await made.json().catch(() => ({}))) as { id?: string };
+      if (!made.ok || !cal.id) return { ok: false, reason: "google" };
+      calendarId = cal.id;
+    }
+    const input = { shelterKey, calendarId, accountEmail: email, ...base };
     if (validateCalendar(input).length) return { ok: false, reason: "google" };
     if (refuseFallbackCalendar(input, process.env.GOOGLE_CALENDAR_ID)) return { ok: false, reason: "fallback_calendar" };
     await verifyCalendar(input);
     const up = await db.from("shelter_calendar_credentials").upsert({
-      shelter_id: shelterId, calendar_id: email, oauth_client_id: c.clientId, oauth_client_secret_enc: await encryptSecret(c.clientSecret), refresh_token_enc: await encryptSecret(tok.refresh_token),
+      shelter_id: shelterId, calendar_id: calendarId, oauth_client_id: c.clientId, oauth_client_secret_enc: await encryptSecret(c.clientSecret), refresh_token_enc: await encryptSecret(tok.refresh_token),
       calendar_account_email: email, token_status: "ok", last_checked_at: now, last_error: null, dead_alerted_at: null, updated_at: now,
     }, { onConflict: "shelter_id" });
     if (up.error) return { ok: false, reason: up.error.code === "23505" ? "calendar_taken" : "store" };
