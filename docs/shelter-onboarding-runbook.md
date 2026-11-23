@@ -150,7 +150,19 @@ you are a product administrator **and** have passed the two-step code.
 
 ## Step 2. Put the host on Cloudflare  **[LUTAN ONLY]**
 
-A host answers only if Cloudflare is told to send it to the app.
+A host answers only if Cloudflare is told to send it to the app. This step takes a
+shelter's web address from "they own it" (or "they want one") to "it answers".
+**Not yet rehearsed** (see "What has been rehearsed").
+
+**Which kind of host is it?** Decide first, because the middle of this step differs.
+
+| | The shelter's **own domain** (e.g. `<shelter>.org`) | A **`cooperjaidee.org` sub-host** (e.g. `<shelter-key>.cooperjaidee.org`) |
+|---|---|---|
+| Needs the shelter | Yes: their registrar login, and their agreement to change nameservers | No |
+| A. Domain into your Cloudflare | **Yes, part A below** (can take minutes to days) | **Skip**: `cooperjaidee.org` is already in your account |
+| B. Route in `wrangler.jsonc` | Yes | Yes |
+| C. Deploy (Step 8) | Yes | Yes |
+| Certificate | Automatic, once the zone is Active | Automatic. **First level only**: `x.cooperjaidee.org`, never `x.y.cooperjaidee.org` (the free certificate does not cover a second level) |
 
 **Why one host at a time.** A wildcard (every sub-host at once) is possible only
 as a *zone route*, never as a *custom domain*, and the app is served as a custom
@@ -158,21 +170,83 @@ domain. (Answered in writing, 2026-11-17, backlog `#v0302`.) So **every host is
 listed individually**, and this step is repeated for each host a shelter has
 (including a `www.` form if it has one). It cannot be done once for all shelters.
 
+**What you need before you start.** The host you will use, written exactly. The
+shelter's key and the host already added in Step 1 (the console only records which
+shelter a host belongs to; it does not make the host answer). For an own domain
+also: who at the shelter holds the registrar login, and that they know you will ask
+them to change the domain's nameservers (the website and any email on that domain
+move with it, so say so first).
+
+### A. Own domain only: bring the domain into your Cloudflare
+
+1. In the Cloudflare dashboard, on the **same account that holds `cooperjaidee.org`**,
+   choose *Add a domain* and enter the shelter's domain. Pick the **Free** plan.
+2. Cloudflare scans for existing DNS records and lists them. **Compare that list with
+   what the shelter actually uses** (ask them, or look at their current registrar's
+   DNS page) and add anything missing. The ones that matter: any email records (MX,
+   SPF, DKIM), `google-site-verification` TXT records, and any other host they use.
+   A missed email record means the shelter's email stops on the day of the switch.
+3. Cloudflare gives you **two nameservers** (names ending `.ns.cloudflare.com`).
+   Send them to the shelter's registrar contact, or, if they give you the login,
+   do it with them: in the registrar's domain settings, replace the existing
+   nameservers with those two. Registrars differ; the setting is called
+   *Nameservers* or *DNS servers*. **This is the shelter's account, not yours:
+   never ask for or keep their password.**
+4. **Wait.** The domain becomes *Active* in Cloudflare when the registrar's change
+   has spread: minutes to a couple of days, depending on the old settings. Nobody
+   can speed it up. Cloudflare emails when it is done; the dashboard shows *Active*.
+   Do not continue to B until it does.
+
+### B. Both kinds: add the route (a pull request)
+
 The list of hosts lives in `wrangler.jsonc`, in the `routes` list for the
-environment, each as `{ "pattern": "<the shelter's host>", "custom_domain": true }`.
+environment (test, UAT or production), each as
+`{ "pattern": "<the shelter's host>", "custom_domain": true }`.
 
-1. A developer adds the host to the right `routes` list in `wrangler.jsonc`, in a
-   pull request. **[TERMINAL]** (until then, nothing happens).
-2. In Cloudflare, make sure the shelter's domain is in your account (a shelter
-   with its own domain adds it; a shelter without one gets a first-level
-   sub-host of the platform's domain, never a second level — the free
-   certificate does not cover one).
-3. The deploy in Step 8 creates the Cloudflare record from that list. If it
-   reports the host already belongs to something else, stop and look: do not
-   remove another record to make room.
+1. A developer adds the host to the right `routes` list, in a pull request.
+   **[TERMINAL]** Until that is merged, nothing happens.
+2. Do the same for a `www.` form, if the shelter has one.
 
-Expected: after the deploy, `https://<the shelter's host>` loads the sign-in page
-of that shelter, and no other shelter's.
+### C. Both kinds: deploy
+
+The deploy in Step 8 creates the Cloudflare record from that list. If it reports
+the host already belongs to something else, stop and look: do not remove another
+record to make room.
+
+**Expected:** after the deploy, `https://<the shelter's host>` answers with a
+valid certificate and **shows the shelter's under-construction page** (see the next
+section: that is correct, not a fault). It never shows another shelter's content.
+**If it does not answer at all**, the usual causes are: the zone is not yet Active
+(A4), the route is missing from the environment you deployed, or the host was
+mistyped in Step 1 or in the route.
+
+### The website is LOCKED when you finish, on purpose
+
+**A new shelter's website is born locked** (`shelters.public_site` defaults to
+`locked`): a visitor who is not signed in sees the under-construction page and
+search engines are told to stay away. The three states are `open`, `locked` and `off`
+(`off` is locked and more: nobody sees a website page, signed in or not).
+
+**There are two locks, and the more closed of the two wins.** One is the shelter's
+own setting. The other is the **deployment floor**, `PUBLIC_SITE` in
+`wrangler.jsonc`, one value for the whole environment. A shelter can only ever be
+*more* closed than the floor, never less. **Production's floor is `locked`
+(Lutan's decision of 2026-11-05).** So **while production runs `locked`, setting a
+shelter to `open` changes nothing a visitor can see, on any shelter.** If you press
+it and still see the construction page, **that is the floor, not a mistake of
+yours.** Raising the floor is Lutan's decision (backlog `#pl7aq`) and is not a step
+in this runbook.
+
+**How to change a shelter's own setting, today:** **NOT YET POSSIBLE from the
+console.** The database function that sets it exists
+(`product_admin_set_shelter_site`, migration `0436`: product administrator, after
+the two-step code) but no console button calls it yet; the button is backlog
+`#wbopn`. Until it lands, do not look for one. When it does, this note becomes a
+button name and is deleted (see "Who can do each step").
+
+**Who can do what here.** The Cloudflare parts (A, and the deploy in C) are
+**[LUTAN ONLY]**: they need your Cloudflare account and the production deploy. B is
+a developer's pull request. Nothing in the console changes who can do this.
 
 ## Step 3. The shelter's own Google account  **[LUTAN ONLY]**
 
@@ -369,7 +443,9 @@ project that is not that environment's own.
 
 ## Step 9. Check it  **[ADMIN SCREEN]**
 
-1. Open `https://<the shelter's host>`. Expected: the shelter's own sign-in page
+1. Open `https://<the shelter's host>`. Expected: **the under-construction page**,
+   because a new shelter is born locked (Step 2, "The website is LOCKED"). That is
+   a correct lock, not a broken site. Its sign-in page is the shelter's own
    (rehearsed: the page title is the shelter's full name).
 2. Sign in as its Admin. Expected: the signed-in header shows the Admin's email and
    *Admin*. **The small badge on the left still reads "LCA"** (known gap, see Step
