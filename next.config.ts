@@ -70,6 +70,20 @@ const nextConfig: NextConfig = {
   //
   // 0.24: "Vet" left the system (docs/decisions/2026-10-09-clinics-and-doctors.md). Its three pages
   // moved, and bookmarks, printed QR sheets and old links in chat land on the new ones.
+  // /th/<page> serves <page> in Thai (#t48xh). The proxy sets x-locale-path: th only for an address
+  // thPathRest() accepts (and deletes any the visitor sent), so this rule cannot reach a staff path. It is a
+  // config rewrite, with a relative destination, because a NextResponse.rewrite from the proxy carried an
+  // absolute URL that Next proxied outward on the Pi and answered 500 (#thpfx, docs/decisions/2026-11-23-thai-prefix-rewrite.md).
+  async rewrites() {
+    return {
+      beforeFiles: [
+        { source: "/th/:path*", has: [{ type: "header", key: "x-locale-path", value: "th" }], destination: "/:path*" },
+      ],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
+
   async redirects() {
     return [
       // 2026-11-04: Appeals became Campaigns and Desexing became Sterilisation in the words people read, and the
