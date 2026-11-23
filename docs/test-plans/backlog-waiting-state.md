@@ -14,7 +14,7 @@
 | PR | |
 | Tested by / date | |
 | Carries a migration? | yes / no |
-| Tested at SHA | |
+| Tested at SHA | `b25730707` on its branch, merged as `d6f412581` (PR #1839). **Filled in 2026-11-23**, when the republish sign-off touched this plan and the checker caught that the header had been left blank at merge |
 
 ## 1. Scope and risk
 
@@ -205,7 +205,7 @@ section 8's.
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | Pinned backlog page shows names, badges and the state filter after republish | the pinned artifact |
+| 1 | **Republished 2026-11-23 (version 446) and PARTLY verified.** Present in the published HTML, counted rather than eyeballed: a name on **all 38** open items (`.nm`), a state badge on **all 38** (`.wstate`), the filter control (`.wfilter`), and the state classes — **12 `lutan`, 6 `buildable`, 4 `director`**. **What is left is pressing the filter and seeing it filter**, which Claude could not do: the browser pane is not signed in to claude.ai, and a local copy opened from disk renders as a static snapshot with scripts inert | the pinned artifact |
 
 ## Sign-off
 
@@ -232,9 +232,9 @@ Automated checks by: Claude  Date: 2026-11-22
 A red `test-plan` that says what it is waiting for is a red people act on. An
 illegible one is a red people learn to ignore.
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: row 1 under Left for manual verification
+- [ ] The manual list above is empty, or every item in it was checked by a person — pending: **one press of the state filter on the pinned page.** Everything else in row 1 is verified in the published HTML; the page is republished and current (`main @ 5084efd61`)
 
-Manual verification by: pending: the pinned backlog page after republish (Left for manual verification, row 1)
+Manual verification by: pending: Lutan — **one press of the state filter** on the pinned backlog page. The republish is done and the names, badges and filter control are verified present in the published HTML by Claude; only the interaction is outstanding, because neither the browser pane (not signed in to claude.ai) nor a local copy (static snapshot, scripts inert) can press it
 
 ### Result
 
