@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { ActionButton } from "@/components/ActionButton";
 import { TemporaryPasswordNotice } from "@/components/TemporaryPasswordNotice";
 import { ACTION_ICONS } from "@/components/hub-icons";
+import { ShelterAccess } from "./ShelterAccess";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useWriteCall } from "@/lib/use-write-form";
 import {
@@ -72,7 +73,7 @@ export type SystemState = "ok" | "warn" | "fail" | "off" | null;
 
 type StepKey = "host" | "role" | "login" | "receipts" | "defaults";
 type CardState = "closed" | "broken" | "setup" | "ready";
-type TabKey = "summary" | "setup" | "connections" | "website" | "contact" | "close";
+type TabKey = "summary" | "setup" | "connections" | "website" | "contact" | "access" | "close";
 /** red = not done, amber = waiting on someone else, green = done, grey = recorded but not measured (Lutan, 2026-11-23). */
 type TabTone = "red" | "amber" | "green" | "grey" | "none";
 
@@ -430,8 +431,8 @@ export function ProductAdminPanel({
     const statusTone = (x: Status) => (x === "connected" ? "text-success" : x === "dead" ? "text-danger" : x === "incomplete" ? "text-warning" : "text-muted");
     const sysWords = systemDatabase === "ok" ? p.healthOk : systemDatabase === "warn" ? p.healthWarn : systemDatabase === "fail" ? p.healthFail : p.healthUnknown;
     const sysTone = systemDatabase === "ok" ? "text-success" : systemDatabase === "warn" ? "text-warning" : systemDatabase === "fail" ? "text-danger" : "text-muted";
-    const tabs = (["summary", "setup", "connections", "website", "contact", "close"] as TabKey[]).filter((k) => k !== "close" || canWrite);
-    const tabLabel: Record<TabKey, string> = { summary: p.tabSummary, setup: p.tabSetup, connections: p.tabConnections, website: p.tabWebsite, contact: p.tabContact, close: p.tabClose };
+    const tabs = (["summary", "setup", "connections", "website", "contact", "access", "close"] as TabKey[]).filter((k) => k !== "close" || canWrite);
+    const tabLabel: Record<TabKey, string> = { summary: p.tabSummary, setup: p.tabSetup, connections: p.tabConnections, website: p.tabWebsite, contact: p.tabContact, access: p.tabAccess, close: p.tabClose };
     const section = "flex flex-col gap-2 border-t border-border pt-4";
     const h4 = "text-sm font-semibold text-foreground";
 
@@ -792,6 +793,7 @@ export function ProductAdminPanel({
             </section>
             )}
 
+            {tab === "access" && <ShelterAccess shelterId={s.id} shelterName={s.display_name ?? s.name} canWrite={canWrite} />}
             {tab === "contact" && (
             <>
             <form

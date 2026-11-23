@@ -1272,6 +1272,46 @@
         "migration": "0428_shelter_state.sql",
         "item": "function public.product_admin_carry_enquiry definer",
         "reason": "PADMIN list (docs/decisions/2026-11-20-shelter-state-schema.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. It copies an enquiry's contact onto the shelter (never over a typed value), links them and marks the enquiry created. It grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0438_product_admin_shelter_access.sql",
+        "item": "function public.product_admin_shelter_roles reads a role",
+        "reason": "PADMIN shelter access backup (#shsec, docs/decisions/2026-11-23-console-shelter-access.md): Lists the shelter's existing roles (id, key, name, is_admin) so the console can offer them; read only. Gated by is_product_admin() and aal2 in the body, the PADMIN list outside the card system by Lutan's 2026-11-18 decision. It creates no role, edits no role and touches no card; it only hands out a role the shelter already defined, so no new way to grant exists. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0438_product_admin_shelter_access.sql",
+        "item": "function public.product_admin_shelter_roles definer",
+        "reason": "PADMIN shelter access backup (#shsec, docs/decisions/2026-11-23-console-shelter-access.md): Read only. Gated by is_product_admin() and aal2 in the body, the PADMIN list outside the card system by Lutan's 2026-11-18 decision. It creates no role, edits no role and touches no card; it only hands out a role the shelter already defined, so no new way to grant exists. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0438_product_admin_shelter_access.sql",
+        "item": "function public.product_admin_shelter_access reads a role",
+        "reason": "PADMIN shelter access backup (#shsec, docs/decisions/2026-11-23-console-shelter-access.md): Lists the shelter's logins with the role each holds; read only. Gated by is_product_admin() and aal2 in the body, the PADMIN list outside the card system by Lutan's 2026-11-18 decision. It creates no role, edits no role and touches no card; it only hands out a role the shelter already defined, so no new way to grant exists. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0438_product_admin_shelter_access.sql",
+        "item": "function public.product_admin_shelter_access definer",
+        "reason": "PADMIN shelter access backup (#shsec, docs/decisions/2026-11-23-console-shelter-access.md): Read only. Gated by is_product_admin() and aal2 in the body, the PADMIN list outside the card system by Lutan's 2026-11-18 decision. It creates no role, edits no role and touches no card; it only hands out a role the shelter already defined, so no new way to grant exists. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0438_product_admin_shelter_access.sql",
+        "item": "function public.product_admin_access_would_lock_out definer",
+        "reason": "PADMIN shelter access backup (#shsec, docs/decisions/2026-11-23-console-shelter-access.md): A yes/no helper called only by the three writers below, so a change cannot leave a shelter with no live Admin login. Gated by is_product_admin() and aal2 in the body, the PADMIN list outside the card system by Lutan's 2026-11-18 decision. It creates no role, edits no role and touches no card; it only hands out a role the shelter already defined, so no new way to grant exists. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0438_product_admin_shelter_access.sql",
+        "item": "function public.product_admin_access_add definer",
+        "reason": "PADMIN shelter access backup (#shsec, docs/decisions/2026-11-23-console-shelter-access.md): Links an existing login to an existing role of the shelter. Gated by is_product_admin() and aal2 in the body, the PADMIN list outside the card system by Lutan's 2026-11-18 decision. It creates no role, edits no role and touches no card; it only hands out a role the shelter already defined, so no new way to grant exists. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0438_product_admin_shelter_access.sql",
+        "item": "function public.product_admin_access_set_role definer",
+        "reason": "PADMIN shelter access backup (#shsec, docs/decisions/2026-11-23-console-shelter-access.md): Moves a login's main role to another existing role of the shelter. Gated by is_product_admin() and aal2 in the body, the PADMIN list outside the card system by Lutan's 2026-11-18 decision. It creates no role, edits no role and touches no card; it only hands out a role the shelter already defined, so no new way to grant exists. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0438_product_admin_shelter_access.sql",
+        "item": "function public.product_admin_access_remove definer",
+        "reason": "PADMIN shelter access backup (#shsec, docs/decisions/2026-11-23-console-shelter-access.md): Archives a login's rows in the shelter (reversible, as the shelter's own archiveUser, 0063); nothing is deleted. Gated by is_product_admin() and aal2 in the body, the PADMIN list outside the card system by Lutan's 2026-11-18 decision. It creates no role, edits no role and touches no card; it only hands out a role the shelter already defined, so no new way to grant exists. Recorded under outsideTheCardSystem.productAdmin, not debt."
       }
     ],
     "stubs": [

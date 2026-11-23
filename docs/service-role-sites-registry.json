@@ -37,6 +37,11 @@
       "reason": "Deletes the one auth login createAuthLogin just made when linking it failed, so none is orphaned. Takes the id createAuthLogin returned in the same request; reads and writes no tenant table."
     },
     {
+      "id": "src/lib/platform/create-login.ts#openAuthSetup",
+      "classification": "cross-shelter",
+      "reason": "Sets one login's authenticator set-up window (app_metadata only; no tenant table is read or written) for a login just given a shelter's Admin role. Called only after product_admin_access_add or product_admin_access_set_role (0438) accepted it for a product administrator at aal2 (#shsec)."
+    },
+    {
       "id": "src/app/account/password/actions.ts#changeOwnPassword",
       "classification": "cross-shelter",
       "reason": "Changes the signed-in person's own password by their own auth user id. An auth-account operation on the one row the session already names, not a read of tenant data."
