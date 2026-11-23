@@ -42,6 +42,8 @@ export default async function proxy(request: NextRequest) {
     const reqHost = requestHost((n) => request.headers.get(n));
     const toPlatform = platformRedirect(reqHost, request.nextUrl.pathname);
     // Absolute, on the host the visitor used: request.url is the Pi's own address behind the Worker.
+    // A redirect is only a Location header the browser follows, so (unlike a rewrite) it is safe on the Pi's
+    // 127.0.0.1 bind: measured by scripts/pi-shaped-check.mjs, docs/decisions/2026-11-23-pi-absolute-url-class.md.
     if (toPlatform) return NextResponse.redirect(`https://${reqHost}${toPlatform}`, 307);
     const to = hostRedirect(
       reqHost,
