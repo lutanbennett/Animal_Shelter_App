@@ -67,9 +67,9 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — pending: a real three-clip upload to Drive and the saved rows read back were not run from this worktree; needs a person on a phone
-- [ ] Data persists — pending: a real three-clip upload to Drive and the saved rows read back were not run from this worktree; needs a person on a phone
-- [ ] Create / edit / delete all exercised (whichever the feature has) — pending: a real three-clip upload to Drive and the saved rows read back were not run from this worktree; needs a person on a phone
+- [x] Happy path works end to end — **PROVED ON A REAL PHONE, ON PRODUCTION, 2026-11-23** — Lutan uploaded three clips and reported the result in chat: after the three clips uploaded, the **Describe each clip** list appeared on its own and the descriptions saved. **That list appearing unprompted is the whole of this feature** — before it, a batch had to be described by going back through the library one reel at a time
+- [x] Data persists — **PROVED ON A REAL PHONE, ON PRODUCTION, 2026-11-23** — Lutan uploaded three clips and reported the result in chat: the descriptions were still there afterwards. **The evidence is his report, not an observation of Claude's.** The read-back is the point: the batch path previously discarded the `reelId` that `uploadReelVideo` returns, which is exactly the shape that saves to nothing
+- [ ] Create / edit / delete all exercised (whichever the feature has) — **create only**, as in #1846. Editing a description after the fact, and deleting a described reel, were not exercised — pending: one edit and one delete
 - [ ] Empty state renders sensibly (no rows yet) — n/a: no new page, nav entry or manual topic; the form already handled this
 - [x] Invalid input is rejected with a readable message, not a crash (per-clip size and type message, same checks as before)
 - [ ] Boundary cases checked (long text, zero, negative, missing optional fields, dates) — n/a: no new page, nav entry or manual topic; the form already handled this
@@ -96,17 +96,17 @@ needs two cards together, put both on one row. Do not name `staff` (retired, `01
 | exactly `<card key>` | | | |
 | signed out | | | |
 
-- [ ] Every login above tested — pending: a real three-clip upload to Drive and the saved rows read back were not run from this worktree; needs a person on a phone
-- [ ] A login that should not have access is blocked server-side (hitting the URL directly fails) — pending: a real three-clip upload to Drive and the saved rows read back were not run from this worktree; needs a person on a phone
+- [ ] Every login above tested — **Admin only**, as in #1846 — pending: a card-scoped login
+- [ ] A login that should not have access is blocked server-side (hitting the URL directly fails) — **not exercised** — pending: a login without `reel_add`
 
 ## 5. Cross-cutting
 
 - [ ] Nav entry correct (`src/app/NavLinks.tsx`) — n/a: no new page, nav entry or manual topic; the form already handled this
 - [ ] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual` — n/a: no new page, nav entry or manual topic; the form already handled this
 - [ ] Translatable strings go through the translation path, checked at `/management/translations` — n/a: no new page, nav entry or manual topic; the form already handled this
-- [ ] Mobile viewport (375px) — pending: a real three-clip upload to Drive and the saved rows read back were not run from this worktree; needs a person on a phone
-- [ ] Browser console clean — pending: a real three-clip upload to Drive and the saved rows read back were not run from this worktree; needs a person on a phone
-- [ ] Network clean — pending: a real three-clip upload to Drive and the saved rows read back were not run from this worktree; needs a person on a phone
+- [x] Mobile viewport (375px) — **PROVED ON A REAL PHONE, ON PRODUCTION, 2026-11-23** — Lutan uploaded three clips and reported the result in chat, on a real phone. The describe-each-clip rows were usable; **the fault found at that width belongs to the upload half and is `#rlprg`**
+- [ ] Browser console clean — **not checked, and not checkable on a phone** — pending: a desktop or attached-device run
+- [ ] Network clean — **not checked**, same reason — pending: a desktop or attached-device run
 
 ## 6. Regression
 
@@ -228,7 +228,7 @@ illegible one is a red people learn to ignore.
 
 - [ ] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <reason>` on the signature below — pending: three-clip upload from a phone needs a person with Drive access
 
-Manual verification by: pending: Lutan uploads three clips from his phone and describes them
+Manual verification by: Lutan Bennett — uploaded three clips from his phone, described them in the list that appeared, and confirmed they saved; line recorded by Claude at his request  Date: 2026-11-23
 
 ### Result
 
@@ -238,4 +238,4 @@ Manual verification by: pending: Lutan uploads three clips from his phone and de
 
 Result: pass
 
-Release manager acknowledgement: pending: at release
+Release manager acknowledgement: Claude Opus 5 (release manager session)  Date: 2026-11-23 — read at release time as `0.49.0`'s pre-deploy pass and carried into that record as a stated gap; the gap closed the same day
