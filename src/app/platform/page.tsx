@@ -68,6 +68,7 @@ export default async function PlatformPage() {
         canWrite={twoStep}
         stepUpPath={stepUpHref("/platform")}
         systemDatabase={database.state}
+        consoleHost={platformHost()}
       />
     </main>
   );
