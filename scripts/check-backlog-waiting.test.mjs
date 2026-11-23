@@ -88,3 +88,27 @@ test("parseNames accepts a flat map and names what is wrong with anything else",
   assert.throws(() => parseNames('{"a":null}'), /"a" is null/);
   assert.throws(() => parseNames('{"a":{"b":"c"}}'), /"a" is object/);
 });
+
+import { shelterToday, sinceInFuture, needsProof, hasProof } from "./lib/backlog-waiting.mjs";
+
+// #utcds: injected instants, the real exported functions. 2026-11-23 02:00 Thailand is 2026-11-22T19:00Z.
+test("a tag dated by the Thailand clock at 02:00 local is accepted", () => {
+  const now = new Date("2026-11-22T19:00:00Z");
+  assert.equal(shelterToday(now), "2026-11-23");
+  assert.equal(sinceInFuture("2026-11-23", now), false);
+});
+test("a genuinely future date is still rejected", () => {
+  assert.equal(sinceInFuture("2026-11-24", new Date("2026-11-22T19:00:00Z")), true);
+  assert.equal(sinceInFuture("2026-11-24", new Date("2026-11-23T16:59:00Z")), true);
+});
+test("the shelter day rolls over at 17:00Z", () => {
+  assert.equal(shelterToday(new Date("2026-11-23T16:59:59Z")), "2026-11-23");
+  assert.equal(shelterToday(new Date("2026-11-23T17:00:00Z")), "2026-11-24");
+});
+
+test("proof lines: only waiting:lutan needs one, and the marker is found", () => {
+  assert.equal(needsProof({ state: "lutan" }), true);
+  assert.equal(needsProof({ state: "decision", by: "lutan" }), false);
+  assert.equal(hasProof("- [ ] x **Proof:** `node scripts/x.mjs` prints ok"), true);
+  assert.equal(hasProof("- [ ] x no proof here"), false);
+});
