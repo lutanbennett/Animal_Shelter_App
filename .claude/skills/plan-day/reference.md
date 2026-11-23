@@ -403,6 +403,13 @@ Fable reading is never spare headroom.
 
 ---
 
+## 5b. Moved from SKILL.md section 6, and why proofs run before naming him
+
+A multi-select confirmation was used on 2026-11-11 and he unticked two options meaning only to confirm; the
+planner set up one stream and he asked "is there only one stream for batch 1". Proofs (#prvln): four items in
+one day were put back on his list after he had done them (#drvtk, #tstok, #drvcl, #u2bo6). Read the proof line;
+do not trust the item prose.
+
 ## 6. Editing `.plan-day.md` and the handover — the traps, in full
 
 **Overwriting takes two steps and both obvious single steps fail.** `Write` refuses a file this session

@@ -90,3 +90,21 @@ export function needsProof(tag) {
 export function hasProof(line) {
   return PROOF_RE.test(line);
 }
+
+// ---- Which kind of proof is it? (#prvln, second half) -------------------------------------------
+// A proof line is either something a session can RUN OR LOOK AT (a command, a screen, a query), or a
+// physical/human wait that no command settles. The class is read from the line's own words, not from
+// a new tag: a line that cannot be run says so in terms, in its first sentences ("Not a command",
+// "Not provable by command", "Not runnable from here", "no command proves"). Unmatched = runnable,
+// which is the safe default: the planner is asked to run it or say why it cannot be.
+export const NOT_A_COMMAND_RE = /\bnot (?:a command|provable by command|runnable from here)\b|\bno command (?:proves|settles)\b/i;
+export function proofText(line) {
+  const i = line.search(PROOF_RE);
+  return i < 0 ? "" : stripTag(line.slice(i)).replace(/^\*\*Proof:\*\*\s*/, "").trim();
+}
+export function proofClass(line) {
+  const t = proofText(line);
+  if (!t) return "none";
+  // only the opening of the line decides: a later "not a command" about a SECOND half must not demote a runnable first half
+  return NOT_A_COMMAND_RE.test(t.slice(0, 220)) ? "read" : "run";
+}
