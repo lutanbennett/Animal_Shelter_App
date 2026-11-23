@@ -11,6 +11,7 @@
 // bind address and the headers; it does not prove production. Exit 1 if any expectation below fails.
 import { spawn } from "node:child_process";
 import http from "node:http";
+import { exitWith } from "./lib/exit.mjs";
 
 const port = Number(process.argv[process.argv.indexOf("--port") + 1]) || 3912;
 const env = {
@@ -67,4 +68,4 @@ try {
 } finally {
   server.kill();
 }
-process.exit(failed ? 1 : 0);
+await exitWith(failed ? 1 : 0);
