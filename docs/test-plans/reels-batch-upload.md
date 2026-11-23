@@ -67,9 +67,9 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — pending: needs a real three-clip upload to Drive, not run from this worktree
-- [ ] Data persists — pending: needs a real three-clip upload to Drive, not run from this worktree
-- [ ] Create / edit / delete all exercised (whichever the feature has) — pending: needs a real three-clip upload to Drive, not run from this worktree
+- [x] Happy path works end to end — **PROVED ON A REAL PHONE, ON PRODUCTION, 2026-11-23** — Lutan uploaded three clips and reported the result in chat: three clips picked from his photo library uploaded to Drive and completed. **His words, kept because they are also a finding:** *"it worked however it stayed on the photo library and looked like it was locked up until it finished all uploads"* — the upload is right, the feedback is not (**`#rlprg`**)
+- [x] Data persists — **PROVED ON A REAL PHONE, ON PRODUCTION, 2026-11-23** — Lutan uploaded three clips and reported the result in chat: the clips were there afterwards. **The evidence is his report, not an observation of Claude's** — nobody signed in on production from this session, and a save that looks fine but does not stick is exactly what the read-back exists to catch
+- [ ] Create / edit / delete all exercised (whichever the feature has) — **create only.** **PROVED ON A REAL PHONE, ON PRODUCTION, 2026-11-23** — Lutan uploaded three clips and reported the result in chat. **Edit and delete were NOT exercised in that run** and are not ticked here on the strength of create working — pending: one edit and one delete of a reel on a phone
 - [ ] Empty state renders sensibly (no rows yet) — n/a: no new page, nav entry or manual topic; the form already handled this
 - [x] Invalid input is rejected with a readable message, not a crash (per-clip size and type message, same checks as before)
 - [ ] Boundary cases checked (long text, zero, negative, missing optional fields, dates) — n/a: no new page, nav entry or manual topic; the form already handled this
@@ -96,17 +96,17 @@ needs two cards together, put both on one row. Do not name `staff` (retired, `01
 | exactly `<card key>` | | | |
 | signed out | | | |
 
-- [ ] Every login above tested — pending: needs a real three-clip upload to Drive, not run from this worktree
-- [ ] A login that should not have access is blocked server-side (hitting the URL directly fails) — pending: needs a real three-clip upload to Drive, not run from this worktree
+- [ ] Every login above tested — **Admin only.** He is Admin, so his run says nothing about a login holding `reel_add` alone, nor about one holding only `reel_view` — pending: a card-scoped login, which `dev-signin.mjs --cards reel_add` models on dev
+- [ ] A login that should not have access is blocked server-side (hitting the URL directly fails) — **not exercised.** An Admin upload proves the allowed path and nothing about the refused one — pending: a login without `reel_add` opening `/reels/new` directly
 
 ## 5. Cross-cutting
 
 - [ ] Nav entry correct (`src/app/NavLinks.tsx`) — n/a: no new page, nav entry or manual topic; the form already handled this
 - [ ] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual` — n/a: no new page, nav entry or manual topic; the form already handled this
 - [ ] Translatable strings go through the translation path, checked at `/management/translations` — n/a: no new page, nav entry or manual topic; the form already handled this
-- [ ] Mobile viewport (375px) — pending: needs a real three-clip upload to Drive, not run from this worktree
-- [ ] Browser console clean — pending: needs a real three-clip upload to Drive, not run from this worktree
-- [ ] Network clean — pending: needs a real three-clip upload to Drive, not run from this worktree
+- [x] Mobile viewport (375px) — **PROVED ON A REAL PHONE, ON PRODUCTION, 2026-11-23** — Lutan uploaded three clips and reported the result in chat, on his own phone rather than an emulated viewport, which is the stronger reading. **It is also where `#rlprg` was found:** the form works at phone width, but its only progress banner renders ~85 lines of JSX below the picker, after the description and date fields, so on a phone it is off the bottom of the screen while the clip list above it sits unchanged
+- [ ] Browser console clean — **not checked, and not checkable in that run:** he was on a phone, where the console is not readable without attaching a desktop browser. Saying `n/a` here would claim it was considered and found irrelevant, which is not true — pending: a desktop or attached-device run
+- [ ] Network clean — **not checked**, same reason as the console line above — pending: a desktop or attached-device run
 
 ## 6. Regression
 
@@ -228,7 +228,7 @@ illegible one is a red people learn to ignore.
 
 - [ ] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <reason>` on the signature below — pending: three-clip upload from a phone needs a person with Drive access
 
-Manual verification by: pending: Lutan uploads three clips from his phone
+Manual verification by: Lutan Bennett — uploaded three clips from his phone to production and reported the result, including the frozen-looking screen now filed as `#rlprg`; line recorded by Claude at his request  Date: 2026-11-23
 
 ### Result
 
@@ -238,4 +238,4 @@ Manual verification by: pending: Lutan uploads three clips from his phone
 
 Result: pass
 
-Release manager acknowledgement: pending: at release
+Release manager acknowledgement: Claude Opus 5 (release manager session)  Date: 2026-11-23 — read at release time as `0.49.0`'s pre-deploy pass and carried into that record as a stated gap rather than absorbed; the gap closed the same day
