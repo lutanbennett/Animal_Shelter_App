@@ -19,6 +19,8 @@ import {
   loginExists,
   mapShelterHost,
   setShelterSite,
+  checkShelterHost,
+  type HostAnswer,
   removeProductAdmin,
   seedShelterDefaults,
   setShelterAccountHolder,
@@ -168,6 +170,7 @@ export function ProductAdminPanel({
   const [nameDrafts, setNameDrafts] = useState<Record<string, { full: string; short: string }>>({});
   const [tab, setTab] = useState<TabKey>("summary");
 
+  const [answers, setAnswers] = useState<Record<string, HostAnswer | "checking">>({});
   const say = (key: string, ok: boolean, text: string) => setMsgs((m) => ({ ...m, [key]: { ok, text } }));
   const note = (key: string) =>
     msgs[key] ? (
@@ -751,6 +754,7 @@ export function ProductAdminPanel({
               </div>
               <h3 className={h4}>{p.addressesTitle}</h3>
               {s.hosts && s.hosts.length > 0 && <p className="text-xs text-muted">{p.websiteUnchecked}</p>}
+              {s.hosts && s.hosts.length > 0 && <p className="max-w-prose text-xs text-muted">{p.hostOutstanding}</p>}
               <p className="max-w-prose text-xs text-muted">{p.addressesNote}</p>
               {s.hosts && s.hosts.length > 0 ? (
                 <ul className="flex flex-col gap-2 text-sm">
@@ -774,6 +778,34 @@ export function ProductAdminPanel({
                           >
                             {p.makeWebsite}
                           </ActionButton>
+                        )}
+                        {h !== consoleHost && (
+                          <>
+                            {answers[h] && answers[h] !== "checking" && (
+                              <span className={`text-xs ${(answers[h] as HostAnswer).answers ? "text-success" : "text-danger"}`}>
+                                {(answers[h] as HostAnswer).answers ? p.hostAnswers : p.hostSilent}
+                              </span>
+                            )}
+                            <ActionButton
+                              icon={ACTION_ICONS.add}
+                              variant="secondary"
+                              compact
+                              disabled={pending || answers[h] === "checking"}
+                              onClick={() => {
+                                setAnswers((a) => ({ ...a, [h]: "checking" }));
+                                startTransition(async () => {
+                                  const r = await checkShelterHost(h);
+                                  if (r.ok) setAnswers((a) => ({ ...a, [h]: { answers: r.answers, status: r.status } }));
+                                  else {
+                                    setAnswers((a) => { const n = { ...a }; delete n[h]; return n; });
+                                    say(`host-check:${s.id}`, false, r.error ?? "");
+                                  }
+                                });
+                              }}
+                            >
+                              {answers[h] === "checking" ? p.hostChecking : p.hostCheck}
+                            </ActionButton>
+                          </>
                         )}
                         {h === consoleHost && <span className="text-xs text-muted">({p.consoleAddress}. {p.consoleAddressNote})</span>}
                         {canWrite && h !== consoleHost && (
@@ -803,6 +835,7 @@ export function ProductAdminPanel({
               {!s.primary_host && w.host && <p className="text-xs text-muted">{p.websiteFallbackNote}</p>}
               {note(`primary:${s.id}`)}
               {note(`host-rm:${s.id}`)}
+              {note(`host-check:${s.id}`)}
               {canWrite && (
                 <form
                   className="flex flex-wrap items-center gap-2"

@@ -267,6 +267,34 @@ export async function setShelterSite(shelterId: string, site: "open" | "locked" 
   });
 }
 
+export type HostAnswer = { answers: boolean; status: number | null };
+
+/**
+ * Does this web address answer at all? (#hstau, smallest slice.) The console records a host in shelter_hosts but nothing makes it
+ * answer: Cloudflare has to be told (docs/shelter-onboarding-runbook.md, Step 2). A read, run on demand from the Website tab, so it
+ * keeps no state. ANY HTTP reply counts as answering, including the under-construction redirect: what it proves is that the name
+ * resolves, a certificate was issued and something replied. It does not prove the reply is this app. Only a host already recorded
+ * for some shelter is ever fetched, so the control cannot be aimed at an arbitrary address.
+ */
+export async function checkShelterHost(host: string): Promise<ActionResult<HostAnswer>> {
+  const { t } = await getT();
+  const e = t.admin.productAdmin.errors;
+  if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
+  if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("product_admin_shelters");
+  if (error) return { ok: false, error: e.badHost };
+  const known = new Set(((data ?? []) as { hosts: string[] | null }[]).flatMap((s) => s.hosts ?? []));
+  const h = host.trim().toLowerCase();
+  if (!known.has(h) || !/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(h)) return { ok: false, error: e.badHost };
+  try {
+    const res = await fetch(`https://${h}/`, { method: "HEAD", redirect: "manual", signal: AbortSignal.timeout(6_000), cache: "no-store" });
+    return { ok: true, answers: true, status: res.status };
+  } catch {
+    return { ok: true, answers: false, status: null };
+  }
+}
+
 export async function unmapShelterHost(host: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.admin.productAdmin.errors;

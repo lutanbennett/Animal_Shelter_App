@@ -237,12 +237,13 @@ it and still see the construction page, **that is the floor, not a mistake of
 yours.** Raising the floor is Lutan's decision (backlog `#pl7aq`) and is not a step
 in this runbook.
 
-**How to change a shelter's own setting, today:** **NOT YET POSSIBLE from the
-console.** The database function that sets it exists
-(`product_admin_set_shelter_site`, migration `0436`: product administrator, after
-the two-step code) but no console button calls it yet; the button is backlog
-`#wbopn`. Until it lands, do not look for one. When it does, this note becomes a
-button name and is deleted (see "Who can do each step").
+**How to change a shelter's own setting:** in the console, open the shelter, its
+**Website** tab, and press **Open the website**, **Lock the website** or **Switch the
+website off** (product administrator, after the two-step code; it calls
+`product_admin_set_shelter_site`, migration `0436`). The tab also says when the
+deployment floor is holding a shelter more closed than you set it. The same tab has a
+**Check it answers** button beside each address, which says whether the host replies at
+all, so "I added it and nothing happens" is visible before you go looking.
 
 **Who can do what here.** The Cloudflare parts (A, and the deploy in C) are
 **[LUTAN ONLY]**: they need your Cloudflare account and the production deploy. B is
