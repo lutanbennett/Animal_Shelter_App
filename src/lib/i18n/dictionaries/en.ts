@@ -6002,6 +6002,7 @@ const en = {
       video: "Video",
       chooseVideo: "Choose from phone or photo library",
       addMoreVideos: "Add more videos",
+      pickerHint: "Choosing several clips? After you tap Add, your phone needs a moment to get them ready, and the photo library may look stuck while it does. That is normal; it will close by itself. A few clips at a time (up to about five) is easiest.",
       batchHint: "Several clips: each becomes its own reel. When they have all uploaded, a list appears where you can add each clip's description, date and animal tags.",
       clipOf: (n: number, total: number) => `Clip ${n} of ${total}. `,
       clipDone: "Done",
