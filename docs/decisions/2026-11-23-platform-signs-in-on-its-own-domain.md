@@ -45,3 +45,7 @@ UAT and test have no `PLATFORM_HOST`, so only add the platform callback there if
 ## Done-when, honestly
 
 *"Sign in, step up and work entirely on `cooperjaidee.org` with Lanna's host unreachable"* is **not met**: `site_url` is unmoved everywhere, and the unreachable-host rehearsal needs UAT (`pending: needs UAT, with Lutan`).
+
+## Update: dev moved, 2026-11-23
+
+Dev (`qxkmhwybjggxvsfxsxbd`) `site_url` changed from `https://test.lannacare.org` to `https://cooperjaidee.org`; `https://cooperjaidee.org/auth/callback` was added and every earlier allow-list entry kept. To put back: set Site URL to `https://test.lannacare.org`. **Not proved:** a browser sign-in on a shelter host and on the platform host afterwards, and invite/magic-link mail wording (deliverable 5).
