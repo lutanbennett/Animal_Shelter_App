@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "When you add several video clips to a reel at once, the page now warns you that your phone needs a moment to get them ready, and suggests a few clips at a time. The photo library can look stuck while it does; that is the phone, and it closes by itself.",
 ];
 
 /** Newest first. */
