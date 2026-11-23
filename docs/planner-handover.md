@@ -1,184 +1,233 @@
-# Planner handover — edition `771`, 2026-11-22
+# Planner handover — edition `772`, 2026-11-23
 
-**This is a DELTA against `770`.** It says what changed, corrects its predecessor, and reports what `770`
+**This is a DELTA against `771`.** It says what changed, corrects its predecessor, and reports what `771`
 left owed. Figures, batch composition and ports live in `.plan-day.md`.
 
 **It outranks nothing.** One chat reads it, one plan replaces it, and a wrong line is corrected by its
 successor rather than by a reviewer.
 
-**IT COVERS NINE STREAMS AND EIGHT HAVE A USABLE FIGURE:** #1809, #1811, #1812, #1813, #1814 (fifteenth
-plan, batch 1); #1815, #1816 (fifteenth, batch 2); #1818, #1823 (sixteenth plan). **The ninth, #1823, is
-`rescoped=yes` because the planner changed its brief twice mid-flight, so it is recorded and kept out of
-the band evidence.** Dials matched the brief on all nine. The counter resets to 0 when this PR merges.
+**IT COVERS TWELVE STREAMS AND IS THREE OVERDUE, WHICH IS ITS OWN FINDING.** #1827, #1828, #1829, #1830,
+#1831, #1832+#1835 (one stream, two PRs, one count), #1833, #1839 (seventeenth plan); #1840, #1841, #1842,
+#1845 (eighteenth plan). **Nine of the twelve are usable readings**; three are marked out below. **The
+trigger is nine and there is no credit for overshooting** — batch 1 of the eighteenth plan merged inside
+the hour and took the count from 8 straight past 9 to 11, then #1845 made 12 before this was written.
+**If a batch can merge in under an hour, the counter has to be read at the END of a setup turn, not at its
+start.** The counter resets to 0 when this PR merges.
 
-**`#1817` IS NOT ONE OF THE NINE.** Lutan created that worktree and ran that stream himself. Only a stream
-a plan created counts (his ruling, 2026-11-20).
+**NOT COUNTED, EACH CHECKED RATHER THAN ASSUMED** (no `stream-usage:` comment on any of them): #1824
+(edition `771`'s own PR), #1825 `record-test-worker`, #1826 `canary-production-attempt`, #1834
+`cut-release-0-48-0`, #1836/#1837 the `0.48.0` record, #1838 `canary-production-run`, and **#1843 + #1844,
+which the Backlog manager opened** — only a stream a plan created counts (his ruling, 2026-11-20).
 
 ## FOR YOUR FIRST TURN
 
-1. **Read `.plan-day.md` first.** Gitignored, ~900 lines, and the only record of the sixteenth plan's
-   reasoning, the day's production work and the measurements taken during it.
-2. **Check what is in flight before you believe anything here.** At writing: no open PRs, and the two
-   sixteenth-plan sessions are idle and done.
-3. **TWO MERGED WORKTREES NEED CLEARING** once he closes their sessions: `shelter-drive-connect` (3001)
-   and `backlog-proof-state` (3002). All PRs merged, all figures read. **`done` them; do not force.**
-4. **`0.47.10` SHIPPED TODAY** (the 1 MB logo cap, and `0434`). The release manager cut it; you did not.
-5. **THE SIXTEENTH PLAN WAS TWO STREAMS, NOT NINE, AND THAT WAS CORRECT.** Of 37 open items only two were
-   work a stream could do. **Do not pad a plan to reach nine** — the skill says so and this day proves it.
+1. **Read `.plan-day.md` first.** Gitignored, ~390 lines, and the only record of the eighteenth plan's
+   reasoning and the corrections made during it.
+2. **Check what is in flight before you believe anything here.** At writing: `#thpfx` (3007) and `#rlbat`
+   (3008) are set up with briefs and **Lutan had not opened their sessions**; `#calsc` (3006) is already
+   merged.
+3. **FOUR MERGED WORKTREES NEED CLEARING** once he closes their sessions: `product-site-pages` (3001),
+   `deploy-secrets-registry` (3002), `worktree-reserved` (3003) and `calendar-narrow-scope` (3006). **All
+   PRs merged and all four figures already read and recorded**, so nothing is lost by waiting. **`done`
+   them; do not force**, and do not touch `Animal_Shelter_backlog-names-signoff` — the Backlog manager's.
+4. **`0.48.0` SHIPPED 2026-11-22.** The release manager cut it; the planner did not.
+5. **BATCH 3 IS NOT QUEUEABLE AND THE PREVIOUS PLAN HAD THIS WRONG.** `#drvcl` was lined up as batch 3
+   because ticking `#83137` looked like it cleared the queue. **It did not.** `#drvcl`'s own tail: *"What
+   is left before the consent is one command of Lutan's"* — production's `DRIVE_CREDENTIALS_KEY` onto the
+   production Worker with `wrangler secret bulk`. **A worktree cannot do it and neither can the planning
+   session**, which is refused `wrangler`.
 
-## THE LESSON OF THE DAY, AND IT FIRED THREE TIMES BEFORE LUNCH: THE BACKLOG'S OWN PROSE IS NOT EVIDENCE
+## THE LESSON OF THE DAY: A `SUPERSEDED` MARKER IS READ BY WHOEVER STARTS AT THE TOP, AND NOBODY STARTS AT THE TOP
 
-**Three items said work was outstanding when it was not, and each one cost something different:**
+**Two sessions made the identical mistake from the same backlog item within one day, independently.** Both
+read `#u2bo6` as waiting on a deploy of Lutan's. **It is not, and has not been since 2026-11-06.** That
+item's head says in terms:
 
-- **`#stpbk`** — offered to Lutan as a buildable stream, **agreed by him**, and found already fixed while
-  its brief was being written. Every step-up link already passes `stepUpHref(from)` and both redirect
-  points honour it through `stepUpDestination()`. **The batch had to be corrected in front of him.**
-- **`#tstsh`** — the planner put its "two things to decide" to him. **He had decided it two days earlier
-  and it was already built**: `0428` added `shelters.archived_at`, live on production since `0.47.9`, and
-  the console draws **Close** and **Reopen**. His answer was short: *"We agreed this yesterday."*
-- **`#nxtqs`** — the item claimed its release note was *"deliberately left n/a under the truth rule"* and
-  still owed. **It had shipped in `0.47.8` on 2026-11-20.** The planner briefed a stream to write it; the
-  stream read `releases.ts`, **refused, and was right**.
+> *"So 'Lutan deploys and confirms Workers AI' is DONE for dev/test (the cron ships with every Worker
+> deploy). NOT READ: production. LEFT: the two managers compare two models … **Everything below that says
+> the deploy is still to do is SUPERSEDED.**"*
 
-**THE ANSWER IS FILED AND HALF BUILT. `#tg5vh`** (filed this morning from the first instance) says the
-backlog has two states on the page — `- [ ]` and `- [x]` — while the work has **three**: not built; built
-with a proof or a press owed by a person; done. **The middle state is the common one here**, because no
-session can reach production, the Pi or the Google console. `claude/backlog-proof-state` built the
-**PROOF OWED** marker in #1819. **Read what it chose before your first plan.**
+The contradicting *"Still to do: Lutan deploys to test and production"* line is the **STATUS 2026-10-21**
+block, sitting below that sentence — exactly what the sentence names. **The guard is correct and both
+readers walked past it.**
 
-**AND THE CHEAP INSTRUMENT IS STILL THE SAME ONE: `grep` the code before you believe a title.** All three
-were settled in under a minute each by reading the file the item named.
+**THE MECHANISM, AND IT IMPLICATES THIS SKILL'S OWN INSTRUCTION.** `plan-day/SKILL.md:251` says *"Read the
+WHOLE item, tail included"* and hands you the command: `sed -n '<n>p' docs/backlog.md | tail -c 900`. For a
+7 KB item line that is a sensible habit — **and it is structurally guaranteed to land you BELOW the guard
+sentence while never showing it to you.** The habit and the item shape combine into a reliable wrong
+answer. **The convention is to read the tail; the guard only protects a reader who starts at the head.**
 
-## THE PLANNER'S OWN DEFECTS, BOTH WORTH NOT REPEATING
+**WHAT TO DO ABOUT IT, which is the Backlog manager's addition and is better than merely being careful:**
+`CLAUDE.md` already requires an item to read correctly *without* its last paragraph. **This is the same
+requirement one level up and in the other direction: a superseded lower half should be CUT, not MARKED**,
+because a marker only works for a reader who will never reach what it guards. **If cutting in bulk is too
+destructive, the cheap version is to quote the superseded block's own first words, dated, inside the head's
+sentence** — then a tail-reader who greps for the status line sees it quoted above and knows.
 
-**(1) A SESSION WAS OPENED ON WORK THAT HAD ALREADY MERGED.** The planner started a session on
-`shelter-drive-connect` without first running `gh pr list --state all --head claude/<slug>`. PR #1818 had
-merged an hour earlier, from a session Lutan opened himself. **Step zero caught it and the session built
-nothing**, which is the guard working — but it cost a session start. **Check for an existing PR before
-starting a session on a folder you did not just create.**
+**WHY IT MATTERS MORE THAN A MISREAD ROW:** the wrong answer put a finished job back onto Lutan's list.
+**That is the one error his own rule says never gets caught**, because nobody re-asks a question they
+believe is already with him — `assistant-retention` sat parked for nine days exactly that way. It reached
+his Desktop sheet and was removed within the hour only because two sessions disagreed in writing.
 
-**(2) THE PLANNER TOLD A STREAM TO WRITE A RELEASE NOTE THAT ALREADY EXISTED**, from `#nxtqs`'s stale
-prose. Had the stream obeyed, users would have been told twice about one change. **It refused and said so
-plainly. That is the brief working as intended** — *"if a numbered deliverable genuinely needs X, do it
-and say so in your PR"* has a mirror image, and this was it.
+## WHAT `771` LEFT OWED — ALL FOUR ANSWERED
+
+1. **`#9l7xf`'s production read** — `771` already recorded this closed. **Unchanged.**
+2. **`#drvcl`'s first Google consent is HIS.** **Still true and now narrower:** the calendar half closed
+   with #1845, and `.env.deploy.uat` has gained the connect secret, so **production alone is unconfigured**
+   and what is left is one `wrangler secret bulk`. `#drvcl` is tagged `lutan`.
+3. **`#cjred`'s last clause** needs a signed-in login that is not a product administrator. **Unchanged,
+   still his.**
+4. **The `scheduled_writer_runs` read, unfiled.** **STILL UNFILED. `772` inherits it.**
+
+## THE PLANNER'S OWN DEFECTS — FOUR, AND ALL FOUR ARE ONE FAULT
+
+**Reasoning about a file instead of opening it.** Each was caught by someone else, which is the only reason
+they are here rather than in the repository.
+
+1. **`git commit -am` in the shared `Animal_Shelter_Backlog` worktree** swept up another session's
+   uncommitted `backlog-names.json`. **The pre-commit hook refused it.**
+2. **Then advising that session to drop its uncommitted change and fast-forward.** It checked the commit
+   instead of taking the summary: `git grep -c "Use yours" ec2263dd3` returns **0**. That advice would have
+   discarded **a decision Lutan gave that morning** (`#psubp`'s address) and a title correction.
+3. **Recommending hook-side JSON validation** for the names file. The Backlog manager measured the hook and
+   found the recommendation aimed at the wrong layer: the guard already covered both files and the script
+   already enforced the shape, while the real hole was `[ "$rc" -eq 3 ] && return 1` refusing only on exit
+   3 when an unreadable names file exits **1**. **The recommendation would have duplicated a check and left
+   the hole open.**
+4. **Telling a stream that `#drvcl`'s queue was clear because `#83137` was ticked**, and **copying forward
+   `#u2bo6`'s superseded reading** — both from notes rather than from the item.
+
+**THE RULE EARNED: the `Backlog` worktree is shared. Announce before editing it, never `git commit -am` in
+it, and read what is in a change before advising anyone to discard it.** Announcing first worked: the second
+round of edits was cleared in one message and collided with nothing.
+
+**AND THE ONE THAT WENT RIGHT, WORTH COPYING:** a guarded script refused its own edit — *"REFUSED: the
+#drvcl note is already there"* — because `#drvcl` already recorded the `GOOGLE_CONNECT_*` precondition in
+more detail than the handover being carried. **Write the guard, then let it tell you.**
 
 ## HIS DECISIONS OF THE DAY — SETTLED, DO NOT RE-OPEN
 
-- **A shelter is only ever CLOSED (archived) and reopenable, NEVER deleted.** His words: *"Only ever
-  archive - switch off access - and ability to unarchive later."* Already built (`0428`, Close/Reopen in
-  the console). **`scripts/remove-shelter.mjs` is not the path, and its declined allow rules are not
-  needed.**
-- **The hosts check runs on all three environments at his go.** Done 2026-11-22, all three clean, which
-  closed `#aucbk` and `#wwwcb`.
+- **The `backlog` branch may also commit `docs/backlog-names.json`, with its shape asserted.** Asked as one
+  question; answered *"Allow it, with a check"*. Shipped as #1843 + #1844. **What he approved is the
+  GUARANTEE, not its location** — the mechanism built differs from the one he was shown, and he was
+  deliberately **not** re-asked.
+- **`#rlbat`'s batch metadata: "Per clip after upload".** Upload the clips first, then type each one's
+  description, date and tags on a list afterwards. **He overruled the planner's recommendation** (one date
+  and one tag set for the batch, a description per clip). **That makes it a second surface rather than three
+  fields, so its band was raised 175-205k → 210-250k before the session opened.**
+- **Setting up a batch MOVES its items' waiting tag to `stream`.** The planner's call, made because the
+  Backlog manager asked rather than fixed. **The planner is the only party who knows a worktree was just
+  created, so it is the planner's edit at setup.**
 
-### ONE THING HE SAID THAT IS **NOT** SETTLED — ASK HIM BEFORE YOU ACT ON IT
+## A BLOCKING CI CHECK WAS RED ON `main` BEFORE ANY STREAM PUSHED
 
-**He answered "Open them" when offered the day's two streams, and the planner started both sessions** —
-reversing his decision of 2026-11-03 that the planner hands back folder, port and dials and **does not
-start sessions**, because his plan bills by turns. **He was told plainly that this reversed it and asked
-whether he meant it. He had not answered when this was written.**
+`check-backlog-waiting.mjs` — shipped by `#bkwai` the previous day — **exited 3 on `main`**, and runs at
+`ci.yml:199` (the `script-integrity` job) **with no `continue-on-error`**. Three items filed overnight had
+no tag and no name, so **every PR opened that day would have gone red on a check about items none of those
+streams filed.**
 
-**So: default to the 2026-11-03 rule — hand back the list and stop — unless he says otherwise in words.**
-The button he pressed said "Open them", which was the planner's own wording, so it is weak evidence of a
-change of mind. **Do not treat this paragraph as permission.**
+**It was found by curiosity, not by process**, and the deadlock underneath it was worse: the check demanded
+a name in `docs/backlog-names.json` while the `backlog` branch's hook forbade that file, **so the backlog
+branch could not satisfy a check that gated its own commits.** Folded into a stream as a numbered
+deliverable 0, landed within minutes, and closed properly by #1843.
 
-## WHAT WAS DONE *TO PRODUCTION* TODAY, AND THE ONE THING THAT NEARLY WENT WRONG
+**Filed as `#ckcia`:** nothing re-asks whether a newly shipped blocking check passes on `main`. **The
+cheapest shape is probably `check-planner-preflight.mjs` growing one question**, since it already runs at
+the top of every plan.
 
-**Seven blockers closed, most of them by one press of his.** Signing in with Google from the bare
-`cooperjaidee.org` landed him on `/platform`, and because that button is a form submission to a Server
-Action — the exact thing that used to be refused — **one press settled `#plhbd`, `#nxtqs` and two of
-`#cjred`'s four clauses.** Both fixes were verified as ancestors of the deployed SHA **before** he pressed.
+## THE `stream` TAG DECISION HAD A TAIL, AND IT COST THREE MORE TAGS
 
-**THE LABEL DRAFTER RUNS (`#aaqtl`).** `scheduled_writer_runs` reports `label-drafts: ok, fail_runs=0`.
+**Deciding what `stream` MEANS retrospectively edited every tag that already held it.** Three predated the
+decision and read as *somebody is building this* when nobody was: `#u2bo6` → `person`, `#drvcl` → `lutan`,
+`#cjseo` → `buildable`. **Each went a different way, read off the item's own tail, so no blanket rule would
+have worked.**
 
-**AND THE NEAR MISS, WHICH IS NOW `#83137`: `node scripts/deploy.mjs --env production --secrets` WOULD
-HAVE PUSHED SEVEN DEV VALUES OVER PRODUCTION'S LIVE SECRETS**, one of them `DRIVE_CREDENTIALS_KEY`, which
-decrypts every shelter's stored Drive credentials. **A `--plan` run first is the only reason this was
-seen.** The script refused and offered `--allow-dev-fallthrough`; **the flag was not taken**, and the three
-new secrets went up through `wrangler secret bulk`, which touches only the keys it is given.
+**THE GENERAL LESSON, IN BOTH DIRECTIONS.** A decision about what a state means is followed, **in the same
+turn**, by a sweep of every tag that already holds it — **and** by a sweep of every piece of **wording**
+that straddled the two states. The Backlog manager's generator had `"A stream"` satisfying a `stream` tag
+*and* `"A stream (on it now)"` satisfying a `buildable` tag; it found the second only because a tag moved
+back. **Anything keyed on these states can be reading pre-decision tags with post-decision meaning.**
 
-**THE RULE THIS PROVES, FROM HIS OWN `CLAUDE.md`: a tool's suggested remedy is not advice.** Read what the
-override would do before taking it. **Dry-run anything that writes to production.**
+## FIGURES — TWELVE STREAMS, NINE USABLE READINGS
 
-## A SECOND INSTRUMENT GAP, FOUND THE HARD WAY
+| PR | slug | band | tokens | messages | floor | verdict |
+|---|---|---|---|---|---|---|
+| #1827 | `test-deploy-token-file` | 145-175k | 163,393 | 75,119 | 88,274 | in band |
+| #1828 | `writer-outcome-read` | 145-180k | 160,256 | 70,697 | 89,559 | in band |
+| #1829 | `cooperjaidee-product-page` | 250-310k | 222,765 | 133,544 | 89,221 | **UNDER by ~27k** |
+| #1830 | `drive-alert-honesty` | 145-175k | 156,832 | 67,835 | 88,997 | in band |
+| #1831 | `tenancy-canary-production-flag` | 150-185k | 190,398 | 97,852 | 92,546 | **OVER by 5.4k** |
+| #1835 | `shelter-drive-move` | 220-280k | 233,393 | 144,404 | 88,989 | `finished=blocked` — **not a reading** |
+| #1833 | `platform-search-register` | 150-185k | 161,687 | 72,466 | 89,221 | in band |
+| #1839 | `backlog-waiting-state` | 190-240k | 115,931 | 26,703 | 89,228 | `compacted=yes` — **not a reading** |
+| #1840 | `worktree-reserved` | 143-170k | 158,559 | 66,763 | 91,796 | in band |
+| #1841 | `deploy-secrets-registry` | 146-175k | 205,874 | 116,871 | 89,003 | **OVER by 31k (~18%)** |
+| #1842 | `product-site-pages` | 300-380k | 235,616 | 145,890 | 89,726 | `rescoped=yes` — **not a reading** |
+| #1845 | `calendar-narrow-scope` | 185-230k | 164,195 | 75,125 | 89,070 | **UNDER by ~21k** |
 
-**Why a scheduled writer skipped or failed is recorded on production and NOTHING CAN READ IT.** The System
-status page shows only *when* a job last ran; no check script reads `scheduled_writer_runs.last_outcome`
-or `last_detail`. **Twenty minutes went on inferring the answer from the colour of a green dot**, and it
-was finally settled with a hand-written Management API read. **It is a small addition to
-`check-production.mjs` and it would have answered the question in one command.** Not yet filed as its own
-item; `#tg5vh`'s stream was told about it.
+**Nine usable: five in band, two under, two over.** Dials matched the brief on all twelve, so every figure
+is comparable.
 
-## FIGURES — NINE STREAMS, EIGHT USABLE READINGS, NONE OVER
+### THE FLOOR — ELEVEN READINGS, 88.3k TO 92.5k
 
-| PR | slug | tokens | band | verdict |
-|---|---|---|---|---|
-| #1809 | `shelter-primary-host` | 156.9k | 145-180k | in band |
-| #1811 | `label-draft-runtime-config` | 152.5k | 143-170k | in band |
-| #1812 | `tenancy-catalogue-flags` | 143.9k | 150-180k | **6.1k UNDER** |
-| #1813 | `deployed-hosts-www-check` | 147.1k | 145-175k | in band |
-| #1814 | `google-identity-check` | 169.3k | 145-180k | in band |
-| #1815 | `scoping-harness-rule` | 143.5k | 148-180k | **4.5k UNDER** |
-| #1816 | `logo-upload-cap` | 158.5k | 150-185k | in band |
-| #1818 | `shelter-drive-connect` | 227.9k | 200-260k | in band |
-| #1823 | `backlog-proof-state` | 159.2k | 170-210k | **rescoped — not a reading** |
+`88,274 · 88,989 · 88,997 · 89,003 · 89,070 · 89,221 · 89,221 · 89,559 · 89,726 · 91,796 · 92,546`
+(the compacted one excluded). **Nine of eleven sit inside 88.3-89.8k; `91,796` and `92,546` are the two
+highs.** `89,221` appears twice again for two unrelated streams — **the exact repeat now recurring for a
+fourth consecutive day. Record it; offer no cause.** Re-derive from the next complete set; never carry
+forward. **The scale rows were measured from actuals, not derived from the floor — do not shift them.**
 
-**Six in band, two under, none over, one excluded.** Dials matched the brief on all nine.
+### THE ONE PATTERN IN THE TWO UNDERS, AND IT IS THE PLANNER'S TO FIX
 
-**THE TWO UNDERSHOOTS SUPPORT THE STANDING HYPOTHESIS AND DO NOT PROVE IT.** Both briefs handed over the
-cause, the decision and the shape of the fix; both came in under. **The hypothesis remains: a trace
-discounts, an unmade decision does not.** `#1818` is the counterweight — its brief deliberately left three
-questions open **and the card question unanswered**, and it landed mid-band at the top of the day's range.
-**No band row was changed on this evidence.**
+**`#1829` came in 27k under and `#1845` 21k under, for the same reason: the brief had already answered the
+expensive question, and the band was priced as though it had not.** `#1845`'s band included a migration
+decision the brief itself had already settled, by reading its own open question back against the schema and
+finding `calendar_id` and `calendar_account_email` already distinct. **A brief that answers the dear
+question discounts its own band. Price what the stream must still FIND OUT, not what the item asked.**
 
-**#1823 IS THE PLANNER'S FAULT, NOT THE STREAM'S.** Its brief gained four deliverables after it was
-written and was then corrected again mid-flight. **It is marked `rescoped=yes` honestly and must stay out
-of any band revision.**
-
-### THE FLOOR — NINE READINGS, 88.3k TO 91.4k
-
-`88,337 · 88,836 · 88,982 · 89,125 · 89,494 · 90,053 · 90,869 · 91,294 · 91,368`
-
-**Tighter than `770`'s and slightly higher at the bottom. Record the range, offer no cause, re-measure.**
+**`#1841`'s 31k overrun is a BRIEF defect, not a band to raise.** It was priced as the ordinary stream
+because the expensive measurement was handed over. **What it shipped was larger than what it was priced
+for:** the Pi lists were not hand-written name by name as the item asked but **re-derived as filters over
+one catalogue**, which is a better answer and a bigger job. **A stream that improves on its brief overruns
+its band, and that is the brief's cost.**
 
 ## FILED, TICKED AND CORRECTED
 
-**Filed:** `#tg5vh` (the backlog cannot say *built, proof owed*); `#83137` (the `--secrets` deploy would
-push seven dev values to production).
-
-**Ticked:** `#aucbk`, `#wwwcb` (hosts check clean on all three); `#plhbd` (his press); `#aaqtl` (the
-drafter runs); `#nxtqs` (the press, and the note had already shipped); `#tncy3` (by #1812).
-
-**Corrected without ticking:** `#tstsh` (retitled — decided and built, he presses Close); `#cjred`
-(retitled — two clauses met, the suspected setting was innocent, two small clauses left); `#gidty` (the
-`hinge probe` client deleted by him; the four older registrations remain).
-
-**An SEO item for `cooperjaidee.org` was drafted and NOT filed** — he said *"please disregard"* and gave it
-to the backlog manager. **Do not file it.** One real finding from that reading, if it comes back: the
-platform host has **one** indexable page and **no `robots.txt` or sitemap of its own**, and the shelter
-site's would misfire there.
+- **`#83137` ticked** — its stream judged the Done-when met but **could not write the tick**, because the
+  hook refused the file; it parked it in a stash and the item read open after the work shipped. **Verified
+  in the shipped code before ticking, not taken from the PR body.** Two `SUPERSEDED` corrections folded into
+  one block: the `DRIVE_CREDENTIALS_KEY` lead, and a stale citation of `#drvtk`'s revoked UAT token.
+- **`#utcds` filed:** `check-backlog-waiting.mjs` compares `since:` against the **UTC** date, so for the
+  first seven hours of a Thailand working day today's date reads as the future. **It has already cost two
+  filings, backdated to get a commit through.** And it **cannot be reproduced during the working day** — a
+  session trying at 14:00 concludes there is no fault. It needs a fixed instant injected.
+- **`#ckcia` filed** (above). **`#calsc` retagged `lutan`** and annotated: built and merged, two steps left
+  and both his, **neither provable from a listing.**
+- **`#psubp`, `#fnbnd`, `#wtres` ticked by their own streams.** **`#cjseo` is NOT `PROOF OWED`** —
+  `check-stale-titles.mjs` reports 0, and the item says *"NOTHING LEFT TO DECIDE; BUILDABLE NOW"*. The
+  previous plan recorded it as proof owed and that note does not match the file. **Whether #1829 largely
+  shipped it is NOT established and is worth one read before it is planned.**
 
 ## STILL OWED
 
-1. **`#9l7xf`'s production read** — `770` listed it; it was answered on 2026-11-21 and the fix shipped in
-   #1809. **Closed. `770` is superseded on this point.**
-2. **`#drvcl`'s first Google consent is HIS**, with the connect client's secret. The screen, both OAuth
-   routes and the env names shipped in #1818; **the release note was correctly left `n/a` naming exactly
-   that step.** It ships in the PR that closes it.
-3. **`#cjred`'s last clause** needs a signed-in login that is **not** a product administrator. He is one,
-   so his press could not exercise it.
-4. **The `scheduled_writer_runs` read** (above), unfiled.
+1. **The `scheduled_writer_runs` read**, inherited unfiled from `770` and `771`. **Third edition.**
+2. **His Cloud console look at `calendar.app.created`'s classification**, and an Admin pressing Connect on a
+   real account. If it is **sensitive**, `#calsc` reopens its three routes rather than being forced.
+3. **Production's `DRIVE_CREDENTIALS_KEY` onto the production Worker** — one command of his, and the only
+   thing between `#drvcl` and its first consent.
+4. **Clearing the four merged worktrees** once he closes their sessions.
 
 ## PROCESS NOTES
 
-- **The nine were not one plan.** Seven came from the fifteenth plan, two from the sixteenth. **The
-  counter is nine merged PLANNED streams since the last edition, across plans and chats.**
-- **`worktree.mjs streams` reports a hand-made worktree as `no metadata line`.** That is not a fault and
-  not a leftover: check `gh pr list --state all --head`, then **ask**. Lutan makes his own worktrees.
-- **A stream that refuses an instruction may be right.** Check before you insist.
+- **A question put to him AFTER the list went out cost one patch to a brief no session had opened.** Asking
+  first would have held his list behind a question. **Never hold the list for a question that can be
+  answered into the brief.**
+- **A peer that checks instead of complying is worth more than one that agrees.** Three of the four defects
+  above were caught by the same session reading a file the planner had reasoned about. **Push back when the
+  evidence is in the file, and read the file before you do.**
+- **`#1832` and `#1835` are one stream with two PRs. One stream, one count.**
 
 ## INTERRUPTIONS
 
-**One, and it was a briefing defect:** `#stpbk` was offered, agreed and withdrawn within the hour. **Cost:
-one worktree created and removed, and his confidence in the day's plan.** The brief was never written, so
-the step-zero guard never got the chance — **the planner's own reading was the thing that failed.**
+**None of the day's work was interrupted by a briefing defect.** The one correction landed in front of him —
+a job put back on his list that was finished on 2026-11-06 — and it was removed within the hour. **Cost: one
+message of his, and it was a message he should never have needed.**
