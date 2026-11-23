@@ -21,7 +21,7 @@ export async function GoogleConnect({ canConnect = false, result }: { canConnect
   let message: { text: string; good: boolean } | null = null;
   if (reason === "ok" && (kind === "drive" || kind === "calendar")) message = { text: g.done[kind], good: true };
   else if (reason === "staged" && kind === "drive") message = { text: g.done.driveStaged, good: true };
-  else if (reason && reason in g.problems) message = { text: g.problems[reason as keyof typeof g.problems], good: false };
+  else if (reason && reason in g.problems) message = { text: g.problems[reason as keyof typeof g.problems] + (reason === "wrong_account" && drive?.driveAccountEmail ? ` (${drive.driveAccountEmail})` : ""), good: false };
 
   const row = (k: ConnectKind, title: string, connected: boolean) => (
     <div key={k} className="flex flex-wrap items-center justify-between gap-2">

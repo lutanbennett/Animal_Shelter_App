@@ -56,7 +56,7 @@ export function missingScopes(kind: ConnectKind, granted: string | undefined): s
 
 export type ConnectOutcome =
   | { ok: true; staged?: boolean }
-  | { ok: false; reason: "not_set_up" | "cancelled" | "state" | "scopes" | "no_refresh_token" | "google" | "fallback_calendar" | "calendar_taken" | "no_key" | "store" };
+  | { ok: false; reason: "not_set_up" | "cancelled" | "state" | "scopes" | "no_refresh_token" | "wrong_account" | "google" | "fallback_calendar" | "calendar_taken" | "no_key" | "store" };
 
 /** Name of the calendar the app creates in a shelter's own Google account (#calsc). */
 export function calendarNameFor(shelterName: string | null | undefined): string {
