@@ -944,7 +944,7 @@ const th: Dictionary = {
       consoleAddressNote: "ที่อยู่นี้ใช้เปิดคอนโซลนี้ จึงลบจากที่นี่ไม่ได้",
       tabSummary: "สรุป",
       tabSetup: "การตั้งค่า",
-      tabConnections: "Google",
+      tabConnections: "Google (ไดรฟ์และปฏิทิน)",
       tabWebsite: "เว็บไซต์",
       tabContact: "ติดต่อ",
       tabClose: "ปิด",
