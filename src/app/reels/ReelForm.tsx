@@ -66,7 +66,7 @@ export function ReelForm({
   // New reels only: the clips picked so far. One clip is the ordinary form; two or more is a batch (serial upload,
   // blank description, today's date, edited afterwards). Edit never touches this.
   const [items, setItems] = useState<ClipItem[]>([]);
-  const [sending, setSending] = useState<{ n: number; total: number } | null>(null);
+  const [sending, setSending] = useState<{ n: number; total: number; index: number } | null>(null);
   const batch = mode === "new" && items.length > 1;
   const [rows, setRows] = useState<Record<string, RowFields>>({});
   const doneClips = items.filter((it) => it.status === "done" && it.reelId);
@@ -125,9 +125,11 @@ export function ReelForm({
         // A clip that fails is marked and the rest carry on; saving again retries only the ones not done.
         const queue = items.map((it): ClipItem => (it.status === "done" ? it : { file: it.file, status: "queued" }));
         const toSend = queue.map((_, i) => i).filter((i) => queue[i].status !== "done");
+        // Clear earlier failures so a retry shows every unsent clip as waiting, not with the last run's error.
+        setItems([...queue]);
         for (let k = 0; k < toSend.length; k++) {
           const i = toSend[k];
-          setSending({ n: k + 1, total: toSend.length });
+          setSending({ n: k + 1, total: toSend.length, index: i });
           const bad = clipProblem(queue[i].file, t.photos.videos.errors);
           if (bad) {
             queue[i] = { file: queue[i].file, status: "failed", error: bad };
@@ -215,6 +217,11 @@ export function ReelForm({
                 <li key={`${it.file.name}-${i}`} className="flex flex-wrap items-center gap-2 text-sm text-foreground">
                   <span>{it.file.name}</span>
                   {batch && it.status === "done" && <span className="text-muted">{f.clipDone}</span>}
+                  {batch && sending && it.status === "queued" && (sending.index === i ? (
+                    <strong role="status">{retrying ? f.retrying : f.uploading(progress ?? 0)}</strong>
+                  ) : (
+                    <span className="text-muted">{f.clipWaiting}</span>
+                  ))}
                   {it.error && <span className="text-danger">{it.error}</span>}
                   {it.status !== "done" && (
                     <button type="button" className="text-xs text-muted underline" disabled={pending} onClick={() => setItems((cur) => cur.filter((_, j) => j !== i))}>
@@ -299,9 +306,8 @@ export function ReelForm({
         </>
       )}
 
-      {progress !== null && (
+      {progress !== null && !batch && (
         <p role="status" className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground">
-          {batch && sending && <strong>{f.clipOf(sending.n, sending.total)}</strong>}
           {retrying ? f.retrying : f.uploading(progress)}
         </p>
       )}

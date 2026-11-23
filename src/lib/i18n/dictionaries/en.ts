@@ -6006,6 +6006,7 @@ const en = {
       batchHint: "Several clips: each becomes its own reel. When they have all uploaded, a list appears where you can add each clip's description, date and animal tags.",
       clipOf: (n: number, total: number) => `Clip ${n} of ${total}. `,
       clipDone: "Done",
+      clipWaiting: "Waiting",
       rowsHeading: "Describe each clip",
       rowSaved: "Saved",
       saveRows: "Save descriptions",
