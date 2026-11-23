@@ -84,17 +84,23 @@ check_backlog_waiting() {
   return 0
 }
 
-# The backlog branch only ever touches docs/backlog.md (CLAUDE.md, "The backlog
-# branch"). The daily `git merge backlog && git push` reaches main with no PR, no
-# CI and no review, so any other file committed there rides along unchecked: a
-# CLAUDE.md rule did on 2026-10-07 and a misfiled line on 2026-10-19. Pure git, no
-# node, so it is fast and has little to crash; if the branch name or the diff
-# cannot be read it lets the commit through.
+# The backlog branch only ever touches the two backlog data files (CLAUDE.md, "The
+# backlog branch"): docs/backlog.md and docs/backlog-names.json, which holds one
+# short name per open item. The daily `git merge backlog && git push` reaches main
+# with no PR, no CI and no review, so any other file committed there rides along
+# unchecked: a CLAUDE.md rule did on 2026-10-07 and a misfiled line on 2026-10-19.
+# The names file is allowed because it is backlog DATA in the same risk class as
+# backlog.md — a flat map of id to name, read by the checks and executed by nothing
+# — and because #bkwai made a name compulsory for every open item, which left
+# filing one refused both ways: with the file, by this rule; without it, by
+# check-backlog-waiting. Nothing else is added, least of all anything executable.
+# Pure git, no node, so it is fast and has little to crash; if the branch name or
+# the diff cannot be read it lets the commit through.
 check_backlog_branch() {
   [ "$(git symbolic-ref --short -q HEAD 2>/dev/null)" = "backlog" ] || return 0
-  others=$(git diff --cached --name-only --no-renames 2>/dev/null | grep -v -x "docs/backlog.md")
+  others=$(git diff --cached --name-only --no-renames 2>/dev/null | grep -v -x -e "docs/backlog.md" -e "docs/backlog-names.json")
   [ -z "$others" ] && return 0
-  echo "pre-commit: refused. The backlog branch may only change docs/backlog.md, because it reaches main with no PR, no CI and no review. Staged:" >&2
+  echo "pre-commit: refused. The backlog branch may only change docs/backlog.md and docs/backlog-names.json, because it reaches main with no PR, no CI and no review. Staged:" >&2
   echo "$others" | sed 's/^/  /' >&2
   echo "Unstage them (git restore --staged <file>) and put that change on a claude/<feature> branch with a PR." >&2
   return 1
