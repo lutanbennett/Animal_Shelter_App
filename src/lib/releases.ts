@@ -70,6 +70,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "Pressing Home as Admin on a phone now opens Settings, the same as on a computer, instead of dropping you into one role's home screen with a button for every role. Those role buttons are still under Who does what.",
+    admin: true,
+  },
 ];
 
 /** Newest first. */
