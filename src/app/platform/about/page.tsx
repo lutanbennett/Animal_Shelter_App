@@ -58,6 +58,7 @@ export default async function AboutPage() {
   return (
     <main className="flex flex-1 flex-col">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
+      <ProductNav bands={a.bands} homeLabel={a.navHome} navLabel={a.navLabel} current="home" th={locale === "th"} />
       <section className="mx-auto grid w-full max-w-6xl items-center gap-10 px-6 py-12 lg:grid-cols-2 lg:py-20">
         <div>
           <p className="text-sm font-medium uppercase tracking-wide text-primary">{a.kicker}</p>
