@@ -1,4 +1,5 @@
 {
+  "chadm": "Role chips off admin home",
   "gcprd": "Connect client onto production",
   "prvln": "Prove a step before asking",
   "pihst": "Pi host mismatch breaks absolute URLs",
@@ -42,5 +43,6 @@
   "wtres": "Created worktree reads as free",
   "rlbat": "Upload several reels at once",
   "fnbnd": "Money side on product page",
-  "psubp": "Product site home and detail pages"
+  "psubp": "Product site home and detail pages",
+  "pnote": "Product site note audience"
 }
