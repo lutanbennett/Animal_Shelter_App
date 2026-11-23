@@ -70,11 +70,19 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  "The CooperJaidee product page now has a page about the money side of a shelter (numbered receipts, expenses your accountant can read, and a cashflow forecast), in English and Thai.",
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.49.0",
+    date: "2026-11-23",
+    title: "The product site explains the money side of running a shelter",
+    major: true,
+    notes: [
+      "The CooperJaidee product page now has a page about the money side of a shelter (numbered receipts, expenses your accountant can read, and a cashflow forecast), in English and Thai.",
+    ],
+  },
   {
     version: "0.48.0",
     date: "2026-11-22",
