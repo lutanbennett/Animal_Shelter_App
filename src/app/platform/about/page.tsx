@@ -83,8 +83,8 @@ export default async function AboutPage() {
                 <h2 className="text-2xl font-semibold text-foreground">{b.name}</h2>
                 <p className="mt-3 text-foreground">{b.text}</p>
                 {b.slug && (
-                  <a href={productFeaturePath(b.slug, locale === "th")} className="mt-4 inline-block text-sm font-medium text-primary underline">
-                    {a.readMore}
+                  <a href={productFeaturePath(b.slug, locale === "th")} className="mt-4 inline-block rounded border border-border bg-surface px-4 py-2 text-sm font-medium text-primary hover:underline">
+                    {a.readMore} →
                   </a>
                 )}
               </div>

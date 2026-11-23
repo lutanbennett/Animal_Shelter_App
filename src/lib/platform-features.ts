@@ -6,7 +6,7 @@
  * No imports on purpose: the proxy and the tests load this file.
  */
 export const PRODUCT_HOME = "/platform/about";
-export const PRODUCT_FEATURE_SLUGS = ["money"] as const;
+export const PRODUCT_FEATURE_SLUGS = ["residents", "medical", "adoptions", "volunteers", "website", "money"] as const;
 export type ProductFeatureSlug = (typeof PRODUCT_FEATURE_SLUGS)[number];
 
 export const productFeaturePath = (slug: string, th = false): string => `${th ? "/th" : ""}/platform/features/${slug}`;
