@@ -205,7 +205,7 @@ section 8's.
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | **Republished 2026-11-23 (version 446) and PARTLY verified.** Present in the published HTML, counted rather than eyeballed: a name on **all 38** open items (`.nm`), a state badge on **all 38** (`.wstate`), the filter control (`.wfilter`), and the state classes — **12 `lutan`, 6 `buildable`, 4 `director`**. **What is left is pressing the filter and seeing it filter**, which Claude could not do: the browser pane is not signed in to claude.ai, and a local copy opened from disk renders as a static snapshot with scripts inert | the pinned artifact |
+| 1 | **Republished 2026-11-23 (version 446). Partly verified, and the rest deliberately dropped.** **Verified by counting the published HTML:** a name on **all 38** open items (`.nm`), a state badge on **all 38** (`.wstate`), the filter control present (`.wfilter`), state classes reading **12 `lutan`, 6 `buildable`, 4 `director`**. **NOT verified, and now never will be: that pressing the filter actually filters.** Claude cannot press it — the browser pane is not signed in to claude.ai, and a local copy renders as a static snapshot with scripts inert — **and no test covers it either**: `check-backlog-waiting.test.mjs` exercises the *checker* (tag and names parsing), not the generated page. Asked, Lutan said *"Not worth chasing"*. **A sound call on an internal page only he reads — recorded so nobody later mistakes the markup check for a working filter** | the pinned artifact |
 
 ## Sign-off
 
@@ -232,9 +232,9 @@ Automated checks by: Claude  Date: 2026-11-22
 A red `test-plan` that says what it is waiting for is a red people act on. An
 illegible one is a red people learn to ignore.
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: **one press of the state filter on the pinned page.** Everything else in row 1 is verified in the published HTML; the page is republished and current (`main @ 5084efd61`)
+- [x] The manual list above is empty, or every item in it was checked by a person — **closed by Lutan's decision, not by a check.** Asked whether to press the state filter or let it go, he said *"Not worth chasing"* (2026-11-23). **So the filter's behaviour is unverified and stays that way**, and this line is ticked because the row has an owner's decision on it, not because anybody looked
 
-Manual verification by: pending: Lutan — **one press of the state filter** on the pinned backlog page. The republish is done and the names, badges and filter control are verified present in the published HTML by Claude; only the interaction is outstanding, because neither the browser pane (not signed in to claude.ai) nor a local copy (static snapshot, scripts inert) can press it
+Manual verification by: n/a: **Lutan decided it was not worth chasing** (2026-11-23), asked directly. **This is a decision to stop, not a verification** — read the row above before trusting the page's filter  Date: 2026-11-23
 
 ### Result
 
