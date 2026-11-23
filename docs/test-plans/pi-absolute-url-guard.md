@@ -14,7 +14,7 @@
 | PR | see PR |
 | Tested by / date | Claude, 2026-11-23 |
 | Carries a migration? | no |
-| Tested at SHA | c11fb33a1 |
+| Tested at SHA | 6a20c6c35 |
 
 ## 1. Scope and risk
 
@@ -40,7 +40,16 @@ because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [ ] GATES_PLACEHOLDER
+- [x] `node scripts/gates.mjs` ends with the four exit codes, all 0. Output as printed:
+
+```
+=== gates: typecheck exited 0 after 18s
+=== gates: lint exited 0 after 237s
+=== gates: test exited 0 after 49s
+=== gates: build exited 0 after 67s
+gates: typecheck=0 lint=0 test=0 build=0
+```
+
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
