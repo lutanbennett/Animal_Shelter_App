@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { stepUpHref, hasTwoStep } from "@/lib/auth/two-step";
 import { isProductAdmin } from "@/lib/auth/product-admin";
 import { getT } from "@/lib/i18n/get-t";
+import { deploymentSiteState } from "@/lib/public-site";
 import { appHost, isPlatformHostname, platformHost, requestHost } from "@/lib/site-hosts";
 import { createClient } from "@/lib/supabase/server";
 import { checkDatabase } from "@/lib/status/health";
@@ -69,6 +70,7 @@ export default async function PlatformPage() {
         stepUpPath={stepUpHref("/platform")}
         systemDatabase={database.state}
         consoleHost={platformHost()}
+        siteFloor={deploymentSiteState()}
       />
     </main>
   );
