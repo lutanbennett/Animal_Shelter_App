@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { actingShelterId } from "@/lib/supabase/acting-shelter";
 import { encryptSecret } from "./drive-credentials-crypto";
-import { stageConsent } from "./shelter-drive-decide";
+import { stageConsent, liveReconnectAction } from "./shelter-drive-decide";
 import { calendarNameFor, folderNameFor, missingScopes, type ConnectKind, type ConnectOutcome } from "./shelter-google-connect-decide";
 // The same checks the connect scripts make, called as they stand (not copied): validate the shape, prove it against Google
 // BEFORE anything is stored, and refuse the fallback shelter's own calendar.
@@ -74,11 +74,14 @@ export async function completeConnect(kind: ConnectKind, code: string, origin: s
         }, { onConflict: "shelter_id" });
         return st.error ? { ok: false, reason: "store" } : { ok: true, staged: true };
       }
-      // Reuse the shelter's folder when this account can still open it; otherwise make one, so nobody is ever asked for a folder id.
+      // Reuse the shelter's folder when this account can still open it. If a folder is recorded and this token cannot open it, REFUSE (#rcwrg):
+      // it is the wrong account, and making a new folder here would repoint every photo at an empty one. Nothing is written or made on that path.
       let folderId = (shelter.drive_root_folder_id as string | null) ?? null;
       let verified: { email: string } | null = null;
       if (folderId) verified = await verifyDrive({ ...base, folderId }).catch(() => null);
-      if (!verified) {
+      const action = liveReconnectAction(folderId, verified !== null);
+      if (action === "refuse") return { ok: false, reason: "wrong_account" };
+      if (action === "make") {
         const made = await fetch("https://www.googleapis.com/drive/v3/files?fields=id", {
           method: "POST",
           headers: { ...auth, "Content-Type": "application/json" },
@@ -89,6 +92,7 @@ export async function completeConnect(kind: ConnectKind, code: string, origin: s
         folderId = f.id;
         verified = await verifyDrive({ ...base, folderId });
       }
+      if (!verified || !folderId) return { ok: false, reason: "google" };
       if (validateDrive({ shelterKey, folderId, ...base }).length) return { ok: false, reason: "google" };
       const { data: prior } = await db.from("shelter_drive_credentials").select("shelter_id").eq("shelter_id", shelterId).maybeSingle();
       const up = await db.from("shelter_drive_credentials").upsert({

@@ -81,3 +81,15 @@ export function decideRootFolder(own: string | null | undefined, shelterKey: str
 export function stageConsent(hasRow: boolean, shelterKey: string | null | undefined): boolean {
   return !hasRow && shelterKey === FALLBACK_SHELTER_KEY;
 }
+
+/**
+ * A reconnect on a LIVE row (#rcwrg): what to do with the shelter's recorded folder. The old code read "this token cannot open the folder"
+ * as "no folder yet" and made a new one in whatever account was chosen, repointing the shelter at an empty folder. Built from "a folder id
+ * is recorded", not from the verify result, because verifyDrive throws the same sentence for a wrong account, a deleted folder and a
+ * network blip, so it cannot tell them apart. Refusing is the safe side of all three: nothing is written and nothing is made.
+ * "make" only when the shelter has no folder recorded at all.
+ */
+export function liveReconnectAction(recordedFolderId: string | null | undefined, tokenCanOpenIt: boolean): "reuse" | "make" | "refuse" {
+  if (!recordedFolderId?.trim()) return "make";
+  return tokenCanOpenIt ? "reuse" : "refuse";
+}

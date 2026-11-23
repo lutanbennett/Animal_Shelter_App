@@ -1773,6 +1773,7 @@ const en = {
           cancelled: "Google was not allowed in, so nothing was saved.",
           scopes: "Not every box was ticked on Google's screen, so nothing was saved. Press Connect again and leave every box ticked.",
           no_refresh_token: "Google did not give lasting permission, so nothing was saved. Press Connect again and choose Allow.",
+          wrong_account: "That Google account cannot open your shelter's existing Drive folder, so nothing was changed and your photos are safe. Press Reconnect again and choose the account this shelter was connected with.",
           google: "Google refused or did not answer, so nothing was saved. Try again in a minute.",
           not_set_up: "Connecting is not switched on for this system yet. Ask the person who looks after the system.",
           no_key: "This system cannot store the connection safely yet, so nothing was saved. Ask the person who looks after the system.",
