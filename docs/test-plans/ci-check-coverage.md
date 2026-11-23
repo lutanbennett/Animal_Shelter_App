@@ -125,7 +125,7 @@ Automated checks by: Claude  Date: 2026-11-23
 Manual verification by: n/a: scripts only, no surface to look at
 
 - [ ] Open defects fixed or accepted — n/a: the one defect is fixed
-- [ ] Checklist pasted into the PR — pending: at PR creation
-- [ ] Handed to release manager — deferred: release manager
+- [ ] Checklist pasted into the PR — n/a: the plan is committed on the branch beside the PR
+- [ ] Handed to release manager — pending: release manager reads it before the next deploy
 
 Result: pass
