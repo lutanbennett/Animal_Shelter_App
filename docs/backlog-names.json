@@ -1,4 +1,5 @@
 {
+  "chadm": "Role chips off admin home",
   "gcprd": "Connect client onto production",
   "prvln": "Prove a step before asking",
   "pihst": "Pi host mismatch breaks absolute URLs",
