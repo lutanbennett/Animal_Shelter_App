@@ -205,6 +205,7 @@ export function ReelForm({
               ]);
             }}
           />
+          <span className={hintClass}>{f.pickerHint}</span>
           <ActionButton icon={Film} onClick={() => fileInput.current?.click()} disabled={pending}>
             {items.length ? f.addMoreVideos : f.chooseVideo}
           </ActionButton>
