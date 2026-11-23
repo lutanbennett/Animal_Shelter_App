@@ -72,6 +72,29 @@ export type SystemState = "ok" | "warn" | "fail" | "off" | null;
 
 type StepKey = "host" | "role" | "login" | "receipts" | "defaults";
 type CardState = "closed" | "broken" | "setup" | "ready";
+type TabKey = "summary" | "setup" | "connections" | "website" | "contact" | "close";
+/** red = not done, amber = waiting on someone else, green = done, grey = recorded but not measured (Lutan, 2026-11-23). */
+type TabTone = "red" | "amber" | "green" | "grey" | "none";
+
+/**
+ * What each settings tab shows beside its name. Measured from what is read, never assumed: the Website tab is NEVER green, because nothing
+ * here checks that the address answers (#hstau); an address that is only recorded is grey. Always a shape as well as a colour.
+ */
+export function tabTone(s: ShelterRow, key: TabKey): TabTone {
+  switch (key) {
+    case "setup":
+      return s.has_host && s.has_admin_role && s.has_admin_login && s.has_receipts && s.has_defaults ? "green" : "red";
+    case "connections":
+      if (s.drive_status === "dead" || s.calendar_status === "dead") return "red";
+      return s.drive_status === "connected" && s.calendar_status === "connected" ? "green" : "amber";
+    case "website":
+      return s.has_host ? "grey" : "red";
+    case "contact":
+      return s.account_holder_name && s.display_name && s.short_name ? "green" : "red";
+    default:
+      return "none";
+  }
+}
 
 /** The four card states, first match wins (docs/decisions/2026-11-20-shelter-state-schema.md). Derived from what is already read: no column. */
 export function cardState(s: ShelterRow): CardState {
@@ -105,6 +128,7 @@ export function ProductAdminPanel({
   canWrite,
   stepUpPath,
   systemDatabase,
+  consoleHost,
 }: {
   enquiries: EnquiryRow[];
   shelters: ShelterRow[];
@@ -113,6 +137,8 @@ export function ProductAdminPanel({
   canWrite: boolean;
   stepUpPath: string;
   systemDatabase: SystemState;
+  /** This console's own address (PLATFORM_HOST): never offered a Remove. */
+  consoleHost: string | null;
 }) {
   const { t } = useI18n();
   const p = t.admin.productAdmin;
@@ -134,6 +160,7 @@ export function ProductAdminPanel({
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const [fromDrafts, setFromDrafts] = useState<Record<string, { key: string; name: string }>>({});
   const [nameDrafts, setNameDrafts] = useState<Record<string, { full: string; short: string }>>({});
+  const [tab, setTab] = useState<TabKey>("summary");
 
   const say = (key: string, ok: boolean, text: string) => setMsgs((m) => ({ ...m, [key]: { ok, text } }));
   const note = (key: string) =>
@@ -142,7 +169,7 @@ export function ProductAdminPanel({
         {msgs[key].text}
       </p>
     ) : null;
-  const nameDraft = (s: ShelterRow) => nameDrafts[s.id] ?? { full: s.display_name ?? "", short: s.short_name ?? "" };
+  const nameDraft = (s: ShelterRow) => nameDrafts[s.id] ?? { full: s.display_name ?? s.name, short: s.short_name ?? "" };
   const holderDraft = (s: ShelterRow) =>
     holderDrafts[s.id] ?? {
       name: s.account_holder_name ?? "",
@@ -361,7 +388,15 @@ export function ProductAdminPanel({
             <dl className="flex flex-col gap-1 text-sm">
               <div className="flex flex-wrap gap-x-2">
                 <dt className="text-muted">{p.websiteLabel}</dt>
-                <dd className="break-all text-foreground">{w.host ?? p.websiteNone}</dd>
+                <dd className="break-all text-foreground">
+                  {w.host ? (
+                    <a href={`https://${w.host}`} target="_blank" rel="noreferrer" className="underline">
+                      {w.host} · {p.visitSite}
+                    </a>
+                  ) : (
+                    p.websiteNone
+                  )}
+                </dd>
               </div>
               <div className="flex flex-wrap gap-x-2">
                 <dt className="text-muted">{p.accountHolderLabel}</dt>
@@ -369,7 +404,10 @@ export function ProductAdminPanel({
               </div>
             </dl>
             <div>
-              <ActionButton icon={ACTION_ICONS.edit} variant="primary" compact onClick={() => setOpenId(s.id)}>
+              <ActionButton icon={ACTION_ICONS.edit} variant="primary" compact onClick={() => {
+                  setTab("summary");
+                  setOpenId(s.id);
+                }}>
                 {p.openSettings}
               </ActionButton>
             </div>
@@ -392,6 +430,8 @@ export function ProductAdminPanel({
     const statusTone = (x: Status) => (x === "connected" ? "text-success" : x === "dead" ? "text-danger" : x === "incomplete" ? "text-warning" : "text-muted");
     const sysWords = systemDatabase === "ok" ? p.healthOk : systemDatabase === "warn" ? p.healthWarn : systemDatabase === "fail" ? p.healthFail : p.healthUnknown;
     const sysTone = systemDatabase === "ok" ? "text-success" : systemDatabase === "warn" ? "text-warning" : systemDatabase === "fail" ? "text-danger" : "text-muted";
+    const tabs = (["summary", "setup", "connections", "website", "contact", "close"] as TabKey[]).filter((k) => k !== "close" || canWrite);
+    const tabLabel: Record<TabKey, string> = { summary: p.tabSummary, setup: p.tabSetup, connections: p.tabConnections, website: p.tabWebsite, contact: p.tabContact, close: p.tabClose };
     const section = "flex flex-col gap-2 border-t border-border pt-4";
     const h4 = "text-sm font-semibold text-foreground";
 
@@ -410,6 +450,36 @@ export function ProductAdminPanel({
           </span>
         </header>
 
+        {st !== "closed" && (
+          <div role="tablist" aria-label={p.tabsLabel} className="flex flex-wrap gap-2 border-b border-border pb-2">
+            {tabs.map((k) => {
+              const tone = tabTone(s, k);
+              const mark = { red: "✕", amber: "◐", green: "✓", grey: "○", none: "" }[tone];
+              const words = { red: p.tabNeeds, amber: p.tabWaiting, green: p.tabDone, grey: p.tabUnchecked, none: "" }[tone];
+              const color = { red: "text-danger", amber: "text-warning", green: "text-success", grey: "text-muted", none: "" }[tone];
+              const broken = k === "connections" && tone === "red";
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === k}
+                  title={broken ? p.tabBroken : words}
+                  onClick={() => setTab(k)}
+                  className={`min-h-11 rounded border px-3 text-sm md:min-h-9 ${tab === k ? "border-primary font-semibold text-foreground" : "border-border text-muted"}`}
+                >
+                  {tabLabel[k]}
+                  {mark && (
+                    <span className={`ml-1.5 ${color}`} aria-label={broken ? p.tabBroken : words}>
+                      {mark}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {st === "closed" ? (
           <section className="flex flex-col gap-2">
             <p className="max-w-prose text-sm text-muted">{p.closedCardNote}</p>
@@ -425,6 +495,7 @@ export function ProductAdminPanel({
         ) : (
           <>
             {/* How it is doing: this shelter's own indicators first, then the system's, labelled as the system's. */}
+            {tab === "summary" && (
             <section className="flex flex-col gap-2">
               <h3 className={h4}>{p.healthTitle}</h3>
               <p className="text-xs font-medium uppercase tracking-wide text-muted">{p.healthShelterPart}</p>
@@ -441,13 +512,21 @@ export function ProductAdminPanel({
                 </li>
               </ul>
             </section>
+            )}
 
-            <section className={section}>
+            {tab === "connections" && (
+            <section className="flex flex-col gap-2">
               <h3 className={h4}>{p.connectionsTitle}</h3>
+              <ul className="flex flex-col gap-1 text-sm">
+                <li className={statusTone(s.drive_status)}>{{ not_started: p.driveNotStarted, incomplete: p.driveIncomplete, connected: p.driveConnected, dead: p.driveDead }[s.drive_status]}</li>
+                <li className={statusTone(s.calendar_status)}>{{ not_started: p.calNotStarted, incomplete: p.calIncomplete, connected: p.calConnected, dead: p.calDead }[s.calendar_status]}</li>
+              </ul>
               <p className="max-w-prose text-xs text-muted">{p.connectionsNote}</p>
             </section>
+            )}
 
-            <section className={section}>
+            {tab === "setup" && (
+            <section className="flex flex-col gap-2">
               <h3 className={h4}>{p.setupTitle}</h3>
               <ol className="flex flex-col gap-2">
                 {steps.map((x) => (
@@ -632,9 +711,12 @@ export function ProductAdminPanel({
                 </div>
               )}
             </section>
+            )}
 
-            <section className={section}>
+            {tab === "website" && (
+            <section className="flex flex-col gap-2">
               <h3 className={h4}>{p.addressesTitle}</h3>
+              {s.hosts && s.hosts.length > 0 && <p className="text-xs text-muted">{p.websiteUnchecked}</p>}
               <p className="max-w-prose text-xs text-muted">{p.addressesNote}</p>
               {s.hosts && s.hosts.length > 0 ? (
                 <ul className="flex flex-col gap-2 text-sm">
@@ -659,7 +741,8 @@ export function ProductAdminPanel({
                             {p.makeWebsite}
                           </ActionButton>
                         )}
-                        {canWrite && (
+                        {h === consoleHost && <span className="text-xs text-muted">({p.consoleAddress}. {p.consoleAddressNote})</span>}
+                        {canWrite && h !== consoleHost && (
                           <ActionButton
                             icon={ACTION_ICONS.delete}
                             variant="danger"
@@ -707,9 +790,12 @@ export function ProductAdminPanel({
               {note(`host-add:${s.id}`)}
               {canWrite && <p className="max-w-prose text-xs text-muted">{p.mapHelp}</p>}
             </section>
+            )}
 
+            {tab === "contact" && (
+            <>
             <form
-              className={`${section} max-w-xl`}
+              className="flex max-w-xl flex-col gap-2"
               onSubmit={(ev) => {
                 ev.preventDefault();
                 startTransition(async () => {
@@ -783,9 +869,11 @@ export function ProductAdminPanel({
               )}
               {note(`names:${s.id}`)}
             </form>
+            </>
+            )}
 
-            {canWrite && (
-              <section className={section}>
+            {tab === "close" && canWrite && (
+              <section className="flex flex-col gap-2">
                 <h3 className={h4}>{p.closeTitle}</h3>
                 <p className="max-w-prose text-xs text-muted">{p.closeNote}</p>
                 <div>
