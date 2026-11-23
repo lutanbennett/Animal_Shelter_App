@@ -7,6 +7,7 @@ import { PRODUCT_FEATURE_SLUGS, PRODUCT_HOME, productFeaturePath } from "@/lib/p
 import { getSiteOrigin } from "@/lib/site-origin";
 import { isPlatformHostname, platformHost, requestHost } from "@/lib/site-hosts";
 import { ProductMockup } from "../../about/ProductMockup";
+import { ProductNav } from "../../about/ProductNav";
 
 /**
  * A product feature page (#psubp): the detail behind one band of the product home page (/platform/about).

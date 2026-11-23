@@ -1122,6 +1122,8 @@ const en = {
         heading: "Software to manage an animal shelter",
         lead: "CooperJaidee brings a shelter’s daily work into one place, so staff and volunteers spend their time on the animals rather than on paperwork.",
         seeMore: "See what it does",
+        navHome: "Overview",
+        navLabel: "Product pages",
         readMore: "Read more",
         backHome: "Back to what CooperJaidee does",
         otherPages: "More about CooperJaidee",

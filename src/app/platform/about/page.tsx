@@ -7,6 +7,7 @@ import { getSiteOrigin } from "@/lib/site-origin";
 import { isPlatformHostname, platformHost, requestHost } from "@/lib/site-hosts";
 import { productFeaturePath } from "@/lib/platform-features";
 import { ProductMockup } from "./ProductMockup";
+import { ProductNav } from "./ProductNav";
 
 /**
  * The product page (#apxld, rebuilt as a product introduction in #cjlnd): what a stranger at cooperjaidee.org lands on.
