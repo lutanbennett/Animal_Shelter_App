@@ -114,7 +114,7 @@ export async function completeConnect(kind: ConnectKind, code: string, origin: s
     let calendarId = (prior?.calendar_id as string | null) ?? null;
     if (calendarId && calendarId !== email) {
       // Only a calendar this app made can be read with this scope, so a stored id that is not the account email is tried first.
-      const still = await verifyCalendar({ shelterKey, calendarId, accountEmail: email, ...base }).catch(() => null);
+      const still = await verifyCalendar({ calendarId, ...base }).catch(() => null);
       if (!still) calendarId = null;
     } else calendarId = null; // the old primary-calendar connection is NOT kept: visits move to a calendar the app makes (deliberate, said on the screen)
     if (!calendarId) {
