@@ -128,14 +128,6 @@
       "reason": "A group tile opens the page of a group on one of the roles the login HOLDS (Admin may preview any). It shows the login its own role's cards, drawn with its own permissions; it grants nothing."
     },
     {
-      "file": "src/app/home/page.tsx",
-      "matches": [
-        "r.key === \"management\""
-      ],
-      "kind": "layout",
-      "reason": "Which role's board the Admin desk view opens first. Admin only; ordering."
-    },
-    {
       "file": "src/app/home/[role]/page.tsx",
       "matches": [
         "roleKey === \"admin\""

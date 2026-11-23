@@ -1,11 +1,9 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { refuseFor } from "@/lib/auth/require-role";
 import { entersApp } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
-import { deviceFrom } from "@/lib/home/device";
-import { listHomeRoles, loadCardsByRole } from "@/lib/home/roles";
+import { loadCardsByRole } from "@/lib/home/roles";
 import { cardsWithoutTile, hasJobTiles, homeGroupsForRoles } from "@/lib/home/tiles";
 import { loadUrgentCounts } from "@/lib/my-tasks/urgent";
 import { countBillsWaiting } from "@/lib/bills/waiting";
@@ -20,8 +18,7 @@ import { formatDate, todayIso } from "@/lib/format";
 /**
  * /home — where a sign-in lands (§8). It decides, then either redirects or draws:
  *
- *  - Admin: one login, the home follows the device. A phone goes to the Management home, anything
- *    larger to Settings (src/lib/home/device.ts). The switch on both opens the others.
+ *  - Admin: /admin on every device. No role's home is chosen for it (#chadm, 2026-11-23).
  *  - Every other role: its own home, its who-does-what tiles (src/lib/home/tiles.ts). Nothing
  *    redirects away from it any more: not `roles.home_path` (a landing page nothing sets, left
  *    unread) and not the clinic scope (the doctor's old hard-coded Appointments, which its own cells
@@ -29,7 +26,6 @@ import { formatDate, todayIso } from "@/lib/format";
  *    what feature" (docs/decisions/2026-10-18-role-home-is-tiles.md). A role whose cards draw
  *    nothing sees the empty state below, which is a finding about its cards, not a page to redirect.
  *
- * The device is asked afresh at every landing; nothing is stored.
  */
 export default async function HomePage() {
   const supabase = await createClient();
@@ -41,14 +37,8 @@ export default async function HomePage() {
   const perms = await loadPermissions();
   if (!perms || !entersApp(perms)) refuseFor(perms);
 
-  if (perms.isAdmin) {
-    const h = await headers();
-    const device = deviceFrom(h.get("user-agent"), h.get("sec-ch-ua-mobile"));
-    if (device === "desk") redirect("/admin");
-    const roles = await listHomeRoles(supabase);
-    const management = roles.find((r) => r.key === "management") ?? roles[0];
-    redirect(management ? `/home/${management.key}` : "/admin");
-  }
+  // Admin lands on /admin on every device (#chadm, 2026-11-23): no role is picked by key, no role home entered.
+  if (perms.isAdmin) redirect("/admin");
 
   const { t, locale } = await getT();
   const urgent = await loadUrgentCounts(supabase, perms, user.id);
