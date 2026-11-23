@@ -58,3 +58,35 @@ export function parseNames(raw) {
   }
   return value;
 }
+
+// The shelter's calendar day (Thailand, UTC+7) for an instant. A `since:` is a day AT THE SHELTER, so it
+// is compared against this, never against the UTC date: from 00:00 to 07:00 local the UTC date is still
+// yesterday and a correctly dated tag read as being in the future (#utcds). `now` is injectable so a test
+// can pin the instant instead of depending on the wall clock.
+export const SHELTER_TIME_ZONE = "Asia/Bangkok";
+export function shelterToday(now = new Date()) {
+  const p = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", { timeZone: SHELTER_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" })
+      .formatToParts(now).map((x) => [x.type, x.value]),
+  );
+  return `${p.year}-${p.month}-${p.day}`;
+}
+
+// A tag's `since:` is in the future only against the shelter's day. ISO dates compare as strings.
+export function sinceInFuture(since, now = new Date()) {
+  return since > shelterToday(now);
+}
+
+// ---- Proof lines (#prvln) -------------------------------------------------------------------------
+// An item waiting on Lutan says how to PROVE the step done, so a session can run it before naming him.
+// It lives in the item's own prose as `**Proof:** <one line>` (backticks around a command are fine),
+// not in the tag: a shell command inside an HTML comment needs escaping and makes the tag brittle.
+// `decision` items are out of scope on purpose: a decision only he can make is not provable by a command.
+export const PROOF_RE = /\*\*Proof:\*\*\s*\S/;
+export const PROOF_STATES = ["lutan"];
+export function needsProof(tag) {
+  return !!tag && PROOF_STATES.includes(tag.state);
+}
+export function hasProof(line) {
+  return PROOF_RE.test(line);
+}
