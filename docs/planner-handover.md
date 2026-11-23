@@ -6,13 +6,18 @@ left owed. Figures, batch composition and ports live in `.plan-day.md`.
 **It outranks nothing.** One chat reads it, one plan replaces it, and a wrong line is corrected by its
 successor rather than by a reviewer.
 
-**IT COVERS TWELVE STREAMS AND IS THREE OVERDUE, WHICH IS ITS OWN FINDING.** #1827, #1828, #1829, #1830,
+**IT COVERS THIRTEEN STREAMS AND IS FOUR OVERDUE, WHICH IS ITS OWN FINDING.** #1827, #1828, #1829, #1830,
 #1831, #1832+#1835 (one stream, two PRs, one count), #1833, #1839 (seventeenth plan); #1840, #1841, #1842,
-#1845 (eighteenth plan). **Nine of the twelve are usable readings**; three are marked out below. **The
-trigger is nine and there is no credit for overshooting** — batch 1 of the eighteenth plan merged inside
-the hour and took the count from 8 straight past 9 to 11, then #1845 made 12 before this was written.
-**If a batch can merge in under an hour, the counter has to be read at the END of a setup turn, not at its
-start.** The counter resets to 0 when this PR merges.
+#1845, #1846 (eighteenth plan). **Ten of the thirteen are usable readings**; three are marked out below.
+
+**THE COUNT ROSE TWICE WHILE THIS DOCUMENT WAS BEING WRITTEN, AND THAT IS THE POINT.** The trigger is nine
+and there is no credit for overshooting. Batch 1 of the eighteenth plan merged inside the hour and took the
+count from 8 straight past 9 to 11; #1845 made 12 while the figures were being read; #1846 made 13 while
+this paragraph's predecessor said twelve, and was found only because a `worktree.mjs sync` pulled in a
+decision file that should not have existed yet. **`#thpfx` (PR #1847) is OPEN at writing, so the next
+edition opens at 1, not 0, and #1847's figure is read next morning.** **If a batch can merge in under
+twenty minutes, the counter must be read at the END of a turn and never carried across one.** The counter
+resets to 0 when this PR merges.
 
 **NOT COUNTED, EACH CHECKED RATHER THAN ASSUMED** (no `stream-usage:` comment on any of them): #1824
 (edition `771`'s own PR), #1825 `record-test-worker`, #1826 `canary-production-attempt`, #1834
@@ -23,12 +28,13 @@ which the Backlog manager opened** — only a stream a plan created counts (his 
 
 1. **Read `.plan-day.md` first.** Gitignored, ~390 lines, and the only record of the eighteenth plan's
    reasoning and the corrections made during it.
-2. **Check what is in flight before you believe anything here.** At writing: `#thpfx` (3007) and `#rlbat`
-   (3008) are set up with briefs and **Lutan had not opened their sessions**; `#calsc` (3006) is already
-   merged.
-3. **FOUR MERGED WORKTREES NEED CLEARING** once he closes their sessions: `product-site-pages` (3001),
-   `deploy-secrets-registry` (3002), `worktree-reserved` (3003) and `calendar-narrow-scope` (3006). **All
-   PRs merged and all four figures already read and recorded**, so nothing is lost by waiting. **`done`
+2. **Check what is in flight before you believe anything here.** At writing: **PR #1847 (`#thpfx`, 3007) is
+   OPEN**; `#calsc` (#1845) and `#rlbat` (#1846) are merged. **The eighteenth plan's whole second batch went
+   from setup to merged in under half an hour**, so anything this document says about what is running was
+   probably untrue before you read it. **Run `gh pr list --state open` first.**
+3. **FIVE MERGED WORKTREES NEED CLEARING** once he closes their sessions: `product-site-pages` (3001),
+   `deploy-secrets-registry` (3002), `worktree-reserved` (3003), `calendar-narrow-scope` (3006) and
+   `reels-batch-upload` (3008). **All PRs merged and all five figures already read and recorded**, so nothing is lost by waiting. **`done`
    them; do not force**, and do not touch `Animal_Shelter_backlog-names-signoff` — the Backlog manager's.
 4. **`0.48.0` SHIPPED 2026-11-22.** The release manager cut it; the planner did not.
 5. **BATCH 3 IS NOT QUEUEABLE AND THE PREVIOUS PLAN HAD THIS WRONG.** `#drvcl` was lined up as batch 3
@@ -164,9 +170,17 @@ back. **Anything keyed on these states can be reading pre-decision tags with pos
 | #1841 | `deploy-secrets-registry` | 146-175k | 205,874 | 116,871 | 89,003 | **OVER by 31k (~18%)** |
 | #1842 | `product-site-pages` | 300-380k | 235,616 | 145,890 | 89,726 | `rescoped=yes` — **not a reading** |
 | #1845 | `calendar-narrow-scope` | 185-230k | 164,195 | 75,125 | 89,070 | **UNDER by ~21k** |
+| #1846 | `reels-batch-upload` | 210-250k (its comment says 175-205k) | 164,312 | 74,295 | 90,017 | **band does not apply — see below** |
 
-**Nine usable: five in band, two under, two over.** Dials matched the brief on all twelve, so every figure
-is comparable.
+**Ten usable: five in band, two under, two over, and #1846's band does not apply.** Dials matched the brief
+on all thirteen, so every floor is comparable.
+
+**#1846 QUOTED A BAND THE BRIEF NO LONGER HELD, AND THAT IS EVIDENCE ABOUT THE PLANNER, NOT THE STREAM.**
+Its comment says `band=175-205k`; the brief said `210-250k` when checked after the patch, confirmed through
+`worktree.mjs streams`. **So the stream was working from the brief as it stood before the patch** — which is
+the mechanism behind the far more serious finding below. Per the reading rule, a figure whose header does not
+match its brief is **printed, never counted as a variance**: 164,312 is recorded, and no band is revised from
+it.
 
 ### THE FLOOR — ELEVEN READINGS, 88.3k TO 92.5k
 
@@ -189,6 +203,39 @@ because the expensive measurement was handed over. **What it shipped was larger 
 for:** the Pi lists were not hand-written name by name as the item asked but **re-derived as filters over
 one catalogue**, which is a better answer and a bigger job. **A stream that improves on its brief overruns
 its band, and that is the brief's cost.**
+
+## THE SAME QUESTION WAS ASKED TWICE BY TWO SESSIONS AND GOT TWO DIFFERENT ANSWERS — READ THIS BEFORE YOU PATCH A BRIEF
+
+**`#rlbat`'s metadata question has two answers on record, hours apart on the same day, and the shipped code
+follows the second.**
+
+- **To the planner, in the planning chat:** asked with four options, he chose **"Per clip after upload"** —
+  upload the clips, then type each one's description, date and tags on a list **inside the flow**.
+- **To the stream, in its own session:** its decision file says *"asked which of three options he wanted …
+  he chose **Blank, edit later**"*, and that is what merged: each clip becomes a reel with today's date, no
+  description and no tags, **to be edited afterwards in the library.**
+
+**BOTH ARE HIS AND NEITHER SESSION DID ANYTHING WRONG.** He was asked twice, minutes apart, with differently
+worded option sets — four options from the planner, three from the stream. **It is on the planner that he was
+asked at all.**
+
+**THE MECHANISM, WHICH IS THE REUSABLE PART: A BRIEF IS READ ONCE, AT SESSION START, AND PATCHING IT
+AFTERWARDS REACHES NOBODY.** The planner answered the question into the brief — his words, the band raised
+175-205k → 210-250k, and a deliverable telling the stream not to re-open it — and **verified the patch had
+landed.** It had. **The session had already opened.** The brief on disk and the brief in the session were
+different documents from that moment on, and nothing says so: `worktree.mjs streams` reads the file, not the
+session. **The stale `band=` in the usage comment is the only visible trace, and it is visible only after
+the fact.**
+
+**THE RULE: once a session may have opened, a brief is frozen. Send the correction to the SESSION**
+(`SendMessage` to its `local_…` id), **or do not make it.** A patch to a brief is only safe before the
+session exists. **And do not congratulate yourself for verifying the file** — the planner did exactly that
+and it proved the wrong thing.
+
+**WHAT IS OWED ON IT: his choice, put to him once, plainly.** What shipped is the cheapest option and it
+works; what he told the planner costs a list in the flow and means a batch gets described in one sitting
+rather than needing a trip back through the library. **Do not rebuild it on a guess, and do not ask him to
+re-choose between four options again** — show him the difference and ask whether to keep what shipped.
 
 ## FILED, TICKED AND CORRECTED
 
@@ -214,7 +261,11 @@ its band, and that is the brief's cost.**
    real account. If it is **sensitive**, `#calsc` reopens its three routes rather than being forced.
 3. **Production's `DRIVE_CREDENTIALS_KEY` onto the production Worker** — one command of his, and the only
    thing between `#drvcl` and its first consent.
-4. **Clearing the four merged worktrees** once he closes their sessions.
+4. **Clearing the five merged worktrees** once he closes their sessions.
+5. **`#rlbat`'s metadata: his choice between what shipped and what he told the planner** (above). **`#rlbat`
+   is NOT ticked** — its `DONE WHEN` needs a real three-clip upload from a phone, which the stream correctly
+   recorded as `pending:` rather than proving something smaller.
+6. **`#thpfx`'s figure**, from PR #1847, read next morning.
 
 ## PROCESS NOTES
 
