@@ -70,6 +70,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "The CooperJaidee product site now has a page for each of its subjects (resident records, medical care, adoptions and fostering, volunteers and staff, the public website, and money), in English and Thai, with a menu at the top of every page to move between them.",
+    admin: true,
+  },
   "When you add several video clips to a reel at once, the page now warns you that your phone needs a moment to get them ready, and suggests a few clips at a time. The photo library can look stuck while it does; that is the phone, and it closes by itself.",
   {
     text: "Pressing Home as Admin on a phone now opens Settings, the same as on a computer, instead of dropping you into one role's home screen with a button for every role. Those role buttons are still under Who does what.",
