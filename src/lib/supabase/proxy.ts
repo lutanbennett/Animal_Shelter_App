@@ -20,9 +20,8 @@ import { isPlatformHostname, requestHost } from "@/lib/site-hosts";
  * components always see a valid session) and redirects signed-out users
  * away from everything except the public paths/prefixes above.
  */
-export async function updateSession(request: NextRequest, rewriteTo?: URL) {
-  // rewriteTo: serve a different path than the one asked for (/th/x -> /x), same gate decisions.
-  const pass = () => (rewriteTo ? NextResponse.rewrite(rewriteTo, { request }) : NextResponse.next({ request }));
+export async function updateSession(request: NextRequest) {
+  const pass = () => NextResponse.next({ request });
   let response = pass();
 
   // Read before getUser(): a refresh the server refuses makes the client

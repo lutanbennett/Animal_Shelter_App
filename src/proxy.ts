@@ -70,13 +70,15 @@ export default async function proxy(request: NextRequest) {
       ? initialLocaleCookie(request.cookies.get(localeCookieName)?.value, request.headers.get("accept-language"))
       : null;
   if (start) request.cookies.set(localeCookieName, start);
-  let rewriteTo: URL | undefined;
+  // The /th/<page> -> /<page> mapping is next.config.ts rewrites(), keyed on this header. It is NOT a
+  // NextResponse.rewrite here: that carried an absolute URL built from the visitor's host and scheme, and behind
+  // the Worker (Host localhost:3001, https, server bound to 127.0.0.1) Next read it as another origin and
+  // proxied it outward over TLS: HTTP 500 on /th (#thpfx). The pathname below only tells the gate which page this is.
   if (thRest) {
     request.headers.set(localePathHeader, "th");
     request.nextUrl.pathname = thRest;
-    rewriteTo = request.nextUrl.clone();
   }
-  const response = await updateSession(request, rewriteTo);
+  const response = await updateSession(request);
   if (start) {
     response.cookies.set(localeCookieName, start, { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
   }
