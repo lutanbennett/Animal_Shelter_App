@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { answerForInsert, cleanEnquiry, ENQUIRY_THANKS, makeThrottle, type EnquiryFields, type EnquiryProblem } from "@/lib/platform/enquiry";
-import { appUrl } from "@/lib/site-hosts";
+import { appUrl, platformUrl } from "@/lib/site-hosts";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /*
@@ -30,7 +30,7 @@ async function mailOwner(row: EnquiryFields) {
   try {
     const to = process.env.SHELTER_ENQUIRY_MAIL_TO?.trim();
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const url = appUrl("/api/releases/mail");
+    const url = platformUrl("/api/releases/mail") ?? appUrl("/api/releases/mail") // test and UAT have no platform host; only there may the staff address stand in;
     if (!to || !key || !url) return;
     const lines = [
       `Shelter: ${row.shelterName}`,

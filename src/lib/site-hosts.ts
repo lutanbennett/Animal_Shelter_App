@@ -82,6 +82,12 @@ export function appUrl(path = "/", env: Record<string, string | undefined> = pro
   return h ? `https://${h}${path}` : null;
 }
 
+/** `https://host/path` for the platform front door (PLATFORM_HOST), or null when it is not set. The platform's own paths use this, never appUrl(): the staff address is a shelter's and the platform must not depend on one (#plsso). */
+export function platformUrl(path = "/", env: Record<string, string | undefined> = process.env): string | null {
+  const h = platformHost(env);
+  return h ? `https://${h}${path}` : null;
+}
+
 export function publicUrl(path = "/", env: Record<string, string | undefined> = process.env): string | null {
   const h = publicHost(env);
   return h ? `https://${h}${path}` : null;
