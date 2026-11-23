@@ -27,3 +27,12 @@ export async function createAuthLogin(email: string): Promise<CreatedLogin> {
 export async function deleteAuthLogin(id: string): Promise<void> {
   await createAdminClient().auth.admin.deleteUser(id);
 }
+
+/**
+ * Opens a login's first authenticator set-up window (the same app_metadata createAuthLogin sets). Called only after
+ * product_admin_access_add / _set_role (0438) accepted the login for the shelter's Admin role. It touches no table.
+ */
+export async function openAuthSetup(userId: string): Promise<void> {
+  const { error } = await createAdminClient().auth.admin.updateUserById(userId, { app_metadata: { [SETUP_OPEN_UNTIL]: setupWindowEnd() } });
+  if (error) console.error("[platform.openAuthSetup]", error);
+}
