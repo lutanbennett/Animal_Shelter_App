@@ -1249,6 +1249,16 @@
         "reason": "PADMIN list (docs/decisions/2026-11-20-shelter-state-schema.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. It writes only shelters.archived_at; nothing else is touched. It grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
       },
       {
+        "migration": "0437_shelter_one_name_typed_once.sql",
+        "item": "function public.product_admin_create_shelter definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-23-shelter-name-columns.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. Same body as 0414, now also setting display_name and short_name from the one name. It grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0437_shelter_one_name_typed_once.sql",
+        "item": "function public.product_admin_set_shelter_names definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-23-shelter-name-columns.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. Same body as 0424, now also writing shelters.name. It grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
         "migration": "0436_product_admin_set_shelter_site.sql",
         "item": "function public.product_admin_set_shelter_site definer",
         "reason": "PADMIN list (docs/decisions/2026-11-20-shelter-state-schema.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan’s 2026-11-18 decision. It writes only shelters.public_site (open, locked or off); the deployment floor still wins when more closed. It grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
