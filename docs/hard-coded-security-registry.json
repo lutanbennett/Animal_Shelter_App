@@ -829,6 +829,11 @@
         "reason": "docs/decisions/2026-11-21-my-shelters-function.md: no card exists for \"which shelters am I at\" and none is invented, because it would grant nothing. Security definer only so it can read user_roles, shelters and shelter_hosts across the 0392 per-shelter policies. It takes no argument, answers only for auth.uid(), and returns only shelters that login already holds a role at. It grants nobody anything."
       },
       {
+        "migration": "0439_my_shelters_says_what_it_found.sql",
+        "item": "function public.my_shelters definer",
+        "reason": "Same function as 0433, recreated with two more columns (host null when no primary address, archived) so a shelter you hold a role at is listed with the reason rather than omitted (#shmis, docs/decisions/2026-11-25-my-shelters-blank.md). Still no argument, still answers only for auth.uid(), still returns only shelters that login already holds a role at. It grants nobody anything."
+      },
+      {
         "migration": "0393_anon_may_run_is_trusted_caller.sql",
         "item": "grant to anon",
         "reason": "EXECUTE on is_trusted_caller() so the 0392 restrictive policies can be evaluated for anon reads (a policy runs with the querying role's rights). The function is security invoker and reads only the JWT role claim; it grants anon nothing it could not do. docs/decisions/2026-11-17-tenancy-part5-policies.md."
