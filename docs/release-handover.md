@@ -1,129 +1,124 @@
-# Release handover — written 2026-11-23 after `0.49.0`
+# Release handover
 
-A **delta** on the last edition, not a runbook. `docs/release-procedure.md` is the runbook and outranks
-this file; `docs/releases/2026-11-23-0-49-0.md` is this release's record and holds the figures. Where
-this file and either of those disagree, they are right.
+**This outranks nothing.** `docs/release-procedure.md` is the runbook and `CLAUDE.md` the rules; where
+this disagrees with either, they win. It is one chat's note to the next, rewritten every release, and
+a wrong line here is corrected by its successor rather than by a reviewer — which is why it merges on
+green like any other PR.
 
-## START HERE
+**Written after `0.49.1` (2026-11-25, minor, no email, one touch).**
 
-**`0.49.0` is live on all four hosts, both endpoints, every one served by the Pi and every one reporting
-`9fc01bdc6`. It mailed.** Subject `[Production] …`, sender `Lanna Care Production`, delivered 05:07 UTC.
+## Where things stand
 
-**`#w4k9n` (e) was closed by `0.48.0` yesterday, NOT by this release.** Today is a re-confirmation on a
-second consecutive mailing release. **Do not announce that proof a third time** — a record that
-re-announces a settled question is how a settled thing gets re-opened.
+- **Live everywhere: `0.49.1 @ ba6603e5b`** on both endpoints, all four hosts, all `served-by: pi`.
+- **Migrations: `0438` is the highest applied** on production and UAT. Dev/test is ahead of nothing —
+  check with `--status` before assuming.
+- **Nothing is waiting on Lutan from this release** except the test gaps below, which are his to look
+  at rather than decide.
 
-**No migration, and none pending** — both deploy databases were already at `436 applied, 0 pending`
-before the cut, and both read `No drift` after. First release in several with no database step at all.
+## The three things worth knowing before your next release
 
-**Cost to Lutan: two touches, the target met.** His answer about the email (unprompted, in his first
-sentence) and the one command. `0.48.0` cost the same two plus **four progress checks** caused by my
-silence; this release reported at each build boundary instead, and he asked for nothing.
+### 1. A minor release's no-mail needs the CONTROL, not just the absence
 
-**Re-measure before trusting any of this.** Every figure was read on 2026-11-23.
+`cut-release.mjs --verify` prints two lines, and a minor release is only proved by both:
 
-## THE LESSON OF THIS RELEASE: THE 24-HOUR LOOP IS REAL, SO WRITE THE GAP DOWN PROPERLY
+```
+ok   mail ABSENCE: majorReleasesSince(previous) is empty  [[]]
+ok   control: from further back, an older major release is still found  [0.49.0 in ["0.49.0"]]
+```
 
-`#thpfx` — the `/th` addresses returning 500 — was **found during `0.48.0`'s own verification yesterday,
-filed with its full measurement, fixed by a stream (#1847) overnight, and proved on production today.**
+Without the control, an empty answer and a broken query are indistinguishable. Then **both your
+Worker deploys say it independently** (`no major release new to <env>, so no email`), and **UAT's is
+the one that counts** — UAT has a live `RELEASE_MAIL` binding and its database holds production's
+real people. Pass `--no-mail` anyway, as the runbook says.
 
-| address | before (`0.48.0`) | after (`0.49.0`) |
-|---|---|---|
-| `cooperjaidee.org/th/platform/about` | **500** | **200** |
-| `lannacareforanimals.org/th` · `test` · `uat` | **500** each | **200** each |
-| `lannacareforanimals.org/th/adopt` | 307 | 307, unchanged (the lock) |
+### 2. `tail` has now cost this project three separate faults. Stop piping.
 
-**Two things made that loop work, and both are cheap to repeat.** The item carried the *pattern* rather
-than the symptom — where the rewrite had to render it failed, where it only redirected it didn't — which
-is what let a stream fix it without rediscovering anything. And it said in terms that **the production
-proof was not a stream's**, so the release manager knew to take it rather than leaving it pending.
+On `0.49.1` I read `check-deferred-notes.mjs` through `tail -6`, concluded "all six", and wrote that
+into `--deferred-reviewed` — when the guard actually lists **12 that may owe a note and 8 others**.
+Nothing wrong reached disk, because that flag is a gate and is not persisted, but the claim was
+false when I made it.
 
-**Take the BEFORE reading while the old release is still live.** I captured all four hosts at 500 before
-the deploy, so the fix has a measured before-and-after instead of an assertion. Thirty seconds, and it is
-the difference between a proof and a claim. **And prove it by reading the page, not the status code:**
-`/th/platform/about` returns 6,249 Thai characters with `lang="th"` and a Thai `<h1>`.
+**Redirect to a file and read it.** `CLAUDE.md` already bans reading exit codes through a pipe (a
+crashed script once printed a stack trace and `EXIT: 0`, which was `tail`'s status), and the runbook
+already warns that `| tail -40` on a deploy discards exactly the head you need. **This is the same
+fault on output rather than status**, and it is most dangerous when the truncated part is the part
+you are about to make a claim about.
 
-## PRODUCTION'S EDGE WENT STALE AND THE ASSET CHECK CAUGHT IT — BELIEVE THAT CHECK
+### 3. A plan with no `Result:` and 23 unticked boxes was fine
 
-Production's Pi deploy ended **`check-assets: FAILED`**: the served page still referenced
-`1c08nzsjqn8gi.css`, **yesterday's** stylesheet, absent from this build. The script's own words:
-*"This is what a poisoned Cloudflare cache looks like: the app renders with no styling."*
+`console-shelter-access.md` reached `main` looking abandoned. **Read it before concluding anything**:
+every unticked line carried a reason and most were `deferred: release manager` — the release's own
+work. Since 2026-11-05 a half-written plan passes `check-test-plan` and reports as *still being
+written*, so this is now the normal mid-flight state rather than a defect. Its `Result:` is yours to
+write when you tick those lines.
 
-**Purge, then re-run the check.** Both production hosts then served `28fyh-mrlfqlu.css`, 95,498 bytes,
-identical to the build. Two minutes, because the check was believed rather than argued with.
+## Two mechanical things that will save you fifteen minutes
 
-**Test's and UAT's checks passed first time**, same build, same minute. **Why production's zone alone
-went stale is NOT established** and the record says so rather than inventing a cause. What follows for
-the next release manager is only this: **the purge is not a formality, and a red asset check is right.**
+### `deferred:` only exists in the pre-production gate
 
-## STOP CARRYING: `sync-home-icons` WORKS AGAIN
+Everywhere else — sections 3 and 7 especially — a line is ticked, `n/a: <reason>`, or
+`pending: <what is outstanding>`. My cut plan failed the checker on five lines for exactly this, plus
+a sixth: **a ticked release-notes line is held to the PR's own diff** — even when the answer is `n/a`. A cut *empties*
+`unreleased` rather than adding to it, so that line is `- [ ] **Release notes.** n/a: …`.
 
-It exited **1** on `0.47.10` and on `0.48.0`, both times on *"`PLATFORM_DRIVE_FOLDER_ID` is not set for
-production"*, and both records carried it as an open gap. **#1841 registered that name this release and
-the script now uploads for real** (536 images across 67 pages). **That also settles what `0.48.0`'s
-record could only state**: `0.47.9`'s claimed exit 0, two later releases got exit 1, and the cause was a
-missing variable the whole time.
+**It bit twice in one release** — the cut plan, then the record plan, where the reason is plainly `n/a` and ticking it still feels right. The rule is about the tick, not the reason: documents PRs leave it unticked.
 
-**The tell was in the deploy output, not in the script:** `strip-baked-env` removed **23** env vars
-against 22 yesterday, and naming the new one found it. Reading that count rather than skimming it is
-worth the ten seconds.
+### UAT refuses a dirty tree, and it is right to
 
-## A DOCUMENTED TRAP, MET IN PRACTICE
+`deploy: uat deploys only from a clean, pushed main` — *working tree has uncommitted changes*. On
+`0.49.1` that was one untracked 214 KB data file left loose in the main checkout. **Move it to
+`.local/`** (gitignored, which is where `CLAUDE.md` puts data to keep but never commit); do not
+delete it and do not look for a force flag. `git status --short` in the main checkout before you
+start the UAT deploy costs nothing.
 
-An hour before the release, during `/clean-streams`, `node … done <slug> | tail` printed **`EXIT: 0` for
-a script that had crashed part-way**. That is the runbook's *Read an exit code from the script, never
-through a pipe*, exactly as written. Re-running without the pipe showed the real state and finished the
-job, and all three places were then checked by hand.
+## A migration that rewrites rows: take the before-picture, keep it
 
-**Every exit code in the release itself was read from the command**, and the record says so. **Reading
-that paragraph is not the same as having been bitten by it** — if you have not, assume you will be.
+`0437` had a backfill, so the runbook's rule applied. `check-shelter-settings.mjs --env <env>` read
+both environments first, and both backfill statements turned out to be **blanks-only** against
+columns that were already populated — so they matched **zero rows**, confirmed byte-identical
+afterwards.
 
-## Traps that cost nothing this time but will
+**That is the outcome you want and it still needs doing**, because "it only fills blanks" is a claim
+about the file and "there are no blanks" is a claim about the data. Only the second one lets you skip
+the backup, and only a read establishes it.
 
-- **His log is UTF-16.** `head -c 2` printed `377 376`; `tr -d '\000'` before grepping is what made it
-  readable. The runbook's paragraph is correct — follow it, don't rediscover it.
-- **The three Server Actions keys look like a fault if compared across environments.** Production
-  `cbd55beae8d8`, test `ecc41837fc0b`, UAT `cdeca9cbc4de`, each matching its own Pi build. Within an
-  environment only.
-- **`audit:register` passing is not `audit:prod` passing.** The register admits high and critical only,
-  so the same **moderate** (`GHSA-g3hv-75wg-m249`, `minimatch`, build-time tooling) sits outside it by
-  design. Read both, and cite the previous release rather than re-deriving it.
-- **The OpenNext bundling stage can go quiet for minutes and be perfectly healthy.** UAT's wrote 0 files
-  for ~180 s while a node process grew to **1,877 MB with 238 s of CPU**. **When the file-age check is
-  ambiguous, read the process** — that settles it in one command.
-- **Watch the directory the current stage writes.** During `next build` that is `.next`, not
-  `.open-next`, which can sit untouched for ten minutes while everything is fine.
-- **One Pi build at a time.** Swap peaked at 2.6 GiB of 6 GiB on a 4 GiB box; three at once is not
-  possible, and that is why `setup.sh` adds the swap.
+## The tenancy catalogue: read the baseline BEFORE you apply
 
-## What is still open — six items, all his
+`check-tenancy-catalogue.mjs --env production` is **report-only and always exits 0**, so it will
+never stop you — which is exactly why it gets skipped.
 
-- **The money page's 375px view and its Thai wording** (#1842) — **this release's only note describes
-  that page, so the headline and the biggest gap are the same thing.**
-- **Two reels uploads from his phone** (#1846, then #1849, which needs the first).
-- **The Calendar console look and a real connect** (#1845).
-- **His decision on `#rlbat`'s metadata behaviour** — a decision, not a test; named so it is not
-  mistaken for an unchecked box.
-- **The pinned backlog page after a republish** (#1839), cosmetic.
+Production was **123 flagged / 7 allowed / 0 stale** before `0.49.1`'s migrations and **130 / 7 / 0**
+after: **exactly the seven** definer functions `0436` and `0438` add, none of which is catalogued and
+neither of which re-owns them. That is `#tnycl`, filed. **The delta is only available if you read it
+first**, and the delta is the whole finding — 130 on its own says nothing, because 123 were already
+flagged.
 
-**`#pnote` is filed and is nobody's blocker:** two consecutive notes now tell every shelter user about
-the product site. `0.48.0`'s record observed it, this one did not observe it twice — it is a backlog item
-with its three shapes and a warning never to alter a note during a cut.
+## Pi builds: serial, pre-flighted, detached
 
-**Dev still carries one extra `schema_migrations` row**, `0422_keep_an_admin_per_shelter.sql`, with no
-file ever in git under that name. Known, dev-only, **unchanged across three releases** — not drift to
-chase.
+One at a time (`next build` peaks above 6 GB on a 4 GiB Pi), each log read before the next starts.
+**Pre-flight the box first** — `ssh lanna-pi-mesh` with `free -m` and `uptime` — so a connection
+problem surfaces before a build rather than during one. On `0.49.1`: 3158 MB available, load 0.00,
+and all three builds passed first time.
 
-## Now routine — stop treating these as open
+**Use `lanna-pi-mesh`, never `lanna-pi.local`.** Do not put the route to Lutan as a question; it is
+recorded as in place and asking has cost a touch before.
 
-UAT's three one-time needs are done (since 2026-11-09), the mesh alias to the Pi is in place, and
-`test-plan` is **advisory, permanently**. All three are in the runbook; none is a decision he owes.
+**One Worker deploy may run alongside one Pi build**, which is where the wall-clock saving is. The
+Pi's `setsid nohup` build survives the SSH session ending, so a foreground timeout on the starting
+command is not a failed build — read the log on the Pi before concluding anything.
 
-## The two touches that are his, and stay his
+## Outstanding, and none of it blocks a release
 
-**The email question** — put as *"should this release email you?"*, never as the two words — and the
-**production Worker deploy**. He has now answered the first unprompted three releases running.
+Nine test gaps from `0.49.1`, listed in `docs/releases/2026-11-25-0-49-1.md`. Two are worth carrying
+forward:
 
-**And tell him the mail reaches one person.** The shelter's own address is not on the production admin
-list and `lannacareforanimals@gmail.com` is skipped with `E_RECIPIENT_NOT_ALLOWED`, so "mails every
-admin" overstates the lever. He knows; say it anyway rather than implying a wider audience.
+- **Lutan uploading several clips from his phone.** `#rlprg`'s first half shipped with a warning
+  note; **the per-clip progress half shipped with no note on purpose**, because it was never shown
+  working in a browser. If he reports on it, that is when the note is owed.
+- **Four of the nine are phone-width looks that can be driven**, not handed over —
+  `admin-home-role-chips` closed its own that way in headless Chrome with a mobile user agent
+  (`#bprf7`). Offer it; do not quietly add it to his list.
+
+**`0.49.0`'s production cache fault did not recur.** Production passed first time, after the purge,
+and after the Worker deploy. Why the two releases differed is **not established** — purge both zones
+every time regardless, and if it happens a third time there are now two data points.
