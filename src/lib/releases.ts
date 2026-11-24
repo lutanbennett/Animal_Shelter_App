@@ -71,6 +71,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "Recent changes now marks any change made by someone from outside your shelter (such as product support) with an \"Outside the shelter\" label beside their email, so you can tell without knowing their name.",
+    admin: true,
+  },
+  {
     text: "The CooperJaidee product site now has a page for each of its subjects (resident records, medical care, adoptions and fostering, volunteers and staff, the public website, and money), in English and Thai, with a menu at the top of every page to move between them.",
     admin: true,
   },
