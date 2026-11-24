@@ -9,12 +9,12 @@
 |---|---|
 | Feature | Calendar connect asks Google for calendar.app.created and makes its own calendar |
 | Backlog item | `docs/backlog.md` → #calsc |
-| Branch / worktree | `claude/calendar-narrow-scope` @ `C:\Development\Animal_Shelter_calendar-narrow-scope` |
-| Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3006` |
+| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | see PR |
 | Tested by / date | Claude, 2026-11-23 |
 | Carries a migration? | no |
-| Tested at SHA | d8ceef8af |
+| Tested at SHA | undefined |
 
 ## 1. Scope and risk
 
@@ -43,11 +43,7 @@ indistinguishable from one that passed.
 - [x] `node scripts/gates.mjs`, run in this worktree:
 
 ```
-=== gates: typecheck exited 0 after 52s
-=== gates: lint exited 0 after 138s
-=== gates: test exited 0 after 32s
-=== gates: build exited 0 after 126s
-gates: typecheck=0 lint=0 test=0 build=0
+undefined
 ```
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
