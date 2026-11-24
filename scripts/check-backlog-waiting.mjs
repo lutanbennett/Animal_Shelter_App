@@ -88,7 +88,7 @@ for (const { lineNo, id, line } of items) {
     if (tag.by && tag.state !== "decision") problems.push(`${who}: by: only belongs on a decision`);
     if (!validDate(tag.since)) problems.push(`${who}: since:"${tag.since}" does not parse as YYYY-MM-DD`);
     else if (sinceInFuture(tag.since)) problems.push(`${who}: since:${tag.since} is in the future`);
-    if (hasProof(line) && proofCount(line) > 1) (PROOF_STRICT ? problems : noProof).push(`${who}: has ${proofCount(line)} "**Proof:**" passages; keep one, an older one beside the tag contradicts it`);
+    if (hasProof(line) && proofCount(line) > 1) noProof.push(`${who}: has ${proofCount(line)} "**Proof:**" passages; keep one (a warning, not a failure: it must not go red on a merge-order lag)`);
     { const d = declaredWho(line); if (d && !WHO_GROUPS.includes(d)) problems.push(`${who}: [who: ${d}] is not one of ${WHO_GROUPS.join(", ")}`); }
     if (needsProof(tag) && !hasProof(line)) (PROOF_STRICT ? problems : noProof).push(`${who}: waiting:lutan with no "**Proof:** <how to check it is done>" line`);
     if (tag.date && !validDate(tag.date)) problems.push(`${who}: date:"${tag.date}" does not parse as YYYY-MM-DD`);

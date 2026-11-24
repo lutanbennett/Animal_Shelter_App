@@ -33,10 +33,7 @@ was rewritten here, and the marker is there for the day a misplacement matters.
 
 ## A second `**Proof:**` in one item
 
-`#pacon` carried two, so the printer showed the stale one beside a tag that contradicted it. **Chosen: an error in
-the strict check** (a warning in `--proofs`, naming the item and the count). A stale proof beside a live tag is
-what `#prvln` exists to prevent, and the pre-commit hook then catches it at the planner's own edit. `BACKLOG_PROOF_STRICT=0`
-turns it back into a report, as for the other proof faults. Live backlog: none have two.
+`#pacon` carried two, so the printer showed the stale one beside a tag that contradicted it. **Chosen: a warning**, in both `--proofs` (names the item and the count) and the strict check (reported, exit 0). First built as an error, and CI went red on PR #1875: `main` still carried `#pacon`'s two passages, because the planner's fix sits on the `backlog` branch until the daily merge, so an error would turn every PR red for that lag. A warning cannot do that, and `--proofs` is what the planner reads before naming him.
 
 ## Deliberately not automated
 
