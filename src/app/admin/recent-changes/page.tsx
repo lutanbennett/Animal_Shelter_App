@@ -48,9 +48,10 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
   const filters = parseFilters(await props.searchParams);
 
   const supabase = await createClient();
+  const admin = createAdminClient();
   const [page, users, detail] = await Promise.all([
     loadPage(supabase, filters),
-    listUsersOfShelter(createAdminClient(), await actingShelterId()),
+    listUsersOfShelter(admin, await actingShelterId()),
     filters.open ? loadDetail(supabase, filters.open) : Promise.resolve(null),
   ]);
 
@@ -60,7 +61,6 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
   const unknownActors = [...new Set(page.entries.map((e) => e.actor).filter((a): a is string => !!a && !ownIds.has(a)))];
   const outsiders = new Map<string, string>();
   if (unknownActors.length > 0) {
-    const admin = createAdminClient();
     const { data: pas } = await admin.from("product_admins").select("user_id").in("user_id", unknownActors);
     for (const pa of pas ?? []) {
       const id = pa.user_id as string;
