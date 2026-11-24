@@ -1,4 +1,4 @@
-# Feature test plan
+| Tested at SHA | 56b1c04f2 || Carries a migration? | yes: 0439 || Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3008` || Branch / worktree | `claude/my-shelters-blank` @ `C:DevelopmentAnimal_Shelter_my-shelters-blank` || Backlog item | `docs/backlog.md` → #shmis |# Feature test plan
 
 
 ---
@@ -234,8 +234,8 @@ Manual verification by: pending: 375px width and console of /platform/shelters n
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR — n/a: pasted into the PR body at creation
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — n/a: the release manager reads the PR and this plan at deploy time
 
 Result: pass
 
-Release manager acknowledgement: <name>  Date: <yyyy-mm-dd>
+Release manager acknowledgement: pending: the release manager signs at deploy time
