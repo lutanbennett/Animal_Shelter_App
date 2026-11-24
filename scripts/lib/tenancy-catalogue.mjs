@@ -31,6 +31,30 @@ export const ALLOWED = {
     reason:
       "reads auth.users, which a re-owned role is refused (42501), so it stays owned by postgres, as login_display_name does. Gated by is_product_admin() and aal2 (docs/decisions/2026-11-19-product-admin-state-schema.md).",
   },
+  "function:public.product_admin_shelter_access": {
+    reason:
+      "reads auth.users (left join, for each login email), which a re-owned role is refused (42501), so it stays owned by postgres, as login_display_name does (0438 line 14, precedents 0417 and 0425). Gated by is_product_admin() and aal2 (docs/decisions/2026-11-25-tenancy-catalogue-seven.md).",
+  },
+  "function:public.product_admin_access_add": {
+    reason:
+      "reads auth.users (looks the email up to find the login), which a re-owned role is refused (42501), so it stays owned by postgres, as login_display_name does (0438 line 14, precedents 0417 and 0425). Gated by is_product_admin() and aal2 (docs/decisions/2026-11-25-tenancy-catalogue-seven.md).",
+  },
+  "function:public.product_admin_shelter_roles": {
+    reason:
+      "reads public.roles / user_roles with no shelter header set, so under rls_definer (a member of authenticated) the restrictive shelter_scope_select policy hides every shelter but the console's own: measured on dev 2026-11-25, shelter_roles returned 0 rows (1 under postgres) and access_set_role failed with \"no such role in this shelter\". Stays owned by postgres; re-owning needs a body change that sets the shelter header, as 0436 does. Gated by is_product_admin() and aal2 (docs/decisions/2026-11-25-tenancy-catalogue-seven.md).",
+  },
+  "function:public.product_admin_access_would_lock_out": {
+    reason:
+      "reads public.roles / user_roles with no shelter header set, so under rls_definer (a member of authenticated) the restrictive shelter_scope_select policy hides every shelter but the console's own: measured on dev 2026-11-25, shelter_roles returned 0 rows (1 under postgres) and access_set_role failed with \"no such role in this shelter\". Stays owned by postgres; re-owning needs a body change that sets the shelter header, as 0436 does. Gated by is_product_admin() and aal2 (docs/decisions/2026-11-25-tenancy-catalogue-seven.md).",
+  },
+  "function:public.product_admin_access_set_role": {
+    reason:
+      "reads public.roles / user_roles with no shelter header set, so under rls_definer (a member of authenticated) the restrictive shelter_scope_select policy hides every shelter but the console's own: measured on dev 2026-11-25, shelter_roles returned 0 rows (1 under postgres) and access_set_role failed with \"no such role in this shelter\". Stays owned by postgres; re-owning needs a body change that sets the shelter header, as 0436 does. Gated by is_product_admin() and aal2 (docs/decisions/2026-11-25-tenancy-catalogue-seven.md).",
+  },
+  "function:public.product_admin_access_remove": {
+    reason:
+      "reads public.roles / user_roles with no shelter header set, so under rls_definer (a member of authenticated) the restrictive shelter_scope_select policy hides every shelter but the console's own: measured on dev 2026-11-25, shelter_roles returned 0 rows (1 under postgres) and access_set_role failed with \"no such role in this shelter\". Stays owned by postgres; re-owning needs a body change that sets the shelter header, as 0436 does. Gated by is_product_admin() and aal2 (docs/decisions/2026-11-25-tenancy-catalogue-seven.md).",
+  },
   "function:public.product_admin_permit_first_login": {
     reason:
       "reads auth.users, which a re-owned role is refused (42501), so it stays owned by postgres, as login_display_name does (0425 line 67, precedents 0417 and 0370). Re-owning it would break first login (docs/decisions/2026-11-21-tenancy-catalogue-flags.md).",
