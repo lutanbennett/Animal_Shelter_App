@@ -230,12 +230,31 @@ search engines are told to stay away. The three states are `open`, `locked` and 
 **There are two locks, and the more closed of the two wins.** One is the shelter's
 own setting. The other is the **deployment floor**, `PUBLIC_SITE` in
 `wrangler.jsonc`, one value for the whole environment. A shelter can only ever be
-*more* closed than the floor, never less. **Production's floor is `locked`
-(Lutan's decision of 2026-11-05).** So **while production runs `locked`, setting a
-shelter to `open` changes nothing a visitor can see, on any shelter.** If you press
-it and still see the construction page, **that is the floor, not a mistake of
-yours.** Raising the floor is Lutan's decision (backlog `#pl7aq`) and is not a step
-in this runbook.
+*more* closed than the floor, never less. **Production's floor was `locked` (Lutan,
+2026-11-05) and is `open` from 2026-11-25, on his instruction**, so on production each
+shelter's own setting now decides. UAT stays `locked` and test stays `off`. While a floor
+is more closed than a shelter, setting that shelter to `open` changes nothing a visitor
+can see, and the console says so in words on the shelter's Summary and Website tab.
+
+### Lifting a floor: the order matters, and the order is the safety
+
+**The trap.** Migration `0426` set Lanna's OWN value to `open`. It has been invisible only
+because the floor was `locked`. **Lift the floor before Lanna's own value reads `locked` and
+lannacareforanimals.org is public the moment the deploy lands.**
+
+1. **Set Lanna's own website to `locked`** in the console (Website tab, **Lock the website**).
+   **[Product administrator]** Invisible while the floor is closed, so it is safe first.
+2. **Read it back**: reload the console, open Lanna's Website tab, and confirm it says locked.
+   Do not trust the press; trust the reloaded screen. **[Product administrator]**
+3. **Only then change the floor** in `wrangler.jsonc` and deploy it. **[LUTAN ONLY]**
+   **Do not deploy unless step 2 read `locked`.**
+4. **Check from outside**: a signed-out request to lannacareforanimals.org still gets the
+   construction page (the Worker remembers a host for 60 seconds, `worker/shelter.mjs:18`, so
+   allow a minute), `/robots.txt` still refuses crawlers for that host, a newly created shelter
+   is still locked (its column default), and a shelter switched to `open` in the console now
+   serves its site.
+
+Doing 3 before 1 publishes Lanna. A new shelter is born locked either way.
 
 **How to change a shelter's own setting:** in the console, open the shelter, its
 **Website** tab, and press **Open the website**, **Lock the website** or **Switch the
