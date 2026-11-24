@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "Product console: a shelter's website now says when the whole deployment is holding it more closed than the shelter's own setting, so a shelter set to open no longer reads as open while its visitors still see the construction page.", admin: true },
 ];
 
 /** Newest first. */
