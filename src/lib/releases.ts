@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "My shelters now lists every shelter you hold a role at: one with no website address yet, or one that has been closed, is shown with the reason instead of being left out, and a sign-in with no shelters gets a sentence instead of a blank page. The not-a-product-admin page now has one My shelters button.", admin: true },
   { text: "Product console: a shelter's website now says when the whole deployment is holding it more closed than the shelter's own setting, so a shelter set to open no longer reads as open while its visitors still see the construction page.", admin: true },
 ];
 
