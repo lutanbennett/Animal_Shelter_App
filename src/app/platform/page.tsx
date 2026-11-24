@@ -4,7 +4,7 @@ import { stepUpHref, hasTwoStep } from "@/lib/auth/two-step";
 import { isProductAdmin } from "@/lib/auth/product-admin";
 import { getT } from "@/lib/i18n/get-t";
 import { deploymentSiteState } from "@/lib/public-site";
-import { appHost, isPlatformHostname, platformHost, requestHost } from "@/lib/site-hosts";
+import { isPlatformHostname, platformHost, requestHost } from "@/lib/site-hosts";
 import { createClient } from "@/lib/supabase/server";
 import { checkDatabase } from "@/lib/status/health";
 import { runCheck } from "@/lib/status/run";
@@ -31,11 +31,10 @@ export default async function PlatformPage() {
   const { t } = await getT();
   if (!(await isProductAdmin())) {
     // #cjred: a signed-in login that is not on the list is told where to go, and nothing about what is here.
-    const app = appHost();
     return (
       <main className="flex flex-1 flex-col gap-3 p-6">
         <p className="max-w-prose text-sm text-foreground">{t.admin.productAdmin.wrongDoor}</p>
-        <a href={app ? `https://${app}/home` : "/home"} className="w-fit text-sm font-medium text-primary underline">
+        <a href="/platform/shelters" className="w-fit text-sm font-medium text-primary underline">
           {t.admin.productAdmin.wrongDoorLink}
         </a>
       </main>
