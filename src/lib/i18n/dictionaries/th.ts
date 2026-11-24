@@ -1938,6 +1938,7 @@ const th: Dictionary = {
       },
       cols: { when: "เมื่อ", who: "ใคร", what: "ทำอะไร", record: "รายการ", fields: "ช่อง" },
       unknownUser: "ไม่รู้จักบัญชีนี้",
+      outsider: "จากภายนอกศูนย์",
       viaCalendar: "ผ่าน Google Calendar",
       unnamedRecord: "(ไม่มีชื่อ)",
       cardIncludes: (card: string, included: string) => `${card} รวม ${included} ไว้ด้วย`,

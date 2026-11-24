@@ -48,11 +48,26 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
   const filters = parseFilters(await props.searchParams);
 
   const supabase = await createClient();
+  const admin = createAdminClient();
   const [page, users, detail] = await Promise.all([
     loadPage(supabase, filters),
-    listUsersOfShelter(createAdminClient(), await actingShelterId()),
+    listUsersOfShelter(admin, await actingShelterId()),
     filters.open ? loadDetail(supabase, filters.open) : Promise.resolve(null),
   ]);
+
+  // An OUTSIDER (#a4k2p): an actor who is a product administrator and is not one of this shelter's own logins.
+  // Derived at read time from product_admins and the shelter's user list; nothing is written for it, and no role is named.
+  const ownIds = new Set(users.users.map((u) => u.id));
+  const unknownActors = [...new Set(page.entries.map((e) => e.actor).filter((a): a is string => !!a && !ownIds.has(a)))];
+  const outsiders = new Map<string, string>();
+  if (unknownActors.length > 0) {
+    const { data: pas } = await admin.from("product_admins").select("user_id").in("user_id", unknownActors);
+    for (const pa of pas ?? []) {
+      const id = pa.user_id as string;
+      const { data: u } = await admin.auth.admin.getUserById(id);
+      outsiders.set(id, u?.user?.email ?? id);
+    }
+  }
 
   // An entry is undoable only while it is the newest change to its row; the
   // action checks again, this decides whether to offer the button.
@@ -226,7 +241,12 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
                       {formatDateTime(e.at, locale)}
                     </td>
                     <td data-label={s.cols.who} className="px-3 py-2 block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] lg:table-cell lg:before:hidden">
-                      {e.actor ? (actorLabel.get(e.actor) ?? s.unknownUser) : e.viaCalendar ? s.viaCalendar : s.filters.system}
+                      {e.actor && outsiders.has(e.actor) ? (
+                        <>
+                          <span className="mr-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-900">{s.outsider}</span>
+                          {outsiders.get(e.actor)}
+                        </>
+                      ) : e.actor ? (actorLabel.get(e.actor) ?? s.unknownUser) : e.viaCalendar ? s.viaCalendar : s.filters.system}
                     </td>
                     <td data-label={s.cols.what} className="px-3 py-2 font-medium text-foreground block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] lg:table-cell lg:before:hidden">{s.kinds[e.kind]}</td>
                     <td data-label={s.cols.record} className="px-3 py-2 block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] lg:table-cell lg:before:hidden">

@@ -49,7 +49,7 @@
     {
       "id": "src/app/admin/recent-changes/page.tsx#RecentChangesPage",
       "classification": "filtered",
-      "reason": "Actor names come from listUsersOfShelter(acting shelter): logins holding a role in the shelter, plus role-less access requests; another shelter's logins are never listed."
+      "reason": "Actor names come from listUsersOfShelter(acting shelter): logins holding a role in the shelter, plus role-less access requests; another shelter's logins are never listed. It also looks up, by uuid, only actors already on this shelter's audit page who are not its own logins, to see whether they are product administrators (#a4k2p)."
     },
     {
       "id": "src/app/admin/security/actions.ts#openSetupForNewAdmin",

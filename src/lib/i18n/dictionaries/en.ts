@@ -2056,6 +2056,7 @@ const en = {
       },
       cols: { when: "When", who: "Who", what: "What", record: "Record", fields: "Fields" },
       unknownUser: "Unknown login",
+      outsider: "Outside the shelter",
       viaCalendar: "Via Google Calendar",
       unnamedRecord: "(no name)",
       cardIncludes: (card: string, included: string) => `${card} includes ${included}`,
