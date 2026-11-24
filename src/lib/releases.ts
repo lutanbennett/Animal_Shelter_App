@@ -70,23 +70,31 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  {
-    text: "Recent changes now marks any change made by someone from outside your shelter (such as product support) with an \"Outside the shelter\" label beside their email, so you can tell without knowing their name.",
-    admin: true,
-  },
-  {
-    text: "The CooperJaidee product site now has a page for each of its subjects (resident records, medical care, adoptions and fostering, volunteers and staff, the public website, and money), in English and Thai, with a menu at the top of every page to move between them.",
-    admin: true,
-  },
-  "When you add several video clips to a reel at once, the page now warns you that your phone needs a moment to get them ready, and suggests a few clips at a time. The photo library can look stuck while it does; that is the phone, and it closes by itself.",
-  {
-    text: "Pressing Home as Admin on a phone now opens Settings, the same as on a computer, instead of dropping you into one role's home screen with a button for every role. Those role buttons are still under Who does what.",
-    admin: true,
-  },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.49.1",
+    date: "2026-11-25",
+    title: "Outside-the-shelter changes marked, product site pages, a warning before a multi-clip reel, and Admin's phone Home",
+    major: false,
+    notes: [
+      {
+        text: "Recent changes now marks any change made by someone from outside your shelter (such as product support) with an \"Outside the shelter\" label beside their email, so you can tell without knowing their name.",
+        admin: true,
+      },
+      {
+        text: "The CooperJaidee product site now has a page for each of its subjects (resident records, medical care, adoptions and fostering, volunteers and staff, the public website, and money), in English and Thai, with a menu at the top of every page to move between them.",
+        admin: true,
+      },
+      "When you add several video clips to a reel at once, the page now warns you that your phone needs a moment to get them ready, and suggests a few clips at a time. The photo library can look stuck while it does; that is the phone, and it closes by itself.",
+      {
+        text: "Pressing Home as Admin on a phone now opens Settings, the same as on a computer, instead of dropping you into one role's home screen with a button for every role. Those role buttons are still under Who does what.",
+        admin: true,
+      },
+    ],
+  },
   {
     version: "0.49.0",
     date: "2026-11-23",
