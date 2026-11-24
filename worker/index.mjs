@@ -17,11 +17,11 @@
 //      CACHE_TTL_SECONDS without touching any origin. Keyed by URL and the
 //      `locale` cookie, skipped when a Supabase auth cookie is present (a
 //      signed-in visitor sees a different header) and for RSC payload
-//      requests (same URL, different body). ~1 ms of CPU. While
-//      PUBLIC_SITE is "locked" (src/lib/public-site.ts) this still holds:
-//      a signed-out "/" is the sign-in landing page and is cached as such,
-//      and every other public page is a redirect to /login, which is never
-//      stored (only a 200 is).
+//      requests (same URL, different body). ~1 ms of CPU. Only
+//      while the effective website state is "open" (the more closed of
+//      PUBLIC_SITE and the shelter's own setting, worker/cache-guard.mjs):
+//      a locked or off site's pages, the holding page included, are never
+//      stored, so none outlives the switch (#wbcch).
 //
 //   2. The Pi. When ORIGIN_HOST is set, the request is replayed against it
 //      with a shared secret header (a WAF rule on that hostname rejects
@@ -66,6 +66,7 @@ import openNext from "../.open-next/worker.js";
 import { handleReleaseRequest } from "./release-mail.mjs";
 import { originOrLocal } from "./origin.mjs";
 import { withShelter } from "./shelter.mjs";
+import { siteIsOpenForCache } from "./cache-guard.mjs";
 import { handleCspReport } from "./csp-report.mjs";
 import { withSecurityHeaders } from "./security-headers.mjs";
 import { runLabelDrafts, runTranslations } from "./translations.mjs";
@@ -141,9 +142,10 @@ async function route(request, env, ctx) {
   request = await withShelter(request, env);
 
   const url = new URL(request.url);
-  // A shelter whose website is locked or off (x-public-site, worker/shelter.mjs, #wbsof) is never served from or stored in the edge
-  // cache: a page cached while it was open would otherwise outlive the switch by up to CACHE_TTL_SECONDS. Open is the common case.
-  const cacheable = isCacheable(request, url) && (request.headers.get("x-public-site") ?? "open") === "open";
+  // Never served from or stored in the edge cache unless the EFFECTIVE state is open: the more closed of the deployment floor
+  // (env.PUBLIC_SITE) and the shelter's own setting (x-public-site, #wbsof). Reading only the header let the holding page be
+  // stored while the floor was locked, to be served after it lifted (#wbcch). See worker/cache-guard.mjs.
+  const cacheable = isCacheable(request, url) && siteIsOpenForCache(request, env);
   if (!cacheable) {
     return withHeaders(await serve(request, env, ctx), { "x-lanna-cache": "BYPASS" });
   }
