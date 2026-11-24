@@ -31,6 +31,14 @@ export const ALLOWED = {
     reason:
       "reads auth.users, which a re-owned role is refused (42501), so it stays owned by postgres, as login_display_name does. Gated by is_product_admin() and aal2 (docs/decisions/2026-11-19-product-admin-state-schema.md).",
   },
+  "function:public.product_admin_shelter_access": {
+    reason:
+      "reads auth.users (left join, for each login's email), which a re-owned role is refused (42501), so it stays owned by postgres, as login_display_name does (0438 line 14, precedents 0417 and 0425). Gated by is_product_admin() and aal2 (docs/decisions/2026-11-25-tenancy-catalogue-seven.md).",
+  },
+  "function:public.product_admin_access_add": {
+    reason:
+      "reads auth.users (looks the email up to find the login), which a re-owned role is refused (42501), so it stays owned by postgres, as login_display_name does (0438 line 14, precedents 0417 and 0425). Gated by is_product_admin() and aal2 (docs/decisions/2026-11-25-tenancy-catalogue-seven.md).",
+  },
   "function:public.product_admin_permit_first_login": {
     reason:
       "reads auth.users, which a re-owned role is refused (42501), so it stays owned by postgres, as login_display_name does (0425 line 67, precedents 0417 and 0370). Re-owning it would break first login (docs/decisions/2026-11-21-tenancy-catalogue-flags.md).",
