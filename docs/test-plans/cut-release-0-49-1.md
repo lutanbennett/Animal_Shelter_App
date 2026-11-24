@@ -57,7 +57,7 @@ the deliverable he asked for, not an afterthought.
 - [x] `check-release-order.mjs --worker-deployed 9fc01bdc6f2f1e7c9bb556ba4117ba39aa20dda9` — production and UAT, both directions, nothing pending
 - [x] `check-deferred-notes.mjs` — exit 0, reviewed in full below
 - [x] `node scripts/gates.mjs` — **typecheck=0 lint=0 test=0 build=0**, build in 132s, run on the cut commit itself
-- [ ] CI green on the PR — pending: the PR does not exist at this commit
+- [x] CI green on the PR — **17/17 passed** on run 45449093159, `headSha` read and confirmed equal to the pushed head `1e7e44fee`. `audit` ran for real (a cut changes `package.json`) and passed
 
 ### The deferred-note review, and a correction worth recording
 
@@ -123,9 +123,9 @@ Read with `scripts/check-shelter-settings.mjs --env production` and `--env uat` 
 rewrites nothing.** That is the best available answer and it is why no backup step is claimed below.
 
 - [x] Before-picture taken and recorded above, on both environments, before applying
-- [ ] `--dry-run` against production — pending: run in the deploy section, before the apply
-- [ ] `--dry-run` against UAT — pending: run in the deploy section, before the apply
-- [ ] Apply plan stated — pending: stated in section 8 at apply time
+- [x] `--dry-run` against production — all three files `ok`
+- [x] `--dry-run` against UAT — all three files `ok`
+- [x] Apply plan stated and followed: UAT first as the rehearsal, then production; names read back on both after applying
 - [x] Production backup for a destructive migration — n/a: additive functions, and the one backfill writes zero rows on both environments as measured above
 
 ### 0438 does not breach the card rule, and this was checked rather than assumed
@@ -147,12 +147,12 @@ fail a build. Baseline taken before applying anything: **123 flagged (47 views, 
 tables missing `definer_all`), 7 allowed by name, 0 stale.**
 
 - [x] Baseline recorded above
-- [ ] **Seven new definer functions are NOT on the allow-list** and neither 0436 nor 0438 carries an `alter function … owner to` line, so they keep the connecting role: `product_admin_set_shelter_site`, `product_admin_shelter_roles`, `product_admin_shelter_access`, `product_admin_access_would_lock_out`, `product_admin_access_add`, `product_admin_access_set_role`, `product_admin_access_remove` — pending: re-read the count after applying and record the delta. **Not a blocker**: the lint is report-only, 123 are already flagged, and each new function is gated inside its own body. **Filed as a backlog item**, because an entry with a reason in checkable terms is the thing that catalogue exists to hold
+- [x] **Seven new definer functions are NOT on the allow-list** and neither 0436 nor 0438 carries an `alter function … owner to` line, so they keep the connecting role: `product_admin_set_shelter_site`, `product_admin_shelter_roles`, `product_admin_shelter_access`, `product_admin_access_would_lock_out`, `product_admin_access_add`, `product_admin_access_set_role`, `product_admin_access_remove` — **Delta read after applying: 123 → 130 flagged, functions 76 → 83 — exactly the seven.** Filed as `#tnycl`. **Not a blocker**: the lint is report-only, 123 are already flagged, and each new function is gated inside its own body. **Filed as a backlog item**, because an entry with a reason in checkable terms is the thing that catalogue exists to hold
 
 ## 4. Functional checks
 
 - [x] `/releases` renders the new entry — verified by the cut's own assertions (newest entry, `latestRelease`, compareVersions order)
-- [ ] The four notes read correctly on `/releases` after deploy — pending: read on production after the deploy
+- [ ] The four notes read correctly on `/releases` after deploy — pending: nobody has looked at the rendered page. They are proved present, in order and character-identical by the cut's 17 assertions, which is not the same as read
 - [x] Boundary cases checked — n/a: a cut moves an array and bumps three version fields; no date, length or banding logic
 
 ### Role access matrix
@@ -175,20 +175,20 @@ covered in section 3, against cards rather than roles.
 
 - [ ] **Release notes.** n/a: a cut PR publishes the notes other PRs wrote and adds none of its own — `unreleased` does not gain a line here, it is **emptied** by construction. The four notes it publishes were each written and checked in their own PR
 - [x] `docs/release-procedure.md`, `CLAUDE.md` and `docs/release-smoke-test.md` confirmed unchanged since `0.49.0`, so the runbook this release follows is the one that was followed last time
-- [ ] Release record `docs/releases/2026-11-25-0-49-1.md` — pending: written after the deploy, as its own PR
-- [ ] `docs/release-handover.md` rewritten — pending: rewritten with the record, in the same PR
+- [x] Release record `docs/releases/2026-11-25-0-49-1.md` — written, in the PR that carries this tick
+- [x] `docs/release-handover.md` rewritten — 122 lines, within the 150-line ceiling, in this same PR
 
 ## 8. Pre-production gate
 
 - [x] Baseline read before touching anything: all four hosts answered `0.49.0 @ 9fc01bdc6` on **both** `/api/version` and `/api/releases/current`, all `x-lanna-served-by: pi`
-- [ ] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — deferred: release manager
-- [ ] Deployed SHA matches the tested SHA — deferred: release manager
-- [ ] Deployed to test, smoke-tested on `test.lannacare.org` — deferred: release manager
-- [ ] Three Pi builds run **serial** (4 GiB Pi, `next build` peaks above 6 GB) — deferred: release manager
-- [ ] Worker deploys strictly test -> UAT -> production, production last — deferred: release manager
-- [ ] UAT deployed with `--no-mail` — deferred: release manager. **UAT can mail**: `RELEASE_MAIL_ENV="UAT"` with a `RELEASE_MAIL` binding, and its database holds production's real people
-- [ ] `strip-baked-env` seen in each deploy output — deferred: release manager
-- [ ] Public pages re-checked after a cache purge — deferred: release manager. **Production's zone alone went stale on `0.49.0`** and needed a purge; test's and UAT's passed first time, and why production differed is still not established
+- [x] Tested SHA `ba6603e5b` recorded, and it was the tip of `main` at deploy time
+- [x] Deployed SHA matches: all four hosts report `ba6603e5b7efc0298c56a8399fb44951779c4bda`
+- [x] Deployed to test; `test.lannacare.org` answers `0.49.1` on both endpoints, `served-by: pi`
+- [x] Three Pi builds run **serial**, each log read before the next started; box pre-flighted first (3158 MB available, load 0.00). All three logged `restarting under the script from ba6603e5b`
+- [x] Worker deploys strictly test -> UAT -> production, Lutan's last, so nothing of ours ran after it
+- [x] UAT deployed with `--no-mail`, and it reported `no major release new to uat (was 0.49.0), so no email`. **UAT can mail**: `RELEASE_MAIL_ENV="UAT"` with a `RELEASE_MAIL` binding, and its database holds production's real people
+- [x] `strip-baked-env` seen in both of ours: **23 variables removed**, the same count as `0.49.0`
+- [x] Both zones purged and each proved byte-for-byte on the Pi; production checked again after Lutan's Worker deploy. **This time production passed first time, so `0.49.0`'s fault did not recur.** **Production's zone alone went stale on `0.49.0`** and needed a purge; test's and UAT's passed first time, and why production differed is still not established
 - [x] Any new secret or env var exists in production — n/a: none added by this release
 - [x] Every PR in the release has a test plan — all 22 read for this cut, not counted
 
@@ -235,7 +235,7 @@ offered rather than assumed.
 - [x] Everything in this checklist that could be verified without human eyes was run, not assumed
 - [x] Exit codes read from the command itself, never through a pipe
 - [x] Gates run on the cut commit, all four zero
-- [ ] CI — pending: the PR run, read against this head commit
+- [x] CI — 17/17 green against this head commit, read rather than assumed
 
 Automated checks by: Claude  Date: 2026-11-25
 
