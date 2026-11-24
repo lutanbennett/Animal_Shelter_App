@@ -9,7 +9,7 @@
 |---|---|
 | Feature | `#shmis`: My shelters lists every shelter you hold a role at and says why one has no link |
 | Backlog item | `docs/backlog.md` → |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/my-shelters-blank` @ `C:DevelopmentAnimal_Shelter_my-shelters-blank` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | opened after this commit |
 | Tested by / date | Claude (Sonnet 5.5), 2026-11-25 |
