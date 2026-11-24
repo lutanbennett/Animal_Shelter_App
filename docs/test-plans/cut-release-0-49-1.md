@@ -56,7 +56,7 @@ the deliverable he asked for, not an afterthought.
 - [x] `check-dev-aal2-absent.mjs` — production and UAT both: the dev-only aal2 step-up is absent from every deployed path
 - [x] `check-release-order.mjs --worker-deployed 9fc01bdc6f2f1e7c9bb556ba4117ba39aa20dda9` — production and UAT, both directions, nothing pending
 - [x] `check-deferred-notes.mjs` — exit 0, reviewed in full below
-- [ ] `node scripts/gates.mjs` — pending: run on the cut branch before the PR
+- [x] `node scripts/gates.mjs` — **typecheck=0 lint=0 test=0 build=0**, build in 132s, run on the cut commit itself
 - [ ] CI green on the PR — pending: the PR does not exist at this commit
 
 ### The deferred-note review, and a correction worth recording
@@ -234,7 +234,8 @@ offered rather than assumed.
 
 - [x] Everything in this checklist that could be verified without human eyes was run, not assumed
 - [x] Exit codes read from the command itself, never through a pipe
-- [ ] Gates and CI — pending: run on the cut branch
+- [x] Gates run on the cut commit, all four zero
+- [ ] CI — pending: the PR run, read against this head commit
 
 Automated checks by: Claude  Date: 2026-11-25
 
