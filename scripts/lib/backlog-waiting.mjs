@@ -108,3 +108,39 @@ export function proofClass(line) {
   // only the opening of the line decides: a later "not a command" about a SECOND half must not demote a runnable first half
   return NOT_A_COMMAND_RE.test(t.slice(0, 220)) ? "read" : "run";
 }
+
+// ---- WHO can run it? (#o5glo) -------------------------------------------------------------------
+// `proofClass` says whether a line is a command or a human wait; it does not say whether THE READER can
+// run it. Three groups, and only the first is something any session can do from a worktree:
+//   worktree - a script, a query or a repo read that works from any checkout
+//   reach    - needs somewhere only some sessions reach: production, the Pi, a hosted dashboard, wrangler
+//   person   - a device or place no session reaches: his phone, the shelter, a screen only he is signed in to
+// DECLARED, not only inferred: a proof line may open with `[who: worktree|reach|person]` right after the
+// marker, and the strict check refuses an unknown value, so a typo cannot silently place a line.
+// INFERRED when there is no marker, from the line's own words. A line the inference cannot place falls
+// into `person`, the most cautious group: the printer then says "could not tell", never "run it".
+export const WHO_GROUPS = ["worktree", "reach", "person"];
+const WHO_DECL_RE = /^\[who:\s*([a-z-]+)\s*\]\s*/i;
+const PERSON_RE = /\b(?:on a phone|from a phone|his phone|his own (?:hands|network|eyes)|in front of the machine|signed in as|search console|the director'?s|at the shelter|mains pulled)\b/i;
+const REACH_STRONG_RE = /\bssh\b|\bwrangler\b|\bthe pi\b|\bpi'?s\b|--env production/i;
+const WORKTREE_CMD_RE = /`\s*(?:node scripts\/|npm |npx |grep |git |gh |ls |cat )/;
+const REACH_WEAK_RE = /\bdashboard\b|\bproduction\b|\/api\//i;
+export function proofCount(line) {
+  return (line.match(/\*\*Proof:\*\*\s*\S/g) || []).length;
+}
+export function declaredWho(line) {
+  const m = WHO_DECL_RE.exec(proofText(line));
+  return m ? m[1].toLowerCase() : null;
+}
+// returns { who, how } where how is "declared" | "inferred" | "unplaced"
+export function proofWho(line) {
+  const d = declaredWho(line);
+  if (d && WHO_GROUPS.includes(d)) return { who: d, how: "declared" };
+  const t = proofText(line).replace(WHO_DECL_RE, "");
+  const head = t.slice(0, 220);
+  if (PERSON_RE.test(head)) return { who: "person", how: "inferred" };
+  if (REACH_STRONG_RE.test(head)) return { who: "reach", how: "inferred" };
+  if (WORKTREE_CMD_RE.test(head)) return { who: "worktree", how: "inferred" };
+  if (REACH_WEAK_RE.test(head)) return { who: "reach", how: "inferred" };
+  return { who: "person", how: "unplaced" };
+}

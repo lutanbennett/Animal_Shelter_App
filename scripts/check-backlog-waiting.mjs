@@ -17,7 +17,7 @@
  */
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { STATES, DECIDERS, parseTag, validDate, openItems, parseNames, sinceInFuture, needsProof, hasProof, proofText, proofClass } from "./lib/backlog-waiting.mjs";
+import { STATES, DECIDERS, parseTag, validDate, openItems, parseNames, sinceInFuture, needsProof, hasProof, proofText, proofClass, proofWho, proofCount, declaredWho, WHO_GROUPS } from "./lib/backlog-waiting.mjs";
 
 const STAGED = process.argv.includes("--staged");
 const FILE = "docs/backlog.md";
@@ -63,11 +63,16 @@ if (!items.length) { console.error("check-backlog-waiting: no open items found â
 // split into "run it" and "not a command - read it". The planner runs this before any list names Lutan.
 if (process.argv.includes("--proofs")) {
   const want = process.argv.filter((a) => /^#?[a-z0-9]{5}$/.test(a) && a !== "--proofs").map((a) => a.replace(/^#/, ""));
-  const rows = items.filter((it) => (want.length ? want.includes(it.id) : needsProof(parseTag(it.line)))).map((it) => ({ ...it, cls: proofClass(it.line), text: proofText(it.line) }));
-  const show = (title, list) => { if (!list.length) return; console.log(title); for (const r of list) console.log("  #" + r.id + " (line " + r.lineNo + "): " + r.text.slice(0, 400)); console.log(""); };
-  show("RUN IT (a command, a screen or a query) - run it before naming him, and say what it showed:", rows.filter((r) => r.cls === "run"));
+  const rows = items.filter((it) => (want.length ? want.includes(it.id) : needsProof(parseTag(it.line)))).map((it) => ({ ...it, cls: proofClass(it.line), text: proofText(it.line).replace(/^[who:[^]]*]s*/i, ""), ...proofWho(it.line), n: proofCount(it.line) }));
+  const show = (title, list) => { if (!list.length) return; console.log(title); for (const r of list) console.log("  #" + r.id + " (line " + r.lineNo + ")" + (r.how === "unplaced" ? " [could not tell who can run it]" : "") + ": " + r.text.slice(0, 400)); console.log(""); };
+  const runs = rows.filter((r) => r.cls === "run");
+  show("RUN IT - ANY SESSION CAN, FROM A WORKTREE - run it before naming him, and say what it showed:", runs.filter((r) => r.who === "worktree"));
+  show("RUN IT ONLY WHERE YOU CAN REACH (production, the Pi, a hosted dashboard) - run it if your session reaches it and say what it showed; if not, name it as HIS with this proof quoted, and never report it as checked:", runs.filter((r) => r.who === "reach"));
+  show("ONLY A PERSON CAN RUN THESE (a phone, a place, a screen only he is signed in to) - name it as HIS with this proof quoted, and never report it as checked:", runs.filter((r) => r.who === "person"));
   show("NOT A COMMAND - READ IT (a physical or human wait; do not present it as a failed check):", rows.filter((r) => r.cls === "read"));
   show("NO PROOF LINE (strict check would refuse these):", rows.filter((r) => r.cls === "none"));
+  const dups = rows.filter((r) => r.n > 1);
+  if (dups.length) { console.log("MORE THAN ONE **Proof:** IN ONE ITEM - only the first is shown above and it may be the stale one; consolidate the item:"); for (const r of dups) console.log("  #" + r.id + " (line " + r.lineNo + ") has " + r.n); console.log(""); }
   if (!rows.length) console.log("no matching waiting:lutan items");
   process.exit(0);
 }
@@ -83,6 +88,8 @@ for (const { lineNo, id, line } of items) {
     if (tag.by && tag.state !== "decision") problems.push(`${who}: by: only belongs on a decision`);
     if (!validDate(tag.since)) problems.push(`${who}: since:"${tag.since}" does not parse as YYYY-MM-DD`);
     else if (sinceInFuture(tag.since)) problems.push(`${who}: since:${tag.since} is in the future`);
+    if (hasProof(line) && proofCount(line) > 1) (PROOF_STRICT ? problems : noProof).push(`${who}: has ${proofCount(line)} "**Proof:**" passages; keep one, an older one beside the tag contradicts it`);
+    { const d = declaredWho(line); if (d && !WHO_GROUPS.includes(d)) problems.push(`${who}: [who: ${d}] is not one of ${WHO_GROUPS.join(", ")}`); }
     if (needsProof(tag) && !hasProof(line)) (PROOF_STRICT ? problems : noProof).push(`${who}: waiting:lutan with no "**Proof:** <how to check it is done>" line`);
     if (tag.date && !validDate(tag.date)) problems.push(`${who}: date:"${tag.date}" does not parse as YYYY-MM-DD`);
   }

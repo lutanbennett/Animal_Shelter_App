@@ -112,3 +112,22 @@ test("proof lines: only waiting:lutan needs one, and the marker is found", () =>
   assert.equal(hasProof("- [ ] x **Proof:** `node scripts/x.mjs` prints ok"), true);
   assert.equal(hasProof("- [ ] x no proof here"), false);
 });
+
+test("who can run a proof line (#o5glo): declared beats inferred, and an unplaceable line is the cautious group", async () => {
+  const { proofWho, proofCount, declaredWho } = await import("./lib/backlog-waiting.mjs");
+  const p = (t) => "- [ ] x **Proof:** " + t + " <!--waiting:lutan since:2026-11-23-->";
+  assert.deepEqual(proofWho(p("`node scripts/check-deployed-hosts.mjs` reads it back")), { who: "worktree", how: "inferred" });
+  assert.deepEqual(proofWho(p("`ssh lanna-pi-mesh \"lsblk\"`, read-only")), { who: "reach", how: "inferred" });
+  assert.deepEqual(proofWho(p("on a phone, open `/reels` and pick three clips")), { who: "person", how: "inferred" });
+  assert.deepEqual(proofWho(p("watch the address bar and it never shows the old host")), { who: "person", how: "unplaced" });
+  assert.deepEqual(proofWho(p("[who: worktree] watch the address bar")), { who: "worktree", how: "declared" });
+  assert.equal(declaredWho(p("[who: nobody] x")), "nobody");
+  assert.equal(proofWho(p("[who: nobody] `node scripts/x.mjs`")).how !== "declared", true);
+});
+
+test("more than one **Proof:** in an item is counted (#o5glo)", async () => {
+  const { proofCount } = await import("./lib/backlog-waiting.mjs");
+  assert.equal(proofCount("x **Proof:** a then **Proof:** b"), 2);
+  assert.equal(proofCount("x **Proof:** a"), 1);
+  assert.equal(proofCount("x"), 0);
+});
