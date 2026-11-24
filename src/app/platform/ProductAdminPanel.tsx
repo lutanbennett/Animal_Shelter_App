@@ -435,7 +435,11 @@ export function ProductAdminPanel({
     const w = websiteOf(s);
     const hd = holderDraft(s);
     const doneCount = steps.filter((x) => x.done).length;
-    const siteWords = s.public_site === "off" ? p.healthSiteOff : s.public_site === "locked" ? p.healthSiteLocked : p.healthSiteOpen;
+    const ownSite = (s.public_site ?? "locked") as keyof typeof siteRank;
+    const floorHolds = siteRank[siteFloor] > siteRank[ownSite];
+    const ownWords = ownSite === "off" ? p.healthSiteOff : ownSite === "locked" ? p.healthSiteLocked : p.healthSiteOpen;
+    // Both facts, not one: the shelter's own setting and what visitors really get (#wbopn). The row mark is NOT touched: a shelter set right is not faulty.
+    const siteWords = floorHolds ? p.healthSiteHeld(ownWords, p.siteState[siteFloor]) : ownWords;
     const statusTone = (x: Status) => (x === "connected" ? "text-success" : x === "dead" ? "text-danger" : x === "incomplete" ? "text-warning" : "text-muted");
     const sysWords = systemDatabase === "ok" ? p.healthOk : systemDatabase === "warn" ? p.healthWarn : systemDatabase === "fail" ? p.healthFail : p.healthUnknown;
     const sysTone = systemDatabase === "ok" ? "text-success" : systemDatabase === "warn" ? "text-warning" : systemDatabase === "fail" ? "text-danger" : "text-muted";
@@ -727,7 +731,7 @@ export function ProductAdminPanel({
               <div className="flex flex-col gap-2 pb-2">
                 <h3 className={h4}>{p.siteTitle}</h3>
                 <p className="text-sm text-foreground">{siteWords}</p>
-                {siteRank[siteFloor] > siteRank[(s.public_site ?? "locked") as keyof typeof siteRank] && <p className="max-w-prose text-xs text-warning">{p.siteFloorWins(p.siteState[siteFloor])}</p>}
+                {floorHolds && <p className="max-w-prose text-xs text-warning">{p.siteFloorWins(p.siteState[siteFloor])}</p>}
                 {canWrite && (
                   <div className="flex flex-wrap items-center gap-2">
                     {(["open", "locked", "off"] as const).filter((v) => v !== (s.public_site ?? "locked")).map((v) => (
