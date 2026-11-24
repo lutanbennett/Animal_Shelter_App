@@ -299,7 +299,7 @@ before pricing it as a programme**: an hour of reading has twice turned three pl
 **Before ANY list, table, batch or handover line names Lutan** (including **Not today**): run
 `node scripts/check-backlog-waiting.mjs --proofs` (add `#id`s to narrow it). It prints, never runs. Each item
 under **RUN IT**: run or look at it and say what it showed; if it is already done, it is not his: close it.
-Items under **NOT A COMMAND** are read out, never run, never reported as a failed check. (`reference.md` 5b.)
+Items under **NOT A COMMAND** are read out, never run, never reported as a failed check. A line under **ONLY WHERE YOU CAN REACH** you cannot reach, or **ONLY A PERSON**, is named as his with its proof quoted, never reported as checked. (`reference.md` 5b.)
 
 Three tables, one per batch: `#`, slug, the item's bold title, area, migration yes/no, **model and
 effort** (never blank — name the default), the band, and one line on why now. A line per batch saying
@@ -307,7 +307,7 @@ what makes it a batch. Under them: *token figures are context-window size, a mea
 bill.* Then **Not today** — his own hands, and anything blocked with the reason.
 
 Then **one** `AskUserQuestion`. **Confirming a batch is SINGLE-select — "all three" or "I want a swap".**
-(Unticking is indistinguishable from not meaning to tick: reference.md section 5b.) Bundle any decision he owes into the same question.
+(reference.md 5b.) Bundle any decision he owes into the same question.
 
 ## 7. Save the plan
 
