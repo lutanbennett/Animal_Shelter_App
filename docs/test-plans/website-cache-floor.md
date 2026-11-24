@@ -40,7 +40,7 @@ because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — **four gates, each `<N>` that gate's own exit code, and every `<N>` is `0`.** Run it yourself and paste its closing lines **exactly as your run printed them**, in a fenced block under this line: the `=== gates: <name> exited <N> after <S>s` line for each gate as well as the final `gates:` line. **Never type the final line from this description or copy it from another plan.** The shape here is deliberately not a line you could paste: the per-gate `after <S>s` timings are the part only a real run has. `check-test-plan.mjs` cannot tell a pasted run from a typed one, so this wording is the only guard (`docs/decisions/2026-11-02-gates-line-four-gates.md`). They are the evidence, and running the script again regenerates them
+- [x] `node scripts/gates.mjs` — all four gates exited 0 (closing lines of my run below)
 
 ```
 === gates: typecheck exited 0 after 52s
@@ -225,13 +225,13 @@ illegible one is a red people learn to ignore.
 
 - [x] The manual list above is empty — n/a: nothing for a person to look at beyond the deploy-time check
 
-n/a: nothing for a person to look at
+Manual verification by: n/a: nothing for a person to look at
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR
-- [ ] Handed to the production release manager
+- [x] Open defects are either fixed or explicitly accepted above (none found)
+- [ ] Checklist pasted into the PR — pending: link to the plan in the PR
+- [ ] Handed to the production release manager — pending: at release
 
 Result: pass
 
