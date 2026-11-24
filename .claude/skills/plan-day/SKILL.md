@@ -307,7 +307,7 @@ what makes it a batch. Under them: *token figures are context-window size, a mea
 bill.* Then **Not today** — his own hands, and anything blocked with the reason.
 
 Then **one** `AskUserQuestion`. **Confirming a batch is SINGLE-select — "all three" or "I want a swap".**
-(Unticking is indistinguishable from not meaning to tick: reference.md section 5b.) Bundle any decision he owes into the same question.
+(reference.md 5b.) Bundle any decision he owes into the same question.
 
 ## 7. Save the plan
 
