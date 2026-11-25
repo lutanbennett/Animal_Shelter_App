@@ -608,10 +608,12 @@ export async function archiveUser(userId: string, requestId: string | null): Pro
     if (await isCurrentUser(userId)) return refuse(t.admin.security.errors.cantArchiveOwnAccount);
 
     const admin = createAdminClient();
+    // This shelter's rows only (0443): the same login may work at another shelter, which this must not archive.
     const { error } = await admin
       .from("user_roles")
       .update({ archived_at: new Date().toISOString() })
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .eq("shelter_id", (await actingShelterId()) ?? "00000000-0000-0000-0000-000000000000");
     if (error) {
       return unexpectedFailure("security.archiveUser", error, t.common.somethingWentWrong);
     }
@@ -628,10 +630,12 @@ export async function restoreUser(userId: string, requestId: string | null): Pro
     if (!(await userInActingShelter(userId))) return refuse(t.admin.security.errors.userNotFound);
 
     const admin = createAdminClient();
+    // This shelter's rows only (0443).
     const { error } = await admin
       .from("user_roles")
       .update({ archived_at: null })
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .eq("shelter_id", (await actingShelterId()) ?? "00000000-0000-0000-0000-000000000000");
     if (error) {
       return unexpectedFailure("security.restoreUser", error, t.common.somethingWentWrong);
     }
