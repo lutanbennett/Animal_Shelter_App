@@ -11,7 +11,7 @@
 | PR | pending: opened after this plan |
 | Tested by / date | Claude, 2026-11-25 |
 | Carries a migration? | yes — 0443 |
-| Tested at SHA | SHA_PLACEHOLDER |
+| Tested at SHA | 56e4d8298 |
 
 ## 1. Scope and risk
 
