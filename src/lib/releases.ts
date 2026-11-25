@@ -70,16 +70,24 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  { text: "The 2-step verification page is now a plain page: just the code box, the Continue button and the lost-phone note, with no shelter logo, menu or name around it, and it no longer says the code is for a shelter (your authenticator belongs to you, whichever shelter you are at). It still sends you back to the page you came from.", admin: true },
-  { text: "Product console: every CooperJaidee feature page can now carry a photo (add a line named photo to the page in Platform → Edit the product site's words and photos), and there is a page for Cooper that appears once you type its heading there.", admin: true },
-  { text: "Product console: the words and photos on every CooperJaidee page can now be changed from Platform → Edit the product site's words and photos, in English and Thai side by side, with no developer and no release. A page that is missing a line still shows its built-in words.", admin: true },
-  { text: "The CooperJaidee product pages now have an EN / ไทย switch in the header: it takes a visitor to the same page in the other language, and each language keeps its own address.", admin: true },
-  { text: "My shelters now lists every shelter you hold a role at: one with no website address yet, or one that has been closed, is shown with the reason instead of being left out, and a sign-in with no shelters gets a sentence instead of a blank page. The not-a-product-admin page now has one My shelters button.", admin: true },
-  { text: "Product console: a shelter's website now says when the whole deployment is holding it more closed than the shelter's own setting, so a shelter set to open no longer reads as open while its visitors still see the construction page.", admin: true },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.49.2",
+    date: "2026-11-25",
+    title: "The product site's words and photos become editable, and a person may hold a role at more than one shelter",
+    major: false,
+    notes: [
+      { text: "The 2-step verification page is now a plain page: just the code box, the Continue button and the lost-phone note, with no shelter logo, menu or name around it, and it no longer says the code is for a shelter (your authenticator belongs to you, whichever shelter you are at). It still sends you back to the page you came from.", admin: true },
+      { text: "Product console: every CooperJaidee feature page can now carry a photo (add a line named photo to the page in Platform → Edit the product site's words and photos), and there is a page for Cooper that appears once you type its heading there.", admin: true },
+      { text: "Product console: the words and photos on every CooperJaidee page can now be changed from Platform → Edit the product site's words and photos, in English and Thai side by side, with no developer and no release. A page that is missing a line still shows its built-in words.", admin: true },
+      { text: "The CooperJaidee product pages now have an EN / ไทย switch in the header: it takes a visitor to the same page in the other language, and each language keeps its own address.", admin: true },
+      { text: "My shelters now lists every shelter you hold a role at: one with no website address yet, or one that has been closed, is shown with the reason instead of being left out, and a sign-in with no shelters gets a sentence instead of a blank page. The not-a-product-admin page now has one My shelters button.", admin: true },
+      { text: "Product console: a shelter's website now says when the whole deployment is holding it more closed than the shelter's own setting, so a shelter set to open no longer reads as open while its visitors still see the construction page.", admin: true },
+    ],
+  },
   {
     version: "0.49.1",
     date: "2026-11-25",
