@@ -32,6 +32,14 @@ create or replace view public.public_platform_content as
 select page, key, en, th, drive_file_id, updated_at
 from public.platform_content;
 
+-- Owned by rls_definer like every public view since 0375 (scripts/check-view-owners.mjs): the view runs as that role, which obeys row-level
+-- security, so the table's one policy below is the only way a row leaves it, and it names that role alone. anon and authenticated hold no
+-- grant and no policy on the table itself.
+alter view public.public_platform_content owner to rls_definer;
+grant select on public.platform_content to rls_definer;
+drop policy if exists platform_content_public_view on public.platform_content;
+create policy platform_content_public_view on public.platform_content for select to rls_definer using (true);
+
 grant select on public.public_platform_content to anon, authenticated, service_role;
 
 -- p_rows: [{"page":"home","key":"heading","en":"…","th":"…","drive_file_id":"…"}]. A row's drive_file_id is changed only when the element

@@ -1264,6 +1264,36 @@
         "reason": "PADMIN list (docs/decisions/2026-11-23-shelter-name-columns.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. Same body as 0424, now also writing shelters.name. It grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
       },
       {
+        "migration": "0441_platform_content.sql",
+        "item": "policy public.platform_content.platform_content_public_view",
+        "reason": "SELECT for the role rls_definer only, the owner of the view public_platform_content, so the view can read the table; anon and authenticated hold no grant and no policy on the table itself. Every platform_content row is public by intent (the words and photos of the cooperjaidee.org pages); the table holds no shelter data and no personal data. Reading public content is not an ability to do something, so there is no card. docs/decisions/2026-11-25-product-page-content-storage.md."
+      },
+      {
+        "migration": "0441_platform_content.sql",
+        "item": "function public.product_admin_set_platform_content definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-25-product-page-content-storage.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. It writes only platform_content, the product site's own page text and photo ids. It grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0441_platform_content.sql",
+        "item": "function public.product_admin_delete_platform_content definer",
+        "reason": "PADMIN list (docs/decisions/2026-11-25-product-page-content-storage.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan's 2026-11-18 decision. It deletes one platform_content row. It grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0441_platform_content.sql",
+        "item": "function is_known_drive_file definer",
+        "reason": "Restated from 0429 with one more branch (platform_content.drive_file_id) so the Worker's orphan cleanup does not treat a product-page photo as unowned. EXECUTE stays revoked from public, anon and authenticated and granted to service_role only: it is the Worker's own is-this-file-one-of-ours test, not a door for a person. docs/decisions/2026-11-25-product-page-content-storage.md."
+      },
+      {
+        "migration": "0441_platform_content.sql",
+        "item": "grant to anon",
+        "reason": "SELECT on the public view public_platform_content: the product pages' own words and photo ids, which are public by intent and carry no shelter or personal data. The base table stays revoked from anon (the public-site pattern of 0122), and the view is owned by rls_definer so the table's one policy decides what leaves it. It lets anon read what the product site publishes, not do anything. docs/decisions/2026-11-25-product-page-content-storage.md."
+      },
+      {
+        "migration": "0441_platform_content.sql",
+        "item": "grant to anon",
+        "reason": "EXECUTE on is_public_drive_file(text), restated from 0429 with one more branch (public_platform_content.drive_file_id), so /api/photos/<id> serves a product-page photo to the public. Nothing is newly granted to a person: the function was already executable by anon. docs/decisions/2026-11-25-product-page-content-storage.md."
+      },
+      {
         "migration": "0436_product_admin_set_shelter_site.sql",
         "item": "function public.product_admin_set_shelter_site definer",
         "reason": "PADMIN list (docs/decisions/2026-11-20-shelter-state-schema.md): gated by is_product_admin() and aal2, a list of people outside the card system, by Lutan’s 2026-11-18 decision. It writes only shelters.public_site (open, locked or off); the deployment floor still wins when more closed. It grants nobody anything. Recorded under outsideTheCardSystem.productAdmin, not debt."
