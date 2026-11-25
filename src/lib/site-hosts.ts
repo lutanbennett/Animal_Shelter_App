@@ -165,7 +165,7 @@ export function hostRedirect(
  * What the platform front door serves: the console, sign-in and the second step, plus what they load.
  * Everything else is a shelter's page and would come up empty with no shelter header.
  */
-const PLATFORM_KEEPS = ["/platform", "/login", "/auth/", "/api/", "/admin/security/verify", "/lca-logo.jpg", "/lca-logo-160.jpg", "/lca-logo.png", "/lca-logo-transparent.png", "/robots.txt", "/sitemap.xml", "/th/platform/about", "/th/platform/features", "/privacy"];
+const PLATFORM_KEEPS = ["/platform", "/login", "/auth/", "/api/", "/admin/security/verify", "/lca-logo.jpg", "/lca-logo-160.jpg", "/lca-logo.png", "/lca-logo-transparent.png", "/robots.txt", "/sitemap.xml", "/th/platform/about", "/th/platform/cooper", "/th/platform/features", "/privacy"];
 
 /**
  * On the platform host, the path a navigation should be sent to instead, or null to serve it here.

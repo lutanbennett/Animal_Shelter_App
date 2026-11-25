@@ -45,9 +45,9 @@ test("sitemap: empty while closed; open lists every product page, each with its 
 
 test("Cooper's page is left out of the sitemap until it has content (#cpstr), and listed once it has", () => {
   const without = platformSitemap(origin, true, false).map((e) => e.url);
-  assert.equal(without.some((u) => u.includes("/cooper")), false);
+  assert.equal(without.some((u) => u.endsWith("/platform/cooper")), false);
   assert.equal(without.length, ALL.length - 2);
-  assert.equal(platformSitemap(origin, true, true).filter((e) => e.url.includes("/cooper")).length, 2);
+  assert.equal(platformSitemap(origin, true, true).filter((e) => e.url.endsWith("/platform/cooper")).length, 2);
   assert.deepEqual(platformSitemap(origin, false, true), []);
 });
 
