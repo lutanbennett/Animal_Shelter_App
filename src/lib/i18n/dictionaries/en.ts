@@ -2652,7 +2652,7 @@ const en = {
           "Security decides who can get into the app, so it asks for a second step: a 6-digit code from an authenticator app on your phone. You set it up once; after that, Security asks for a code once each time you sign in. The rest of the app doesn't change.",
         codeTitle: "Enter your code",
         codeSubtitle:
-          "Security needs the second step. Open the authenticator app on your phone and enter the 6-digit code it shows for this shelter.",
+          "This needs the second step. Open the authenticator app on your phone and enter the 6-digit code it shows.",
         stepInstall:
           "Install an authenticator app on your phone if you don't have one: Google Authenticator, Microsoft Authenticator or similar — any of them works.",
         stepScan: "Tap Start below and scan the QR code with the app.",
@@ -2670,7 +2670,6 @@ const en = {
           "There are no backup codes. If you lose this phone, another admin can reset your 2-step verification from Security, and you set it up again on the new one.",
         lostPhone:
           "Lost or replaced your phone? Ask another admin to reset your 2-step verification from Security. If no admin can get in, the developer can reset it.",
-        backToSettings: "Back to Settings",
         setupClosedTitle: "Set-up isn't open yet",
         setupClosed:
           "To protect your login, an authenticator app can only be set up once another admin has allowed it: they open Settings → Security and press Allow set-up next to your name. Then come back here. If you are the only admin, the developer can open it.",

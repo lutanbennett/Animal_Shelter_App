@@ -13,7 +13,8 @@ import { isPublicPage } from "@/lib/public-paths";
  */
 export function PublicPathGate({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  // The second step (TWO_STEP_PATH in src/lib/auth/two-step.ts, which is server-only so not imported here) belongs to the person, not a shelter: it is a bare page.
   // The adopter page draws its own small header: an adopter holds no card, so the staff chrome has nothing for them.
-  if (isPublicPage(pathname) || pathname === "/adopter-update" || pathname === "/platform" || pathname.startsWith("/platform/")) return null;
+  if (isPublicPage(pathname) || pathname === "/adopter-update" || pathname === "/platform" || pathname === "/admin/security/verify" || pathname.startsWith("/platform/")) return null;
   return <>{children}</>;
 }
