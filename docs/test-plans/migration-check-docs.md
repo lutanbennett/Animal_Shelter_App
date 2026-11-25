@@ -40,7 +40,16 @@ because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [ ] `node scripts/gates.mjs` four gates — pending: GATESBLOCK
+- [x] `node scripts/gates.mjs` ends with the one line below, four gates, every exit code 0. Output as printed:
+
+```
+=== gates: typecheck exited 0 after 62s
+=== gates: lint exited 0 after 207s
+=== gates: test exited 0 after 41s
+=== gates: build exited 0 after 232s
+gates: typecheck=0 lint=0 test=0 build=0
+```
+
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
