@@ -166,7 +166,7 @@ async function givableRole(key: string | null): Promise<GivableRole | null> {
 const roleColumns = (role: GivableRole) => ({ role_id: role.id, shelter_id: role.shelterId });
 
 /**
- * Sets a login's MAIN role: changes the one is_main row, or adds it for a login that has none. user_roles is one row per
+ * Sets a login's MAIN role: changes the login's one is_main row IN THE ROLE'S SHELTER, or adds it for a login that has none there (0443: one main role per shelter). user_roles is one row per
  * (login, role) since 0196, so an upsert on the login would add a second role instead of replacing the first.
  */
 async function setMainRole(admin: ReturnType<typeof createAdminClient>, userId: string, role: GivableRole) {
@@ -174,6 +174,7 @@ async function setMainRole(admin: ReturnType<typeof createAdminClient>, userId: 
     .from("user_roles")
     .update(roleColumns(role))
     .eq("user_id", userId)
+    .eq("shelter_id", role.shelterId)
     .eq("is_main", true)
     .select("user_id");
   if (error) return error;
@@ -362,7 +363,8 @@ export async function addExtraRole(userId: string, roleKey: string, endsOn: stri
     const { data: rows, error: readError } = await admin
       .from("user_roles")
       .select("role_id, is_main, archived_at")
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .eq("shelter_id", role.shelterId);
     if (readError) return unexpectedFailure("security.addExtraRole", readError, t.common.somethingWentWrong);
     const main = (rows ?? []).find((r) => r.is_main);
     if (!main || main.archived_at) return refuse(t.admin.security.errors.extraRoleNeedsMain);
