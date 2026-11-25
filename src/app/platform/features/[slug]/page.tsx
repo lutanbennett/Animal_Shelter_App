@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import Image from "next/image";
 import { notFound } from "next/navigation";
+import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
 import { isPlatformSearchOpen } from "@/lib/public-site";
 import { PRODUCT_FEATURE_SLUGS, PRODUCT_HOME, productFeaturePath } from "@/lib/platform-features";
 import { createClient } from "@/lib/supabase/server";
-import { loadProductPage, overlayProductText } from "@/lib/site/product-content";
+import { loadProductPage, overlayProductText, productPhotoId, productText } from "@/lib/site/product-content";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { isPlatformHostname, platformHost, requestHost } from "@/lib/site-hosts";
 import { ProductMockup } from "../../about/ProductMockup";
@@ -41,7 +43,10 @@ async function feature(slug: string) {
   // The console's rows (page "feature-<slug>", #pcmsx) laid over the dictionary, which stays the fallback so a missing row never blanks the page.
   const content = await loadProductPage(await createClient(), `feature-${slug}`);
   const f = overlayProductText(content, locale, base);
-  return { f, t, locale };
+  // The page's photo (key "photo", #pcmsx): none until a console line holds one; then it shows under the lead.
+  const photo = productPhotoId(content, "photo");
+  const photoAlt = productText(content, "photo", locale);
+  return { f, t, locale, photo, photoAlt };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -73,7 +78,7 @@ export default async function FeaturePage({ params }: Props) {
   const { slug } = await params;
   const got = await feature(slug);
   if (!got) notFound();
-  const { f, t, locale } = got;
+  const { f, t, locale, photo, photoAlt } = got;
   const a = t.admin.productAdmin.about;
   const origin = await getSiteOrigin();
   const self = productFeaturePath(slug, locale === "th");
@@ -101,6 +106,13 @@ export default async function FeaturePage({ params }: Props) {
         <h1 className="mt-2 text-4xl font-semibold text-foreground">{f.heading}</h1>
         <p className="mt-4 text-lg text-foreground">{f.lead}</p>
       </section>
+      {photo && (
+        <section className="mx-auto w-full max-w-3xl px-6 pb-10">
+          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-border bg-surface">
+            <Image src={driveImageUrl(photo)} alt={photoAlt} fill sizes="(min-width: 768px) 768px, 100vw" className="object-cover" />
+          </div>
+        </section>
+      )}
 
       <div className="border-t border-border">
         {f.sections.map((s, i) => (
