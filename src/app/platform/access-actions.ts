@@ -38,7 +38,7 @@ function accessError(t: Dictionary, code: string | undefined, what: string): str
   const a = t.admin.productAdmin.access;
   if (code === "42501") return t.admin.productAdmin.errors.refused(what);
   if (code === "23514") return a.lockOut;
-  if (code === "23505") return a.otherShelter;
+  if (code === "23505") return a.alreadyHere;
   if (code === "22023") return a.notFound;
   return null;
 }

@@ -125,7 +125,7 @@ export async function createShelter(key: string, name: string, requestId: string
  * Give a shelter its Admin role and link one existing login to it (#shadm, 0415). Same pattern: signed-in
  * client, and the functions raise for anyone who is not a product administrator at aal2. The role is given no
  * cards: Admin is decided by roles.is_admin. A login is only picked by account id, never created here (no
- * service role). 23505 on the link means already linked OR already has a main role elsewhere: one sentence.
+ * service role). 23505 on the link means already linked OR already has a main role IN THIS SHELTER (0443: a login may hold one per shelter): one sentence.
  */
 export async function createShelterAdminRole(shelterId: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
