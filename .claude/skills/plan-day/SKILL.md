@@ -275,7 +275,7 @@ unranked. Per candidate:
    its brief; if its deliverable IS the measurement, move one. **Intersect the actual file lists before
    moving anything** — a shared directory is not a collision, a shared file is.
 3. **State a migration expectation; never present it as a reservation.** The number is settled at COMMIT time by
-   `check-migration-numbers.mjs`, which reads open PRs; a planner does not own the slot (sessions outside the plan take
+   `check-migration-numbers.mjs`; CI failed two sibling migration PRs on 2026-11-25, so **never two in one batch** (the second waits, then syncs; see CLAUDE.md); a planner does not own the slot (sessions outside the plan take
    numbers, and a `migration=none` stream took `0364` the same day). Prefer one migration-carrying stream per batch, and
    where an open question of his could need schema, write the brief as "expected none, may need one".
 4. **Schema-first items span adjacent batches** — schema in batch N, app in N+1, never together.
