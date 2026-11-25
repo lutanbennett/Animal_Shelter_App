@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { getT } from "@/lib/i18n/get-t";
 import { isPlatformSearchOpen } from "@/lib/public-site";
 import { PRODUCT_FEATURE_SLUGS, PRODUCT_HOME, productFeaturePath } from "@/lib/platform-features";
+import { createClient } from "@/lib/supabase/server";
+import { loadProductPage, overlayProductText } from "@/lib/site/product-content";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { isPlatformHostname, platformHost, requestHost } from "@/lib/site-hosts";
 import { ProductMockup } from "../../about/ProductMockup";
@@ -34,8 +36,12 @@ type Feature = {
 async function feature(slug: string) {
   if (!(PRODUCT_FEATURE_SLUGS as readonly string[]).includes(slug)) return null;
   const { t, locale } = await getT();
-  const f = (t.admin.productAdmin.about.features as Record<string, Feature>)[slug];
-  return f ? { f, t, locale } : null;
+  const base = (t.admin.productAdmin.about.features as Record<string, Feature>)[slug];
+  if (!base) return null;
+  // The console's rows (page "feature-<slug>", #pcmsx) laid over the dictionary, which stays the fallback so a missing row never blanks the page.
+  const content = await loadProductPage(await createClient(), `feature-${slug}`);
+  const f = overlayProductText(content, locale, base);
+  return { f, t, locale };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

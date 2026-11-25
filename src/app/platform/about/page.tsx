@@ -5,11 +5,16 @@ import { getT } from "@/lib/i18n/get-t";
 import { isPlatformSearchOpen } from "@/lib/public-site";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { isPlatformHostname, platformHost, requestHost } from "@/lib/site-hosts";
+import Image from "next/image";
 import { productFeaturePath } from "@/lib/platform-features";
+import { driveImageUrl } from "@/lib/google/drive-client";
+import { createClient } from "@/lib/supabase/server";
+import { loadProductPage, overlayProductText, productPhotoId, productText } from "@/lib/site/product-content";
 import { ProductMockup } from "./ProductMockup";
 import { ProductNav } from "./ProductNav";
 
 /**
+ * The words come from the console's rows (#pcmsx, /platform/content) laid over the dictionary, which is the fallback, so a missing row never blanks the page.
  * The product page (#apxld, rebuilt as a product introduction in #cjlnd): what a stranger at cooperjaidee.org lands on.
  * Static words only. It reads no table and lists no shelter or account, so it cannot be used to find out which exist.
  * Every link is a plain link; none is an action that needs a card. With the feature pages under /platform/features/ (#psubp) it is one of the only pages under /platform that are ever
@@ -18,7 +23,8 @@ import { ProductNav } from "./ProductNav";
  */
 export async function generateMetadata(): Promise<Metadata> {
   const { t, locale } = await getT();
-  const a = t.admin.productAdmin.about;
+  const content = await loadProductPage(await createClient(), "home");
+  const a = overlayProductText(content, locale, t.admin.productAdmin.about, ["features", "slug"]);
   const open = isPlatformSearchOpen();
   const origin = await getSiteOrigin();
   const en = "/platform/about";
@@ -42,7 +48,10 @@ export default async function AboutPage() {
   const h = await headers();
   if (platformHost() && !isPlatformHostname(requestHost((n) => h.get(n)) ?? "")) notFound();
   const { t, locale } = await getT();
-  const a = t.admin.productAdmin.about;
+  const content = await loadProductPage(await createClient(), "home");
+  const a = overlayProductText(content, locale, t.admin.productAdmin.about, ["features", "slug"]);
+  const heroPhoto = productPhotoId(content, "hero.photo");
+  const heroAlt = productText(content, "hero.photo", locale);
   const origin = await getSiteOrigin();
   const jsonLd = JSON.stringify({
     "@context": "https://schema.org",
@@ -73,7 +82,13 @@ export default async function AboutPage() {
             </a>
           </div>
         </div>
-        <ProductMockup mock={a.bands[0].mock} />
+        {heroPhoto ? (
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-border bg-surface">
+            <Image src={driveImageUrl(heroPhoto)} alt={heroAlt} fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
+          </div>
+        ) : (
+          <ProductMockup mock={a.bands[0].mock} />
+        )}
       </section>
 
       <div id="features" className="border-t border-border">
