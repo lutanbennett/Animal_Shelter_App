@@ -40,6 +40,7 @@ grant select on public.platform_content to rls_definer;
 drop policy if exists platform_content_public_view on public.platform_content;
 create policy platform_content_public_view on public.platform_content for select to rls_definer using (true);
 
+revoke insert, update, delete, truncate, references, trigger on public.public_platform_content from authenticated, anon;
 grant select on public.public_platform_content to anon, authenticated, service_role;
 
 -- p_rows: [{"page":"home","key":"heading","en":"…","th":"…","drive_file_id":"…"}]. A row's drive_file_id is changed only when the element
