@@ -1,7 +1,7 @@
 {
+  "83137": "Per-environment deploy secrets",
   "cpstr": "A page telling Cooper's story",
   "ptlng": "Product pages have no language control",
-  "83137": "Per-environment deploy secrets",
   "wbcch": "Construction page cached past switch",
   "shmis": "Shelter missing from chooser",
   "tnycl": "Console definer functions uncatalogued",
@@ -61,5 +61,6 @@
   "rlprg": "Reel upload looks frozen",
   "o5glo": "Who can run a proof line",
   "a4k2p": "Mark an outsider's change",
-  "m9fr2": "Migration check vs open PRs"
+  "m9fr2": "Migration check vs open PRs",
+  "pcmsx": "Console edits the product pages"
 }
