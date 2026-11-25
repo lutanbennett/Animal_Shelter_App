@@ -64,3 +64,7 @@ subtree `admin.productAdmin.about`: `heading`, `lead`, `bands.0.name`, `sections
 - **Seed:** 0442 inserts `on conflict do nothing`, so re-running it never overwrites a console edit. It was generated once from the dictionaries
   (a scratch script, not committed); if the dictionary prose changes before the console ships, the rows will not follow it, which is the point.
 - **Harness:** `supabase/harness/platform_content.sql`.
+
+## Found by CI, and the two places that now know
+
+`public-views` (live anon read) failed the first push: it wants every public view in `PUBLIC_VIEWS`, and a view that answers with no shelter header is a fault unless it is installation-level. `public_platform_content` is exactly that, so it is in `PUBLIC_VIEWS` and in `INSTALLATION_LEVEL_VIEWS` (`scripts/check-public-views.mjs`), and `platform_content` is recorded in `docs/tenancy-shared-tables-registry.json` as deliberately unscoped. The console stream does not need to touch either.
