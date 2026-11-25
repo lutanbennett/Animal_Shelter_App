@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { BackLink } from "@/components/BackLink";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdminUser, hasAdminRole } from "@/lib/auth/require-admin";
@@ -52,9 +51,6 @@ export default async function TwoStepPage({ searchParams }: { searchParams: Prom
       )}
 
       <p className="max-w-prose text-xs text-muted">{s.lostPhone}</p>
-      <div>
-        <BackLink href="/admin">{s.backToSettings}</BackLink>
-      </div>
     </main>
   );
 }
