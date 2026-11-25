@@ -2,6 +2,7 @@
   "rule": "Every public base table is either scoped (has shelter_id, so 0392/0396's restrictive policies filter it) or recorded here as deliberately unscoped, with a reason in checkable terms. scripts/check-tenancy-shared-tables.mjs fails on a table with no column and no record, and on a record for a table that now has the column or no longer exists. Item #tnc10; docs/decisions/2026-11-17-tenancy-unscoped-tables.md.",
   "tables": {
     "shelters": "The tenant table itself; its row is the shelter.",
+    "platform_content": "Installation-level: the words and photo ids of the cooperjaidee.org product pages (0441). The product site has no shelter, every row is public by intent, writes are product-administrator only through definer functions. docs/decisions/2026-11-25-product-page-content-storage.md.",
     "schema_migrations": "Platform: which migrations ran.",
     "status_alert_checks": "Installation monitoring (Pi/Worker health), platform.",
     "status_alert_runs": "Installation monitoring, platform.",

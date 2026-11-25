@@ -87,6 +87,7 @@ const PUBLIC_VIEWS = [
   // readable; the donation_channels table itself refuses anon.
   "public_donation_channels",
   "public_shop_links",
+  "public_platform_content", // installation-level: the product site's own pages, no shelter (0441)
   // 0369. Shown, unarchived merchandise products and their sizes/colours: no supplier, no stock count, no creator.
   "public_merch_products",
   "public_merch_variants",
@@ -203,10 +204,10 @@ if (!root.ok) {
   // view scopes itself (0391, 0430), so a view created or recreated as `postgres` answers EVERY shelter's rows to
   // anyone. Every call above sends the header, which is why this was invisible: public_site_content leaked 6 rows
   // with and without it (#1788) and nothing here went red. A view over installation-level tables (the register,
-  // docs/tenancy-shared-tables-registry.json) would be listed in INSTALLATION_LEVEL_VIEWS; there are none today.
+  // docs/tenancy-shared-tables-registry.json) is listed in INSTALLATION_LEVEL_VIEWS: public_platform_content (0441) is the one today.
   // public_shelter_stats is an aggregate: it always answers one row, so its counts must all be zero.
   // A view that is also empty WITH the header proves nothing (no rows to leak): it is noted, never passed silently.
-  const INSTALLATION_LEVEL_VIEWS = new Set();
+  const INSTALLATION_LEVEL_VIEWS = new Set(["public_platform_content"]); // 0441: every row is public by intent and belongs to no shelter
   const bare = { apikey: key, Authorization: `Bearer ${key}` };
   for (const name of exposed.filter((n) => n.startsWith("public_") && !INSTALLATION_LEVEL_VIEWS.has(n))) {
     const read = await fetch(`${url}/rest/v1/${name}?select=*&limit=1000`, { headers: bare });
