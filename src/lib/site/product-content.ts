@@ -39,3 +39,27 @@ export function productText(content: ProductPageContent, key: string, locale: Lo
 export function productPhotoId(content: ProductPageContent, key: string): string | null {
   return content.get(key)?.driveFileId?.trim() || null;
 }
+
+/** The shapes the database accepts (0441 checks), so the console can refuse before asking. */
+export const PRODUCT_PAGE_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
+export const PRODUCT_KEY_RE = /^[A-Za-z0-9._-]{1,200}$/;
+
+/**
+ * The dictionary's words with the console's rows laid over them (#pcmsx). Walks `base` (a dictionary subtree, already in the
+ * reader's language) and, for every string, asks the rows for `prefix + path` and keeps the dictionary's own string when there is
+ * no row, so a missing or deleted row can never blank a page: the dictionary is the fallback, by design. Arrays are walked by
+ * index and objects by key, matching the dotted keys the seed (0442) was generated with. `skip` names keys that are code, not
+ * words (a link's slug, a nested subtree read as its own page), and they are copied as they are.
+ */
+export function overlayProductText<T>(content: ProductPageContent, locale: Locale, base: T, skip: readonly string[] = [], prefix = ""): T {
+  if (typeof base === "string") return productText(content, prefix, locale, base) as T;
+  if (Array.isArray(base)) return base.map((v, i) => overlayProductText(content, locale, v, skip, prefix ? `${prefix}.${i}` : `${i}`)) as T;
+  if (base && typeof base === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(base as Record<string, unknown>)) {
+      out[k] = skip.includes(k) ? v : overlayProductText(content, locale, v, skip, prefix ? `${prefix}.${k}` : k);
+    }
+    return out as T;
+  }
+  return base;
+}

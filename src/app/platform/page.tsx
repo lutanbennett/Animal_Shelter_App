@@ -56,6 +56,9 @@ export default async function PlatformPage() {
       <div>
         <h1 className="text-2xl font-semibold text-foreground">{t.admin.productAdmin.title}</h1>
         <p className="max-w-prose text-sm text-muted">{t.admin.productAdmin.subtitle}</p>
+        <a href="/platform/content" className="mt-2 inline-block text-sm font-medium text-primary underline">
+          {t.admin.productAdmin.content.link} →
+        </a>
       </div>
       <ProductAdminPanel
         enquiries={(enquiries.data ?? []) as EnquiryRow[]}
