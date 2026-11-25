@@ -1347,6 +1347,16 @@
         "migration": "0438_product_admin_shelter_access.sql",
         "item": "function public.product_admin_access_remove definer",
         "reason": "PADMIN shelter access backup (#shsec, docs/decisions/2026-11-23-console-shelter-access.md): Archives a login's rows in the shelter (reversible, as the shelter's own archiveUser, 0063); nothing is deleted. Gated by is_product_admin() and aal2 in the body, the PADMIN list outside the card system by Lutan's 2026-11-18 decision. It creates no role, edits no role and touches no card; it only hands out a role the shelter already defined, so no new way to grant exists. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0443_one_main_role_per_shelter.sql",
+        "item": "function public.product_admin_access_add definer",
+        "reason": "PADMIN shelter access (#acwho, docs/decisions/2026-11-25-one-main-role-per-shelter.md): Links an existing login to an existing role of the shelter, now also a login that works at another shelter. Gated by is_product_admin() and aal2 in the body, the PADMIN list outside the card system by Lutan's 2026-11-18 decision. Re-created by 0443 so a login may hold a main role in each shelter; it grants no new way to give access. Recorded under outsideTheCardSystem.productAdmin, not debt."
+      },
+      {
+        "migration": "0443_one_main_role_per_shelter.sql",
+        "item": "function public.product_admin_link_shelter_admin definer",
+        "reason": "PADMIN shelter access (#acwho, docs/decisions/2026-11-25-one-main-role-per-shelter.md): Links a login to the shelter's Admin role; its already-has-a-main-role refusal now asks this shelter only. Gated by is_product_admin() and aal2 in the body, the PADMIN list outside the card system by Lutan's 2026-11-18 decision. Re-created by 0443 so a login may hold a main role in each shelter; it grants no new way to give access. Recorded under outsideTheCardSystem.productAdmin, not debt."
       }
     ],
     "stubs": [
