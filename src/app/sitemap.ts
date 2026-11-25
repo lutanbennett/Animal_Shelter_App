@@ -9,6 +9,7 @@ import { hasPublicMerchProducts } from "@/lib/merch/shop";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { localizedHref } from "@/lib/public-paths";
 import { onPlatformHost, platformSitemap } from "@/lib/platform-search";
+import { cooperIsLive } from "@/lib/site/cooper-page";
 
 // PUBLIC_SITE is a Worker var read at request time (src/lib/public-site.ts),
 // and the entries come from the database: never baked at build time.
@@ -32,7 +33,7 @@ export const dynamic = "force-dynamic";
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // The product host lists only its own page, never a shelter table (#cjseo).
-  if (await onPlatformHost()) return platformSitemap(await getSiteOrigin());
+  if (await onPlatformHost()) return platformSitemap(await getSiteOrigin(), undefined, await cooperIsLive(await createClient()));
   if (isPublicSiteLocked(await getPublicSiteState())) return [];
   const [origin, supabase] = await Promise.all([getSiteOrigin(), createClient()]);
   if (!origin) return [];

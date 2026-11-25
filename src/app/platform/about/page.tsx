@@ -116,6 +116,7 @@ export default async function AboutPage() {
       <section className="mx-auto w-full max-w-6xl px-6 py-12">
         <h2 className="text-2xl font-semibold text-foreground">{a.whoTitle}</h2>
         <p className="mt-2 max-w-prose text-foreground">{a.who}</p>
+        <p className="mt-3 max-w-prose text-foreground">{a.whoMore}</p>
       </section>
 
       <section className="border-y border-border bg-surface">

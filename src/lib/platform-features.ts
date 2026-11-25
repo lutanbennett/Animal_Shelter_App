@@ -9,10 +9,14 @@ export const PRODUCT_HOME = "/platform/about";
 export const PRODUCT_FEATURE_SLUGS = ["residents", "medical", "adoptions", "volunteers", "website", "money"] as const;
 export type ProductFeatureSlug = (typeof PRODUCT_FEATURE_SLUGS)[number];
 
+/** Cooper's page (#cpstr). Its words and photo are the product administrator's, typed in the console as page "cooper"; until the `heading` line exists the page answers not-found and the sitemap leaves it out. */
+export const PRODUCT_COOPER = "/platform/cooper";
+export const PRODUCT_COOPER_PAGE = "cooper";
+
 export const productFeaturePath = (slug: string, th = false): string => `${th ? "/th" : ""}/platform/features/${slug}`;
 
 /** Every English product page address, home first. */
-export const PRODUCT_PAGES_EN: string[] = [PRODUCT_HOME, ...PRODUCT_FEATURE_SLUGS.map((s) => productFeaturePath(s))];
+export const PRODUCT_PAGES_EN: string[] = [PRODUCT_HOME, ...PRODUCT_FEATURE_SLUGS.map((s) => productFeaturePath(s)), PRODUCT_COOPER];
 /** Every Thai product page address, home first. */
 export const PRODUCT_PAGES_TH: string[] = PRODUCT_PAGES_EN.map((p) => `/th${p}`);
 

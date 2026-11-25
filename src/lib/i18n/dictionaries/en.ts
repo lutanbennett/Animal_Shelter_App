@@ -1312,6 +1312,7 @@ const en = {
         },
         whoTitle: "Who it is for",
         who: "Animal shelters and rescues that want one dependable system. Each shelter’s information is kept separate and is never visible to another shelter.",
+        whoMore: "It is animal rescue management as much as shelter management: the same records, medical care, adoptions and volunteers, whether you run a building or a rescue that works from foster homes.",
         joinTitle: "Interested in joining?",
         joinText: "Tell us about your shelter and we will be in touch.",
         enquire: "Ask about joining",

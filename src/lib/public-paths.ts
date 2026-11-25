@@ -32,7 +32,7 @@
  * page, so the Worker never edge-caches it.
  */
 
-export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/sitemap.xml", "/lca-logo.jpg", "/lca-logo-160.jpg", "/lca-logo.png", "/lca-logo-transparent.png", "/api/version", "/platform/enquire", "/platform/about"];
+export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/sitemap.xml", "/lca-logo.jpg", "/lca-logo-160.jpg", "/lca-logo.png", "/lca-logo-transparent.png", "/api/version", "/platform/enquire", "/platform/about", "/platform/cooper"];
 
 /**
  * The public *pages* — the one list. The proxy (isPublicPath), the layout gate
@@ -80,7 +80,7 @@ export const PUBLIC_PATH_PREFIXES = [
  * carry the session cookie. No /r/ or /e/ either: a scanned card or QR
  * code lands on /login with ?next= and goes back there after sign-in.
  */
-export const LOCKED_PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/sitemap.xml", "/lca-logo.jpg", "/lca-logo-160.jpg", "/lca-logo.png", "/lca-logo-transparent.png", "/api/version", "/platform/enquire", "/platform/about"];
+export const LOCKED_PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/sitemap.xml", "/lca-logo.jpg", "/lca-logo-160.jpg", "/lca-logo.png", "/lca-logo-transparent.png", "/api/version", "/platform/enquire", "/platform/about", "/platform/cooper"];
 
 export const LOCKED_PUBLIC_PATH_PREFIXES = ["/privacy", "/platform/features/"];
 
@@ -139,7 +139,7 @@ export function thPathRest(pathname: string): string | null {
   if (pathname !== "/th" && !pathname.startsWith("/th/")) return null;
   const rest = pathname.slice(3) || "/";
   // The product page's Thai twin (#cjseo): not a shelter public page, but it has a Thai address for search engines.
-  if (rest === "/platform/about" || rest.startsWith("/platform/features/")) return rest;
+  if (rest === "/platform/about" || rest === "/platform/cooper" || rest.startsWith("/platform/features/")) return rest;
   return isPublicPage(rest) ? rest : null;
 }
 

@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { isPlatformSearchOpen } from "./public-site";
-import { PRODUCT_PAGES_EN, PRODUCT_PAGES_TH, productAlternates } from "./platform-features";
+import { PRODUCT_COOPER, PRODUCT_PAGES_EN, PRODUCT_PAGES_TH, productAlternates } from "./platform-features";
 
 /**
  * The product pages a search engine may index (#cjseo, widened by #psubp): the home page and each feature page, English and its
@@ -20,10 +20,11 @@ export function platformRobots(origin: URL | null, open = isPlatformSearchOpen()
 }
 
 /** The platform host's sitemap: every product page in both languages and nothing from any shelter table. Empty while closed. */
-export function platformSitemap(origin: URL | null, open = isPlatformSearchOpen()): MetadataRoute.Sitemap {
+export function platformSitemap(origin: URL | null, open = isPlatformSearchOpen(), cooperLive = true): MetadataRoute.Sitemap {
   if (!open || !origin) return [];
   const abs = (p: string) => new URL(p, origin).toString();
-  return PLATFORM_INDEXABLE.map((p) => {
+  // Cooper's page is listed only once it has content (#cpstr): a sitemap entry that answers not-found is worse than none.
+  return PLATFORM_INDEXABLE.filter((p) => cooperLive || (p !== PRODUCT_COOPER && p !== `/th${PRODUCT_COOPER}`)).map((p) => {
     // Each page gets ITS OWN language links, not the home page's.
     const en = p.startsWith("/th/") ? p.slice(3) : p;
     const alt = productAlternates(en);

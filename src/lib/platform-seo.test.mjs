@@ -7,7 +7,7 @@ import { platformRedirect } from "./site-hosts.ts";
 
 const env = { PLATFORM_HOST: "cooperjaidee.example" };
 const origin = new URL("https://cooperjaidee.example");
-const ALL = ["/platform/about","/platform/features/residents","/platform/features/medical","/platform/features/adoptions","/platform/features/volunteers","/platform/features/website","/platform/features/money","/th/platform/about","/th/platform/features/residents","/th/platform/features/medical","/th/platform/features/adoptions","/th/platform/features/volunteers","/th/platform/features/website","/th/platform/features/money"];
+const ALL = ["/platform/about","/platform/features/residents","/platform/features/medical","/platform/features/adoptions","/platform/features/volunteers","/platform/features/website","/platform/features/money","/platform/cooper","/th/platform/about","/th/platform/features/residents","/th/platform/features/medical","/th/platform/features/adoptions","/th/platform/features/volunteers","/th/platform/features/website","/th/platform/features/money","/th/platform/cooper"];
 
 test("the product site is closed unless the switch is exactly 'open'", () => {
   for (const v of [undefined, "", "closed", "OPEN", "true", "locked"]) assert.equal(isPlatformSearchOpen(v), false, String(v));
@@ -43,11 +43,19 @@ test("sitemap: empty while closed; open lists every product page, each with its 
   assert.equal(money.alternates.languages.th, "https://cooperjaidee.example/th/platform/features/money");
 });
 
+test("Cooper's page is left out of the sitemap until it has content (#cpstr), and listed once it has", () => {
+  const without = platformSitemap(origin, true, false).map((e) => e.url);
+  assert.equal(without.some((u) => u.endsWith("/platform/cooper")), false);
+  assert.equal(without.length, ALL.length - 2);
+  assert.equal(platformSitemap(origin, true, true).filter((e) => e.url.endsWith("/platform/cooper")).length, 2);
+  assert.deepEqual(platformSitemap(origin, false, true), []);
+});
+
 test("the switch closes every product page at once, and opens only product pages", () => {
   const closed = platformRobots(origin, false);
   assert.equal(closed.rules.allow, undefined);
   assert.deepEqual(platformSitemap(origin, false), []);
-  for (const p of platformRobots(origin, true).rules.allow.slice(1)) assert.match(p, /^(\/th)?\/platform\/(about|features\/[a-z-]+)$/);
+  for (const p of platformRobots(origin, true).rules.allow.slice(1)) assert.match(p, /^(\/th)?\/platform\/(about|cooper|features\/[a-z-]+)$/);
 });
 
 test("public path lists carry the feature pages, and the Thai address rewrites", () => {
