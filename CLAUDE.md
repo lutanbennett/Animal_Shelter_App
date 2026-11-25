@@ -850,7 +850,7 @@ dev server running, none of it matters.
   re-runnable, harmless to code that doesn't know about it), merged and
   applied to dev the same day; then the feature branch created from the
   updated `main`. Aim for one in-flight branch carrying a migration at a
-  time; nothing reserves the slot, so `check-migration-numbers.mjs` (it reads open PRs) settles the number at commit. If it says
+  time; nothing reserves the slot, so `check-migration-numbers.mjs` settles the number: one past `origin/main`'s highest, no gaps. It asks `gh` for open PRs when it can (the hook never does), but **do not plan two migration-carrying streams in one batch expecting both green**: on 2026-11-25 CI (`--base origin/main`) failed #1880's `0440` as a gap and said to take `0439`, which #1881 held and had applied to dev, while the bare command passed on both branches (so bare and `--base` disagree for this check too, as for `check-test-plan.mjs`). **The second PR WAITS:** the first merges, it runs `node scripts/worktree.mjs sync`, pushes, and its number is correct with no rename. **Never rename onto a number another open PR holds, above all one already applied to dev.** If it says
   your file is already applied to dev, do NOT renumber it: stop and report. If two streams both
   need schema, their migrations go in one schema PR.
 - Apply with `node scripts/apply-migrations.mjs` (`--dry-run` first for
