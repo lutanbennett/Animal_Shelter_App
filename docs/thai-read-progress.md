@@ -45,6 +45,13 @@ which are the ones merged after the list was made, so they were never read. Afte
   - Batch 5 — the Management page's tile descriptions (9), the Product admin menu item (1) and the shop staff photo controls (7). **All 17 passed, none changed.** `nav.productAdmin` (ผู้ดูแลผลิตภัณฑ์) was RAISED as possibly reading like "looks after the merchandise" and KEPT: looked at, not skipped.
   - Batch 6 — the shop's exchange-rate tab, `merchStaff.rates*` (10). **All passed, none changed.**
   - **That is all 91 new worker-facing strings read. None changed.**
+  - **Then the console's 666, starting with the 76 that are the PUBLIC CooperJaidee About page** — the page a shelter
+    considering the system reads. The ~490 strings inside the console itself are labels only a product administrator
+    sees, and he reads English, so they are the lowest-value reading in the whole list: do those last, or not at all.
+  - Batch 7 — the About page's resident-records block and its sample card (14). **All passed, none changed.**
+  - Batch 8 — the medical-care block (13). **All passed, none changed.**
+  - Batch 9 — the adoptions-and-fostering block (13). **All passed, none changed** — including two I flagged as
+    possibly wrong (below), which the reader judged acceptable.
 - **Position reached:** the four disagreements are settled and **91 strings are read** (batches 1-6: everything new
   except the console). **Still to read:** the 666 `admin` console strings. The 133 "Thai changed" strings are dealt
   with differently — see below.
@@ -84,6 +91,14 @@ which are the ones merged after the list was made, so they were never read. Afte
   Put that to the reader as one question rather than string by string.
 
 ### Seen and left as is (ruled, do not re-raise)
+
+- **About page, the adoptions block — two raised with the reader and KEPT, 2026-11-26.** Recorded so nobody spends
+  the same reading twice. (1) `bands[2].mock.rows[0].0`: the English row label is *Placement* and the Thai is
+  **ประเภท** ("type"), so the row reads "type: foster". (2) `bands[2].mock.sub`: *Mali · placement* is
+  **มะลิ · การไปอยู่บ้านใหม่** ("going to live in a new home"), which is adoption-flavoured on a card whose own title
+  is *Foster or adopt*. Both read well enough to a Thai reader; **neither is a fault, and neither is to be re-raised.**
+- `nav.productAdmin` (ผู้ดูแลผลิตภัณฑ์) and the About page's `bands[0].mock.rows[1].0` (ที่อยู่ for where an animal is
+  INSIDE the shelter, not a postal address) were raised the same way and kept.
 
 - `management.cashflow.income.inKind`: the English puts the amount first (*"+450 in kind"*), the Thai puts the word
   first (*"+สิ่งของ 450"*). Raised with the reader because only a reader can judge it. **Lutan, 2026-11-26: "leave the
