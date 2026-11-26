@@ -219,7 +219,9 @@ function cfAuthNote() {
 }
 
 function wrangler(args, opts = {}) {
-  const r = spawnSync(process.execPath, [WRANGLER, ...args], {
+  // --require the net trace: wrangler swallows the error behind its DNS message (#wgdns).
+  const trace = fileURLToPath(new URL("./lib/wrangler-net-trace.cjs", import.meta.url));
+  const r = spawnSync(process.execPath, ["--require", trace, WRANGLER, ...args], {
     stdio: opts.input ? ["pipe", "inherit", "inherit"] : "inherit",
     ...opts,
     env: { ...process.env, ...cfAuth(), ...(opts.env ?? {}) },
