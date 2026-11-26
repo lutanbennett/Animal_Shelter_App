@@ -70,7 +70,8 @@ import { CLOUDFLARE_ACCOUNT_VAR, DELIBERATE_DEV_FALLTHROUGH, WORKER_BUILD_VARS, 
 import { appliedMigrations } from "./lib/deploy-schema.mjs";
 import { releaseProblems, schemaVerdict } from "./lib/release-guards.mjs";
 import { strayEnvFiles } from "./lib/env-leak.mjs";
-import { readWranglerConfig } from "./lib/wrangler.mjs";
+import { readWranglerConfig, routeHosts } from "./lib/wrangler.mjs";
+import { domainsToReassert, readFlaggedHosts } from "./lib/attached-hosts.mjs";
 import { takeTreeLock, treeProblems } from "./lib/tree-lock.mjs";
 import { ACTIONS_KEY_VAR, actionsKeyProblem, builtKeyProblem, keyFingerprint } from "./lib/actions-key.mjs";
 // TypeScript, loaded through Node's type stripping: the same file the app
@@ -361,6 +362,25 @@ async function liveVersion() {
 }
 const previous = await liveVersion();
 
+// The hosts the console attached to this Worker (#hstau). A deploy DELETES every custom domain absent from
+// the config it deploys (measured, #1899), so each flagged host is passed as `--domain`, which wrangler
+// APPENDS to wrangler.jsonc's routes (docs/decisions/2026-11-26-host-attach-deploy.md, -deploy-reasserts-hosts.md).
+//
+// A FAILED READ REFUSES THE DEPLOY, and that is deliberate: do NOT soften it to a warning. Deploying without
+// the list is exactly the outage this exists to prevent — every console-attached shelter address would go
+// dark until someone noticed. A Supabase blip costing a retry is the cheaper failure. (Contrast the schema
+// check above, where "could not ask" warns: a missed check there loses nothing that is live.)
+const flagged = await readFlaggedHosts(env, projectRef(env));
+if (!flagged.ok) {
+  console.error(
+    `deploy: could not read which hosts are attached to the ${envName} Worker (shelter_hosts.attach_to_worker): ${flagged.reason}.
+` +
+      "  Refusing: a deploy without that list would DELETE every console-attached custom domain. Retry when the database answers.",
+  );
+  bail(2);
+}
+const extraDomains = domainsToReassert(flagged.hosts, routeHosts(readWranglerConfig(), envName));
+
 console.log(`deploy: release ${latestRelease.version} "${latestRelease.title}" (live now: ${previous ?? "unknown"})`);
 if (noPi) console.log(`deploy: --no-pi: ORIGIN_HOST will be EMPTY on ${envName}; the Worker serves everything and the Pi is bypassed. Deploy again without --no-pi to put it back.`);
 console.log(`deploy: ${envName} → Supabase project ${projectRef(env)} (${git("rev-parse --short HEAD")})`);
@@ -386,7 +406,12 @@ const deployArgs = [
   "--autoconfig",
   "false",
   ...(noPi ? ["--var", "ORIGIN_HOST:"] : []),
+  ...extraDomains.flatMap((h) => ["--domain", h]),
 ];
+console.log(
+  `deploy: attached hosts re-asserted as --domain: ${extraDomains.length ? extraDomains.join(", ") : "none"}` +
+    ` (${flagged.hosts.length} flagged in shelter_hosts, the rest already in wrangler.jsonc routes)`,
+);
 if (planOnly) {
   console.log(`deploy: --plan: would ${skipBuild ? "reuse the last build" : "build"}${pushSecrets ? ", push secrets" : ""}, then run:`);
   console.log(`  wrangler ${deployArgs.map((a) => (/\s/.test(a) ? JSON.stringify(a) : a)).join(" ")}`);
