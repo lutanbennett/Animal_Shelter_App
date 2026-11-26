@@ -1,6 +1,8 @@
 # The Thai read: how new Thai wording gets read by a person
 
-**Last read: 2026-11-01** (Lutan's wife read all 91 production labels). This line is the whole
+**Last read: 2026-11-26** (Lutan with a Thai reader beside him: 324 strings — everything new a worker or a
+visitor meets, including all 315 of the public CooperJaidee pages. The console's own ~329 labels were **accepted
+unread** by his decision that day, which `docs/thai-read-progress.md` records as accepted rather than read). This line is the whole
 record of the date. Whoever merges a round of corrections changes it in the same pull request.
 Chosen because it lives in the one file everybody opens first and travels with the change that
 makes it true, so it cannot drift the way a calendar entry or a note in a chat can.
