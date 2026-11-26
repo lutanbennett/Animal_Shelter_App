@@ -86,7 +86,7 @@ it. Everything outside those comments is judged.
 | PR | opened from this branch |
 | Tested by / date | Claude, 2026-11-26 |
 | Carries a migration? | no |
-| Tested at SHA | SHA_HERE |
+| Tested at SHA | b0112d5f3 |
 
 ## 1. Scope and risk
 
@@ -230,7 +230,7 @@ Manual verification by: n/a: developer scripts with no surface for a person to l
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [x] Checklist pasted into the PR
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — pending: next release cut
 
 Result: pass
 
