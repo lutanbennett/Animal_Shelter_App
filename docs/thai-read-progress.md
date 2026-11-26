@@ -40,9 +40,10 @@ which are the ones merged after the list was made, so they were never read. Afte
 - **Read so far, by Lutan with a Thai reader beside him:**
   - Batch 1 — the reels multi-clip uploader (13) and the public shop (3). **All 16 passed, none changed.**
   - Batch 2 — the tax-deduction field and the e-Donation list, `donations.taxId.*` (14). **All passed, none changed.**
-- **Position reached:** the four disagreements are settled and batches 1-2 are read. **Still to read:** `login` (3),
-  `management` (19), `merchStaff` (17), `animalReport` (6), `animalStaff` (1), `nav` (1), the remaining
-  14 `donations.taxId` strings, the 666 `admin` strings, and the 133 "Thai changed" strings.
+  - Batch 3 — the rest of the e-Donation screen (14) and three sign-in messages, `login.closed.*` and `siteNotSetUp` (3). **All 17 passed, none changed.**
+  - Batch 4 — the public animal-report photo field and its four errors plus the staff photo label (7), and the money page's income side, `management.cashflow.income.*` (10). **All 17 passed, none changed.**
+- **Position reached:** the four disagreements are settled and **64 strings are read** (batches 1-4). **Still to read:**
+  `management.landing.tiles.*` (9), `nav` (1), `merchStaff` (17), the 666 `admin` strings, and the 133 "Thai changed" strings.
 - **Do NOT write a `--skip-read` range for this run until it finishes.** A range covering `a637f36a2` would skip the
   unread majority as well as what was read, which is exactly the fault the range convention exists to avoid.
 
@@ -64,6 +65,10 @@ which are the ones merged after the list was made, so they were never read. Afte
   Put that to the reader as one question rather than string by string.
 
 ### Seen and left as is (ruled, do not re-raise)
+
+- `management.cashflow.income.inKind`: the English puts the amount first (*"+450 in kind"*), the Thai puts the word
+  first (*"+สิ่งของ 450"*). Raised with the reader because only a reader can judge it. **Lutan, 2026-11-26: "leave the
+  ordering for the in kind amount."** Each reads naturally in its own language; it is not a mismatch to fix.
 
 - `uploads.errors.cannotReadResidentsList`: the English moved to *"You do not hold a card that lets you read the
   residents list"* and the Thai still says, roughly, *"your permission cannot read the animal list"* — it predates the
