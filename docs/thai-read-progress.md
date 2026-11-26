@@ -69,12 +69,23 @@ which are the ones merged after the list was made, so they were never read. Afte
     **ยกเลิก** for a VOID receipt, raised because an accountant might want a narrower term.
   - Batches 13-18 — the adoptions, medical and money FEATURE pages: their prose, worked examples, search titles and
     section cards (10, 12, 12, 12, 12, 12). **All passed except the two corrections below.**
-  - **229 strings read in all so far; 107 of the public strings are left.** A script hands out the batches now
+  - Batches 19-26 — the rest of the resident, volunteer and website feature pages, and the About page's own front
+    matter (12, 12, 12, 10, 12, 12, 12, 13). **All passed except the corrections below.**
+  - **THE READ IS FINISHED: 324 strings read, 4 changed.** Every new string a worker or a visitor meets is read,
+    including all 315 public ones. **229 strings read at the halfway mark** A script hands out the batches now
     (`next-batch.mjs` in the session scratchpad): it keeps the public pages first, skips the 87 repeats, and records
     what has been read. **By batch 13 I was tracking a 894-row list by hand, which is how a string gets shown twice.**
-- **Position reached:** the four disagreements are settled and **91 strings are read** (batches 1-6: everything new
-  except the console). **Still to read:** the 666 `admin` console strings. The 133 "Thai changed" strings are dealt
-  with differently — see below.
+- **Position reached: FINISHED for this list.** 324 strings read across 26 batches in one sitting, 4 changed. The
+  console's ~329 remaining labels are **accepted, not read** (the block below says why and what would reopen them).
+- **NEXT RUN, and read this before choosing the command.** The list was generated at commit `a637f36a2`, so pass all
+  three ranges:
+  `node scripts/list-thai-added.mjs 2026-11-12 --skip-read 2026-11-12..4bf320928 --skip-read 4bf320928..4644759ef --skip-read 4644759ef..a637f36a2`
+  **That third range skips the console strings too, which were accepted rather than read.** That is the intended
+  behaviour of his decision, not an oversight — but it is the one place where "skipped" and "read by a person" part
+  company, so it is written here rather than left for someone to infer from a command line.
+- **Two strings elsewhere in the app still say `พบแพทย์` (the doctor) where a vet is meant** — a late-recorded visit
+  and a bill belonging to a visit. They are not in this week's list and were read in earlier weeks, so they are a
+  question for the next read, not a missed correction.
 - **WHAT THE 133 "THAI CHANGED" STRINGS ACTUALLY ARE, MEASURED RATHER THAN ASSUMED:** not the บัตรสิทธิ์ rewording
   (that was the first two runs). `git diff 4644759ef..HEAD -- src/lib/i18n/dictionaries/th.ts` shows them to be the
   **multi-shelter sweep**: the hard-coded ลานนาแคร์ / Lanna Care replaced by `{shelter}` and `{shelterShort}` so a
@@ -87,6 +98,14 @@ which are the ones merged after the list was made, so they were never read. Afte
   unread majority as well as what was read, which is exactly the fault the range convention exists to avoid.
 
 ### What was changed
+
+000. **The same sample card read differently on two pages, twice over, and both were fixed to agree.**
+   (a) *Morning feed*, *Walk dogs* and *Open* were ให้อาหารเช้า / พาสุนัขเดิน / ยังไม่ทำ on the volunteers feature
+   page and ให้อาหารตอนเช้า / พาสุนัขเดินเล่น / ยังไม่เริ่ม on the home page; the home page's wording won, as the one
+   more people see. (b) The sample cat was ทิเกอร์ on the home page and ไทเกอร์ on the website page; ทิเกอร์ won,
+   **which is his own earlier answer and not a preference of mine** — offered ไทเกอร์ as the commoner spelling in
+   batch 11, he kept ทิเกอร์. **Both were found only by reading the two pages in one sitting**, which is an argument
+   for keeping the public pages together in one run rather than splitting them across weeks.
 
 00. **The About page said the DOCTOR where it meant the VET, in two places, and the page disagreed with itself.**
    `features.medical.sections[0].name` was **การพบแพทย์** ("seeing the doctor") while its own paragraph underneath, and
