@@ -59,6 +59,26 @@ export const ALLOWED = {
     reason:
       "reads auth.users, which a re-owned role is refused (42501), so it stays owned by postgres, as login_display_name does (0425 line 67, precedents 0417 and 0370). Re-owning it would break first login (docs/decisions/2026-11-21-tenancy-catalogue-flags.md).",
   },
+  "function:public.product_admin_set_platform_content": {
+    reason:
+      "writes public.platform_content, whose only policy is `platform_content_public_view` (for select to rls_definer), so under rls_definer " +
+      "(nobypassrls, not the table's owner) its insert/update would be refused by row-level security. The table has no shelter_id (0441 line 5: " +
+      "the product site has no shelter), so there is no tenant filter for the postgres owner to bypass. Gated by is_product_admin() and aal2 " +
+      "(docs/decisions/2026-11-26-tenancy-catalogue-gate.md).",
+  },
+  "function:public.product_admin_delete_platform_content": {
+    reason:
+      "deletes from public.platform_content, whose only policy is `platform_content_public_view` (for select to rls_definer), so under " +
+      "rls_definer its delete would match 0 rows. The table has no shelter_id (0441 line 5), so there is no tenant filter to bypass. Gated by " +
+      "is_product_admin() and aal2 (docs/decisions/2026-11-26-tenancy-catalogue-gate.md).",
+  },
+  "table:public.platform_content": {
+    reason:
+      "has no shelter_id and no tenant policy to bypass; its one view, public_platform_content, is owned by rls_definer and reads it through " +
+      "its own `platform_content_public_view` policy (for select to rls_definer using (true)), so the blank-page failure definer_all guards " +
+      "against cannot happen to it. Its writers are the two product_admin_*_platform_content functions above, owned by postgres " +
+      "(docs/decisions/2026-11-26-tenancy-catalogue-gate.md).",
+  },
   "function:public.login_display_name": {
     reason:
       "reads auth.users (RLS on, no policy; postgres cannot add one), so a re-owned role reads 0 rows. Stays owned by postgres; " +
