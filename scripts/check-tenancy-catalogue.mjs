@@ -5,7 +5,8 @@
 //
 // Run in every release (docs/release-procedure.md section 5) AND nightly against dev by .github/workflows/tenancy-catalogue.yml (strict, --tenant-role rls_definer; docs/decisions/2026-11-15-tenancy-lint-scheduled.md).
 // Needs SUPABASE_ACCESS_TOKEN (the Management API). It is still NOT on the pull-request path: a PR run would hand a token to every run of a public repo, so the nightly run uses a Database: Read token scoped to dev only.
-// --strict exits 1 on any finding; for the re-own stream, once a tenant role exists.
+// --strict exits 1 on any finding. The gate WHERE A MIGRATION IS WRITTEN is scripts/check-tenancy-migrations.mjs (a CI job, blocking);
+// this one reads the live database, so it also sees what file text cannot (redefinitions, dynamic SQL) — see 2026-11-26-tenancy-catalogue-gate.md.
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 import { exitWith } from "./lib/exit.mjs";
 import { lintCatalogue, VIEWS_SQL, FUNCTIONS_SQL, TABLES_SQL, DEFAULT_TENANT_ROLE } from "./lib/tenancy-catalogue.mjs";
