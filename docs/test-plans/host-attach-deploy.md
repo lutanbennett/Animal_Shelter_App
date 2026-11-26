@@ -11,7 +11,7 @@
 | PR | opened from this branch |
 | Tested by / date | Claude, 2026-11-26 |
 | Carries a migration? | no |
-| Tested at SHA | SHA_HERE |
+| Tested at SHA | 51c3bef92 |
 
 ## 1. Scope and risk
 
@@ -31,7 +31,15 @@ Touched: `scripts/deploy.mjs` (missing `fileURLToPath` import; account-id name r
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — **four gates, each `<N>` that gate's own exit code, and every `<N>` is `0`.** Pasted below as printed
 
 ```
-GATES_HERE
+=== gates: typecheck — npm run typecheck
+=== gates: typecheck exited 0 after 56s
+=== gates: lint — npm run lint
+=== gates: lint exited 0 after 214s
+=== gates: test — npm test
+=== gates: test exited 0 after 49s
+=== gates: build — npm run build
+=== gates: build exited 0 after 198s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
