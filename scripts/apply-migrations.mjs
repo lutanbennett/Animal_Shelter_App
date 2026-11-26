@@ -64,7 +64,7 @@ import { ENVIRONMENTS, SITE_ORIGINS, loadEnv, parseEnvArg, projectRef as refOf }
 import { MIGRATION_NAME, MIGRATIONS_DIR, parseLsTree } from "./lib/migrations.mjs";
 import { consumerReport, liveRelease } from "./lib/migration-consumers.mjs";
 // Shared with Settings → System status, so the page and --drift agree.
-import { migrationDrift } from "../src/lib/migration-drift.ts";
+import { migrationDrift, renumberedRows } from "../src/lib/migration-drift.ts";
 import { bail, runMain } from "./lib/exit.mjs";
 
 async function main() {
@@ -281,6 +281,13 @@ function driftReport() {
   for (const name of unapplied) console.log(`    ${name}`);
   console.log(`  Applied here, no file on origin/main: ${missingFile.length}`);
   for (const name of missingFile) console.log(`    ${name}`);
+  // A renumbered file leaves its old name recorded beside the new one; say so, and how to clear it.
+  for (const { row, file } of renumberedRows(missingFile, mainFiles, applied)) {
+    console.log(
+      `    ↳ ${row} looks like ${file} under its old number, and ${file} is applied here: nothing is missing.\n` +
+        `      Clear the old row on dev with: node scripts/apply-migrations.mjs --forget ${row}`,
+    );
+  }
   return { unapplied, missingFile };
 }
 
