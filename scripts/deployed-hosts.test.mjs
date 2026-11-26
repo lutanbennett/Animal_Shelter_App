@@ -61,3 +61,13 @@ test("#wwwcb: a routed www. form with no row or no callback still fails", () => 
 test("#wwwcb: a literally configured host is kept even if no route names it", () => {
   assert.deepEqual(addressesAnsweredOn({ APP_HOST: "a.org" }, ["other.org"]), ["a.org"]);
 });
+
+import { googleClientProject } from "./lib/deployed-hosts.mjs";
+test("#gidty: a Google client id names its project, and an unknown one is reported, not thrown", () => {
+  assert.equal(googleClientProject("559913308840-abc.apps.googleusercontent.com"), "CooperJaidee's Google project");
+  assert.equal(googleClientProject("1036347359893-xyz.apps.googleusercontent.com"), "the shelter's Google project");
+  assert.equal(googleClientProject("42-q.apps.googleusercontent.com"), "unrecognised project 42");
+  assert.equal(googleClientProject(""), "no client id set");
+  assert.equal(googleClientProject(null), "no client id set");
+  assert.equal(googleClientProject("nonsense"), "unrecognised client id shape");
+});
