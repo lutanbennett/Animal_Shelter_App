@@ -52,6 +52,12 @@ which are the ones merged after the list was made, so they were never read. Afte
   - Batch 8 — the medical-care block (13). **All passed, none changed.**
   - Batch 9 — the adoptions-and-fostering block (13). **All passed, none changed** — including two I flagged as
     possibly wrong (below), which the reader judged acceptable.
+  - Batch 10 — the volunteers-and-staff block (13). **All passed, none changed.**
+  - Batch 11 — the public-website block (13). **All passed, none changed.** The sample cat's name *Tiger* is spelled
+    **ทิเกอร์**; **ไทเกอร์** was offered as the commoner transliteration and the reader kept ทิเกอร์.
+  - Batch 12 — the money block and the adoptions follow-on panel (14). **All passed, none changed**, including
+    **ยกเลิก** for a VOID receipt, raised because an accountant might want a narrower term.
+  - **171 strings read in all so far.**
 - **Position reached:** the four disagreements are settled and **91 strings are read** (batches 1-6: everything new
   except the console). **Still to read:** the 666 `admin` console strings. The 133 "Thai changed" strings are dealt
   with differently — see below.
