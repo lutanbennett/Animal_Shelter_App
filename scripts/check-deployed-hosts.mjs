@@ -11,7 +11,7 @@
 // Changes no setting. Different from scripts/check-site-hosts.mjs, which asserts a host is pinned into the BUILD, not that it has a ROW.
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 import { readWranglerConfig, routeHosts } from "./lib/wrangler.mjs";
-import { addressesAnsweredOn, missingHosts, missingCallbacks } from "./lib/deployed-hosts.mjs";
+import { addressesAnsweredOn, missingHosts, missingCallbacks, googleClientProject } from "./lib/deployed-hosts.mjs";
 import { runMain } from "./lib/exit.mjs";
 
 await runMain(async () => {
@@ -81,6 +81,9 @@ await runMain(async () => {
   const noCallback = missingCallbacks(deployed, auth.uri_allow_list);
   console.log(`sign-in redirect allow-list in ${name}: ${auth.uri_allow_list || "(empty)"}`);
   console.log(`site_url (where an unlisted sign-in is thrown): ${auth.site_url}`);
+  // #gidty: which Google project signs people in here. Information only, never a failure; the secret is never read out.
+  const gid = typeof auth.external_google_client_id === "string" ? auth.external_google_client_id : "";
+  console.log(`Google sign-in in ${name}: ${auth.external_google_enabled ? "enabled" : "DISABLED"}, client ${gid || "(none)"} (${googleClientProject(gid)})`);
   for (const h of deployed) console.log(`  ${noCallback.includes(h) ? "NO CALLBACK" : "ok         "} https://${h}/auth/callback`);
   if (noCallback.length) {
     console.error(`FAIL: ${noCallback.length} address(es) have no /auth/callback entry in ${name}'s Supabase allow-list: ${noCallback.join(", ")}. Signing in there lands on ${auth.site_url}. Add them by hand; this check changes nothing.`);

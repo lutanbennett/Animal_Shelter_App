@@ -70,3 +70,18 @@ export function choosePrimaries(rows, publicHost) {
   }
   return { set, undecided };
 }
+
+/** Google project numbers this deployment knows by name (#gidty). A client id starts with its project number. */
+const GOOGLE_PROJECTS = { "559913308840": "CooperJaidee's Google project", "1036347359893": "the shelter's Google project" };
+
+/**
+ * A readable name for the Google project a sign-in client id belongs to (#gidty). Never throws: an unknown
+ * number is a thing to report, and a missing id says so. Takes the id only, never the secret.
+ */
+export function googleClientProject(clientId) {
+  const id = typeof clientId === "string" ? clientId.trim() : "";
+  if (!id) return "no client id set";
+  const m = /^(\d+)-/.exec(id);
+  if (!m) return "unrecognised client id shape";
+  return GOOGLE_PROJECTS[m[1]] ?? `unrecognised project ${m[1]}`;
+}
