@@ -11,7 +11,7 @@
 | PR | opened after this commit |
 | Tested by / date | Claude, 2026-11-26 |
 | Carries a migration? | yes |
-| Tested at SHA | SHA_PLACEHOLDER |
+| Tested at SHA | c280770c5 |
 
 ## 1. Scope and risk
 
@@ -27,7 +27,13 @@ One column, `supabase/migrations/0445_shelter_hosts_attach_to_worker.sql`, plus 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — four gates, every exit code `0`.
 
-GATES_PLACEHOLDER
+```
+=== gates: typecheck exited 0 after 39s
+=== gates: lint exited 0 after 144s
+=== gates: test exited 0 after 37s
+=== gates: build exited 0 after 134s
+gates: typecheck=0 lint=0 test=0 build=0
+```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
@@ -153,7 +159,7 @@ Manual verification by: n/a: schema only, nothing for a person to look at
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [x] Checklist pasted into the PR
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — pending: the next release cut
 
 Result: pass
 
