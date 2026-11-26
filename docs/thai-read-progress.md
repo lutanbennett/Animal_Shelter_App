@@ -45,9 +45,19 @@ which are the ones merged after the list was made, so they were never read. Afte
   - Batch 5 — the Management page's tile descriptions (9), the Product admin menu item (1) and the shop staff photo controls (7). **All 17 passed, none changed.** `nav.productAdmin` (ผู้ดูแลผลิตภัณฑ์) was RAISED as possibly reading like "looks after the merchandise" and KEPT: looked at, not skipped.
   - Batch 6 — the shop's exchange-rate tab, `merchStaff.rates*` (10). **All passed, none changed.**
   - **That is all 91 new worker-facing strings read. None changed.**
-  - **Then the console's 666, starting with the 76 that are the PUBLIC CooperJaidee About page** — the page a shelter
-    considering the system reads. The ~490 strings inside the console itself are labels only a product administrator
-    sees, and he reads English, so they are the lowest-value reading in the whole list: do those last, or not at all.
+  - **Then the console's 664. MEASURE THE SPLIT WITH A SCRIPT, NOT BY EYE:** 315 of them are the **public
+    CooperJaidee About page and its feature pages** — what a shelter considering the system reads — and ~349 are
+    labels inside the console. **A first count said the About page was 76**, because the grouping command dropped every
+    key containing `[0]`, which is most of the sample-card wording. **87 of the 664 are word-for-word repeats** of
+    wording elsewhere in the same list (the feature pages re-use the bands' sample cards), and nobody reads those twice.
+  - **THE ~349 CONSOLE STRINGS ARE ACCEPTED AS THEY STAND, NOT READ — LUTAN'S DECISION, 2026-11-26, IN HIS WORDS:**
+    *"for the console translation, just apply whatever you reccomend as it will prettty much just be english people
+    administering it"*. **Say what that does and does not mean, because the distinction is this file's whole purpose:**
+    it means **no reader time is spent** on wording only a product administrator sees, and the existing Thai stays as
+    each stream wrote it. It does **NOT** mean a person read it, and **no Thai was rewritten** on that instruction —
+    rewriting Thai nobody present can read would be worse than leaving it, and the routine forbids it (*"Nobody edits
+    Thai they cannot read"*). **If a Thai-reading administrator ever uses the console, this is the block to re-read.**
+    The reader's attention goes to the 315 public strings instead, which is where a stranger's opinion of the system forms.
   - Batch 7 — the About page's resident-records block and its sample card (14). **All passed, none changed.**
   - Batch 8 — the medical-care block (13). **All passed, none changed.**
   - Batch 9 — the adoptions-and-fostering block (13). **All passed, none changed** — including two I flagged as
