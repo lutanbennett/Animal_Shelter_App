@@ -31,6 +31,10 @@ export const ALLOWED = {
     reason:
       "reads auth.users, which a re-owned role is refused (42501), so it stays owned by postgres, as login_display_name does. Gated by is_product_admin() and aal2 (docs/decisions/2026-11-19-product-admin-state-schema.md).",
   },
+  "function:public.product_admin_access_elsewhere": {
+    reason:
+      "counts, for each login in p_shelter, the OTHER shelters where it holds a live main role, so it must read user_roles across shelters; owned by rls_definer the restrictive shelter policy would hide every other shelter and the count would always be 0. Returns user_id and a count only, never a shelter id or name. Gated by is_product_admin() and aal2 in its body, like 0438 (0444; docs/decisions/2026-11-26-shelter-membership-console.md).",
+  },
   "function:public.product_admin_shelter_access": {
     reason:
       "reads auth.users (left join, for each login email), which a re-owned role is refused (42501), so it stays owned by postgres, as login_display_name does (0438 line 14, precedents 0417 and 0425). Gated by is_product_admin() and aal2 (docs/decisions/2026-11-25-tenancy-catalogue-seven.md).",

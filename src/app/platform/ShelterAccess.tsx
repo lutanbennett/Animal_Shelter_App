@@ -54,8 +54,10 @@ export function ShelterAccess({ shelterId, shelterName, canWrite }: { shelterId:
   const add = () =>
     startTransition(async () => {
       const r = await addCall((id) => shelterAccessAdd(shelterId, email, roleKey || data?.roles[0]?.key || "", id));
-      if (r.ok) setEmail("");
-      done(r.ok, r.ok ? a.added : (r.error ?? ""));
+      if (!r.ok) return done(false, r.error ?? "");
+      setEmail("");
+      const what = r.outcome === "new" ? a.addedNew : r.outcome === "reRoled" ? a.addedReRoled : a.addedUnchanged;
+      done(true, r.otherShelters > 0 ? `${what} ${a.alsoElsewhere(r.otherShelters)}` : what);
     });
   const setRole = (l: AccessLogin, key: string) =>
     startTransition(async () => {
@@ -86,6 +88,7 @@ export function ShelterAccess({ shelterId, shelterName, canWrite }: { shelterId:
             <li key={l.userId} className="flex flex-wrap items-center gap-2">
               <span className={l.archived ? "text-muted line-through" : "text-foreground"}>{l.email ?? l.userId}</span>
               {l.archived && <span className="text-xs text-muted">({a.takenOut})</span>}
+              {l.extraRoles.length > 0 && <span className="text-xs text-muted">({a.mainRole})</span>}
               {canWrite && !l.archived ? (
                 <>
                   <select
@@ -109,6 +112,12 @@ export function ShelterAccess({ shelterId, shelterName, canWrite }: { shelterId:
               ) : (
                 <span className="text-muted">{l.roleName}</span>
               )}
+              {l.extraRoles.length > 0 && (
+                <span className="basis-full pl-4 text-xs text-muted">
+                  {a.extraRoles} {l.extraRoles.map((x) => (x.archived ? `${x.name} (${a.takenOut})` : x.name)).join(", ")}
+                </span>
+              )}
+              {l.otherShelters > 0 && <span className="basis-full pl-4 text-xs text-muted">{a.alsoElsewhere(l.otherShelters)}</span>}
             </li>
           ))}
         </ul>

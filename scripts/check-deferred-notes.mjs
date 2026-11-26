@@ -6,7 +6,9 @@
 //
 //   node scripts/check-deferred-notes.mjs [--since <ref>] [--head <ref>] [--self-test]
 //
-// Range: the last "Cut x.y.z" commit (or --since) up to --head (default HEAD). Prints; exits 0.
+// Range: the commit that added the newest release in src/lib/releases.ts (or --since) up to --head
+// (default HEAD). Prints; exits 0. Not the last "Cut x.y.z" commit by message: 0.49.1's was worded
+// "Cut release 0.49.1", so the grep skipped it (docs/decisions/2026-11-26-instrument-accuracy.md).
 // It cannot know whether a step has closed, so it only shows. cut-release.mjs is what refuses.
 import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
@@ -16,9 +18,13 @@ import { scanPlans, short, releaseNoteAnswer } from "./lib/deferred-notes.mjs";
 const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
 const git = (...a) => execFileSync("git", ["-C", repo, ...a], { encoding: "utf8", maxBuffer: 64 << 20 });
 
-export function lastCut() {
-  const out = git("log", "-1", "--format=%H", "-E", "--grep=^Cut [0-9]+\.[0-9]+\.[0-9]+").trim();
-  if (!out) throw new Error("no earlier \"Cut x.y.z\" commit found; pass --since <ref>");
+/** The commit that added the newest release recorded in src/lib/releases.ts at `head`. */
+export function lastCut(head = "HEAD") {
+  const src = git("show", `${head}:src/lib/releases.ts`);
+  const v = /\bversion:\s*"(\d+\.\d+\.\d+)"/.exec(src)?.[1];
+  if (!v) throw new Error("no release found in src/lib/releases.ts; pass --since <ref>");
+  const out = git("log", "-1", "--format=%H", "-S", `version: "${v}"`, head, "--", "src/lib/releases.ts").trim();
+  if (!out) throw new Error(`no commit adds release ${v} to src/lib/releases.ts; pass --since <ref>`);
   return out;
 }
 
@@ -29,8 +35,8 @@ export function scanRange(since, head = "HEAD") {
   return { files: files.length, ...scanPlans(plans) };
 }
 
-export function report({ files, candidates, others }, since) {
-  const L = [`Release-notes line answered n/a, ${since.slice(0, 8)}..HEAD (${files} test plans changed):`, ""];
+export function report({ files, candidates, others }, since, head = "HEAD") {
+  const L = [`Release-notes line answered n/a, ${since.slice(0, 8)}..${head} (${files} test plans changed):`, ""];
   L.push(candidates.length
     ? `MAY OWE A NOTE — the reason points at a step still to happen (${candidates.length}). For each, is the step closed by this release? If so its note is owed here:`
     : "May owe a note: none.");
@@ -56,8 +62,15 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     t("a plan with no such line yields nothing", releaseNoteAnswer("# plan\n- [x] other") === null);
     const s = scanPlans([{ file: "docs/test-plans/cut-release-1.md", text: line("n/a: until the deploy") }, { file: "docs/test-plans/a.md", text: line("n/a: until the deploy") }]);
     t("a cut's own plan is skipped", s.candidates.length === 1 && s.candidates[0].file.endsWith("a.md"));
+    // 0.49.2's two false positives: a ticked line whose template prose says "every `n/a` was right…".
+    const prose = "Answering only for shelter users is how `0.47.5` shipped: every `n/a` was right about shelter users and wrong about Admin. A change only Admin sees gets a note too, written `{ text: \"…\", admin: true }`. If not, `n/a: <why nobody would notice>`: a refactor. Write `n/a: <the outstanding step>` and put the note in the PR that closes the step";
+    t("a ticked line with the template's admin prose is not an n/a", releaseNoteAnswer(`- [x] **Release notes.** ${prose}`) === null);
+    t("an unticked line reads the answer, not the template's prose", releaseNoteAnswer(line(`${prose} n/a: developer tooling only`))?.reason === "developer tooling only");
+    t("an unticked line with only template prose yields nothing", releaseNoteAnswer(line(prose)) === null);
+    t("the range starts at the newest release's cut commit", /^[0-9a-f]{40}$/.test(lastCut()));
     process.exit(bad ? 1 : 0);
   }
-  const since = opt("since") ?? lastCut();
-  console.log(report(scanRange(since, opt("head") ?? "HEAD"), since));
+  const head = opt("head") ?? "HEAD";
+  const since = opt("since") ?? lastCut(head);
+  console.log(report(scanRange(since, head), since, head));
 }

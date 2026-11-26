@@ -7,6 +7,11 @@
 // The template's own sentence also contains "`n/a: <why ...>`"; a ticked line carries it verbatim.
 const TEMPLATE_ECHO = /If not, `?n\/a: <why[^>]*>`?/gi;
 const LABEL = /^\s*[-*]\s*\[[ xX]\]\s*\*\*Release notes\.?\*\*/i;
+const TICKED = /^\s*[-*]\s*\[[xX]\]/;
+// An answer is "n/a:" followed by words, not by a `<placeholder>`. The template's own prose says
+// "every `n/a` was right…" (no colon) and "`n/a: <why…>`" (a placeholder); neither is an answer.
+// The FIRST such match wins: an author who replaces the placeholder in place writes it there.
+const ANSWER = /n\/a\b:\s*(?![`\s]*<)(.*)$/i;
 
 // Wording of a reason that points at something still to happen. Deliberately generous: a false
 // candidate costs a reader one line, a missed one is the fault this exists to stop.
@@ -17,8 +22,10 @@ const DEFERRAL =
 export function releaseNoteAnswer(planText) {
   for (const raw of planText.split(/\r?\n/)) {
     if (!LABEL.test(raw)) continue;
+    // Ticked means the note is in `unreleased`; check-test-plan.mjs holds that to the diff.
+    if (TICKED.test(raw)) return null;
     const body = raw.replace(LABEL, "").replace(TEMPLATE_ECHO, "");
-    const m = /n\/a\b:?\s*(.*)$/i.exec(body);
+    const m = ANSWER.exec(body);
     if (!m) return null;
     const reason = m[1].replace(/^[`\s—-]+|[`\s]+$/g, "").trim();
     if (reason.length < 3) return null;
