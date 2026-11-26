@@ -31,6 +31,47 @@ which are the ones merged after the list was made, so they were never read. Afte
 - A supplier is ซัพพลายเออร์ on the shop staff pages and ผู้จัดจำหน่าย on the Who does what screen.
 - A size is ขนาด on the shop staff pages and ไซซ์ on the Who does what screen.
 
+## Third run (2026-11-26) — IN PROGRESS, NOT FINISHED
+
+- **List:** `node scripts/list-thai-added.mjs 2026-11-12 --skip-read 2026-11-12..4bf320928 --skip-read 4bf320928..4644759ef`
+  at commit `a637f36a2`: **894 strings** (757 new, 133 Thai changed, 4 where the English changed and the Thai did not).
+- **Why it is so much bigger than the first two runs:** 666 of the 757 new strings are the product-administrator
+  console, built 2026-11-25. They are settings wording, so they are read LAST and are a sitting of their own.
+- **Read so far, by Lutan with a Thai reader beside him:**
+  - Batch 1 — the reels multi-clip uploader (13) and the public shop (3). **All 16 passed, none changed.**
+  - Batch 2 — the tax-deduction field and the e-Donation list, `donations.taxId.*` (14). **All passed, none changed.**
+- **Position reached:** the four disagreements are settled and batches 1-2 are read. **Still to read:** `login` (3),
+  `management` (19), `merchStaff` (17), `animalReport` (6), `animalStaff` (1), `nav` (1), the remaining
+  14 `donations.taxId` strings, the 666 `admin` strings, and the 133 "Thai changed" strings.
+- **Do NOT write a `--skip-read` range for this run until it finishes.** A range covering `a637f36a2` would skip the
+  unread majority as well as what was read, which is exactly the fault the range convention exists to avoid.
+
+### What was changed
+
+1. `shop.disclosure` and `shop.shareFallback`: the Thai had **ลานนาแคร์** written into it while the English had already
+   moved to `{shelterShort}`, so any other shelter's public shop page named Lanna Care in Thai. Both now take the name
+   from the shelter. Found by the "English changed, Thai did not" section, which is the only thing that reports it.
+2. **A space goes between Latin and Thai words** (Lutan's ruling, asked because the substitution left
+   `{shelterShort}ได้รับ` running together as the Thai name had). Applied to the 3 boundaries on those two lines.
+
+### Rulings to apply next time, and the one that is NOT settled
+
+- **Latin beside Thai takes a space.** Applied only where the value is certainly a name that may be in Latin letters —
+  the shelter's short name. **31 other adjacencies in `th.ts` were measured and deliberately left:** most are
+  placeholders whose value is a THAI word (`${kind}ตัวไหน?`, `${category}ทั้งหมด`, `${zone}บนแผนผัง`), where a space
+  would be wrong. **The open ones are the placeholders holding a person's, animal's or card's name** (`${name}`,
+  `${residentName}`, `${carer}`, `${card}`), which are the same situation as the shelter's name and were not ruled on.
+  Put that to the reader as one question rather than string by string.
+
+### Seen and left as is (ruled, do not re-raise)
+
+- `uploads.errors.cannotReadResidentsList`: the English moved to *"You do not hold a card that lets you read the
+  residents list"* and the Thai still says, roughly, *"your permission cannot read the animal list"* — it predates the
+  บัตรสิทธิ์ ruling. **Lutan, 2026-11-26: "I think it's fine to keep the difference."** So the Thai stays. It will keep
+  appearing in the disagreement list while the English differs; that is the tool working, not a job outstanding.
+- The two English strings still naming Lanna Care (`namesFull`, `namesShort`) are the **example text** in the console's
+  shelter-name fields, not a name shown to a visitor. Left on purpose.
+
 ## Second run (2026-11-14)
 
 - **List:** `node scripts/list-thai-added.mjs 2026-11-12 --skip-read 2026-11-12..4bf320928` at commit `4644759ef`: 126 strings (25 new, 101 Thai changed).
