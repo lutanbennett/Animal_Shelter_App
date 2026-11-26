@@ -42,12 +42,31 @@ which are the ones merged after the list was made, so they were never read. Afte
   - Batch 2 — the tax-deduction field and the e-Donation list, `donations.taxId.*` (14). **All passed, none changed.**
   - Batch 3 — the rest of the e-Donation screen (14) and three sign-in messages, `login.closed.*` and `siteNotSetUp` (3). **All 17 passed, none changed.**
   - Batch 4 — the public animal-report photo field and its four errors plus the staff photo label (7), and the money page's income side, `management.cashflow.income.*` (10). **All 17 passed, none changed.**
-- **Position reached:** the four disagreements are settled and **64 strings are read** (batches 1-4). **Still to read:**
-  `management.landing.tiles.*` (9), `nav` (1), `merchStaff` (17), the 666 `admin` strings, and the 133 "Thai changed" strings.
+  - Batch 5 — the Management page's tile descriptions (9), the Product admin menu item (1) and the shop staff photo controls (7). **All 17 passed, none changed.** `nav.productAdmin` (ผู้ดูแลผลิตภัณฑ์) was RAISED as possibly reading like "looks after the merchandise" and KEPT: looked at, not skipped.
+  - Batch 6 — the shop's exchange-rate tab, `merchStaff.rates*` (10). **All passed, none changed.**
+  - **That is all 91 new worker-facing strings read. None changed.**
+- **Position reached:** the four disagreements are settled and **91 strings are read** (batches 1-6: everything new
+  except the console). **Still to read:** the 666 `admin` console strings. The 133 "Thai changed" strings are dealt
+  with differently — see below.
+- **WHAT THE 133 "THAI CHANGED" STRINGS ACTUALLY ARE, MEASURED RATHER THAN ASSUMED:** not the บัตรสิทธิ์ rewording
+  (that was the first two runs). `git diff 4644759ef..HEAD -- src/lib/i18n/dictionaries/th.ts` shows them to be the
+  **multi-shelter sweep**: the hard-coded ลานนาแคร์ / Lanna Care replaced by `{shelter}` and `{shelterShort}` so a
+  shelter's own name appears. **The meaning of each string is unchanged**, which is why they are not re-read one by
+  one. **What the sweep COULD break is spacing**, and that was checked across the whole file, not just these strings:
+  42 Latin/Thai adjacencies measured, every name-holding one spaced (below), 38 left and all of them placeholders
+  whose value is a Thai word or a number (`${kind}ตัวไหน?`, `${category}ทั้งหมด`), where a space would be wrong.
+  **Re-measure with the scan, not by eye, after any future sweep of this kind.**
 - **Do NOT write a `--skip-read` range for this run until it finishes.** A range covering `a637f36a2` would skip the
   unread majority as well as what was read, which is exactly the fault the range convention exists to avoid.
 
 ### What was changed
+
+0. **A space goes between a name and Thai — Lutan's ruling, and it now holds with no exception to remember.**
+   Raised because swapping the name for a placeholder left `{shelterShort}ได้รับ` running together. Applied to: the
+   two shop lines (3 boundaries), a permission card's name twice in `shownAsPart`, a zone map's alt text `planAlt`,
+   and the donation receipt's greeting `เรียน คุณ ${name}`. **The greeting was put to the reader separately** rather
+   than changed on the general ruling, because after คุณ Thai joins a Thai name with no space while a Latin name
+   wants one; she chose the space. **Nothing else was touched:** the other adjacencies are Thai-word placeholders.
 
 1. `shop.disclosure` and `shop.shareFallback`: the Thai had **ลานนาแคร์** written into it while the English had already
    moved to `{shelterShort}`, so any other shelter's public shop page named Lanna Care in Thai. Both now take the name
