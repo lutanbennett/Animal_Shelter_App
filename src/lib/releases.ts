@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "Product console: one person can now work at more than one shelter. Add their existing login on a shelter's Access tab and they keep their place at the other. The Access list says how many other shelters someone also works at (never which ones), shows every role a person holds there, and the Add button now says whether the login was new to the shelter, moved to the role you chose, or already had it.", admin: true },
 ];
 
 /** Newest first. */
