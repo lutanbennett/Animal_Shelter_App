@@ -1,157 +1,148 @@
-# Planner handover — edition `773`, 2026-11-23
+# Planner handover — edition `774`, 2026-11-26
 
-**This is a DELTA against `772`.** It says what changed, corrects its predecessor, and reports what `772`
+**This is a DELTA against `773`.** It says what changed, corrects its predecessor, and reports what `773`
 left owed. Figures, batch composition and ports live in `.plan-day.md`.
 
 **It outranks nothing.** One chat reads it, one plan replaces it, and a wrong line is corrected by its
 successor rather than by a reviewer.
 
-**IT COVERS NINE STREAMS, ALL WITH FIGURES, ALL FROM ONE DAY.** `#thpfx` (#1847),
-`reels-batch-metadata` (#1849), `backlog-proof-and-dates` (#1850), `ci-check-coverage` (#1851),
-`pi-absolute-url-guard` (#1852), `reel-picker-warning` (#1859), `admin-home-role-chips` (#1860),
-`reel-clip-progress` (#1861), `shelter-website-unlock` (#1862). **PR #1853 was the planner's own
-strict-check PR and does NOT count.** **Three more streams were set up after this was written
-(`#pacon`, `#pfive`, `#shrun`, ports 3007-3009) and are NOT covered here** — their figures are the next
-edition's. The counter resets to 0 when this PR merges.
+**IT COVERS TWENTY-FOUR STREAMS, NOT NINE, ACROSS FOUR DAYS AND FIVE PLANS — AND EVERY ONE HAS A FIGURE.**
+`onboarding-runbook` (#1866), `product-console-build` (#1867), `product-pages-five` (#1868),
+`shelter-name-columns` (#1869), `drive-reconnect-guard` (#1870), `proof-line-run` (#1871),
+`platform-own-signin` (#1872), `console-shelter-access` (#1873), `console-host-live` (#1874),
+`proof-line-who` (#1875), `audit-outsider-change` (#1876), `website-lock-truth` (#1879),
+`tenancy-catalogue-seven` (#1880), `my-shelters-blank` (#1881), `migration-check-docs` (#1883),
+`product-site-language` (#1884), `product-content-schema` (#1885), `product-content-console` (#1886),
+`product-site-finish` (#1887), `platform-step-up` (#1888), `shelter-membership-schema` (#1889),
+`tenancy-catalogue-gate` (#1891), `instrument-accuracy` (#1892), `shelter-membership-console` (#1893).
 
-**FIVE PLANS IN ONE DAY, which is the context for everything below.** `772` covered thirteen streams
-across three plans; this one covers nine across two more. **The backlog went from a pool of one buildable
-item at 10:00 to eight by 15:00**, because streams file findings faster than streams consume them.
+**WHY FIFTEEN OVERDUE, STATED PLAINLY RATHER THAN APOLOGISED FOR: Lutan was offered this edition three
+times and said no each time, while mid-release or mid-batch.** He asked for it on the fourth. **The rule
+is nine; the practice was his judgement, and his judgement cost nothing** — every figure survived on its
+PR, which is exactly what that mechanism is for. **Do not read the backlog of editions as lost data.**
+The counter resets to 0 when this PR merges.
 
 ## FOR YOUR FIRST TURN
 
-1. **Read `.plan-day.md` first.** Gitignored, ~80 lines, the twenty-second plan.
-2. **`gh pr list --state open` BEFORE you believe anything here.** On 2026-11-23 a batch went from set up
-   to merged in under half an hour, twice. **Anything this document says about what is running was
-   probably untrue before you read it.**
-3. **FOURTEEN MERGED WORKTREES NEED CLEARING**, all `HELD` by idle sessions. **Every figure is already
-   read and recorded, so nothing is lost by waiting. Ask Lutan; do not force.**
-4. **`0.49.0` SHIPPED**, cut by the release manager. **Production runs `0.49.0` @ `9fc01bdc6`.**
+1. **Read `.plan-day.md` first.** Gitignored, ~90 lines, the twenty-ninth plan. **All four of its streams
+   are set up; three merged, one (`dev-migration-0422`, port 3001) is live.** When it merges, the next
+   `/plan-day` re-plans from scratch — nothing is pending.
+2. **`gh pr list --state open` BEFORE you believe anything here.** On 2026-11-26 three streams went from
+   set up to merged in 72 minutes.
+3. **THREE MERGED WORKTREES NEED CLEARING** (`tenancy-catalogue-gate`, `instrument-accuracy`,
+   `shelter-membership-console`), all `HELD` by Lutan's own sessions — `done` refused all three, correctly.
+   **773's fourteen are gone.** Every figure is read and recorded. **Ask; do not force.**
+4. **`0.49.2` SHIPPED.** Production runs `0.49.2` @ `5344c037a`.
+5. **PRODUCTION'S SIGN-IN NOW RESOLVES ON `cooperjaidee.org`**, not on a shelter's domain. Read below
+   before telling anyone otherwise.
 
-## THE DAY'S LESSON, AND IT COST HIM FOUR INTERRUPTIONS: THE ITEM IS NOT THE RECORD
+## THE BAND FINDING OF THESE FOUR DAYS, AND IT IS WORTH MORE THAN THE TABLE
 
-**Four times the planner asked Lutan for something already done or already answered.** His words, and
-they are the measure of the day: ***"why is this so hard, it has happened multiple times this morning
-that you already had the information and were trying to get me to do something again"***.
+**`product-console-build` (#1867) was banded 300–370k and came in at 195k — 105k under, the largest miss
+ever recorded here. The cause is in its own PR body and it is not subtle: most of what the band priced
+had already shipped.** Half its deliverables read *"already on main (#1789); not redone"*. **The planner
+banded THE ITEM; the stream built THE GAP.**
 
-1. **`#u2bo6`'s deploy** — done 2026-11-06, with a stale *"Still to do"* line **below** a `SUPERSEDED`
-   marker. **Two sessions read it wrong the same day.**
-2. **`#shfil`'s question** — answered three times. The item said *"nothing here is waiting on him"*
-   higher up than the paragraph re-asking it.
-3. **`#gcprd`'s console trip** — the 19 redirect URIs have been in `docs/google-cloud-inventory.md:111`
-   since 2026-11-21, and the item claimed *"nothing in this repository records which URIs that client
-   has"*. **That false sentence is what sent him to look.**
-4. **The connect press** — the planner said there would be no warning, **from the code on `main`, without
-   checking which code production was running.** Production was `0.48.0`, which predated the fix by hours.
+**THE RULE THAT FALLS OUT OF IT, AND IT IS CHEAP TO OBEY: band what is MISSING, not what the item
+describes, and the one-minute check is `git log` / `ls` on the surface the item names.** `773` already
+recorded the mirror of this (*"check the SCHEMA before planning a schema stream"*, `#wbopn`); **this is
+the same fault on a UI surface and it cost 105k of forecast.** The brief's own step zero caught it, which
+is the system working — but a band that wrong makes every forecast built on it meaningless.
 
-**ALL FOUR ARE ONE FAULT AT DIFFERENT DISTANCES: reading the item, or the repository, instead of the
-thing actually running.**
+### The spread, 22 usable readings of 24
 
-**THE INSTRUMENT BUILT THAT MORNING ONLY CATCHES HALF OF IT.** `#prvln` now makes an item **say** how to
-check whether a step is really his, and **13 `waiting:lutan` items carry a `**Proof:**` line** written by
-the planner. **It does not make anyone run the check.** That unbuilt half is the half that would have
-caught all four. **`#prvln` is PARKED — he was offered it and said "Not now" while cutting a release.
-Raise it once, when he is not mid-release; do not start it unasked.**
+**14 inside · 6 over · 2 under.** Not readings: **#1872 `platform-own-signin` (`finished=blocked`)** and
+**#1880 `tenancy-catalogue-seven` (`rescoped=yes`)**. Dials matched the brief on all 24.
 
-## `#prvln`'s GUARD IS NOW STRICT, AND IT CAUGHT ITS OWN AUTHOR
+**The six overs: `audit-outsider-change` +9k · `my-shelters-blank` +12k · `product-content-schema` +15k ·
+`product-site-finish` +2k · `shelter-membership-schema` +10k · `onboarding-runbook` +0.8k (marginal).**
+**The two unders: `product-console-build` -105k · `product-site-language` -0.7k (marginal).**
 
-`PROOF_STRICT` defaults on since PR #1853: an item tagged `waiting:lutan` with no `**Proof:**` line
-**fails** (exit 3). **Done in this order on purpose — lines first, then the check run with
-`BACKLOG_PROOF_STRICT=1` against `main` and seen to pass, and only then the flip** — because flipping
-first would have put a blocking check red on `main` about data nobody had filled in, which is `#ckcia`'s
-own fault one layer along.
+**A HYPOTHESIS WAS WRITTEN ON 2026-11-26 AND DID NOT FIRE THE SAME DAY. BOTH HALVES ARE RECORDED HERE
+BECAUSE HALF OF THEM WOULD BE A LIE.** From the nine-stream set of 2026-11-25 (4 inside, 4 over, none
+under) the planner wrote: *a band whose paragraph NAMES an open design question carries +10–15k, because
+naming an unknown is not pricing it.* **Every one of those four overs fitted it.** **Then the next three
+streams — two of them naming an open design question, none carrying the premium — all landed inside.**
+**So: keep it as a hypothesis, apply it to nothing yet, and look again after the next complete set.**
+Three streams is not a refutation of eight, and eight is not a law.
 
-**Within hours it refused the planner's own commit**, for retagging `#rlprg` to `lutan` with no proof
-line. **A guard that catches its author on the day it ships is better evidence than any fixture.**
-`BACKLOG_PROOF_STRICT=0` returns it to reporting.
+### The floor — 24 readings, 87.8k to 92.6k
 
-## WHAT `772` LEFT OWED
+Unchanged in place from `773`'s 89.4–93.5k, a little wider at the bottom. **FOUR exact repeats in one
+set** — `89,422` (#1867, #1868), `88,522` (#1879, #1880), `90,886` (#1887, #1889), `91,048` (#1891,
+#1893) — **the repeat phenomenon still recurring; `773` recorded it on its fifth day. Record it; offer no cause.** Re-derive from the
+next complete set. **Do not shift the scale rows to match the floor** (the `773` and `772` warning
+stands).
 
-1. **The `scheduled_writer_runs` read** — **STILL UNFILED, third edition running.** **Either file it or
-   write down why not.** Carrying it forward silently for three editions is itself the finding.
-2. **His Cloud console look** — **DONE.** The scope is **not sensitive**; he measured it.
-3. **Production's `DRIVE_CREDENTIALS_KEY`** — **DONE**, and more besides (below).
-4. **Clearing merged worktrees** — still owed, now fourteen.
+## WHAT `773` LEFT OWED — ALL FOUR SETTLED
 
-## WHAT WAS DELIVERED TO PRODUCTION, AND HOW
+1. **The `scheduled_writer_runs` read — RETIRED, 2026-11-26, after four editions.** `773` said *"file it
+   or write down why not"*. **Nobody across four editions has been able to say what it was for, which is
+   the answer.** It is not carried into `775`. **If it mattered, it will come back as a symptom; an
+   instruction nobody understands is not a safeguard.**
+2. **Clearing merged worktrees** — **DONE.** Fourteen cleared; three new ones now held (above).
+3. **`#rlprg`'s drivable proofs** — not advanced; still owed, now by whoever plans `#rlprg` next.
+4. **`#prvln`'s second half — BUILT, and `773` IS WRONG ON THIS PAGE.** `773` says it is *"PARKED — raise
+   it once, when he is not mid-release"*. He was asked once, said **"Yes, into batch 2"**, and
+   `proof-line-run` (#1871) shipped it the same afternoon. **A handover that tells you something is parked
+   is a statement with a date on it.**
 
-- **The platform files folder** created on the Cooper Jaidee Drive; its id recorded, never printed.
-- **The Google connect client live on the Pi — AND NO SECRET WAS REGENERATED.** Lutan said he could not
-  get the secret without regenerating the client. **He did not need to: the one required was already in
-  `.env.deploy.uat`** (suffix `LzIH`, matching `docs/google-cloud-inventory.md:111`), **because ONE
-  client serves every environment — its 19 redirect URIs already include `lannacareforanimals.org`.**
-  Copied as a **matched pair** and carried to the Pi **over ssh on stdin**, so no value touched a command
-  line, a shell history or a process list.
-- **`#calsc` and `#gcprd` are DONE**, every clause observed on production: no `unverified app` screen,
-  the calendar created, appointments appearing in it, Drive still connected — **and the first clean
-  calendar poll since 2026-11-19**, when the old token was revoked. **Read from the live database, not
-  taken on report.**
-- **A DEAD PERMISSION RULE FOUND:** the only Pi allow rule named `lanna-pi.local`, which stopped
-  resolving when the Pi moved subnet, **so it had never matched the commands actually run.** A rule for
-  `lanna-pi-mesh` was added on his go, the settings file backed up and re-parsed afterwards.
+## THE GUIDED SESSION ON HIS OWN ITEMS — THREE ITEMS, AND TWO WERE NOT HIS
 
-## THE BAND FINDING OF THE DAY, AND IT IS THE PLANNER'S HABIT RATHER THAN THE TABLE'S
+**This is `773`'s lesson (*"the item is not the record"*) paying for itself, with the measurement run
+BEFORE he was asked each time.**
 
-**SEVEN UNDERS IN TWO DAYS, ONE CAUSE: a brief that hands over the cause, the decision AND the shape of
-the fix lands near the floor, and the planner keeps pricing the question the brief already answered.**
+- **`#plsso` — DONE, the part that was his.** He changed production's Supabase Site URL to
+  `https://cooperjaidee.org`; `check-deployed-hosts.mjs --env production` read it back live. **The risk
+  the item named was measured first:** not one of production's own mailer templates uses `{{ .SiteURL }}`,
+  so no shelter user's mail could be affected. **Still open: the UAT rehearsal with Lanna's host
+  unreachable.**
+- **`#rqv5c` — NOT HIS, AND THE ITEM WAS ASKING HIM FOR FINISHED WORK.** Its header listed a UAT rehearsal
+  as owed; **that rehearsal ran on 2026-11-23, 912/912 files**, and the item's own body said so. **Worse,
+  it never named the real blocker: `scripts/drive-move-to-shelter-account.mjs:92` REFUSES
+  `--env production` outright, with no override.** His "production run" is **unbuilt work**, not a press.
+- **`#hstau` — WAS HIS, IS NOW A STREAM'S.** He created the Cloudflare token; both UAT secrets
+  (`CLOUDFLARE_WORKERS_DOMAIN_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`) are set and read back. **Retagged
+  `buildable`.** **Half of what the item called missing was never missing** — `wrangler whoami` prints the
+  account id, and nobody need be asked for it.
 
-`#1829` -27k · `#1845` -21k · `reels-batch-metadata` -20k · `backlog-proof-and-dates` -11k ·
-`reel-picker-warning` -30k · `reel-clip-progress` -7k · `shelter-website-unlock` -24k.
+**THE PATTERN ACROSS ALL THREE: an item that says a step is his is a CLAIM, and two of three were false.**
+`#prvln`'s proof lines exist precisely so this check is one command. **Run them. The cost of not running
+one is an interruption; the cost of running one is a minute.**
 
-**THE SHARPEST READING: `reel-picker-warning` carried TWO items and still came in 30k under.** Folding
-did not make it dear, because both answers were handed over. **So folding two well-briefed items should
-be priced near the quick-win row plus a little, not at the sum of two ordinary streams.**
+## THREE LESSONS EARNED, EACH FROM A REAL COST
 
-### Figures — nine streams
+- **TELLING HIM WHERE TO CLICK FROM MEMORY IS GUESSING. OPEN THE PAGE.** A set of written directions for
+  the Supabase dashboard drew *"your instructions are very poor, please be more precise"*. **Opening the
+  page in his Chrome and describing what is actually on it took under a minute and ended the problem.**
+  For any step of his that lives in a web page, **look at the page first and send him a picture of it.**
+- **A COMMAND HANDED TO HIM IS PART OF THE DELIVERABLE, AND `npx` IS NOT `npx.cmd` ON THIS MACHINE.**
+  PowerShell's execution policy refuses `npx`; the session memory already said so and the planner still
+  wrote `npx`. **Read the command you are about to hand over as if you were the one typing it.**
+- **A REFUSAL IS NOT ALWAYS A FAULT, AND SOMETIMES IT IS THE WHOLE FINDING.** `worktree.mjs done` refusing
+  three held folders is correct behaviour. So is `drive-move-to-shelter-account.mjs` refusing production.
+  **The second was mistaken for a waiting step for four days.**
 
-| PR | slug | band | tokens | messages | floor | verdict |
-|---|---|---|---|---|---|---|
-| #1847 | `thai-prefix-500` | 150-190k | 188,445 | 98,428 | 90,017 | in band |
-| #1849 | `reels-batch-metadata` | 175-215k | 154,880 | 62,253 | 92,627 | **UNDER 20k** |
-| #1850 | `backlog-proof-and-dates` | 170-210k | 158,948 | 69,526 | 89,422 | **UNDER 11k** |
-| #1851 | `ci-check-coverage` | 150-190k | 157,978 | 65,231 | 92,747 | in band |
-| #1852 | `pi-absolute-url-guard` | 165-205k | 165,164 | 75,742 | 89,422 | in band |
-| #1859 | `reel-picker-warning` | 175-215k | 145,541 | 55,396 | 90,145 | **UNDER 30k** |
-| #1860 | `admin-home-role-chips` | 150-190k | 159,373 | 65,903 | 93,470 | in band |
-| #1861 | `reel-clip-progress` | 155-195k | 147,558 | 55,750 | 91,808 | **UNDER 7k** |
-| #1862 | `shelter-website-unlock` | 185-225k | 160,770 | 68,738 | 92,032 | `rescoped=yes` — **not a reading** |
+## ONE BRIEF WORTH COPYING, AND WHY
 
-**Eight usable: four in band, four under, none over.** Dials matched the brief on all nine.
-
-### The floor — eight readings, 89.4k to 93.5k
-
-`89,422 · 89,422 · 90,017 · 90,145 · 91,808 · 92,032 · 92,627 · 93,470`. **`89,422` appears twice for two
-unrelated streams — the exact repeat recurring for a fifth day.** **Record it; offer no cause.**
-Re-derive from the next complete set. **Do not shift the scale rows to match.**
-
-## THE TWO RULES EARNED TODAY — DO NOT RE-LEARN THEM
-
-- **ONCE A SESSION MAY HAVE OPENED, A BRIEF IS FROZEN.** Send the correction to the session or do not
-  make it. **Verifying the FILE proves the wrong thing** — the planner patched `#rlbat`'s brief, verified
-  it on disk, and the running session never saw it. **Lutan was then asked the same question twice and
-  gave two different answers**, and the one that shipped was not the one he gave the planner.
-  **Corollary, used successfully the same day:** a brief whose session has NOT opened can still be fixed,
-  and was — `onboarding-runbook` was corrected minutes after setup when a stream's `rescoped=yes` showed
-  the console control it described had not shipped.
-- **A `SUPERSEDED` MARKER GUARDING A LOWER HALF IS READ BY WHOEVER STARTS AT THE TOP, AND THE CONVENTION
-  — `plan-day/SKILL.md:251`, `tail -c 900` — IS TO START AT THE BOTTOM.** **Cut a superseded half rather
-  than marking it**, or quote its first words, dated, in the head's sentence.
-
-## PROCESS NOTES
-
-- **`rescoped=yes` IS A SIGNAL TO ACT ON, NOT JUST A FLAG TO EXCLUDE.** `shelter-website-unlock` carried
-  *"(schema half only; console control follows)"*, which is how the planner learned its sibling brief was
-  wrong. **Read the comment's tail, not only its fields.**
-- **Check the SCHEMA before planning a schema stream.** `#wbopn` read like a two-batch schema item;
-  `shelters.public_site` already existed. **One minute of reading saved a batch.** **And the reverse bit
-  the same day: `#pacon`'s card needs "the website", and `shelter_hosts` has no primary — `is_primary`
-  was deliberately dropped.** **The column existing is not the same as the thing being storable.**
-- **A planned stream that ships only half still counts once.** One stream, one PR, one count.
+**`dev-migration-0422` (live, port 3001) is briefed to DISAGREE with its own item.** `#d422o` says dev
+carries an un-reverted migration from an abandoned branch and prescribes a down-migration. **It is a
+renumbered file whose old row was left behind** — `0423_keep_an_admin_per_shelter.sql` is on `main` and
+commit `fb16692ed` says *"Renumber the last-Admin guard fix to 0423: #1746 took 0422"*. **Following the
+item would have dropped the last-Admin guard on dev and broken `dev-signin.mjs` for every other stream.**
+The brief hands that over **as evidence to test, not as an instruction**, and tells the stream to stop and
+say so if the database disagrees. **That framing is the point: a brief that asserts gets obeyed, including
+when it is wrong.**
 
 ## STILL OWED
 
-1. **The `scheduled_writer_runs` read.** Third edition. **File it or kill it.**
-2. **Clearing fourteen merged worktrees**, on his word.
-3. **`#rlprg`'s two drivable proofs** (phone viewport, retry lighting the right row) and its last clause,
-   which is him on a real phone.
-4. **`#prvln`'s second half**, parked by him.
+1. **Clearing three merged worktrees**, on his word.
+2. **`#rqv5c`'s production path for the Drive move script** — buildable, unbriefed, and it blocks the
+   Director's consent and his run.
+3. **`#plsso`'s UAT rehearsal** — his environment, and the item's last clause.
+4. **`#rlprg`'s two drivable proofs** and its phone clause.
+5. **The release handover is STALE** — `check-release-handover.mjs` says it does not name `0.49.2`. **The
+   release manager's, not the planner's.**
+6. **One question of his, unanswered since 2026-11-25:** whether he wants to use a shelter as ordinary
+   staff would, which today needs a separate login. **`shelter-membership-console` (#1893) has since
+   merged — read what it built before putting it to him again.**
