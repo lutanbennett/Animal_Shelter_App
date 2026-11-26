@@ -46,9 +46,23 @@ nothing built here.
 `0426` ran `update shelters set public_site = 'open' where key = 'lanna'`. Lanna's own value was `open`, kept
 closed only by the floor. Lifting the floor before Lanna's own row reads `locked` publishes the site on deploy.
 
+**SUPERSEDED 2026-11-26 (#flrwh, `docs/decisions/2026-11-26-website-lock-order.md`): step 3 below guarded the
+wrong step.** `PUBLIC_SITE` is `where: "pi"`, `source: "wrangler"` in `scripts/lib/runtime-config.mjs`, so
+`scripts/pi/write-env.mjs` copies it into the Pi at the **Pi build**, and the Pi serves every page. In `0.49.2` the
+floor lifted at the production Pi build, before the Worker deploy and before anyone read Lanna's value back. The
+corrected order:
+
 1. Set Lanna's own website to locked (console, Website tab). Product administrator.
 2. Read it back on a reloaded screen. Product administrator.
-3. Only then deploy the floor change. **Lutan's** (production deploy, 2026-10-02).
+3. Only then run the **production Pi build** that carries the floor change (Claude's step), and after it the
+   production Worker deploy (**Lutan's**, 2026-10-02). No production Pi build carrying it may start before step 2.
+4. Check from outside:
+
+The order as first written, kept so a reader meeting it knows which way it went: *"3. Only then deploy the floor
+change. Lutan's (production deploy)."* That guarded the Worker deploy, which is not where the value goes live.
+
+The order, as it continues:
+
 4. Check from outside: construction page for a signed-out visitor to lannacareforanimals.org (allow 60 seconds,
    `worker/shelter.mjs:18`), `robots.txt` still refuses crawlers, a new shelter still locked, a shelter switched to
    `open` now serves.

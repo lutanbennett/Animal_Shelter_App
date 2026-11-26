@@ -246,8 +246,12 @@ lannacareforanimals.org is public the moment the deploy lands.**
    **[Product administrator]** Invisible while the floor is closed, so it is safe first.
 2. **Read it back**: reload the console, open Lanna's Website tab, and confirm it says locked.
    Do not trust the press; trust the reloaded screen. **[Product administrator]**
-3. **Only then change the floor** in `wrangler.jsonc` and deploy it. **[LUTAN ONLY]**
-   **Do not deploy unless step 2 read `locked`.**
+3. **Only then change the floor** in `wrangler.jsonc` and ship it: **the production Pi build first**
+   (the deployer's step), then the production Worker deploy **[LUTAN ONLY]**. **No production Pi build
+   carrying the change may start unless step 2 read `locked`**: `PUBLIC_SITE` reaches the Pi at its
+   build (`write-env.mjs`), and the Pi serves every page, so the floor lifts there, not at the Worker
+   deploy. *(Corrected 2026-11-26, #flrwh: this step used to guard only the Worker deploy, and in `0.49.2`
+   the floor lifted at the Pi build. `docs/decisions/2026-11-26-website-lock-order.md`.)*
 4. **Check from outside**: a signed-out request to lannacareforanimals.org still gets the
    construction page (the Worker remembers a host for 60 seconds, `worker/shelter.mjs:18`, so
    allow a minute), `/robots.txt` still refuses crawlers for that host, a newly created shelter

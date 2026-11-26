@@ -378,6 +378,26 @@ The last is dev, the database the test site serves. Exit 0 means every address t
 
 The same run also reads that environment's Supabase sign-in redirect allow-list (`GET /v1/projects/<ref>/config/auth`, `uri_allow_list`) and fails when an address has no `/auth/callback` entry, printing `site_url`, where Supabase silently sends an unlisted sign-in (#aucbk, docs/decisions/2026-11-20-callback-allowlist-check.md). It changes nothing: a person adds the missing entry.
 
+### Name the step that applies each changed `wrangler.jsonc` var (every release, before any deploy)
+
+A var in `wrangler.jsonc` is not only the Worker's. Every one `scripts/lib/runtime-config.mjs` lists as
+`where: "pi"` with `source: "wrangler"` (`PUBLIC_SITE`, `APP_HOST`, `PUBLIC_HOST`, `PLATFORM_HOST`,
+`PLATFORM_SEARCH` on 2026-11-26) is copied into the Pi at the **Pi build**, and the Pi serves every page, so the
+change goes live at the **Pi build, before the Worker deploy**. `0.49.2` lifted the website floor that way and put
+the real public site on the internet while the procedure guarded Lutan's Worker deploy (#flrwh). From the release
+checkout, bare, with the previous release's deployed SHA from section 2:
+
+```bash
+node scripts/check-wrangler-var-steps.mjs --base <previous release's deployed SHA>
+```
+
+It lists every changed var and the step that applies it. **Any guard on a change it names as applied at the Pi
+build — a read-back, a confirmation, Lutan's yes — is done before the FIRST Pi build of this release, not before
+the Worker deploy.** For `PUBLIC_SITE` that guard is: the shelter's own `public_site` value set and read back
+on a reloaded console screen (`docs/decisions/2026-11-25-website-lock-truth.md`, steps 1 and 2) **before any
+production Pi build starts**. It names steps and exits 0; exit 1 means it could not read a file, and the release
+waits until it can.
+
 ### Prove the dev-only step-up is absent (every release, before any deploy)
 
 `dev-signin --aal2` (#dvaal) can raise a scripted dev login to aal2. It cannot run anywhere but dev, and this is the
@@ -907,6 +927,11 @@ update the response *headers*.** The Worker adds them
 else set there, changes at the moment the **Worker** deploy runs — which on
 production is Lutan's command. See the trap below before verifying any
 header-related change.
+
+**And a Pi build DOES change what a `wrangler.jsonc` var says, for every var the Pi reads** (#flrwh). If section
+3's `check-wrangler-var-steps.mjs` named any change as applied at the Pi build, its guard is done **before this
+step**: for `PUBLIC_SITE`, the shelter's own `public_site` read back as wanted on production before the production
+Pi build starts.
 
 ```bash
 ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && ./scripts/pi/deploy-pi.sh'
