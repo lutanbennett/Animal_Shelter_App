@@ -70,5 +70,6 @@
   "d422o": "Dev has an orphan migration applied",
   "dfnwi": "Release-note guard asks the wrong range",
   "flrwh": "Website floor lifts at Pi build",
-  "wgdns": "Wrangler hides the real deploy error"
+  "wgdns": "Wrangler hides the real deploy error",
+  "shnul": "Host shelter_id nullability drift"
 }
