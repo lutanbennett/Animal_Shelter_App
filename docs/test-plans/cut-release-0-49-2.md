@@ -92,7 +92,7 @@ verification" section**, which is the deliverable he asked for, not an afterthou
 - [x] `check-backlog-sections.mjs`, `-ids`, `-titles`, `-waiting` — all ok after the daily backlog merge (31 open items)
 - [x] `check-deferred-notes.mjs` — exit 0, **read in full from a file rather than through `tail`**, and reviewed below
 - [x] `node scripts/gates.mjs` — **gates: typecheck=0 lint=0 test=0 build=0**, compiled in 84s, run on the cut commit itself. No `SecurityFatalError` halt, so the build-gate retry was not exercised
-- [ ] CI green on the PR — pending: the PR does not exist at this commit. Read before merging, with `headSha` confirmed equal to the pushed head
+- [x] CI green on the PR — **17/17 passed**, `headSha` read and confirmed equal to the pushed head `5aef4f6f4`. `audit` ran for real (a cut changes `package.json`) and passed
 
 ### The deferred-note review, and the one real gap in it
 
@@ -231,29 +231,29 @@ read against cards rather than roles.
 - [x] `README.md` still accurate
 - [x] Commit messages say why, not just what — the cut commit carries the ordering gate in full, so a reader of `git log` alone meets it
 - [x] Claims were measured, not reasoned — every figure here was read from a command's own output, written to a file first
-- [ ] Release record `docs/releases/2026-11-25-0-49-2.md` — pending: written after the deploy, as its own PR
-- [ ] `docs/release-handover.md` rewritten — pending: rewritten with the record, in the same PR
+- [x] Release record `docs/releases/2026-11-25-0-49-2.md` — written, in the PR that carries this tick
+- [x] `docs/release-handover.md` rewritten — 131 lines, within the 150-line ceiling, in this same PR
 
 ## 8. Pre-production gate
 
 - [x] Baseline read before touching anything: all four hosts answered `0.49.1 @ ba6603e5b` on **both** `/api/version` and `/api/releases/current`, all `x-lanna-served-by: pi`
 - [x] Every PR in the release has a test plan — all twelve read for this cut, not counted. Nine `Result: pass`, two `pass with accepted defects`, none `fail`
-- [ ] **LANNA'S OWN WEBSITE READS `locked` ON PRODUCTION, CONFIRMED BEFORE THE WORKER DEPLOY** — pending: Lutan, on his console. **This is the gate of this release.** He set it on 2026-11-25; the confirmation is one sentence at deploy time, and the deploy must not run without it
-- [ ] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — deferred: release manager
-- [ ] Deployed SHA matches the tested SHA, read from `deploy.mjs`'s own line — deferred: release manager
-- [ ] Deployed to test, smoke-tested on `test.lannacare.org` — deferred: release manager
-- [ ] Three Pi builds run **serial** (4 GiB Pi, `next build` peaks above 6 GB), box pre-flighted first — deferred: release manager
+- [x] **LANNA'S OWN WEBSITE READS `locked` ON PRODUCTION** — **and this line guarded the wrong step, which is the finding of this release.** The floor lifts at the **production Pi build**, not the Worker deploy (`PUBLIC_SITE` is `where: "pi"` in `runtime-config.mjs`; `write-env.mjs` applies it into the Pi's env file at build time). His 2026-11-25 console change had **not** taken, so the Pi build put the real public site on the internet: `/` 200 at 78,877 bytes, `/adopt`, `/our-work` and `/donate` all 200, `CF-Cache-Status: DYNAMIC`, `robots.txt` serving `Allow: /` with a sitemap. He set it `locked` on 2026-11-26 and it closed within a minute. Filed as `#flrwh`; full account in the record
+- [x] Tested SHA `5344c037a` recorded, and it was the tip of `main` at deploy time
+- [x] Deployed SHA matches: all four hosts report `5344c037a85720b2ffb8ca68a3a5a99eea8b8c51` on `/api/version`
+- [x] Deployed to test; `test.lannacare.org` answers `0.49.2` on both endpoints, `served-by: pi`
+- [x] Three Pi builds run **serial**, each log read before the next started. Box pre-flighted first: 3238 MB -> 3389 MB available, load 0.00, uptime 13 days, 872 G free. Each logged its own correct Server Actions fingerprint (test `ecc41837fc0b`, UAT `cdeca9cbc4de`, production `cbd55beae8d8`) and `check-assets: ok`. **`deploy-pi.sh`'s machine-wide `flock -n` refuses rather than waits, so stacking was impossible by construction** — read after fearing it
 - [ ] Worker deploys strictly test -> UAT -> production, production last — deferred: release manager
-- [ ] UAT deployed with `--no-mail` — deferred: release manager. **UAT can mail**: `RELEASE_MAIL_ENV="UAT"` with a live `RELEASE_MAIL` binding, and its database holds production's real people, so its silence is the strongest of the three mail proofs
-- [ ] `strip-baked-env: removed N env var(s)` seen in each deploy output — deferred: release manager (23 on `0.49.1`)
+- [x] UAT deployed with `--no-mail`, and it reported `no major release new to uat (was 0.49.1), so no email`. **UAT can mail**: `RELEASE_MAIL_ENV="UAT"` with a live `RELEASE_MAIL` binding, and its database holds production's real people, so its silence is the strongest of the three mail proofs
+- [x] `strip-baked-env` seen in both of ours (23 on `0.49.1`)
 - [ ] Any new secret or env var exists in production — deferred: release manager. **`PUBLIC_SITE` is a `vars` entry in `wrangler.jsonc`, not a secret**, so it ships with the bundle; what must be checked is `GOOGLE_DRIVE_ROOT_FOLDER_ID` on the production Worker, because the new content editor uploads photos through it
 - [ ] Public pages re-checked after a cache purge — deferred: release manager. **Production's zone alone went stale on `0.49.0`** and passed first time on `0.49.1`; purge both zones regardless
-- [ ] **Checked from outside after the production deploy: a signed-out visitor still gets the construction page** — deferred: release manager, mine, step 4 of the order above. Before-picture: 200, 24,462 bytes, construction wording present
-- [ ] `robots.txt` still refuses crawlers after the floor lift — deferred: release manager
-- [ ] Timezone-sensitive behaviour on the deployed build — deferred: release manager. n/a by nature for a cut, re-confirmed after deploy by reading the entry's date back from `/api/releases/current`
-- [ ] Evidence pasted into this plan is the tool's actual output, unedited — deferred: release manager, for the deploy sections still to come
-- [ ] Migration ordering: the apply happens **before** the deploy — deferred: release manager. #1889's code is already live-bound to `0443`, so this is not optional
-- [ ] `apply-migrations.mjs --env production --dry-run` run and clean — deferred: release manager. Run above, and the one failure is the documented caveat; re-read at apply time
+- [x] **Checked from outside — and it FAILED, at the step before the one this line names.** After the production **Pi build** a signed-out visitor got the real site (`/` 200 at 78,877 bytes, construction wording gone; `/adopt`, `/our-work`, `/donate` all 200). After Lutan locked Lanna on 2026-11-26: `/` back to 200 at **24,468 bytes with construction wording present**, the other three **307 to `/login`**. Before-picture was 200, 24,462 bytes
+- [x] `robots.txt` — **it did NOT refuse crawlers after the floor lift.** It served `Allow: /` with a sitemap while the floor was open and Lanna's value was still `open`. Back to `Disallow: /` with `x-robots-tag: noindex, nofollow` once Lanna was locked
+- [x] Timezone-sensitive behaviour — n/a by nature for a cut; the entry reads back correctly from `/api/releases/current`
+- [x] Evidence pasted into this plan is the tool's actual output, unedited. **One exception recorded rather than hidden:** `guarded-install.mjs` was read through `| tail -4` and reported as success when the install had not finished — the figures above are from unpiped reads, and that fault is written up in the record and the handover
+- [x] Migration ordering: applied before every deploy. UAT first as the rehearsal, then production; both read 444 applied, 0 pending, zero drift afterwards
+- [x] `apply-migrations.mjs --env production --dry-run` — the one failure is the documented per-file-transaction caveat (`0441` creates the table `0442` seeds, and the dry-run rolls it back). The correct action on that output is to apply, and all five applied cleanly
 
 ### Rollback
 
@@ -300,20 +300,20 @@ offered after the deploy, not assumed: Lutan said *"Leave them"* to the same off
 - [x] Nothing is ticked that was not actually executed
 - [x] **Every exit code read from the command itself and every output read from a file, never through a pipe** — the `0.49.1` lesson, where `tail -6` produced a false claim about this very guard
 - [x] Gates — `gates: typecheck=0 lint=0 test=0 build=0`, read from the output file rather than a pipe
-- [ ] CI — pending: read against this head commit before merging
+- [x] CI — read against this head commit before merging
 
 Automated checks by: Claude  Date: 2026-11-25
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: eight rows, each with its owner named above
+- [x] The manual list above is **not** empty: eight rows, each with its owner named. Row 1 was done by Lutan on 2026-11-26 and is the finding of this release; the rest are carried into the record
 
 Manual verification by: pending: the eight rows above, and the post-deploy read of `/releases` as Admin. Nothing in this cut PR itself needs a person's eyes — the version bump and the note array are proved by 17 assertions
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — pending: with the PR body
-- [ ] Handed to the production release manager — pending: this is that handover; the one thing asked of Lutan is row 1 plus his deploy
+- [x] Checklist pasted into the PR
+- [x] Handed over: `docs/release-handover.md` is rewritten in this same PR, leading on the floor-trigger finding
 
 Result: pass
