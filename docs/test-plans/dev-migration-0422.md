@@ -164,7 +164,7 @@ Manual verification by: n/a: nothing for a person to look at; script output and 
 
 - [ ] Open defects are either fixed or explicitly accepted above — n/a: no defects
 - [x] Checklist pasted into the PR
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — pending: the release manager, at the next release
 
 Result: pass
 
