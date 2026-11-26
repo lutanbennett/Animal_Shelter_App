@@ -9865,7 +9865,7 @@ const th: Dictionary = {
       // The email goes to the donor, who is usually overseas: English, like the receipt.
       emailSubject: (number: string) => `ใบเสร็จรับเงินบริจาคเลขที่ ${number} — {shelter}`,
       emailBody: (name: string, number: string) =>
-        `เรียน คุณ${name}\n\nขอขอบคุณสำหรับการบริจาคให้มูลนิธิ {shelter} ใบเสร็จรับเงินเลขที่ ${number} แนบมากับอีเมลฉบับนี้\n\nด้วยความขอบคุณ\nมูลนิธิ {shelter}`,
+        `เรียน คุณ ${name}\n\nขอขอบคุณสำหรับการบริจาคให้มูลนิธิ {shelter} ใบเสร็จรับเงินเลขที่ ${number} แนบมากับอีเมลฉบับนี้\n\nด้วยความขอบคุณ\nมูลนิธิ {shelter}`,
       markSent: "ส่งแล้ว",
       driveSaved: "บันทึกลง Drive แล้ว",
       driveOpen: "เปิดใน Drive",
