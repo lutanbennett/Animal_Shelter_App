@@ -67,7 +67,11 @@ which are the ones merged after the list was made, so they were never read. Afte
     **ทิเกอร์**; **ไทเกอร์** was offered as the commoner transliteration and the reader kept ทิเกอร์.
   - Batch 12 — the money block and the adoptions follow-on panel (14). **All passed, none changed**, including
     **ยกเลิก** for a VOID receipt, raised because an accountant might want a narrower term.
-  - **171 strings read in all so far.**
+  - Batches 13-18 — the adoptions, medical and money FEATURE pages: their prose, worked examples, search titles and
+    section cards (10, 12, 12, 12, 12, 12). **All passed except the two corrections below.**
+  - **229 strings read in all so far; 107 of the public strings are left.** A script hands out the batches now
+    (`next-batch.mjs` in the session scratchpad): it keeps the public pages first, skips the 87 repeats, and records
+    what has been read. **By batch 13 I was tracking a 894-row list by hand, which is how a string gets shown twice.**
 - **Position reached:** the four disagreements are settled and **91 strings are read** (batches 1-6: everything new
   except the console). **Still to read:** the 666 `admin` console strings. The 133 "Thai changed" strings are dealt
   with differently — see below.
@@ -83,6 +87,15 @@ which are the ones merged after the list was made, so they were never read. Afte
   unread majority as well as what was read, which is exactly the fault the range convention exists to avoid.
 
 ### What was changed
+
+00. **The About page said the DOCTOR where it meant the VET, in two places, and the page disagreed with itself.**
+   `features.medical.sections[0].name` was **การพบแพทย์** ("seeing the doctor") while its own paragraph underneath, and
+   every other string on the page, said **สัตวแพทย์**. Lutan: *"change it to match vet"*. Then `sections[1].text` was
+   found to carry the same slip and was changed the same way **after asking him again** — my question had stacked
+   "change this?" with "is the rest fine?", so his *"All fine"* answered neither, and guessing would have left the
+   heading and the paragraph disagreeing, which is the fault we had just fixed. **The About page is now clean of it.**
+   **TWO USES SURVIVE ELSEWHERE AND ARE DELIBERATE, NOT MISSED:** a late-recorded visit and a bill belonging to a
+   visit. They were read in earlier weeks, are not in this week's list, and are a question for the next read.
 
 0. **A space goes between a name and Thai — Lutan's ruling, and it now holds with no exception to remember.**
    Raised because swapping the name for a placeholder left `{shelterShort}ได้รับ` running together. Applied to: the
