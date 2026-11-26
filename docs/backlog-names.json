@@ -68,5 +68,7 @@
   "acwho": "A person cannot hold two shelters",
   "tnc41": "Four new uncatalogued tenancy objects",
   "d422o": "Dev has an orphan migration applied",
-  "dfnwi": "Release-note guard asks the wrong range"
+  "dfnwi": "Release-note guard asks the wrong range",
+  "flrwh": "Website floor lifts at Pi build",
+  "wgdns": "Wrangler hides the real deploy error"
 }
