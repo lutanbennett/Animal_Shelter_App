@@ -169,6 +169,25 @@ jobs:
           node-version: 22
       - run: node scripts/check-new-policy-role-names.mjs --base origin/${{ github.base_ref }}
 
+  # A migration added on this branch that creates a view, an API-executable security definer function or an RLS
+  # table must give it an owner in the same file (owner to rls_definer / security_invoker / definer_all) or carry an
+  # ALLOWED entry in scripts/lib/tenancy-catalogue.mjs (#tnc41). Static, reads only the added SQL files, so no token:
+  # the nightly tenancy-catalogue.yml still reads the live catalogue for what text cannot show
+  # (docs/decisions/2026-11-26-tenancy-catalogue-gate.md). Pull requests only, like migration-numbers.
+  tenancy-migrations:
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.docs-only != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: node scripts/check-tenancy-migrations.mjs --base origin/${{ github.base_ref }}
+
   # scripts/ is loaded by nothing CI runs: typecheck, lint and build never
   # touch it, so a syntax error in deploy.mjs reached main with CI green
   # (#302), and spare-clone.sh was committed 100644 while its systemd unit runs
