@@ -59,6 +59,8 @@ export const RUNTIME_CONFIG = [
   { name: "ORIGIN_KEY", where: "both", secret: true, scrub: true, required: false, purpose: "The Worker sends it to the Pi; the WAF rule and the Pi's app check it (src/lib/origin-key.ts)." },
   { name: "STATUS_READ_TOKEN", where: "both", secret: true, scrub: true, required: false, purpose: "Bearer token for the read-only GET /api/status/health feed Home Assistant polls (src/app/api/status/health/route.ts). Its own secret, rotated alone; never the service-role key. Unset: the feed refuses everyone." },
   { name: "CLOUDFLARE_ANALYTICS_TOKEN", where: "both", secret: true, scrub: true, required: false, purpose: "Visitor count on Settings → System status; grey until the zone id is set too." },
+  { name: "CLOUDFLARE_WORKERS_DOMAIN_TOKEN", where: "both", secret: true, scrub: true, required: false, purpose: "Cloudflare API token holding Account → Workers Scripts → Edit only, for attaching and detaching a shelter's own web address to this environment's Worker (PUT/DELETE /accounts/{id}/workers/domains; docs/decisions/2026-11-26-host-attach-trial.md). 'both' because the Pi serves the pages whose actions would call it. Unset: no host can be attached from the app." },
+  { name: "CLOUDFLARE_ACCOUNT_ID", where: "both", secret: true, scrub: false, required: false, purpose: "The Cloudflare account the domain attach above is made in. Not a credential (npx.cmd wrangler whoami prints it); kept beside the token so a rebuilt Worker gets both. Unset: no host can be attached from the app." },
   { name: "CLOUDFLARE_ZONE_ID", where: "both", secret: true, scrub: false, required: false, purpose: "Zone the visitor count reads." },
   { name: "ASSISTANT_LLM_PROVIDER", where: "both", secret: true, scrub: false, required: false, purpose: "Which assistant model implementation to use (src/lib/assistant/llm.ts); openai-compatible when unset, which is the only one there is. There is no vendor key anywhere in assistant v2: the model runs on the shelter's own machine (docs/decisions/2026-11-01-drop-anthropic-sdk.md)." },
   { name: "ASSISTANT_LLM_MODEL", where: "both", secret: true, scrub: false, required: false, purpose: "The assistant's model id, in one place so swapping a model is configuration (src/lib/assistant/llm-openai.ts). Unset: the model call is not configured and the keyword assistant carries on." },
@@ -144,3 +146,7 @@ export const WORKER_DEFAULTED_KNOBS = ["TRANSLATE_MODEL", "TRANSLATE_ENGINE", "O
 
 /** Why a Drive-set name resolving from .env.local is deliberate, not a fault (#rqv5c ends it). */
 export const DELIBERATE_DEV_FALLTHROUGH = ["GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_OAUTH_REFRESH_TOKEN"];
+
+// Wrangler's own name for the account id, which is ALSO a runtime secret above (the domain attach). One spelling,
+// so scripts/deploy.mjs hands wrangler the same name the manifest registers (check-runtime-config forbids it spelling it).
+export const CLOUDFLARE_ACCOUNT_VAR = "CLOUDFLARE_ACCOUNT_ID";

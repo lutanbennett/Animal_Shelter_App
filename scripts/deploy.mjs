@@ -63,9 +63,10 @@ import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { SITE_ORIGINS, envFile, loadEnv, loadLayers, parseEnvArg, projectRef } from "./lib/env.mjs";
 import { ALLOW_FLAG, fallthroughRefusal, localOnly, planLines, sourcesFor } from "./lib/secret-sources.mjs";
-import { DELIBERATE_DEV_FALLTHROUGH, WORKER_BUILD_VARS, WORKER_NOT_PUSHED, WORKER_OPTIONAL_SECRETS, WORKER_REQUIRED_SECRETS } from "./lib/runtime-config.mjs";
+import { CLOUDFLARE_ACCOUNT_VAR, DELIBERATE_DEV_FALLTHROUGH, WORKER_BUILD_VARS, WORKER_NOT_PUSHED, WORKER_OPTIONAL_SECRETS, WORKER_REQUIRED_SECRETS } from "./lib/runtime-config.mjs";
 import { appliedMigrations } from "./lib/deploy-schema.mjs";
 import { releaseProblems, schemaVerdict } from "./lib/release-guards.mjs";
 import { strayEnvFiles } from "./lib/env-leak.mjs";
@@ -192,10 +193,10 @@ function cfSource(key) {
 function cfAuth() {
   const token = cfSource("CLOUDFLARE_API_TOKEN");
   if (!token) return {};
-  const account = cfSource("CLOUDFLARE_ACCOUNT_ID");
+  const account = cfSource(CLOUDFLARE_ACCOUNT_VAR);
   return {
     CLOUDFLARE_API_TOKEN: token.value,
-    ...(account ? { CLOUDFLARE_ACCOUNT_ID: account.value } : {}),
+    ...(account ? { [CLOUDFLARE_ACCOUNT_VAR]: account.value } : {}),
   };
 }
 
@@ -203,7 +204,7 @@ function cfAuth() {
 function cfAuthNote() {
   const token = cfSource("CLOUDFLARE_API_TOKEN");
   if (token) {
-    const account = cfSource("CLOUDFLARE_ACCOUNT_ID");
+    const account = cfSource(CLOUDFLARE_ACCOUNT_VAR);
     return (
       `API token from ${token.from}` +
       (account ? `, account id from ${account.from}` : ", no account id set (wrangler infers it)")
