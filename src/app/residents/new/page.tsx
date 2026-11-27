@@ -43,7 +43,7 @@ export default async function NewResidentPage(
       .order("name")
       .returns<(DietTypeOption & { name_th: string | null })[]>(),
     supabase
-      .from("residents")
+      .from("resident_list_view")
       .select("resident_code, name, thai_name, current_status")
       .returns<{ resident_code: string | null; name: string; thai_name: string | null; current_status: string | null }[]>(),
   ]);
