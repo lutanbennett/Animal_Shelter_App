@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "Supplier order emails and status alert emails now come from your shelter’s full name followed by “(via CooperJaidee)”, so you can tell at a glance which shelter sent them. Release emails to admins now come from CooperJaidee.", admin: true },
   "When you are signed in and open the Thai version of the public website (an address starting /th), the app’s own header and side menu no longer appear around it: you see the website as a visitor would, as the English pages already did.",
   "If a password-reset email link no longer works, the sign-in page now says so and offers to send a new one, instead of wrongly saying Google sign-in failed.",
   "Saving a new password while your account has an authenticator app now tells you to enter its code under Security first, instead of showing a technical error.",
