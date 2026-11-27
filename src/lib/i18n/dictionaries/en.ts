@@ -7003,6 +7003,21 @@ const en = {
         microchipInvalid: "A microchip number is exactly 15 digits (spaces and dashes are ignored).",
         microchipDuplicate: "That microchip number is already recorded. Check the number.",
       },
+      /** #dupnm: shown under the name, never blocks. Departed and dead residents count. */
+      nameCheck: {
+        taken: "There is already a resident called this.",
+        similar: "This name looks like a resident you already have.",
+        gone: "no longer at the shelter",
+        sameAnimal: "If it is the same animal coming back, do not register it again.",
+        useNumbered: "Use “{name}”",
+        orEdit: "or change the name yourself.",
+        reasons: {
+          bracket: "the same name once the bracket tag is dropped",
+          tag: "one name is the other's bracket tag",
+          thai: "the same Thai name",
+          spelling: "close spelling",
+        },
+      },
     },
     list: {
       pageTitle: "Residents",

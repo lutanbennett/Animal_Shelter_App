@@ -27,7 +27,10 @@ export default async function NewResidentPage(
   // Zones and enclosures come from the same loader as Move, with each
   // enclosure's headcount, so intake's capacity warning can't disagree
   // with the other placement screens about what "full" means.
-  const [options, originsResult, dietTypesResult] = await Promise.all([
+  // Every resident the login can read, departed and dead included, for the
+  // name warning (#dupnm): half its value is "is this the same animal coming
+  // back?". A read the login cannot make just leaves the warning quiet.
+  const [options, originsResult, dietTypesResult, existingResult] = await Promise.all([
     loadEnclosureOptions(supabase),
     supabase
       .from("group_origins")
@@ -39,6 +42,10 @@ export default async function NewResidentPage(
       .select("id, name, name_th, is_standard")
       .order("name")
       .returns<(DietTypeOption & { name_th: string | null })[]>(),
+    supabase
+      .from("resident_list_view")
+      .select("resident_code, name, thai_name, current_status")
+      .returns<{ resident_code: string | null; name: string; thai_name: string | null; current_status: string | null }[]>(),
   ]);
 
   const origins = originsResult.data ?? [];
@@ -74,6 +81,12 @@ export default async function NewResidentPage(
         }))}
         initialStep={initialStep}
         chip={chip}
+        existingResidents={(existingResult.data ?? []).map((r) => ({
+          code: r.resident_code,
+          name: r.name,
+          thaiName: r.thai_name,
+          status: r.current_status,
+        }))}
       />
     </main>
   );

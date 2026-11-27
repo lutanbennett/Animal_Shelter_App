@@ -33,6 +33,7 @@ import {
 import { textareaClass } from "@/components/textareaClass";
 import { TagNoteField } from "@/components/TagNoteField";
 import { DateInput } from "@/components/DateInput";
+import { NameField, type ExistingResident } from "./NameField";
 
 export type DietTypeOption = { id: string; name: string; is_standard: boolean };
 export type OriginOption = { id: string; name: string };
@@ -198,6 +199,7 @@ export function IntakeForm({
   initialStep = 0,
   chip = null,
   canTagNotes = false,
+  existingResidents = [],
 }: {
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
@@ -207,6 +209,8 @@ export function IntakeForm({
   chip?: string | null;
   /** canTagNote(perms, ["resident.register"]): the intake save asks resident.register. Default false. */
   canTagNotes?: boolean;
+  /** Every resident, departed and dead too, for the name warning (#dupnm). */
+  existingResidents?: ExistingResident[];
 }) {
   const [state, onSubmit, pending] = useWriteForm(recordIntake, undefined);
   const { t, locale } = useI18n();
@@ -338,7 +342,7 @@ export function IntakeForm({
               <label htmlFor="name" className="text-sm font-medium text-muted">
                 {t.residents.new.fields.name} <span className="text-danger">*</span>
               </label>
-              <input id="name" name="name" required className={inputClass} />
+              <NameField existing={existingResidents} inputClass={inputClass} />
             </div>
             <div className="flex flex-col gap-1">
               <label htmlFor="thaiName" className="text-sm font-medium text-muted">

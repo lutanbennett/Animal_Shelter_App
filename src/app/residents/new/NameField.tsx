@@ -1,0 +1,125 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useI18n } from "@/lib/i18n/I18nProvider";
+import { nearMatchReason, nextNumberedName, sameName } from "@/lib/residents/near-names";
+import { ADOPTED, DECEASED } from "@/lib/residents/status";
+
+/** Every resident, departed and dead included: "is this the same animal coming back?" (#dupnm). */
+export type ExistingResident = {
+  code: string | null;
+  name: string;
+  thaiName: string | null;
+  status: string | null;
+};
+
+const MAX_SHOWN = 5;
+
+/**
+ * The intake wizard's name box, with a warning under it when the name is
+ * already taken or looks like an existing resident's. A warning only: the
+ * volunteer may take the offered number, change the name, or carry on.
+ * The matching is src/lib/residents/near-names.ts, the same rules the bulk
+ * loader uses.
+ */
+export function NameField({
+  existing,
+  inputClass,
+}: {
+  existing: ExistingResident[];
+  inputClass: string;
+}) {
+  const { t } = useI18n();
+  const c = t.residents.new.nameCheck;
+  const [name, setName] = useState("");
+  const [thaiName, setThaiName] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // The Thai name box sits beside this one; follow it so rule 2 can fire.
+  useEffect(() => {
+    const thai = inputRef.current?.form?.elements.namedItem("thaiName");
+    if (!(thai instanceof HTMLInputElement)) return;
+    const read = () => setThaiName(thai.value);
+    thai.addEventListener("input", read);
+    return () => thai.removeEventListener("input", read);
+  }, []);
+
+  const check = useMemo(() => {
+    const typed = name.trim();
+    if (!typed) return null;
+    const exact = existing.filter((r) => sameName(r.name, typed));
+    const near = exact.length
+      ? []
+      : existing
+          .map((r) => ({ r, reason: nearMatchReason({ name: typed, thaiName }, { name: r.name, thaiName: r.thaiName }) }))
+          .filter((m): m is { r: ExistingResident; reason: string } => m.reason !== null);
+    if (!exact.length && !near.length) return null;
+    return {
+      exact,
+      near,
+      suggestion: exact.length ? nextNumberedName(typed, existing.map((r) => r.name)) : null,
+    };
+  }, [name, thaiName, existing]);
+
+  const reasonText = (reason: string) => {
+    if (reason.startsWith("the same name once")) return c.reasons.bracket;
+    if (reason.startsWith("one name is")) return c.reasons.tag;
+    if (reason.startsWith("the same Thai")) return c.reasons.thai;
+    if (reason.startsWith("close spelling")) return c.reasons.spelling;
+    return reason;
+  };
+  const who = (r: ExistingResident) =>
+    `${r.code ? `${r.code} ` : ""}${r.name}${r.status === DECEASED || r.status === ADOPTED ? ` (${c.gone})` : ""}`;
+
+  const listed = check
+    ? check.exact.length
+      ? check.exact.map((r) => who(r))
+      : check.near.map(({ r, reason }) => `${who(r)}: ${reasonText(reason)}`)
+    : [];
+
+  return (
+    <>
+      <input
+        ref={inputRef}
+        id="name"
+        name="name"
+        required
+        className={inputClass}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        aria-describedby={check ? "name-check" : undefined}
+      />
+      {check && (
+        <div
+          id="name-check"
+          role="status"
+          className="flex flex-col gap-1 rounded border border-warning/40 bg-warning/10 p-2 text-sm text-foreground"
+        >
+          <p className="font-medium">{check.exact.length ? c.taken : c.similar}</p>
+          <ul className="list-disc pl-5">
+            {listed.slice(0, MAX_SHOWN).map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+            {listed.length > MAX_SHOWN && <li>…</li>}
+          </ul>
+          <p className="text-muted">{c.sameAnimal}</p>
+          {check.suggestion && (
+            <p className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                className="rounded border border-primary px-2 py-1 text-primary hover:bg-primary/10"
+                onClick={() => {
+                  setName(check.suggestion!);
+                  inputRef.current?.focus();
+                }}
+              >
+                {c.useNumbered.replace("{name}", check.suggestion)}
+              </button>
+              <span className="text-muted">{c.orEdit}</span>
+            </p>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
