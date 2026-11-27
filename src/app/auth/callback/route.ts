@@ -3,6 +3,7 @@ import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
 import { getPublicSiteState } from "@/lib/public-site-request";
 import { NEXT_COOKIE, NEXT_COOKIE_PATH, resolveNext } from "@/lib/auth/next-cookie";
 import { CHOOSER_PATH, isChooserPath } from "@/lib/auth/chooser-path";
+import { frontDoorLanding, onFrontDoor } from "@/lib/auth/front-door";
 import { PASSWORD_CHANGE_PATH } from "@/lib/auth/password-change";
 import { ADOPTER_PATH, loadAdopterScope } from "@/lib/adopter/scope";
 import { actingShelterId } from "@/lib/supabase/acting-shelter";
@@ -50,6 +51,14 @@ export async function GET(request: NextRequest) {
   // An adopter holds no staff card; a verified email that is a live contact is sent to the page for sending news (#l5gxn).
   if (!role?.entersApp && (await loadAdopterScope(supabase))) {
     return NextResponse.redirect(`${origin}${ADOPTER_PATH}`);
+  }
+  // The platform front door (#fdsgn): no shelter here by design, so a role-less login is asked what it holds ACROSS shelters.
+  if (!role && (await onFrontDoor())) {
+    const landing = await frontDoorLanding(supabase, resolveNext(request.cookies.get(NEXT_COOKIE)?.value, searchParams.get("next")));
+    if (!landing) await supabase.auth.signOut();
+    const done = NextResponse.redirect(`${origin}${landing ?? "/login?error=no_platform"}`);
+    done.cookies.delete({ name: NEXT_COOKIE, path: NEXT_COOKIE_PATH });
+    return done;
   }
   // The shelter chooser (#apxld): a login with roles only at shelters may land there from the host that has none.
   if (!role && !(await actingShelterId())) {

@@ -10,6 +10,7 @@ import { NEXT_COOKIE, callbackUrl, nextCookieOptions } from "@/lib/auth/next-coo
 import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
 import { getPublicSiteState } from "@/lib/public-site-request";
 import { CHOOSER_PATH, isChooserPath } from "@/lib/auth/chooser-path";
+import { frontDoorLanding, onFrontDoor } from "@/lib/auth/front-door";
 import { safeNextPath } from "@/lib/auth/next-path";
 import { ADOPTER_PATH, loadAdopterScope } from "@/lib/adopter/scope";
 import { getT } from "@/lib/i18n/get-t";
@@ -47,6 +48,14 @@ export async function login(
   // locked site it would still get past the lock.
   const role = await loadSessionRole(supabase);
   if (!role?.entersApp && (await loadAdopterScope(supabase))) redirect(ADOPTER_PATH);
+  // The platform front door (#fdsgn): no shelter here by design, so a role-less login is asked what it holds ACROSS shelters.
+  if (!role && (await onFrontDoor())) {
+    const landing = await frontDoorLanding(supabase, safeNextPath(formData.get("next") as string));
+    if (landing) redirect(landing);
+    await supabase.auth.signOut();
+    const { t } = await getT();
+    return { error: t.login.errors.nothingOnPlatform, email };
+  }
   // The shelter chooser (#apxld) is the one place a login with no role here may go: it holds roles at shelters, not at this host.
   if (!role && isChooserPath(safeNextPath(formData.get("next") as string)) && !(await actingShelterId())) redirect(CHOOSER_PATH);
   if (!role) {
