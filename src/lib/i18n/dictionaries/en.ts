@@ -861,6 +861,9 @@ const en = {
         tooShort: (min: number) => `Password must be at least ${min} characters.`,
         mismatch: "The two passwords don't match.",
         samePassword: "Choose a password you haven't used before.",
+        /** Supabase refuses a new password while an authenticator is enrolled and this session has not passed it (aal2). The requirement stays; this only says the way through. */
+        needsAuthenticator:
+          "Your account has an authenticator app, so enter its code first: open Security in the menu, enter the code, then come back here and save your new password.",
         currentRequired: "Enter your current password.",
         currentWrong: "That isn't your current password. Check it and try again, or sign out and use \"Forgot password?\".",
         cannotVerify: "We couldn't check your current password just now, so nothing was changed. Try again in a moment.",
@@ -932,6 +935,13 @@ const en = {
       /** Email and password: any other refusal from the auth service. */
       signInFailed: "Couldn’t sign in just now. Please try again in a moment.",
       google: "Google sign-in didn’t complete. Please try again.",
+      /** An email link (password reset) that Supabase refused: read from the URL fragment in LinkErrorNotice. It may have expired OR been used up already by a mail scanner or browser prefetch, so it blames neither. */
+      emailLinkUsed:
+        "That email link no longer works. Links can only be used once, and some mail apps open them before you do. Request a new one below, and if clicking it fails again, copy the link and paste it into your browser.",
+      /** Any other failure carried in the fragment of an email link. */
+      emailLinkFailed: "That email link didn’t work. Request a new one below and try again.",
+      /** The button under either message above. */
+      requestNewLink: "Send me a new link",
       /** The session ended (long inactivity, or signed out elsewhere). */
       expired: "You were signed out because you haven’t used the app for a while. Sign in again and you’ll go back to where you were.",
     },

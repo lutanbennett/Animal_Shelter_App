@@ -1,10 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useSyncExternalStore } from "react";
+import { linkErrorFromHash, type LinkErrorKind } from "@/lib/auth/link-error";
 import { useKeptForm } from "@/lib/use-kept-form";
 import { useFormStatus } from "react-dom";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { login, signInWithGoogle } from "./actions";
+
+/** The fragment as the page first loaded, read once: clearing the address must not clear the message. */
+let firstLinkError: LinkErrorKind | null | undefined;
+function initialLinkError(): LinkErrorKind | null {
+  if (firstLinkError === undefined) firstLinkError = linkErrorFromHash(window.location.hash);
+  return firstLinkError;
+}
+const noSubscribe = () => () => {};
 
 const inputClass =
   "rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
@@ -25,6 +35,17 @@ export function LoginForm({
 }) {
   const [state, onSubmit, pending] = useKeptForm(login, undefined);
   const { t } = useI18n();
+  // A refused email link reports itself in the URL fragment, which the server never sees, so the page's
+  // ?error=google would blame Google. Read it in the browser (server snapshot: none), then clear the
+  // address so a reload does not show it again (docs/decisions/2026-11-27-reset-link-error-read-in-the-browser.md).
+  const linkError = useSyncExternalStore(noSubscribe, initialLinkError, () => null);
+  useEffect(() => {
+    if (!linkError) return;
+    const url = new URL(window.location.href);
+    url.hash = "";
+    url.searchParams.delete("error");
+    window.history.replaceState(window.history.state, "", url.pathname + url.search);
+  }, [linkError]);
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-4">
@@ -57,8 +78,22 @@ export function LoginForm({
             className={inputClass}
           />
         </div>
-        {(state?.error || error) && (
-          <p className="text-sm text-danger">{state?.error ?? error}</p>
+        {state?.error ? (
+          <p className="text-sm text-danger">{state.error}</p>
+        ) : linkError ? (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-danger">
+              {linkError === "used" ? t.login.errors.emailLinkUsed : t.login.errors.emailLinkFailed}
+            </p>
+            <Link
+              href="/login/forgot"
+              className="flex min-h-11 items-center justify-center rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface"
+            >
+              {t.login.errors.requestNewLink}
+            </Link>
+          </div>
+        ) : (
+          error && <p className="text-sm text-danger">{error}</p>
         )}
         <button
           type="submit"
