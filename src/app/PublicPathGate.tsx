@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { isPublicPage } from "@/lib/public-paths";
+import { isChromelessPath } from "@/lib/public-paths";
 
 /**
  * Hides the app chrome (header, sidebar) on the public pages, so a
