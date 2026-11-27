@@ -1055,6 +1055,18 @@ node scripts/purge-cache.mjs --env production
 node scripts/purge-cache.mjs --env test
 ```
 
+**The first line covers all FOUR production hosts, in two zones** (#cjpzn, 2026-11-27):
+`lannacareforanimals.org` + `www.` (`CLOUDFLARE_ZONE_ID_LANNACAREFORANIMALS`) and `cooperjaidee.org` + `www.`
+(`CLOUDFLARE_ZONE_ID_COOPERJAIDEE`). The list lives in `scripts/lib/purge-zones.mjs` and a unit test fails if
+`wrangler.jsonc` binds a host no zone covers. **What you see when a zone is skipped:** a line
+`purge-cache: NOT PURGED — cooperjaidee.org and www.cooperjaidee.org: CLOUDFLARE_ZONE_ID_COOPERJAIDEE is missing …`,
+the other zone purged and re-checked as normal, a closing `finished, but NOT PURGED: …` line, and **exit 1**.
+That is not a reason to stop the release: purge the named zone by hand in Cloudflare (that zone → Caching →
+Configuration → Purge Everything) and carry on. A `REFUSED by Cloudflare … 10000` on one zone means the token is
+not allowed on it. **As of 2026-11-27 production's purge token cannot see the `cooperjaidee.org` zone**, so until
+Lutan widens it and the zone id is added, expect this exit 1 and purge that zone by hand
+(`docs/decisions/2026-11-27-purge-missing-zone-fails-after-purging.md`).
+
 **The second line covers test AND UAT.** They are one Cloudflare zone (`lannacare.org`), a purge is
 zone-wide, and the script re-checks both sites' stylesheets after it. `--env uat` does exactly the same;
 use either, not both. Both read the zone's credentials from `.env.deploy.uat` (a token that can reach
