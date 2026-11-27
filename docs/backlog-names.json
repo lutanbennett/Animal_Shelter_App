@@ -76,5 +76,6 @@
   "shnul": "Host shelter_id nullability drift",
   "dnsgp": "Wrangler deploy DNS blackout",
   "c0nhd": "Migration 0445 stale consumer header",
-  "rpsha": "release-prs needs no sha"
+  "rpsha": "release-prs needs no sha",
+  "cjpzn": "cooperjaidee zone never purged"
 }
