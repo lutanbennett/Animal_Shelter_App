@@ -10,6 +10,7 @@ import {
 import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
 import { DEFAULT_SIGNED_IN_PATH, NO_ACCESS_PATH, safeNextPath } from "@/lib/auth/next-path";
 import { CHOOSER_PATH } from "@/lib/auth/chooser-path";
+import { frontDoorKeeps } from "@/lib/auth/front-door-paths";
 import { isPublicPath as isPublicPathname, isWebsitePageWhenOff } from "@/lib/public-paths";
 import { ADOPTER_PATH, loadAdopterScope } from "@/lib/adopter/scope";
 import { PUBLIC_SITE_HEADER, isPublicSiteLocked, isPublicSiteOff, isSearchClosed, publicSiteStateFor } from "@/lib/public-site";
@@ -162,6 +163,11 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname !== CHOOSER_PATH
   ) {
     const role = await loadSessionRole(supabase);
+    // The platform front door (#fdsgn): no shelter here by design. A role-less login may use the console's pages, which ask
+    // is_product_admin()/my_shelters() themselves (and the database refuses the rest); it is not signed out as "no site".
+    if (!role && isPlatformHostname(requestHost((n) => request.headers.get(n)) ?? "") && frontDoorKeeps(request.nextUrl.pathname)) {
+      return noindex(response, searchClosed);
+    }
     if (off && role?.entersApp && isWebsitePageWhenOff(request.nextUrl.pathname)) {
       const url = request.nextUrl.clone();
       url.pathname = DEFAULT_SIGNED_IN_PATH;

@@ -930,6 +930,9 @@ const en = {
       /** Sign-in refused because this address is not registered to any shelter (#hostx): nothing is wrong with the account. */
       siteNotSetUp:
         "This site isn’t set up yet, so nobody can sign in here. Your account is fine. Please tell the person who looks after the system.",
+      /** Signed in on the platform front door, but the account is not a product administrator and holds no role at any shelter (#fdsgn). */
+      nothingOnPlatform:
+        "You signed in, but this account has nothing here yet: it isn't a product administrator and has no shelter. Please tell the person who looks after the system.",
       /** Email and password: wrong email or password (the auth service only says "Invalid login credentials"). */
       badCredentials: "That email or password isn’t right. Try again, or tap Forgot password?",
       /** Email and password: any other refusal from the auth service. */
