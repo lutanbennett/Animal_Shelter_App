@@ -1,12 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { linkErrorFromHash, type LinkErrorKind } from "@/lib/auth/link-error";
 import { useKeptForm } from "@/lib/use-kept-form";
 import { useFormStatus } from "react-dom";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { login, signInWithGoogle } from "./actions";
+
+/** The fragment as the page first loaded, read once: clearing the address must not clear the message. */
+let firstLinkError: LinkErrorKind | null | undefined;
+function initialLinkError(): LinkErrorKind | null {
+  if (firstLinkError === undefined) firstLinkError = linkErrorFromHash(window.location.hash);
+  return firstLinkError;
+}
+const noSubscribe = () => () => {};
 
 const inputClass =
   "rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
@@ -28,17 +36,16 @@ export function LoginForm({
   const [state, onSubmit, pending] = useKeptForm(login, undefined);
   const { t } = useI18n();
   // A refused email link reports itself in the URL fragment, which the server never sees, so the page's
-  // ?error=google would blame Google. Read it here, then clear it so a reload does not show it again.
-  const [linkError, setLinkError] = useState<LinkErrorKind | null>(null);
+  // ?error=google would blame Google. Read it in the browser (server snapshot: none), then clear the
+  // address so a reload does not show it again (docs/decisions/2026-11-27-reset-link-error-read-in-the-browser.md).
+  const linkError = useSyncExternalStore(noSubscribe, initialLinkError, () => null);
   useEffect(() => {
-    const kind = linkErrorFromHash(window.location.hash);
-    if (!kind) return;
-    setLinkError(kind);
+    if (!linkError) return;
     const url = new URL(window.location.href);
     url.hash = "";
     url.searchParams.delete("error");
     window.history.replaceState(window.history.state, "", url.pathname + url.search);
-  }, []);
+  }, [linkError]);
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-4">
