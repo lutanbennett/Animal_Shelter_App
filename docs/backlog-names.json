@@ -78,5 +78,6 @@
   "dnsgp": "Wrangler deploy DNS blackout",
   "c0nhd": "Migration 0445 stale consumer header",
   "rpsha": "release-prs needs no sha",
-  "cjpzn": "cooperjaidee zone never purged"
+  "cjpzn": "cooperjaidee zone never purged",
+  "rcgle": "Reset failure blames Google"
 }
