@@ -33,3 +33,31 @@ is missed and reads as "nothing reads this" — false confidence, worse than sil
 
 **Follow-up.** An unauthenticated version endpoint served by the app (not the
 Worker) would make "live" exact; filed on the backlog branch.
+
+## Amended 2026-11-27 (#c0nhd): the header is a SNAPSHOT at write time
+
+**Contract.** `-- consumer:` records what read the migration's objects **when the
+file was written**. It is never kept current: it is read only while the file is
+pending, and applied files are never edited. A later reader does not make an old
+header wrong in any way anyone needs to fix; it makes it out of date, by design.
+
+**Why not "carry the real consumer on the next migration touching the object".**
+That promises currency, and nothing keeps it: the sweep on 2026-11-27 found 18
+files whose `none`/`none yet` named a reader to come, and every one of those
+readers has since shipped (0232, 0241, 0255, 0276, 0312, 0322, 0330, 0357, 0411,
+0412, 0414, 0415, 0427, 0433, 0445, 0446, 0447, plus 0318). A promise broken 18
+times out of 18 is not a contract.
+
+**What changes in the output.** A `none` used to be silent, which read as "checked:
+nothing reads this". `apply-migrations.mjs` now prints a note naming each pending
+`none` file as *what the author believed when writing it, not re-checked*.
+
+**What an author should do instead of `none yet`.** If the reader is known but
+not written, declare its intended path (`-- consumer: src/app/x/page.tsx`). The
+check then warns "not on origin/main" / "does not exist in release" until it
+ships, which is the warning `none` silences.
+
+**No check asserting headers against reality.** It would compare a snapshot
+with later state, go red on the 18 files above, and nothing could fix them
+(applied files are never edited): noise with no action, the
+`fault-maintenance-delete` shape.
