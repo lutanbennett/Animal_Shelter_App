@@ -94,12 +94,16 @@ for (const [what, mutate] of Object.entries(broken)) {
   // A setting added to the registry later is held to the same rule with no new code here.
   const next = [...WORKER_ROUTED_VARS, { name: "FUTURE_SETTING", distinct: false, needs: "a future consumer" }];
   say(failing(config, next).some((m) => /FUTURE_SETTING/.test(m)), "caught: a newly registered routed setting that no environment sets");
-  // Legitimate absence is not a failure: an environment with no routes owes nothing, and test/uat set no PLATFORM_HOST.
+  // Legitimate absence is not a failure: an environment with no routes owes nothing, and PLATFORM_HOST is optional.
   const unrouted = clone();
   unrouted.env.uat.routes = [];
   delete unrouted.env.uat.vars.SUPABASE_URL;
   say(!failing(unrouted).some((m) => /^uat sets SUPABASE_URL/.test(m)), "not blamed: an environment with no routes and no SUPABASE_URL");
-  say(!config.env.uat.vars.PLATFORM_HOST && !failing(config).some((m) => /PLATFORM_HOST/.test(m)), "not blamed: uat has no PLATFORM_HOST, which is correct");
+  // test and uat gained one in #pltst; an environment without the product's front door is still legitimate.
+  const noPlatform = clone();
+  delete noPlatform.env.uat.vars.PLATFORM_HOST;
+  noPlatform.env.uat.routes = noPlatform.env.uat.routes.filter((r) => r.pattern !== config.env.uat.vars.PLATFORM_HOST);
+  say(!failing(noPlatform).some((m) => /PLATFORM_HOST/.test(m)), "not blamed: an environment with no PLATFORM_HOST");
 }
 
 console.log(failed ? `\n${failed} wrong` : "\nall right");

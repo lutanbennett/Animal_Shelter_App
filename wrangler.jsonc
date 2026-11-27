@@ -34,7 +34,10 @@
     "test": {
       "name": "lanna-animal-care-test",
       "version_metadata": { "binding": "CF_VERSION_METADATA" },
-      "routes": [{ "pattern": "test.lannacare.org", "custom_domain": true }],
+      "routes": [
+        { "pattern": "test.lannacare.org", "custom_domain": true },
+        { "pattern": "cooperjaidee-test.lannacare.org", "custom_domain": true }
+      ],
       // No RELEASE_MAIL binding and RELEASE_MAIL_ENV empty: the dev database
       // never sends release mail (worker/release-mail.mjs).
       // PUBLIC_SITE "off": nobody sees the public website here, signed in or
@@ -57,6 +60,10 @@
         // docs/domain-checklist.md lists the places outside the code that also change.
         "APP_HOST": "test.lannacare.org",
         "PUBLIC_HOST": "test.lannacare.org",
+        // The product platform's front door for this environment (#pltst, Lutan 2026-11-27: "a test and UAT
+        // environment for the product as well"), shaped as production's PLATFORM_HOST. Maps to no shelter;
+        // copied to the Pi by scripts/pi/write-env.mjs and into the build by scripts/deploy.mjs (SITE_HOST_VARS).
+        "PLATFORM_HOST": "cooperjaidee-test.lannacare.org",
         "ORIGIN_TIMEOUT_MS": "20000",
         "RELEASE_MAIL_ENV": "",
         "PUBLIC_SITE": "off",
@@ -90,7 +97,8 @@
       "name": "lanna-animal-care-uat",
       "version_metadata": { "binding": "CF_VERSION_METADATA" },
       "routes": [
-        { "pattern": "uat.lannacare.org", "custom_domain": true }
+        { "pattern": "uat.lannacare.org", "custom_domain": true },
+        { "pattern": "cooperjaidee-uat.lannacare.org", "custom_domain": true }
       ],
       "vars": {
         "NODE_ENV": "production",
@@ -103,6 +111,10 @@
         // docs/domain-checklist.md lists the places outside the code that also change.
         "APP_HOST": "uat.lannacare.org",
         "PUBLIC_HOST": "uat.lannacare.org",
+        // The product platform's front door for this environment (#pltst, Lutan 2026-11-27: "a test and UAT
+        // environment for the product as well"), shaped as production's PLATFORM_HOST. Maps to no shelter;
+        // copied to the Pi by scripts/pi/write-env.mjs and into the build by scripts/deploy.mjs (SITE_HOST_VARS).
+        "PLATFORM_HOST": "cooperjaidee-uat.lannacare.org",
         "ORIGIN_TIMEOUT_MS": "20000",
         "RELEASE_MAIL_ENV": "UAT",
         "RELEASE_MAIL_FROM": "releases@lannacare.org",
