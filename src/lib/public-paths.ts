@@ -163,3 +163,14 @@ export function otherLanguageHref(pathname: string, next: string): string | null
   if (!isPublicPage(bare)) return null;
   return next === "th" ? localizedHref(bare, "th") : bare;
 }
+
+/**
+ * #thchr: true where the staff app's header and sidebar must not be drawn. A `/th` address keeps
+ * its prefix in the browser (the Thai twin is a rewrite), so it is tested by its bare twin via
+ * thPathRest. A `/th` address thPathRest does not know (null) is still a Thai public-site address,
+ * never a staff page, so it is chromeless too: a shelter's menu must not appear on the product site.
+ */
+export function isChromelessPath(pathname: string): boolean {
+  if (pathname === "/th" || pathname.startsWith("/th/")) return true;
+  return isPublicPage(pathname) || pathname === "/adopter-update" || pathname === "/platform" || pathname === "/admin/security/verify" || pathname.startsWith("/platform/");
+}

@@ -108,3 +108,11 @@ test("the merchandise catalogue is edge-cached but its checkout and order pages 
   }
   assert.equal(isEdgeCachedPage(thPathRest("/th/shop/merch/checkout") ?? ""), false);
 });
+
+test("isChromelessPath: /th twins hide the staff chrome as their bare pages do (#thchr)", async () => {
+  const { isChromelessPath } = await import("./public-paths.ts");
+  for (const p of ["/adopt", "/th", "/th/", "/th/adopt", "/th/donate", "/th/platform/about", "/th/platform/features/x", "/th/platform/shelters", "/th/nonsense", "/platform", "/platform/about", "/adopter-update"])
+    assert.equal(isChromelessPath(p), true, p);
+  for (const p of ["/residents", "/my", "/admin", "/thing", "/theme", "/thx/adopt"])
+    assert.equal(isChromelessPath(p), false, p);
+});
