@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "Product administrators can now sign in on the CooperJaidee product address itself. Before, it said the site wasn’t set up.", admin: true },
 ];
 
 /** Newest first. */
