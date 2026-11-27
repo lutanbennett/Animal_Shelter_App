@@ -43,7 +43,8 @@ check("consumer changed since release -> warns as unknown, not as missing", edit
 const gone = consumerReport([f("0004_d.sql", "-- consumer: src/nope.ts")], { release, read });
 check("consumer not on main -> warns", gone.warnings.length === 1 && gone.warnings[0].includes("not on origin/main"));
 const none = consumerReport([f("0005_e.sql", "-- consumer: none"), f("0006_f.sql", "-- no header")], { release, read });
-check("none is silent; no header is counted, not guessed", none.warnings.length === 0 && none.notes.length === 1 && none.notes[0].includes("1 file(s) declare no"), JSON.stringify(none));
+check("none never warns, and is noted as the author's claim, not a checked fact", none.warnings.length === 0 && none.notes.some((n) => n.includes("0005_e.sql") && n.includes("not re-checked")), JSON.stringify(none));
+check("no header is counted, not guessed", none.notes.some((n) => n.includes("1 file(s) declare no")), JSON.stringify(none));
 const blind = consumerReport([f("0007_g.sql", "-- consumer: src/new.ts")], { release: null, read });
 check("unknown live release -> skipped note, no warning", blind.warnings.length === 0 && blind.notes.some((n) => n.includes("skipped")));
 

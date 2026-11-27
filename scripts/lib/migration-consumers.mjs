@@ -8,7 +8,13 @@
 // may carry
 //
 //   -- consumer: src/app/adopt/[id]/page.tsx, src/lib/residents/public.ts
-//   -- consumer: none            (nothing in the app reads it)
+//   -- consumer: none            (nothing read it WHEN THE FILE WAS WRITTEN)
+//
+// THE HEADER IS A SNAPSHOT AT WRITE TIME, never kept current (contract chosen
+// 2026-11-27, #c0nhd; docs/decisions/2026-10-02-migration-consumer-header.md).
+// It is read only while the file is pending, and applied files are never
+// edited, so a `none` that a later stream falsifies stays `none`. So a `none`
+// is reported as its author's claim, never as a checked fact.
 //
 // Inference was rejected (docs/decisions/2026-10-02-migration-consumer-header.md):
 // it needs SQL parsed to find what a file adds and TypeScript searched for the
@@ -64,10 +70,11 @@ export function consumerState(path, { releaseRef, read }) {
 export function consumerReport(files, { release, read }) {
   const warnings = [];
   const undeclared = [];
+  const declaredNone = [];
   for (const { name, sql } of files) {
     const consumers = declaredConsumers(sql);
     if (consumers === null) { undeclared.push(name); continue; }
-    if (!consumers.length) continue;
+    if (!consumers.length) { declaredNone.push(name); continue; }
     if (!release) continue;
     const not = consumers
       .map((path) => [path, consumerState(path, { releaseRef: release.ref, read })])
@@ -93,6 +100,9 @@ export function consumerReport(files, { release, read }) {
         ? `\"Live\" here is what ${release.origin} reports it runs: ${release.version} @ ${release.ref.slice(0, 7)}${release.servedBy === "worker" ? " (answered by the Worker, the fallback, not the Pi)" : ""}.`
         : `\"Live\" here is ASSUMED to be the commit that cut ${release.version} (${release.askedFailed}), so an undeployed cut counts as live.`,
     );
+  }
+  if (declaredNone.length) {
+    notes.push(`${declaredNone.length} file(s) declare \`-- consumer: none\` (${declaredNone.join(", ")}). That is what the author believed when writing the file, not re-checked: a reader shipped since, even in the same release, gets no warning here.`);
   }
   if (undeclared.length) {
     notes.push(`${undeclared.length} file(s) declare no \`-- consumer:\` header, so nothing was checked for them (that is not the same as nothing reading them).`);
