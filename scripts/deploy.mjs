@@ -62,7 +62,8 @@
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { SITE_ORIGINS, envFile, loadEnv, loadLayers, parseEnvArg, projectRef } from "./lib/env.mjs";
 import { ALLOW_FLAG, fallthroughRefusal, localOnly, planLines, sourcesFor } from "./lib/secret-sources.mjs";
@@ -82,6 +83,7 @@ import { buildReleaseMail } from "../src/lib/release-mail.ts";
 import { DEFAULT_SHELTER_NAMES } from "../src/lib/shelter-names-default.ts";
 import { SITE_HOST_VARS } from "../src/lib/site-hosts.ts";
 import { bail, runMain } from "./lib/exit.mjs";
+import { DNS_RETRY_DELAY_MS, DNS_RETRY_MAX, dnsRetryDecision } from "./lib/dns-retry.mjs";
 
 async function main() {
 
@@ -223,14 +225,51 @@ function cfAuthNote() {
 function wrangler(args, opts = {}) {
   // --require the net trace: wrangler swallows the error behind its DNS message (#wgdns).
   const trace = fileURLToPath(new URL("./lib/wrangler-net-trace.cjs", import.meta.url));
-  const r = spawnSync(process.execPath, ["--require", trace, WRANGLER, ...args], {
-    stdio: opts.input ? ["pipe", "inherit", "inherit"] : "inherit",
-    ...opts,
-    env: { ...process.env, ...cfAuth(), ...(opts.env ?? {}) },
-  });
-  if (r.status !== 0) {
-    console.error(`\ndeploy: \`wrangler ${args.join(" ")}\` exited with ${r.status}`);
-    bail(r.status ?? 1);
+  // Retried ONLY on the sub-second DNS blackout (#dnsgp): a getaddrinfo ENOTFOUND that the trace saw
+  // inside this child. Any other failure fails at once, as before. This runs after the build, so a
+  // retry re-uploads the same .open-next output and never rebuilds.
+  // docs/decisions/2026-11-27-deploy-dns-blackout.md
+  const cmd = `wrangler ${args.join(" ")}`;
+  const dir = mkdtempSync(join(tmpdir(), "deploy-net-trace-"));
+  try {
+    for (let retriesDone = 0; ; retriesDone++) {
+      const traceFile = join(dir, `attempt-${retriesDone}.log`);
+      const r = spawnSync(process.execPath, ["--require", trace, WRANGLER, ...args], {
+        stdio: opts.input ? ["pipe", "inherit", "inherit"] : "inherit",
+        ...opts,
+        env: { ...process.env, ...cfAuth(), ...(opts.env ?? {}), DEPLOY_NET_TRACE_FILE: traceFile },
+      });
+      if (r.status === 0) {
+        if (retriesDone) console.log(`deploy: DNS-RETRY: \`${cmd}\` succeeded on retry ${retriesDone} of ${DNS_RETRY_MAX}. Note it in the release record (#dnsgp).`);
+        return;
+      }
+      let traceText = "";
+      try {
+        traceText = readFileSync(traceFile, "utf8");
+      } catch {
+        // no file: the trace saw no failed lookup
+      }
+      const d = dnsRetryDecision({ status: r.status, traceText, retriesDone });
+      if (!d.retry) {
+        console.error(`\ndeploy: \`${cmd}\` exited with ${r.status}`);
+        if (retriesDone) console.error(`deploy: DNS-RETRY: gave up after ${retriesDone} retr${retriesDone === 1 ? "y" : "ies"} (#dnsgp).`);
+        bail(r.status ?? 1);
+      }
+      console.warn(
+        `\ndeploy: DNS-RETRY ${retriesDone + 1} of ${DNS_RETRY_MAX}: \`${cmd}\` exited with ${r.status} and the net trace saw ` +
+          `getaddrinfo ENOTFOUND for ${d.hosts.join(", ")}: the machine-wide DNS blackout (#dnsgp). ` +
+          `Retrying in ${DNS_RETRY_DELAY_MS / 1000}s with the same build (no rebuild). Note it in the release record.`,
+      );
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, DNS_RETRY_DELAY_MS);
+      // The 0.47.4 safeguard on every attempt: the build being re-uploaded still carries this key.
+      const problem = builtKeyProblem(env[ACTIONS_KEY_VAR]);
+      if (problem) {
+        console.error(`deploy: ${envName}: ${problem}`);
+        bail(2);
+      }
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
   }
 }
 const git = (args) => spawnSync(`git ${args}`, { shell: true, encoding: "utf8" }).stdout.trim();
