@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { shelterSenderName } from "./mail-sender.ts";
 
 test("the sender names the shelter, carried by CooperJaidee", () => {
-  assert.equal(shelterSenderName("Lanna Care for Animals"), "Lanna Care for Animals (via CooperJaidee)");
+  assert.equal(shelterSenderName("Hillside Animal Rescue"), "Hillside Animal Rescue (via CooperJaidee)");
 });
 
 test("a qualifier follows the shelter name", () => {

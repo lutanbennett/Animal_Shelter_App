@@ -152,10 +152,6 @@
       "reason": "Names the x-lanna-* header family, an internal protocol name and not a display name; hostnames and headers are Parts 4 and 13."
     },
     {
-      "file": "worker/release-mail.mjs",
-      "reason": "The Worker relay has no shelter and no database; the sender name is the RELEASE_MAIL_SENDER_NAME deploy variable, and this literal is only its fallback so Lanna's mail is unchanged."
-    },
-    {
       "file": "worker/release-mail.test.mjs",
       "reason": "Comment, example or placeholder text, or a host/header name, not output that varies by shelter."
     },
