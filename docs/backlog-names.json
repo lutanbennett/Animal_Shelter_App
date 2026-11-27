@@ -71,5 +71,8 @@
   "dfnwi": "Release-note guard asks the wrong range",
   "flrwh": "Website floor lifts at Pi build",
   "wgdns": "Wrangler hides the real deploy error",
-  "shnul": "Host shelter_id nullability drift"
+  "shnul": "Host shelter_id nullability drift",
+  "dnsgp": "Wrangler deploy DNS blackout",
+  "c0nhd": "Migration 0445 stale consumer header",
+  "rpsha": "release-prs needs no sha"
 }
