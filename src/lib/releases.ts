@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "Product console: each web address on a shelter’s Website tab now has Attach at next deploy and Stop attaching at next deploy. The press only records the wish: the address starts (or stops) answering after the next deploy, and Check it answers tells you when it has.", admin: true },
 ];
 
 /** Newest first. */
