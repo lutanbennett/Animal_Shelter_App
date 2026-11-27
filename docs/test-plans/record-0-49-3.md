@@ -100,6 +100,10 @@ recovery minutes later. Both documents lead on that, and `#dnsgp` carries the fi
   in their own PRs (#1900 and #1893) and were published by the cut
 - [x] `docs/releases/2026-11-26-0-49-3.md` written
 - [x] `docs/release-handover.md` rewritten, within its limit, and no longer stale
+- [x] `docs/decisions/2026-11-27-deploy-dns-blackout.md` written, **because this reverses a decision
+  made the day before** — `#wgdns` closed with "No retry" and `#dnsgp` asks for one. The file says why
+  the earlier reasoning was right, what measurement changed it, the exact scope of the retry, and what
+  is still only inferred. Without it the reversal would read as a later session ignoring an earlier call
 - [x] Backlog: `#dnsgp`, `#c0nhd`, `#rpsha` and `#cjpzn` were filed on the `backlog` branch, not here,
   because that is where backlog items go — commits `ee5d2ba59` and `d2e6b3f4d`, all four backlog hooks
   green on each
