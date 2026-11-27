@@ -82,5 +82,6 @@
   "rpsha": "release-prs needs no sha",
   "cjpzn": "cooperjaidee zone never purged",
   "rcgle": "Reset failure blames Google",
-  "gcln7": "Retire unused shelter sign-in client"
+  "gcln7": "Retire unused shelter sign-in client",
+  "pltst": "Product test and UAT environments"
 }
