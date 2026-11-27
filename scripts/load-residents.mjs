@@ -68,7 +68,7 @@
 //
 // Possible duplicates: every row is compared with every resident already in
 // the database — archived, adopted, deceased and Lifecycle/Unassigned ones
-// included — by the rules in scripts/lib/near-names.mjs (the same name once a
+// included — by the rules in src/lib/residents/near-names.ts (the same name once a
 // bracket tag is dropped, the same Thai name, or a close spelling). Each match
 // is listed with the existing resident's code, where it is now and when it was
 // created, so a human can rule same-dog or different-dog and mark the row
@@ -83,7 +83,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
 import { parseCsvObjects } from "./lib/csv.mjs";
-import { nearMatchReason } from "./lib/near-names.mjs";
+import { nearMatchReason } from "../src/lib/residents/near-names.ts";
 
 // ---------------------------------------------------------------------------
 // Arguments

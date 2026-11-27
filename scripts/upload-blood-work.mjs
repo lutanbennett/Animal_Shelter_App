@@ -68,7 +68,7 @@
 // The checks above are what stands in for the app's own.
 
 import { loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
-import { nearMatchReason, normaliseName } from "./lib/near-names.mjs";
+import { nearMatchReason, normaliseName } from "../src/lib/residents/near-names.ts";
 import { appEnvForSupabaseUrl } from "../src/lib/app-env.ts";
 import { readFileSync } from "node:fs";
 

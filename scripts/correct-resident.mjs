@@ -58,7 +58,7 @@
 //   - a Drive folder, profile photo or deceased archive, unless --drive-trashed
 //     says those have already been moved to the Drive trash. This script does
 //     not touch Drive; it prints the IDs so whoever runs it can trash them first
-//   - names that do not look like the same animal (scripts/lib/near-names.mjs)
+//   - names that do not look like the same animal (src/lib/residents/near-names.ts)
 //     unless --force-names
 //   - --copy onto a detail the original already has, with a different value
 //
@@ -87,7 +87,7 @@ import { execFileSync } from "node:child_process";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
-import { nearMatchReason } from "./lib/near-names.mjs";
+import { nearMatchReason } from "../src/lib/residents/near-names.ts";
 import { appEnvForSupabaseUrl } from "../src/lib/app-env.ts";
 
 // ---------------------------------------------------------------------------

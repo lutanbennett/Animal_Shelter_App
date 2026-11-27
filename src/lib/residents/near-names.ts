@@ -1,4 +1,7 @@
-// Do two resident names look like the same animal? Used by load-residents.mjs
+// Do two resident names look like the same animal? Used by the intake wizard
+// (src/app/residents/new: warns before a new resident takes a name in use;
+// moved here from scripts/lib/near-names.mjs on 2026-11-27, rules unchanged),
+// by load-residents.mjs
 // (to warn about near-duplicates before a bulk load) and correct-resident.mjs
 // (to refuse removing one resident in favour of another with an unrelated
 // name). Kept deliberately small and explainable: every match comes back with
@@ -17,7 +20,7 @@
 //      plainly different dogs, and a list full of those trains people to skip it.
 
 /** Lower case, no accents, no punctuation, single spaces. Thai letters are kept. */
-export function normaliseName(text) {
+export function normaliseName(text: unknown): string {
   return String(text ?? "")
     .normalize("NFKD")
     .replace(/[̀-ͯ]/g, "")
@@ -29,7 +32,7 @@ export function normaliseName(text) {
 const BRACKETS = /[([{]([^)\]}]*)[)\]}]/g;
 
 /** "Noon (Daeng)" → { core: "noon", tags: ["daeng"] } */
-export function nameParts(name) {
+export function nameParts(name: unknown): { core: string; tags: string[] } {
   const text = String(name ?? "");
   const tags = [...text.matchAll(BRACKETS)]
     .flatMap((m) => m[1].split(/[,/]/))
@@ -39,11 +42,11 @@ export function nameParts(name) {
 }
 
 /** Levenshtein distance, stopping early once it passes `limit`. */
-function distance(a, b, limit) {
+function distance(a: string, b: string, limit: number): number {
   if (Math.abs(a.length - b.length) > limit) return limit + 1;
   let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
   for (let i = 1; i <= a.length; i++) {
-    const cur = [i];
+    const cur: number[] = [i];
     let best = i;
     for (let j = 1; j <= b.length; j++) {
       cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
@@ -60,7 +63,7 @@ function distance(a, b, limit) {
  * `{ name, thaiName }`. An exact (case-insensitive) name match also returns
  * null: the loader refuses those on its own, and they need no second line.
  */
-export function nearMatchReason(a, b) {
+export function nearMatchReason(a: NamedResident, b: NamedResident): string | null {
   if (normaliseName(a.name) && normaliseName(a.name) === normaliseName(b.name)) return null;
 
   const pa = nameParts(a.name);
@@ -81,4 +84,35 @@ export function nearMatchReason(a, b) {
     if (d <= limit) return `close spelling (${d} letter${d === 1 ? "" : "s"} different)`;
   }
   return null;
+}
+
+export type NamedResident = { name: unknown; thaiName?: unknown };
+
+/** An exact clash, by the loader's own test: the same name once case, accents and punctuation go. */
+export function sameName(a: unknown, b: unknown): boolean {
+  const na = normaliseName(a);
+  return na !== "" && na === normaliseName(b);
+}
+
+const NUMBERED = /^(.*?)\s+(\d+)$/;
+
+/**
+ * The name to offer when `name` is already taken: the base name and one more
+ * than the highest number any resident already carries on it. A bare "Tiger"
+ * counts as 1, so Tiger → "Tiger 2"; Tiger and Tiger 2 → "Tiger 3"; Tiger and
+ * Tiger 5 → "Tiger 6" (one past the highest, never filling a gap, so the
+ * newest Tiger always has the biggest number). Typing "Tiger 2" when it is
+ * taken offers the next Tiger too. Null when nothing clashes.
+ */
+export function nextNumberedName(name: string, existing: readonly unknown[]): string | null {
+  const typed = name.trim().replace(/\s+/g, " ");
+  if (!existing.some((e) => sameName(e, typed))) return null;
+  const typedNumber = typed.match(NUMBERED);
+  const base = typedNumber ? typedNumber[1] : typed;
+  let highest = 1;
+  for (const e of existing) {
+    const n = String(e ?? "").trim().match(NUMBERED);
+    if (n && sameName(n[1], base)) highest = Math.max(highest, Number(n[2]));
+  }
+  return `${base} ${highest + 1}`;
 }
