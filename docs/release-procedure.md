@@ -304,11 +304,18 @@ build against `package.json`** anyway.
 
 ## 2. Work out what is in the release
 
-The previous release's **deployed SHA** is in its `docs/releases/<date>.md` header.
+The previous release's **deployed SHA** is in its `docs/releases/<date>-<version>.md` header, and the
+script reads it from there when you give it none:
 
 ```bash
-node scripts/release-prs.mjs <previous deployed SHA> HEAD
+node scripts/release-prs.mjs
 ```
+
+Its first line names the record, version and SHA it chose (`Range start: …`). **Check that version is
+the previous release, not the one you are cutting:** once this release's own record exists, the newest
+record is this release, so pass the previous SHA explicitly (`node scripts/release-prs.mjs <sha> HEAD`).
+No record or no `**Commit**` line is exit 2, never a guessed range
+(`docs/decisions/2026-11-27-release-prs-default-sha.md`).
 
 It must **exit 0**. Non-zero names a migration or test plan belonging to no PR in
 the list, which means a PR is missing — find it on GitHub and add it by hand.
