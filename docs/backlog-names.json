@@ -1,6 +1,9 @@
 {
   "83137": "Per-environment deploy secrets",
   "cpstr": "System origins and Cooper tribute",
+  "thchr": "App chrome on Thai product page",
+  "mlsnd": "Who password mail comes from",
+  "cnhom": "Console name links nowhere",
   "ptlng": "Product pages have no language control",
   "wbcch": "Construction page cached past switch",
   "shmis": "Shelter missing from chooser",
@@ -9,6 +12,7 @@
   "rcwrg": "Reconnect to wrong account",
   "nmcol": "Shelter name stored three ways",
   "hstau": "Adding a host makes it answer",
+  "hsttk": "Setup ticks a dead website",
   "shsec": "Shelter access from console",
   "pfive": "The other five product pages",
   "shrun": "Runbook: pointing a domain",
@@ -71,5 +75,11 @@
   "dfnwi": "Release-note guard asks the wrong range",
   "flrwh": "Website floor lifts at Pi build",
   "wgdns": "Wrangler hides the real deploy error",
-  "shnul": "Host shelter_id nullability drift"
+  "shnul": "Host shelter_id nullability drift",
+  "dnsgp": "Wrangler deploy DNS blackout",
+  "c0nhd": "Migration 0445 stale consumer header",
+  "rpsha": "release-prs needs no sha",
+  "cjpzn": "cooperjaidee zone never purged",
+  "rcgle": "Reset failure blames Google",
+  "gcln7": "Retire unused shelter sign-in client"
 }
