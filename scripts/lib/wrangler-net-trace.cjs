@@ -22,7 +22,17 @@ function report(hostname, options, err, started) {
     `after=${ms}ms`,
     `at=${new Date().toISOString()}`,
   ];
-  process.stderr.write(`\n[deploy net-trace] DNS lookup FAILED: ${fields.join(" ")}\n`);
+  const line = `\n[deploy net-trace] DNS lookup FAILED: ${fields.join(" ")}\n`;
+  process.stderr.write(line);
+  // deploy.mjs reads this file to decide a DNS-blackout retry (#dnsgp): stderr is inherited, so the
+  // parent cannot read the line above. Unset, nothing is written.
+  if (process.env.DEPLOY_NET_TRACE_FILE) {
+    try {
+      require("node:fs").appendFileSync(process.env.DEPLOY_NET_TRACE_FILE, line);
+    } catch {
+      // the stderr line above is still the record
+    }
+  }
 }
 
 const original = dns.lookup;

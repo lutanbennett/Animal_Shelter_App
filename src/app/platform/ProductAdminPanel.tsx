@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { ActionButton } from "@/components/ActionButton";
 import { TemporaryPasswordNotice } from "@/components/TemporaryPasswordNotice";
 import { ACTION_ICONS } from "@/components/hub-icons";
@@ -20,6 +20,7 @@ import {
   mapShelterHost,
   setShelterSite,
   checkShelterHost,
+  checkShelterHosts,
   type HostAnswer,
   removeProductAdmin,
   seedShelterDefaults,
@@ -82,18 +83,26 @@ type TabKey = "summary" | "setup" | "connections" | "website" | "contact" | "acc
 type TabTone = "red" | "amber" | "green" | "grey" | "none";
 
 /**
- * What each settings tab shows beside its name. Measured from what is read, never assumed: the Website tab is NEVER green, because nothing
- * here checks that the address answers (#hstau); an address that is only recorded is grey. Always a shape as well as a colour.
+ * Whether the website step is really done (#hsttk): an address is recorded AND it answered when the console probed it. A row alone proves
+ * nothing (the address is written the moment it is typed), and an address not yet probed counts as not done, never as done.
  */
-export function tabTone(s: ShelterRow, key: TabKey): TabTone {
+export function websiteLive(s: ShelterRow, live: boolean): boolean {
+  return s.has_host && live;
+}
+
+/**
+ * What each settings tab shows beside its name. Measured from what is read, never assumed: the Website tab is green only when the address
+ * answered the probe (#hsttk); an address that is recorded but silent or not yet probed is grey. Always a shape as well as a colour.
+ */
+export function tabTone(s: ShelterRow, key: TabKey, live = false): TabTone {
   switch (key) {
     case "setup":
-      return s.has_host && s.has_admin_role && s.has_admin_login && s.has_receipts && s.has_defaults ? "green" : "red";
+      return websiteLive(s, live) && s.has_admin_role && s.has_admin_login && s.has_receipts && s.has_defaults ? "green" : "red";
     case "connections":
       if (s.drive_status === "dead" || s.calendar_status === "dead") return "red";
       return s.drive_status === "connected" && s.calendar_status === "connected" ? "green" : "amber";
     case "website":
-      return s.has_host ? "grey" : "red";
+      return !s.has_host ? "red" : live ? "green" : "grey";
     case "contact":
       return s.account_holder_name && s.display_name && s.short_name ? "green" : "red";
     default:
@@ -101,11 +110,14 @@ export function tabTone(s: ShelterRow, key: TabKey): TabTone {
   }
 }
 
-/** The four card states, first match wins (docs/decisions/2026-11-20-shelter-state-schema.md). Derived from what is already read: no column. */
-export function cardState(s: ShelterRow): CardState {
+/**
+ * The four card states, first match wins (docs/decisions/2026-11-20-shelter-state-schema.md). Derived from what is already read: no column.
+ * A website that does not answer keeps the shelter in "setup", never "broken": a shelter mid-setup is not broken (#hsttk).
+ */
+export function cardState(s: ShelterRow, live = false): CardState {
   if (s.archived_at) return "closed";
   if (s.drive_status === "dead" || s.calendar_status === "dead") return "broken";
-  if (!(s.has_host && s.has_admin_role && s.has_admin_login && s.has_receipts && s.has_defaults)) return "setup";
+  if (!(websiteLive(s, live) && s.has_admin_role && s.has_admin_login && s.has_receipts && s.has_defaults)) return "setup";
   return "ready";
 }
 
@@ -172,6 +184,27 @@ export function ProductAdminPanel({
   const [tab, setTab] = useState<TabKey>("summary");
 
   const [answers, setAnswers] = useState<Record<string, HostAnswer | "checking">>({});
+  /** Does the shelter's website answer? Unknown (not probed yet, or the probe failed) is false: a step is never ticked on a guess. */
+  const liveOf = (s: ShelterRow) => {
+    const h = websiteOf(s).host;
+    const a = h ? answers[h] : undefined;
+    return !!a && a !== "checking" && a.answers;
+  };
+  const [probing, setProbing] = useState(true);
+  // One probe for every website, AFTER the page has drawn, so the list never waits on it (#hsttk).
+  useEffect(() => {
+    const hosts = shelters.filter((s) => !s.archived_at).map((s) => websiteOf(s).host).filter((h): h is string => !!h);
+    if (hosts.length === 0) return;
+    let gone = false;
+    checkShelterHosts(hosts).then((r) => {
+      if (gone) return;
+      if (r.ok) setAnswers((a) => ({ ...a, ...r.results }));
+      setProbing(false);
+    });
+    return () => {
+      gone = true;
+    };
+  }, [shelters]);
   const say = (key: string, ok: boolean, text: string) => setMsgs((m) => ({ ...m, [key]: { ok, text } }));
   const note = (key: string) =>
     msgs[key] ? (
@@ -212,7 +245,7 @@ export function ProductAdminPanel({
   const badge = (st: CardState) => <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${stateTone[st]}`}>{stateWords[st]}</span>;
 
   const stepsOf = (s: ShelterRow): { key: StepKey; done: boolean; label: string }[] => [
-    { key: "host", done: s.has_host, label: p.stepHost },
+    { key: "host", done: websiteLive(s, liveOf(s)), label: p.stepHost },
     { key: "role", done: s.has_admin_role, label: p.stepAdminRole },
     { key: "login", done: s.has_admin_login, label: p.stepAdminLogin },
     { key: "receipts", done: s.has_receipts, label: p.stepReceipts },
@@ -361,7 +394,7 @@ export function ProductAdminPanel({
 
   /* ----------------------------------------------------------------------------------------------- landing: one card per shelter */
   const card = (s: ShelterRow) => {
-    const st = cardState(s);
+    const st = cardState(s, liveOf(s));
     const w = websiteOf(s);
     const nextStep = stepsOf(s).find((x) => !x.done);
     const holder = [s.account_holder_name, s.account_holder_phone].filter(Boolean).join(" · ");
@@ -400,9 +433,20 @@ export function ProductAdminPanel({
                 <dt className="text-muted">{p.websiteLabel}</dt>
                 <dd className="break-all text-foreground">
                   {w.host ? (
-                    <a href={`https://${w.host}`} target="_blank" rel="noreferrer" className="underline">
-                      {w.host} · {p.visitSite}
-                    </a>
+                    <>
+                      <a href={`https://${w.host}`} target="_blank" rel="noreferrer" className="underline">
+                        {w.host} · {p.visitSite}
+                      </a>
+                      {s.has_host && (answers[w.host] || probing) && (
+                        <span className={`ml-2 text-xs ${!answers[w.host] || answers[w.host] === "checking" ? "text-muted" : (answers[w.host] as HostAnswer).answers ? "text-success" : "text-danger"}`}>
+                          {!answers[w.host] || answers[w.host] === "checking"
+                            ? p.hostChecking
+                            : (answers[w.host] as HostAnswer).answers
+                              ? `✓ ${p.hostAnswers}`
+                              : `✗ ${p.hostSilent}`}
+                        </span>
+                      )}
+                    </>
                   ) : (
                     p.websiteNone
                   )}
@@ -429,7 +473,7 @@ export function ProductAdminPanel({
 
   /* ----------------------------------------------------------------------------------------- behind the card: one shelter's settings */
   const settings = (s: ShelterRow) => {
-    const st = cardState(s);
+    const st = cardState(s, liveOf(s));
     const steps = stepsOf(s);
     const next = steps.find((x) => !x.done)?.key ?? null;
     const draft = emailDrafts[s.id] ?? "";
@@ -467,7 +511,7 @@ export function ProductAdminPanel({
         {st !== "closed" && (
           <div role="tablist" aria-label={p.tabsLabel} className="flex flex-wrap gap-2 border-b border-border pb-2">
             {tabs.map((k) => {
-              const tone = tabTone(s, k);
+              const tone = tabTone(s, k, liveOf(s));
               const mark = { red: "✕", amber: "◐", green: "✓", grey: "○", none: "" }[tone];
               const words = { red: p.tabNeeds, amber: p.tabWaiting, green: p.tabDone, grey: p.tabUnchecked, none: "" }[tone];
               const color = { red: "text-danger", amber: "text-warning", green: "text-success", grey: "text-muted", none: "" }[tone];

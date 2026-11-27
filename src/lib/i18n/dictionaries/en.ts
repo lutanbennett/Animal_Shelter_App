@@ -1088,6 +1088,7 @@ const en = {
       calConnected: "Calendar: connected",
       calDead: "Calendar: sign-in has stopped working",
       platformName: "CooperJaidee platform",
+      platformHomeLink: "CooperJaidee platform: go to the home page",
       allShelters: "← All shelters",
       openSettings: "Settings",
       visitSite: "Visit site",
