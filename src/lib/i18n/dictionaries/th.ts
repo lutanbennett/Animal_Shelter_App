@@ -978,6 +978,7 @@ const th: Dictionary = {
       calConnected: "ปฏิทิน: เชื่อมต่อแล้ว",
       calDead: "ปฏิทิน: การลงชื่อเข้าใช้หยุดทำงาน",
       platformName: "แพลตฟอร์ม CooperJaidee",
+      platformHomeLink: "แพลตฟอร์ม CooperJaidee: ไปที่หน้าแรก",
       allShelters: "← ศูนย์ทั้งหมด",
       openSettings: "ตั้งค่า",
       visitSite: "เปิดเว็บไซต์",
