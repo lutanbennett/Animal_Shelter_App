@@ -6,7 +6,7 @@
 | --- | --- |
 | Feature | Cut `0.50.0` — a MAJOR release, so **the release email goes out**, on Lutan's instruction of 2026-11-27 |
 | Branch | `claude/cut-release-0-50-0` |
-| Tested SHA | filled in at deploy time by the release manager |
+| Tested SHA | `cbd69edee53e632ae07a061d0e82725c62dec9a9` — the merge commit of #1921, and still `origin/main`'s tip at verification |
 | Environments | dev (gates only at this stage); test, UAT and production in the deploy sections |
 | Author | Claude (release manager) |
 | Date | 2026-11-27 |
@@ -247,10 +247,10 @@ per-file-transaction caveat of the kind the runbook warns about.
   `NOT PURGED` exit-1 behaviour is written down. **Read rather than worked from memory**, because a
   runbook that changed since the last release is exactly the one not to assume
 - [x] `docs/test-plan-template.md` and `docs/release-smoke-test.md` confirmed unchanged
-- [ ] Release record `docs/releases/2026-11-27-0-50-0.md` — pending: written after the deploy, in its
-  own PR, as the paperwork budget requires
-- [ ] `docs/release-handover.md` rewritten — pending: rewritten with the record, in the same PR, and
-  checked with `node scripts/check-release-handover.mjs` before that PR is opened
+- [x] Release record `docs/releases/2026-11-27-0-50-0.md` — written after the deploy in its own PR,
+  `claude/record-0-50-0`, leading on the correction to `0.49.3`'s DNS-blackout duration
+- [x] `docs/release-handover.md` rewritten — in the record's PR, **122 lines** against the 150-line
+  limit, and `check-release-handover.mjs` prints `Current: the handover names 0.50.0`
 - [x] Commit messages say why, not just what
 - [x] Claims here were measured, not reasoned — every figure in this plan was read from the command
   that produced it, and the one inference worth flagging (the 125-to-0 tenancy figure) was
@@ -262,44 +262,25 @@ per-file-transaction caveat of the kind the runbook warns about.
   `check-wrangler-var-steps.mjs --base ef022e146` names two changes, both test/UAT `PLATFORM_HOST`,
   both applied at the Pi build. **Their guard is section 1's accepted gap**, settled with Lutan before
   the first Pi build rather than before the Worker deploy, which is where `0.49.2` got it wrong
-- [ ] Tested SHA recorded in the header — deferred: release manager, and it must be the tip of `main`
-  at deploy time
-- [ ] Deployed SHA matches the tested SHA, read from `deploy.mjs`'s own line — deferred: release
-  manager
-- [ ] Deployed to test, smoke-tested on `test.lannacare.org` — deferred: release manager
-- [ ] Three Pi builds run **serial**, box pre-flighted first — deferred: release manager
-- [ ] Worker deploys strictly test -> UAT -> production, production last — deferred: release manager
-- [ ] UAT deployed with `--no-mail` — deferred: release manager. **On a major release this is the
-  one that must not be forgotten in spirit even though `deploy.mjs` now refuses to mail from UAT
-  without `--mail` in words**, because UAT's database holds production's real people
-- [ ] **The production release email arrives** — deferred: release manager, and its subject must start
-  `[Production]` with a sender name that does not say UAT. This is the first major release since
-  `RELEASE_MAIL_ENV: "Production"` was set on 2026-11-06, so it is the proof `#w4k9n` (e) has been
-  waiting for, and it is also the live proof for `shelter-sender-name`'s own pending line
-- [ ] `strip-baked-env: removed N env var(s)` seen in each deploy output — deferred: release manager
-- [ ] Any new secret or env var exists in production — n/a: none added. No `wrangler.jsonc` var
-  changed in the production block and no migration needs a secret
-- [ ] Public pages re-checked after a cache purge — deferred: release manager, and **expect exit 1
-  from `purge-cache.mjs --env production`** naming the `cooperjaidee.org` zone, which is `#cjpzn` and
-  is purged by hand
-- [ ] A signed-out visitor still gets the construction page — deferred: release manager, with
-  `robots.txt` still refusing crawlers, checked after the production Pi build **and** after the
-  Worker deploy
-- [ ] Timezone-sensitive behaviour on the deployed build — n/a: nothing in a cut derives a date; the
-  entry's own date reads back from `/api/releases/current`
-- [ ] Evidence pasted into this plan is the tool's actual output, unedited — deferred: release manager
-- [ ] **Does this PR contain both a migration and code that reads it?** — deferred: release manager.
-  The release does: `0449`'s consumers are already live on `main`, so the apply must precede the
-  deploy, and that ordering is in section 3's apply plan
-- [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — deferred: release
-  manager, to re-read at apply time; it was run for this plan and all four files read `ok`
-- [ ] For a destructive or rewriting migration only: a fresh production backup — n/a: no file
-  rewrites or deletes a row; `0448` relaxes a constraint and the other three define functions
-- [ ] Apply plan stated — deferred: release manager; stated in section 3, **UAT first, then
-  production, both before any Pi build**
-- [ ] Tenancy catalogue re-read after applying, and the delta recorded — deferred: release manager.
-  The baseline is in section 3, with the flag caveat
-- [ ] Rollback position stated, including what it does not cover — deferred: release manager, below
+- [x] Tested SHA recorded in the header — `cbd69edee53e632ae07a061d0e82725c62dec9a9`, the merge commit of #1921. `origin/main` was **still** that commit at verification, so `main` did not move during this release and all four builds came from it
+- [x] Deployed SHA matches the tested SHA, read from the deploy's own line — `deploy: built from cbd69edee53e` on all three Worker deploys, and `/api/version` returns `{"version":"0.50.0","sha":"cbd69edee53e632ae07a061d0e82725c62dec9a9"}` on all four production hosts as well as test and UAT. The code-identity allow-list diff `cbd69edee..origin/main` is **empty**
+- [x] Deployed to test, smoke-tested on `test.lannacare.org` — Worker Version ID `de63fc64-99d1-4378-8dd7-c9475ddf540e`, project `qxkmhwybjggxvsfxsxbd`, `/api/version` and `/api/releases/current` both `0.50.0`, `x-lanna-served-by: pi`, assets 96,135 bytes identical to the build. **Endpoints and assets only — no UI journey was clicked through on test**
+- [x] Three Pi builds run **serial** (4 GiB Pi, `next build` peaks above 6 GB), box pre-flighted first — pre-flight: up 15 days, load 0.00, 3.2 GiB of 4.0 GiB available, 871 G free, all three services active, `sudo -n -l` listing all six NOPASSWD commands. Then test, UAT, production in that order, each one's closing lines read before the next started, each printing its own key (`ecc41837fc0b`, `cdeca9cbc4de`, `cbd55beae8d8`) and `serving 0.50.0 as expected`
+- [x] Worker deploys strictly test -> UAT -> production, production last — test, then UAT (one failure, then `--skip-build`), then Lutan's production deploy last. The UAT deploy ran alongside the **production Pi build**, which is the parallelism the runbook sanctions; no two Worker deploys overlapped and nothing of ours ran after his
+- [x] UAT deployed with `--no-mail` — run as `node scripts/deploy.mjs --env uat --no-mail`, and the deploy said so itself: `--no-mail, not announcing 0.50.0`. **On a major release that matters more than usual**, because UAT's database holds production's real people; `deploy.mjs` also refuses to mail from UAT without `--mail` in words, so this was belt and braces rather than the only guard
+- [x] **The production release email arrived, and it is correct** — `deploy: release mail for 0.50.0 [Production]: sent 1, skipped 2`, both skips `E_RECIPIENT_NOT_ALLOWED` on addresses unverified with the relay. Read in the inbox rather than stopped at `sent 1`: delivered 16:44:39Z, subject starting **`[Production]`**, sender name **CooperJaidee Production** — not UAT. **This closes `#w4k9n` (e)**, the first proof available since `RELEASE_MAIL_ENV: "Production"` was set on 2026-11-06, and it is also the live answer to `shelter-sender-name`'s own pending line
+- [x] `strip-baked-env: removed N env var(s)` seen in each deploy output — **23 on all three**, the same 23 as `0.49.1` to `0.49.3`. Note the UAT **retry** log has no such line, because `--skip-build` skips the stage that strips; UAT's figure comes from the first attempt's log, which built completely
+- [x] Any new secret or env var exists in production — n/a: none added, and **nothing was lost**: the production Worker holds **15 secrets**, the same 15 as `0.49.3`, read by name only. No `wrangler.jsonc` var changed in the production block and no migration needs one
+- [x] Public pages re-checked after a cache purge — the `lannacare.org` zone purged and **all four** of its hosts re-checked, each byte count matching its own build (test and `cooperjaidee-test` 96,135; UAT and `cooperjaidee-uat` 96,116), every one `CF MISS`. Production purged with **exit 1 by design**, naming `cooperjaidee.org` and `www.cooperjaidee.org` as `NOT PURGED` because `CLOUDFLARE_ZONE_ID_COOPERJAIDEE` is absent — `#cjpzn`, exactly as predicted here before the deploy — after purging its own zone and re-checking both hosts at 96,047 bytes `CF MISS`. `check-assets.mjs` on all three Pi clones: `ok … identical to the build`
+- [x] A signed-out visitor still gets the construction page, and `robots.txt` still refuses crawlers — **checked twice, after the production Pi build and again after the Worker deploy** (the Worker, not the Pi, sets those headers). Byte-identical both times and identical to `0.49.3`'s picture: `/` **200 at 24,468 bytes**, `/adopt` 307, `/our-work` 307, `/donate` 307, `robots.txt` 200 with `Disallow: /`, `x-robots-tag: noindex, nofollow`, and `cooperjaidee.org` `/` 307
+- [x] Timezone-sensitive behaviour on the deployed build — n/a: nothing in a cut derives a date; the entry's own date reads back as `0.50.0` from `/api/releases/current` on all four production hosts
+- [x] Evidence pasted into this plan is the tool's actual output, unedited — every figure above was read from the command itself or from a redirected log file. **Lutan's production log is UTF-16** (PowerShell's `tee`), confirmed by its `377 376` byte-order mark, and was decoded with `tr -d` before grepping rather than being read as empty. The Pi logs were grepped **on the Pi**, never through a local pipe
+- [x] **Does this PR contain both a migration and code that reads it?** — the release does: `0449`'s consumers (`src/app/platform/page.tsx`, `ProductAdminPanel.tsx`) were already on `main` from #1918, so the apply had to precede the deploy, and it did. Both applies warned that `0449`'s declared consumer `differs from release 0.49.3`, which was read rather than waved through: that is the check working
+- [x] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — all four files `ok`, and `ok` on UAT too. Re-read at apply time as this line asked
+- [x] For a destructive or rewriting migration only: a fresh production backup — n/a: no file rewrites or deletes a row. `0448` **relaxes** a constraint, which cannot reject a row that was accepted before it, and the other three define functions
+- [x] Apply plan stated, and followed — **UAT first as the rehearsal, then production**, both **before any Pi build**. All four files `ok` on each; before, both read `446 applied, 4 pending` with zero drift; after, both `450 applied, 0 pending` and `450 file(s), 450 applied row(s)`. `assert-schema.mjs` printed `holds every migration this commit carries` for both **before the first Pi build started**
+- [x] Tenancy catalogue re-read after applying, and the delta recorded — **`0 flagged (0 views, 0 functions, 0 tables missing definer_all), 17 allowed by name, 0 stale` before and after**, identical on production, UAT and test, strict, exit 0 each. **Delta: none.** And the caveat written here before the apply held: the same production database reads **125 flagged** without `--tenant-role rls_definer`, which is the figure `0.49.3`'s record quotes, so the two records are not comparable and nothing was re-owned between them
+- [x] Rollback position stated, including what it does not cover — below, and the release record repeats it with what it cannot undo (neither path reverts a migration, and neither unsends the email)
 
 ### Rollback
 
