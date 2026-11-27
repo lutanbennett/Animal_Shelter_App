@@ -650,6 +650,8 @@ node scripts/check-tenancy-catalogue.mjs --env production --strict --tenant-role
 node scripts/check-tenancy-catalogue.mjs --env test --strict --tenant-role rls_definer
 ```
 
+**Quote the flags beside every figure you record, and compare only against a reading taken with the same flags.** Run without them, the same production database reads **125 flagged**; with `--strict --tenant-role rls_definer` it reads **0**. `0.49.3`'s record quoted the flagless 125 and `0.50.0`'s the flagged 0, so the two records read as a 125-object improvement that never happened (nothing was re-owned between them; the `0.49.3` record now carries a correction). Write it as e.g. *"0 flagged (`--strict --tenant-role rls_definer`)"*, never as a bare number.
+
 **It asserts:** every API-reachable view and security definer function is owned by `rls_definer` (or invoker, or named in its allow-list), **and every public table with row-level security carries a `definer_all` policy**. **Exit 0 is the pass.** **Exit 1** names each object: a view or function still owned by `postgres` (re-own it, as `0375` did), or a table with no `definer_all` (copy the policy block from `0375_reown_definers.sql`; without it every view over that table reads 0 rows, a blank page and not a leak). **Exit 2** means it could not read the catalogue: not a pass, run it again with the token. A finding is a fix in a new migration, not a reason to skip the check.
 
 **Pull the main checkout before you apply, not after.** The step above assumes
@@ -779,6 +781,16 @@ mid-build; `docs/decisions/2026-11-16-deploy-cloudflare-api-token.md` names the 
 and says why it must not go in `.env.local`. And **do not offer `--skip-build` to make the retry
 quicker** unless the leftover `.open-next` can be shown to belong to *this* environment: a test
 deploy in the same checkout leaves one that would point production at the dev database.
+
+**How to show it, in about two minutes** (moved here from the `0.50.0` handover, where it was first used on UAT's retry):
+
+```bash
+for ref in <this env's project ref> <dev's> <production's>; do printf "%-24s " "$ref"; grep -rl "$ref" .open-next | wc -l; done
+find .open-next -type f -printf '%TH:%TM %p
+' | sort -r | head -2
+```
+
+The env being deployed should have the hits and the other environment you could be confusing it with none, and the timestamps should be that env's own build. **The count is not the proof; reading a hit is.** On `0.50.0` it read 20 for UAT, 5 for dev and 0 for production, and **reading one dev hit in context showed a hard-coded comparison in the app's own code** (`"https://<uat>.supabase.co".startsWith("https://<dev>.")?"dev":…`), not a stale bundle. A count alone looks like contamination; open at least one unexpected hit before deciding. Also: the retry's log has **no `strip-baked-env` line**, because `--skip-build` skips that stage — take that figure from the failed attempt's log, which built completely, and do not record it as unread.
 
 **A DIFFERENT FAILURE, NOT TO BE CONFUSED WITH THE ONE ABOVE: the stored login is GONE (`--env test`).**
 If a retry fails *harder* — *"In a non-interactive environment, it's necessary to set a
@@ -941,12 +953,14 @@ step**: for `PUBLIC_SITE`, the shelter's own `public_site` read back as wanted o
 Pi build starts.
 
 ```bash
-ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && ./scripts/pi/deploy-pi.sh'
-ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App_test && ./scripts/pi/deploy-pi.sh --env test'
-ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App_uat && ./scripts/pi/deploy-pi.sh --env uat'
+ssh lanna-pi-mesh 'cd ~/Animal_Shelter_App && ./scripts/pi/deploy-pi.sh'
+ssh lanna-pi-mesh 'cd ~/Animal_Shelter_App_test && ./scripts/pi/deploy-pi.sh --env test'
+ssh lanna-pi-mesh 'cd ~/Animal_Shelter_App_uat && ./scripts/pi/deploy-pi.sh --env uat'
 ```
 
-### `lanna-pi.local` ONLY WORKS FROM THE HOME NETWORK. THE MESH IS THE OTHER ROUTE, AND IT IS NOT A LAST RESORT
+### EVERY PI COMMAND HERE NAMES `lanna-pi-mesh`. `lutan@lanna-pi.local` ONLY WORKS FROM THE HOME NETWORK
+
+**Changed 2026-11-28 (#rbkpi): the commands now name the mesh directly**, because it works from every network including home, and the old shape asked the reader to substitute a name by hand in every command. `ssh lutan@lanna-pi.local` is the home-only alternative, kept here as a note; it is never needed.
 
 **Promoted here 2026-11-15 after `0.47.0`, where this cost Lutan the third touch on a release whose
 target is two.** The name above is not resolved by mDNS: `~/.ssh/config` rewrites it to the Pi's
@@ -968,9 +982,8 @@ could not reach it, and the first conclusion drawn from the timeout was almost t
 permanently (installed and signed in on the Pi 2026-11-06; *Management SSH, anywhere* recorded
 **IN PLACE** in `docs/decisions/2026-11-07-network-review-closed.md` and
 `docs/as-built-2026-11-13.md`). **Lutan added an `~/.ssh/config` alias for it on 2026-11-15**, so
-there is nothing to look up: write `lanna-pi-mesh` in place of `lutan@lanna-pi.local` in every
-command in this section and they work unchanged — `setsid nohup`, the detached logs and
-`check-assets.mjs` included. All three Pi builds on `0.47.0` ran that way with no other difference.
+there is nothing to look up: every command in this section already names `lanna-pi-mesh` —
+`setsid nohup`, the detached logs and `check-assets.mjs` included. All three Pi builds on `0.47.0` ran that way with no other difference.
 
 ```bash
 ssh lanna-pi-mesh 'cd ~/Animal_Shelter_App && ./scripts/pi/deploy-pi.sh --ref <release sha>'
@@ -1027,14 +1040,28 @@ last step for a password, leaving `.next.new` swapped and the service not restar
 a release record written before that date reporting exactly that is describing the old
 state, not a new fault.
 
-**Run it detached with a log, not in the SSH foreground.** The build takes longer
-than the foreground tool timeout, and a timeout kills the SSH session mid-build:
+**Run it detached with a log, and run the `ssh` itself in the BACKGROUND from the start.** The build
+on the Pi is genuinely detached, but the SSH session that started it **stays open until the build
+finishes** (corrected 2026-11-28 after `0.50.0`: this said `… & sleep 20; tail` as if it returned in
+20 seconds, and it does not). Run in the foreground, the tool's 120-second timeout moves it to the
+background mid-build and **reads exactly like a hang** — one wasted call per build, three per release;
+the build itself is unaffected. So start it with the tool's run-in-background option:
 
 ```bash
-ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && rm -f ~/deploy-prod.log && setsid nohup ./scripts/pi/deploy-pi.sh > ~/deploy-prod.log 2>&1 < /dev/null & sleep 20; tail -15 ~/deploy-prod.log'
+ssh lanna-pi-mesh 'cd ~/Animal_Shelter_App && rm -f ~/deploy-prod.log && setsid nohup ./scripts/pi/deploy-pi.sh > ~/deploy-prod.log 2>&1 < /dev/null'
 ```
 
-then poll with `sleep <n>; tail ~/deploy-prod.log`.
+and read progress with a **separate** call that greps **on the Pi**:
+
+```bash
+ssh -n lanna-pi-mesh 'grep -inE "fingerprint|serving|check-assets|FAILED|restarting under|running" ~/deploy-prod.log; tail -5 ~/deploy-prod.log'
+```
+
+**`ssh -n`, and the `grep`/`tail` inside the quotes.** Never pipe the ssh into a local `| head` or
+`| tail`: the local side buffers and reads nothing, and that is the most-breached rule in release
+work. Use `deploy-test.log` / `deploy-uat.log` for the other clones. Mesh SSH has timed out once
+mid-release and worked on the retry: retry once, and check the served headers (above) before
+concluding anything about the Pi.
 
 **Check the log has `deploy-pi: restarting under the script from <sha>`.** That line means the
 script from the release commit is the one that ran, so its guards (swap, `.next.prev`, asset
@@ -1086,7 +1113,7 @@ Configuration → Purge Everything**, which is Lutan's step — then re-run the 
 the Pi:
 
 ```bash
-ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && node scripts/pi/check-assets.mjs --url https://lannacareforanimals.org/'
+ssh lanna-pi-mesh 'cd ~/Animal_Shelter_App && node scripts/pi/check-assets.mjs --url https://lannacareforanimals.org/'
 ```
 
 The script builds into `.next.new` and renames it over `.next` only once it compiled, so a request never meets a half-written build; it probes the Pi on loopback **with the origin key** (production answers `Forbidden` without it); and the asset check below runs from an exit trap, so a failure in an earlier step can no longer skip it. A `DEPLOY FAILED` banner is believed — but if the probe line says `serves 'nothing'`, confirm with `https://lannacareforanimals.org/api/version` before rolling back, and **run the asset check by hand either way**.
@@ -1119,7 +1146,7 @@ account:
 curl -s https://lannacareforanimals.org/api/version
 curl -s https://test.lannacare.org/api/version
 curl -s https://uat.lannacare.org/api/version
-ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && git log --oneline -1; cd ~/Animal_Shelter_App_test && git log --oneline -1; cd ~/Animal_Shelter_App_uat && git log --oneline -1; systemctl is-active lanna-care lanna-care-test lanna-care-uat'
+ssh lanna-pi-mesh 'cd ~/Animal_Shelter_App && git log --oneline -1; cd ~/Animal_Shelter_App_test && git log --oneline -1; cd ~/Animal_Shelter_App_uat && git log --oneline -1; systemctl is-active lanna-care lanna-care-test lanna-care-uat'
 ```
 
 **Ask both endpoints on all three, not just `/api/version`.** `/api/version` is
@@ -1217,7 +1244,7 @@ grepping), and `&&` **inside a quoted `ssh` argument**, because that is bash
 on the Pi parsing it, not PowerShell:
 
 ```bash
-ssh lutan@lanna-pi.local "cd ~/Animal_Shelter_App && ./scripts/pi/deploy-pi.sh --ref <sha>"
+ssh lanna-pi-mesh "cd ~/Animal_Shelter_App && ./scripts/pi/deploy-pi.sh --ref <sha>"
 ```
 
 **`ssh host 'sudo …'` cannot prompt for a password.** No TTY, so it dies with
