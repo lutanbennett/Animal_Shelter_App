@@ -11,19 +11,16 @@
  *
  *   node scripts/check-release-handover.mjs [repo-root]   (root injectable for fixtures)
  */
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { releaseRecords } from "./lib/release-records.mjs";
 
 const root = process.argv[2] ?? fileURLToPath(new URL("..", import.meta.url));
 const dir = join(root, "docs", "releases");
 const handover = join(root, "docs", "release-handover.md");
 
-const records = readdirSync(dir)
-  .map((f) => f.match(/^(\d{4}-\d{2}-\d{2})-(\d+)-(\d+)-(\d+)\.md$/))
-  .filter(Boolean)
-  .map((m) => ({ file: m[0], date: m[1], parts: [+m[2], +m[3], +m[4]], version: `${m[2]}.${m[3]}.${m[4]}` }))
-  .sort((a, b) => a.date.localeCompare(b.date) || a.parts[0] - b.parts[0] || a.parts[1] - b.parts[1] || a.parts[2] - b.parts[2]);
+const records = releaseRecords(root);
 
 if (!records.length) {
   console.log(`No release records in ${dir}; nothing to compare.`);

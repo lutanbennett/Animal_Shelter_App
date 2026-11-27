@@ -72,6 +72,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 export const unreleased: ReleaseNote[] = [
   "If a password-reset email link no longer works, the sign-in page now says so and offers to send a new one, instead of wrongly saying Google sign-in failed.",
   "Saving a new password while your account has an authenticator app now tells you to enter its code under Security first, instead of showing a technical error.",
+  { text: "Product console: each web address on a shelter’s Website tab now has Attach at next deploy and Stop attaching at next deploy. The press only records the wish: the address starts (or stops) answering after the next deploy, and Check it answers tells you when it has.", admin: true },
 ];
 
 /** Newest first. */

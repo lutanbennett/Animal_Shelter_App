@@ -1,9 +1,15 @@
 // exit-ok: every child process is a *Sync call and nothing opens a socket, so no handle is open at process.exit (gh is run through spawnSync)
 // Lists the PRs in a release, and refuses to answer when its sources disagree.
 //
-//   node scripts/release-prs.mjs <since-sha> [<until-ref>=HEAD]
+//   node scripts/release-prs.mjs [<since-sha> [<until-ref>=HEAD]]
 //
-// <since-sha> is the previous release's deployed SHA (its docs/releases/ record).
+// <since-sha> is the previous release's deployed SHA. Left out, it is read from
+// the newest docs/releases/<date>-<version>.md record's **Commit** line, and the
+// script prints which record and SHA it chose before the list. That is right
+// while CUTTING the next release; once the in-flight release has its own record,
+// pass the previous release's SHA explicitly (the operator's responsibility;
+// docs/decisions/2026-11-27-release-prs-default-sha.md). No readable record or
+// commit line is exit 2, never a guessed range.
 //
 // Why this exists: the pre-deploy check in docs/release-smoke-test.md is "every
 // PR in this release has a completed test plan", done by hand, against a list of
@@ -39,6 +45,8 @@
 // the network, and an orphan GitHub cannot resolve is still a refusal.
 
 import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { resolveSince } from "./lib/release-records.mjs";
 
 function git(...args) {
   const r = spawnSync("git", args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
@@ -49,10 +57,20 @@ function git(...args) {
   return r.stdout;
 }
 
-const [since, until = "HEAD"] = process.argv.slice(2);
-if (!since || since.startsWith("-")) {
-  console.error("usage: node scripts/release-prs.mjs <since-sha> [<until-ref>=HEAD]");
+const [arg, until = "HEAD"] = process.argv.slice(2);
+if (arg?.startsWith("-")) {
+  console.error("usage: node scripts/release-prs.mjs [<since-sha> [<until-ref>=HEAD]]");
   process.exit(2);
+}
+const resolved = resolveSince({ arg, root: fileURLToPath(new URL("..", import.meta.url)) });
+if (resolved.error) {
+  console.error(`Cannot default the range start: ${resolved.error}.
+Pass the previous release's deployed SHA: node scripts/release-prs.mjs <since-sha> [<until-ref>]`);
+  process.exit(2);
+}
+const since = resolved.sha;
+if (resolved.source === "record") {
+  console.log(`Range start: ${since.slice(0, 9)}, release ${resolved.version}, from ${resolved.file} (no SHA given; pass one to override).`);
 }
 const range = `${since}..${until}`;
 
