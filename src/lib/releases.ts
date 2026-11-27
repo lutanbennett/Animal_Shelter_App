@@ -70,12 +70,20 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  "Thai wording, read by a Thai speaker: the shop page in Thai now shows your own shelter's name instead of Lanna Care, the product pages say สัตวแพทย์ (the vet) where they said the doctor, and a space now separates a name from the Thai around it.",
-  { text: "Product console: one person can now work at more than one shelter. Add their existing login on a shelter's Access tab and they keep their place at the other. The Access list says how many other shelters someone also works at (never which ones), shows every role a person holds there, and the Add button now says whether the login was new to the shelter, moved to the role you chose, or already had it.", admin: true },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.49.3",
+    date: "2026-11-26",
+    title: "Thai wording corrected by a Thai reader, and one person can work at more than one shelter",
+    major: false,
+    notes: [
+      "Thai wording, read by a Thai speaker: the shop page in Thai now shows your own shelter's name instead of Lanna Care, the product pages say สัตวแพทย์ (the vet) where they said the doctor, and a space now separates a name from the Thai around it.",
+      { text: "Product console: one person can now work at more than one shelter. Add their existing login on a shelter's Access tab and they keep their place at the other. The Access list says how many other shelters someone also works at (never which ones), shows every role a person holds there, and the Add button now says whether the login was new to the shelter, moved to the role you chose, or already had it.", admin: true },
+    ],
+  },
   {
     version: "0.49.2",
     date: "2026-11-25",
