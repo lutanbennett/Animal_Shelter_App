@@ -1,6 +1,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getAppEnv } from "@/lib/app-env";
 import { shelterNames } from "@/lib/shelter-settings";
+import { shelterSenderName } from "@/lib/mail-sender";
 import en from "@/lib/i18n/dictionaries/en";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { type HealthCheckKey, type HealthReport, runHealthChecks } from "./health";
@@ -186,7 +187,7 @@ export async function send(
     for (const address of to) {
       try {
         await env.STATUS_ALERT_MAIL.send({
-          from: { email: env.STATUS_ALERT_FROM, name: `${(await shelterNames()).shortName} status` },
+          from: { email: env.STATUS_ALERT_FROM, name: shelterSenderName((await shelterNames()).displayName, "status") },
           to: address,
           subject,
           text: mail.text,

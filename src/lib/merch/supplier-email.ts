@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAppEnv } from "@/lib/app-env";
 import { shelterNames } from "@/lib/shelter-settings";
+import { shelterSenderName } from "@/lib/mail-sender";
 
 /**
  * The daily supplier email (docs/merch-shop.md, "The daily supplier email"). Run once a day by the Worker's cron
@@ -106,7 +107,7 @@ async function deliver(to: string, mail: ReturnType<typeof buildEmail>): Promise
   const env = workerEnv();
   if (env?.STATUS_ALERT_MAIL && env.STATUS_ALERT_FROM) {
     try {
-      await env.STATUS_ALERT_MAIL.send({ from: { email: env.STATUS_ALERT_FROM, name: (await shelterNames()).shortName }, to, subject: mail.subject, text: mail.text, html: mail.html });
+      await env.STATUS_ALERT_MAIL.send({ from: { email: env.STATUS_ALERT_FROM, name: shelterSenderName((await shelterNames()).displayName) }, to, subject: mail.subject, text: mail.text, html: mail.html });
       return { ok: true };
     } catch (err) {
       const e = err as { code?: string; message?: string };
