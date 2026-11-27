@@ -70,6 +70,8 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "If a password-reset email link no longer works, the sign-in page now says so and offers to send a new one, instead of wrongly saying Google sign-in failed.",
+  "Saving a new password while your account has an authenticator app now tells you to enter its code under Security first, instead of showing a technical error.",
 ];
 
 /** Newest first. */
