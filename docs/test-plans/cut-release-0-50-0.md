@@ -122,13 +122,21 @@ where ordinary shelter users see more than one line.
   items, all above ## Completed`
 - [x] `node scripts/guarded-install.mjs` in the main checkout before anything was deployed, so the
   `0.28.0` fault (a checkout whose `node_modules` does not match the lockfile) cannot recur
-- [ ] `node scripts/gates.mjs` — pending: the run is still going; its own closing lines go in the
-  fenced block below, read from the run and never typed
+- [x] `node scripts/gates.mjs` — **all four green**; the run's own closing lines are in the fenced
+  block below, read from the run's output file and not typed
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit. Read before merging,
   with `headSha` confirmed equal to the pushed head
 
 ```
-(the gates run's own closing lines go here, pasted from the run)
+=== gates: typecheck — npm run typecheck
+=== gates: typecheck exited 0 after 47s
+=== gates: lint — npm run lint
+=== gates: lint exited 0 after 178s
+=== gates: test — npm test
+=== gates: test exited 0 after 40s
+=== gates: build — npm run build
+=== gates: build exited 0 after 161s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 ## 3. Schema and data
@@ -254,8 +262,8 @@ per-file-transaction caveat of the kind the runbook warns about.
   `check-wrangler-var-steps.mjs --base ef022e146` names two changes, both test/UAT `PLATFORM_HOST`,
   both applied at the Pi build. **Their guard is section 1's accepted gap**, settled with Lutan before
   the first Pi build rather than before the Worker deploy, which is where `0.49.2` got it wrong
-- [ ] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — deferred:
-  release manager, at the merge
+- [ ] Tested SHA recorded in the header — deferred: release manager, and it must be the tip of `main`
+  at deploy time
 - [ ] Deployed SHA matches the tested SHA, read from `deploy.mjs`'s own line — deferred: release
   manager
 - [ ] Deployed to test, smoke-tested on `test.lannacare.org` — deferred: release manager
@@ -264,8 +272,8 @@ per-file-transaction caveat of the kind the runbook warns about.
 - [ ] UAT deployed with `--no-mail` — deferred: release manager. **On a major release this is the
   one that must not be forgotten in spirit even though `deploy.mjs` now refuses to mail from UAT
   without `--mail` in words**, because UAT's database holds production's real people
-- [ ] **The production release email arrives, and its subject starts `[Production]` with a sender name
-  that does not say UAT** — deferred: release manager. This is the first major release since
+- [ ] **The production release email arrives** — deferred: release manager, and its subject must start
+  `[Production]` with a sender name that does not say UAT. This is the first major release since
   `RELEASE_MAIL_ENV: "Production"` was set on 2026-11-06, so it is the proof `#w4k9n` (e) has been
   waiting for, and it is also the live proof for `shelter-sender-name`'s own pending line
 - [ ] `strip-baked-env: removed N env var(s)` seen in each deploy output — deferred: release manager
@@ -274,15 +282,17 @@ per-file-transaction caveat of the kind the runbook warns about.
 - [ ] Public pages re-checked after a cache purge — deferred: release manager, and **expect exit 1
   from `purge-cache.mjs --env production`** naming the `cooperjaidee.org` zone, which is `#cjpzn` and
   is purged by hand
-- [ ] A signed-out visitor still gets the construction page, and `robots.txt` still refuses crawlers
-  — deferred: release manager, checked after the production Pi build **and** after the Worker deploy
-- [ ] Timezone-sensitive behaviour on the deployed build — n/a by nature for a cut
+- [ ] A signed-out visitor still gets the construction page — deferred: release manager, with
+  `robots.txt` still refusing crawlers, checked after the production Pi build **and** after the
+  Worker deploy
+- [ ] Timezone-sensitive behaviour on the deployed build — n/a: nothing in a cut derives a date; the
+  entry's own date reads back from `/api/releases/current`
 - [ ] Evidence pasted into this plan is the tool's actual output, unedited — deferred: release manager
 - [ ] **Does this PR contain both a migration and code that reads it?** — deferred: release manager.
   The release does: `0449`'s consumers are already live on `main`, so the apply must precede the
   deploy, and that ordering is in section 3's apply plan
-- [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — deferred:
-  release manager to re-read at apply time; it was run for this plan and all four files read `ok`
+- [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — deferred: release
+  manager, to re-read at apply time; it was run for this plan and all four files read `ok`
 - [ ] For a destructive or rewriting migration only: a fresh production backup — n/a: no file
   rewrites or deletes a row; `0448` relaxes a constraint and the other three define functions
 - [ ] Apply plan stated — deferred: release manager; stated in section 3, **UAT first, then
