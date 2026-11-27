@@ -70,18 +70,26 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  { text: "Supplier order emails and status alert emails now come from your shelter’s full name followed by “(via CooperJaidee)”, so you can tell at a glance which shelter sent them. Release emails to admins now come from CooperJaidee.", admin: true },
-  "When you are signed in and open the Thai version of the public website (an address starting /th), the app’s own header and side menu no longer appear around it: you see the website as a visitor would, as the English pages already did.",
-  "When you register a new resident, the form now tells you if the name is already used by another resident (including ones who have left or died) or looks very like one, so you can check it is not the same animal coming back. If the name is taken, press the button to use the next number (for example Tiger 2), or change the name yourself.",
-  "If a password-reset email link no longer works, the sign-in page now says so and offers to send a new one, instead of wrongly saying Google sign-in failed.",
-  "Saving a new password while your account has an authenticator app now tells you to enter its code under Security first, instead of showing a technical error.",
-  { text: "Product console: each web address on a shelter’s Website tab now has Attach at next deploy and Stop attaching at next deploy. The press only records the wish: the address starts (or stops) answering after the next deploy, and Check it answers tells you when it has.", admin: true },
-  { text: "Product console: a shelter’s card now says beside its web address whether the address answers, and the setup checklist no longer ticks the website step until it does. The CooperJaidee name at the top left is now a link back to the product home page.", admin: true },
-  { text: "Product console: an address marked to attach now says “marked for the next deploy”, and only the button that applies is shown (Attach, or Stop attaching). If a marked address does not answer yet, the card explains that this is expected until the next deploy.", admin: true },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.50.0",
+    date: "2026-11-27",
+    title: "Emails say which shelter sent them, duplicate resident names are caught at intake, and the product console tracks its own web addresses",
+    major: true,
+    notes: [
+      { text: "Supplier order emails and status alert emails now come from your shelter’s full name followed by “(via CooperJaidee)”, so you can tell at a glance which shelter sent them. Release emails to admins now come from CooperJaidee.", admin: true },
+      "When you are signed in and open the Thai version of the public website (an address starting /th), the app’s own header and side menu no longer appear around it: you see the website as a visitor would, as the English pages already did.",
+      "When you register a new resident, the form now tells you if the name is already used by another resident (including ones who have left or died) or looks very like one, so you can check it is not the same animal coming back. If the name is taken, press the button to use the next number (for example Tiger 2), or change the name yourself.",
+      "If a password-reset email link no longer works, the sign-in page now says so and offers to send a new one, instead of wrongly saying Google sign-in failed.",
+      "Saving a new password while your account has an authenticator app now tells you to enter its code under Security first, instead of showing a technical error.",
+      { text: "Product console: each web address on a shelter’s Website tab now has Attach at next deploy and Stop attaching at next deploy. The press only records the wish: the address starts (or stops) answering after the next deploy, and Check it answers tells you when it has.", admin: true },
+      { text: "Product console: a shelter’s card now says beside its web address whether the address answers, and the setup checklist no longer ticks the website step until it does. The CooperJaidee name at the top left is now a link back to the product home page.", admin: true },
+      { text: "Product console: an address marked to attach now says “marked for the next deploy”, and only the button that applies is shown (Attach, or Stop attaching). If a marked address does not answer yet, the card explains that this is expected until the next deploy.", admin: true },
+    ],
+  },
   {
     version: "0.49.3",
     date: "2026-11-26",
