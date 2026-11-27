@@ -12,7 +12,7 @@ import { frontDoorKeeps } from "./front-door-paths";
  * neither widens anything: /platform and the chooser ask the database again, and the database refuses the rest.
  */
 
-/** Whether this request arrived on the platform front door. The host is the Worker's x-lanna-public-host (set, never passed through). */
+/** Whether this request arrived on the platform front door. The host is the one the Worker sets (requestHost), never passed through from the visitor. */
 export async function onFrontDoor(): Promise<boolean> {
   const h = await headers();
   return isPlatformHostname(requestHost((n) => h.get(n)) ?? "");
