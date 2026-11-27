@@ -143,7 +143,7 @@ The free Supabase plan allows two projects (dev and production), and a third wou
 
 ## F. The platform front door, `cooperjaidee.org` (`#pltfd`)
 
-**What it is:** the operator console (`/platform`) on the platform's own address, which maps to no shelter. The setting is `PLATFORM_HOST` (`wrangler.jsonc`, production only for now), the third address after `APP_HOST` and `PUBLIC_HOST`; it feeds `serverActions.allowedOrigins` and the upload check, so a button pressed there is accepted.
+**What it is:** the operator console (`/platform`) on the platform's own address, which maps to no shelter. The setting is `PLATFORM_HOST` (`wrangler.jsonc`; production, and since `#pltst` test and UAT too, section G), the third address after `APP_HOST` and `PUBLIC_HOST`; it feeds `serverActions.allowedOrigins` and the upload check, so a button pressed there is accepted.
 
 **Done in the code:** `PLATFORM_HOST` and the two `custom_domain` routes (`cooperjaidee.org`, `www.cooperjaidee.org`) in production's config; the proxy sends any shelter page on that host to `/platform`; `/platform` answers not-found on any other host once the setting is set.
 
@@ -158,3 +158,24 @@ The free Supabase plan allows two projects (dev and production), and a third wou
 **F.3 DONE 2026-11-22:** Lutan opened bare `cooperjaidee.org` in a private window, was sent to sign-in, pressed Continue with Google and landed on `https://cooperjaidee.org/platform`; that press is a Server Action, so it proved the allowed-origin and redirect fixes. Still untested: what the front door shows a signed-in login that is not a product administrator (`#cjred`).
 
 **Prove it by saving, not by loading:** sign in at `https://cooperjaidee.org`, press *Verify with your authenticator app*, then add a web address to a test shelter. A page that loads proves nothing here: a missing allowed origin refuses every button while every page renders (30 September / 1 October 2026).
+
+## G. The platform front door on test and UAT (`#pltst`, 2026-11-27)
+
+`wrangler.jsonc` gives test `cooperjaidee-test.lannacare.org` and UAT `cooperjaidee-uat.lannacare.org`,
+each as a route and as `PLATFORM_HOST`. Reasoning: `docs/decisions/2026-11-27-platform-on-test-and-uat.md`.
+Do it **once per environment, test first**, and finish each step's proof before starting the next. Nothing
+here touches production or Google.
+
+| # | Step | test (dev project `qxkmhwybjggxvsfxsxbd`) | UAT (`fsjagxmxjosauwmxwype`) |
+|---|---|---|---|
+| G1 | **DNS.** In the `lannacare.org` zone, check there is no A or CNAME record on the new name. The deploy creates the record and certificate, and refuses to overwrite one that is already there (section F, step 1) | `cooperjaidee-test` | `cooperjaidee-uat` |
+| G2 | **Front-door row**, `shelter_id` set to **null** (as `0382` seeded `cooperjaidee.org`). Without it, `check-deployed-hosts` fails with "Every sign-in there is refused". SQL: `insert into public.shelter_hosts (host, shelter_id) values ('<host>', null) on conflict (host) do nothing;` This works only after `0448` (nullable `shelter_id`) is applied to that project; read `apply-migrations.mjs --status --env <env>` first | dev | UAT |
+| G3 | **Supabase → Authentication → URL Configuration → Redirect URLs:** add `https://<host>/auth/callback`. Keep every existing entry. **Use the dashboard field only**; do not use a scripted `config/auth` PATCH (the cause of the 2026-11-26 UAT sign-in break) | dev | UAT |
+| G4 | **Pi build, then Worker deploy, from a released `main`**, as in `docs/release-procedure.md` (Pi: the `deploy-pi.sh --env test` / `--env uat` lines; Worker: `node scripts/deploy.mjs --env test`, `--env uat --no-mail`). **The Pi has to go first:** it is what carries `PLATFORM_HOST` into `.env.production.local` (`scripts/pi/write-env.mjs`). Without it, every button on the new address is refused while every page renders (#plhbd) | test Pi + Worker | UAT Pi + Worker |
+| G5 | **Read it back:** `node scripts/check-deployed-hosts.mjs --env <env>` (UAT: run it from the main checkout, which has `.env.deploy.uat`). It must list the new host as `ok` and show its callback present | | |
+| G6 | **Site URL**, after G5. First open Authentication → Email Templates and search for `SiteURL`. If a template uses it, stop and tell Lutan, because invites would then point at the product address. Otherwise set **Site URL** to `https://<host>`, read the old value back first and note it so it can be put back. Dashboard field only | `https://cooperjaidee-test.lannacare.org` (was `http://localhost:3000` on 2026-11-05; read it) | `https://cooperjaidee-uat.lannacare.org` (today `https://uat.lannacare.org`) |
+| G7 | **Prove it by saving, not by loading** (section F): sign in on the new address as a product administrator, step up, and save one thing in `/platform` | | |
+
+Done when G5 and G7 pass on both environments. That is what makes `#plsso`'s UAT rehearsal possible.
+
+**Cache purge.** `scripts/lib/purge-zones.mjs` lists both new hosts in the `lannacare.org` zone for test and UAT, so `purge-cache.mjs` re-checks them. Run it only **after** G4: before the deploy creates the address, the re-check cannot reach it and exits 1.

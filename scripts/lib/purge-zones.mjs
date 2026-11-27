@@ -16,8 +16,8 @@ export const PURGE_ZONES = {
     { zoneVar: "CLOUDFLARE_ZONE_ID_COOPERJAIDEE", hosts: ["cooperjaidee.org", "www.cooperjaidee.org"] },
   ],
   // Test and UAT are ONE zone (lannacare.org). The named environment's host is re-checked first.
-  uat: [{ zoneVar: "CLOUDFLARE_ZONE_ID", hosts: ["uat.lannacare.org", "test.lannacare.org"] }],
-  test: [{ zoneVar: "CLOUDFLARE_ZONE_ID", hosts: ["test.lannacare.org", "uat.lannacare.org"] }],
+  uat: [{ zoneVar: "CLOUDFLARE_ZONE_ID", hosts: ["uat.lannacare.org", "test.lannacare.org", "cooperjaidee-uat.lannacare.org", "cooperjaidee-test.lannacare.org"] }],
+  test: [{ zoneVar: "CLOUDFLARE_ZONE_ID", hosts: ["test.lannacare.org", "uat.lannacare.org", "cooperjaidee-test.lannacare.org", "cooperjaidee-uat.lannacare.org"] }],
 };
 
 /**
