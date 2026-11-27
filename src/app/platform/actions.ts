@@ -295,6 +295,31 @@ export async function checkShelterHost(host: string): Promise<ActionResult<HostA
   }
 }
 
+/**
+ * Mark (or unmark) one of a shelter's addresses to be attached to this environment's Worker (#hstau step 3). This sets
+ * shelter_hosts.attach_to_worker through product_admin_set_host_attach(p_shelter, p_host, p_attach) (0447; 0446's two-argument
+ * form was dropped by 0447 because the restrictive per-shelter policy hid every row without the shelter). It changes NOTHING at
+ * Cloudflare now: scripts/deploy.mjs reads the flag and passes the host as --domain on the NEXT deploy, so the address is attached
+ * then, and unmarking it lets that next deploy drop it. The wording on screen says so.
+ */
+export async function setShelterHostAttach(shelterId: string, host: string, attach: boolean, requestId: string | null): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.productAdmin.errors;
+  const supabase = await createClient();
+  return runWriteAction("productAdmin.setHostAttach", write(t), { id: requestId, action: "productAdmin.setHostAttach", db: supabase }, async () => {
+    if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
+    if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
+    if (!UUID.test(shelterId) || typeof attach !== "boolean") return { ok: false, error: e.badHost };
+    const { error } = await supabase.rpc("product_admin_set_host_attach", { p_shelter: shelterId, p_host: host.trim(), p_attach: attach });
+    if (error) {
+      const msg = shelterError(e, error.code, e.noSuchHost, e.noSuchHost, attach ? "marking that address to attach" : "unmarking that address");
+      return msg ? { ok: false, error: msg } : databaseFailure("productAdmin.setHostAttach", error, t.common);
+    }
+    revalidatePath("/platform");
+    return { ok: true };
+  });
+}
+
 export async function unmapShelterHost(host: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.admin.productAdmin.errors;
