@@ -104,6 +104,9 @@ export async function changeOwnPassword(
       if (error) {
         // Supabase refuses the same password again; say so in our words.
         if (/different from the old password/i.test(error.message)) return { ok: false, error: e.samePassword };
+        // An enrolled authenticator not yet passed this session (aal2). Never relaxed here: it stops a stolen
+        // mailbox becoming a stolen account. Only the wording changes, to name the way through.
+        if (error.code === "insufficient_aal" || /aal2/i.test(error.message)) return { ok: false, error: e.needsAuthenticator };
         return { ok: false, error: error.message };
       }
 

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { linkErrorFromHash, type LinkErrorKind } from "@/lib/auth/link-error";
 import { useKeptForm } from "@/lib/use-kept-form";
 import { useFormStatus } from "react-dom";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -25,6 +27,18 @@ export function LoginForm({
 }) {
   const [state, onSubmit, pending] = useKeptForm(login, undefined);
   const { t } = useI18n();
+  // A refused email link reports itself in the URL fragment, which the server never sees, so the page's
+  // ?error=google would blame Google. Read it here, then clear it so a reload does not show it again.
+  const [linkError, setLinkError] = useState<LinkErrorKind | null>(null);
+  useEffect(() => {
+    const kind = linkErrorFromHash(window.location.hash);
+    if (!kind) return;
+    setLinkError(kind);
+    const url = new URL(window.location.href);
+    url.hash = "";
+    url.searchParams.delete("error");
+    window.history.replaceState(window.history.state, "", url.pathname + url.search);
+  }, []);
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-4">
@@ -57,8 +71,22 @@ export function LoginForm({
             className={inputClass}
           />
         </div>
-        {(state?.error || error) && (
-          <p className="text-sm text-danger">{state?.error ?? error}</p>
+        {state?.error ? (
+          <p className="text-sm text-danger">{state.error}</p>
+        ) : linkError ? (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-danger">
+              {linkError === "used" ? t.login.errors.emailLinkUsed : t.login.errors.emailLinkFailed}
+            </p>
+            <Link
+              href="/login/forgot"
+              className="flex min-h-11 items-center justify-center rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface"
+            >
+              {t.login.errors.requestNewLink}
+            </Link>
+          </div>
+        ) : (
+          error && <p className="text-sm text-danger">{error}</p>
         )}
         <button
           type="submit"
