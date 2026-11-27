@@ -13,7 +13,7 @@
 | PR | opened from this branch |
 | Tested by / date | Claude, 2026-11-27 |
 | Carries a migration? | no |
-| Tested at SHA | bf1e5a34c |
+| Tested at SHA | 45253afc9 |
 
 ## 1. Scope and risk
 
@@ -29,7 +29,13 @@ What changed: test and UAT each get a product front door on its own address. Tou
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — **four gates, each `<N>` that gate's own exit code, and every `<N>` is `0`.**
 
-GATES_PLACEHOLDER
+```
+=== gates: typecheck exited 0 after 7s
+=== gates: lint exited 0 after 143s
+=== gates: test exited 0 after 36s
+=== gates: build exited 0 after 46s
+gates: typecheck=0 lint=0 test=0 build=0
+```
 
 - [ ] CI green on the PR (runs the same four gates, among its other checks) — n/a: not yet — the PR does not exist at this commit
 
