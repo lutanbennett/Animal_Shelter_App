@@ -24,52 +24,7 @@ timeout, not Cloudflare) and the *duration* reading was wrong.
 **The duration is now unknown with 23 seconds as a floor.** Two episodes, two very
 different numbers. Do not write a third figure as though it settles it.
 
-## 2. `--skip-build` IS ALLOWED, AND HERE IS HOW TO EARN IT IN TWO MINUTES
-
-The runbook forbids `--skip-build` unless the leftover `.open-next` **can be shown** to
-belong to the environment you are deploying. Showing it is cheap, so show it rather than
-reasoning:
-
-```bash
-for ref in <this env's project ref> <dev's> <production's>; do printf "%-24s " "$ref"; grep -rl "$ref" .open-next | wc -l; done
-find .open-next -type f -printf '%TH:%TM %p\n' | sort -r | head -2
-```
-
-On this release's UAT retry that read **20 / 5 / 0** — UAT's ref everywhere, production's
-nowhere — with timestamps from UAT's own build. **Do not panic at the dev hits:** read one
-in context and you find a hard-coded comparison in the app's own code
-(`"https://<uat>.supabase.co".startsWith("https://<dev>.")?"dev":…`), not a stale bundle.
-A count alone would have looked like contamination.
-
-**And the retry's log has no `strip-baked-env` line**, because `--skip-build` skips the
-stage that strips. Take that figure from the failed attempt's log, which built completely.
-Do not record it as unread.
-
-## 3. THE RUNBOOK'S DETACHED PI-BUILD RECIPE DOES NOT RETURN IN 25 SECONDS
-
-`ssh … 'setsid nohup ./scripts/pi/deploy-pi.sh … & sleep 25; tail -15 …'` holds the SSH
-session open **until the build finishes**, so a 120-second foreground timeout moves it to
-the background mid-build and reads exactly like a hang. The build is genuinely detached and
-unaffected; only your call is wasted.
-
-- **Run that ssh in the background from the start**, and read progress with a separate
-  `ssh -n … 'grep -inE "fingerprint|serving|check-assets|FAILED" ~/deploy-<env>.log'`.
-- **`ssh -n`, and grep *on the Pi*.** The piping rule is unchanged and still the
-  most-breached line in this file: `| head` and `| tail` on the *local* side of an ssh
-  buffer and read nothing.
-- Mesh SSH timed out once mid-release and worked on the retry. One retry before concluding
-  anything about the Pi; `curl -sI … | grep x-lanna-served-by` on all three sites tells you
-  whether the box is actually fine.
-
-## 4. A CATALOGUE FIGURE WITHOUT ITS FLAGS IS NOT A BASELINE
-
-`check-tenancy-catalogue.mjs --env production` alone reads **125 flagged**; with
-`--strict --tenant-role rls_definer`, which the runbook prescribes, the same database reads
-**0 flagged**. `0.49.3`'s record quotes the 125, so a reader comparing the two records sees
-an improvement that never happened. **Quote the flags beside the figure**, and compare only
-against a reading taken with the same ones.
-
-## 5. A STREAM LEFT A RELEASE GATE RED, AND IT COST THE THIRD TOUCH
+## 2. A STREAM LEFT A RELEASE GATE RED, AND IT COST THE THIRD TOUCH
 
 `check-deployed-hosts` FAILed on test and UAT before the cut: #1920 added two new product
 addresses as `wrangler.jsonc` routes and left `docs/domain-checklist.md` section G — the
@@ -83,7 +38,7 @@ his**, so `check-deployed-hosts --env uat` and the dev run will keep FAILing on
 do not script an auth write to clear it — a scripted `config/auth` PATCH is what broke UAT
 sign-in on 2026-11-26.
 
-## 6. WHAT IS NOW SETTLED, SO DO NOT CARRY IT FORWARD
+## 3. WHAT IS NOW SETTLED, SO DO NOT CARRY IT FORWARD
 
 - **The production release mail is correct, and `#w4k9n` (e) is closed.** First major release
   since `RELEASE_MAIL_ENV: "Production"` was set on 2026-11-06: subject `[Production] …`,
@@ -97,7 +52,7 @@ sign-in on 2026-11-26.
   purge that zone by hand and carry on.
 - **UAT restarts its own Pi service.** Still true, third release running.
 
-## 7. OUTSTANDING, AND ALL OF IT IS LUTAN'S
+## 4. OUTSTANDING, AND ALL OF IT IS LUTAN'S
 
 Not blockers, and not work the next release manager can do. Each is a dashboard field or a
 look at a screen behind a sign-in.
@@ -113,10 +68,9 @@ look at a screen behind a sign-in.
    release notes themselves, which nobody has read on a rendered `/releases` page. The
    record tables all of them with where to look.
 
-## 8. For the planner, not for the next release
+## 5. For the planner, not for the next release
 
 Owed, and **not** in any release — a release ships what is already on `main`: the DNS retry
-window (section 1), the runbook's Pi-build recipe (section 3), the `0.49.3` catalogue figure
-(section 4), and the upstream rule behind section 5 — a stream that changes a deployed host
+window (section 1) and the upstream rule behind section 2 — a stream that changes a deployed host
 should not leave a release gate red. The test Pi's build cache is 1001 MB against a 1024 MB
 ceiling and will start being cleared, which is a slower build and not a failure.
