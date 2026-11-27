@@ -29,6 +29,7 @@ import {
   setShelterPrimaryHost,
   setShelterReceipts,
   unmapShelterHost,
+  setShelterHostAttach,
 } from "./actions";
 
 type Status = "not_started" | "incomplete" | "connected" | "dead";
@@ -760,6 +761,7 @@ export function ProductAdminPanel({
               {s.hosts && s.hosts.length > 0 && <p className="text-xs text-muted">{p.websiteUnchecked}</p>}
               {s.hosts && s.hosts.length > 0 && <p className="max-w-prose text-xs text-muted">{p.hostOutstanding}</p>}
               <p className="max-w-prose text-xs text-muted">{p.addressesNote}</p>
+              {canWrite && s.hosts && s.hosts.length > 0 && <p className="max-w-prose text-xs text-muted">{p.attachNote}</p>}
               {s.hosts && s.hosts.length > 0 ? (
                 <ul className="flex flex-col gap-2 text-sm">
                   {s.hosts.map((h) => (
@@ -813,6 +815,38 @@ export function ProductAdminPanel({
                         )}
                         {h === consoleHost && <span className="text-xs text-muted">({p.consoleAddress}. {p.consoleAddressNote})</span>}
                         {canWrite && h !== consoleHost && (
+                          <>
+                            <ActionButton
+                              icon={ACTION_ICONS.add}
+                              variant="secondary"
+                              compact
+                              disabled={pending}
+                              onClick={() =>
+                                startTransition(async () => {
+                                  const r = await call((id) => setShelterHostAttach(s.id, h, true, id));
+                                  say(`host-attach:${s.id}`, r.ok, r.ok ? p.attachMarked(h) : (r.error ?? ""));
+                                })
+                              }
+                            >
+                              {p.attachHost}
+                            </ActionButton>
+                            <ActionButton
+                              icon={ACTION_ICONS.delete}
+                              variant="secondary"
+                              compact
+                              disabled={pending}
+                              onClick={() =>
+                                startTransition(async () => {
+                                  const r = await call((id) => setShelterHostAttach(s.id, h, false, id));
+                                  say(`host-attach:${s.id}`, r.ok, r.ok ? p.detachMarked(h) : (r.error ?? ""));
+                                })
+                              }
+                            >
+                              {p.detachHost}
+                            </ActionButton>
+                          </>
+                        )}
+                        {canWrite && h !== consoleHost && (
                           <ActionButton
                             icon={ACTION_ICONS.delete}
                             variant="danger"
@@ -840,6 +874,7 @@ export function ProductAdminPanel({
               {note(`primary:${s.id}`)}
               {note(`host-rm:${s.id}`)}
               {note(`host-check:${s.id}`)}
+              {note(`host-attach:${s.id}`)}
               {canWrite && (
                 <form
                   className="flex flex-wrap items-center gap-2"
