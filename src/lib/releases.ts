@@ -75,6 +75,7 @@ export const unreleased: ReleaseNote[] = [
   "Saving a new password while your account has an authenticator app now tells you to enter its code under Security first, instead of showing a technical error.",
   { text: "Product console: each web address on a shelter’s Website tab now has Attach at next deploy and Stop attaching at next deploy. The press only records the wish: the address starts (or stops) answering after the next deploy, and Check it answers tells you when it has.", admin: true },
   { text: "Product console: a shelter’s card now says beside its web address whether the address answers, and the setup checklist no longer ticks the website step until it does. The CooperJaidee name at the top left is now a link back to the product home page.", admin: true },
+  { text: "Product console: an address marked to attach now says “marked for the next deploy”, and only the button that applies is shown (Attach, or Stop attaching). If a marked address does not answer yet, the card explains that this is expected until the next deploy.", admin: true },
 ];
 
 /** Newest first. */

@@ -58,6 +58,8 @@ export type ShelterRow = {
   enquiry_id: string | null;
   archived_at: string | null;
   public_site: string | null;
+  // 0449: the addresses whose attach_to_worker flag is set (marked for the next deploy). Absent on a database before 0449.
+  attached_hosts?: string[] | null;
 };
 export type EnquiryRow = {
   id: string;
@@ -858,8 +860,10 @@ export function ProductAdminPanel({
                           </>
                         )}
                         {h === consoleHost && <span className="text-xs text-muted">({p.consoleAddress}. {p.consoleAddressNote})</span>}
-                        {canWrite && h !== consoleHost && (
-                          <>
+                        {h !== consoleHost && s.attached_hosts?.includes(h) && (
+                          <span className="text-xs text-muted">({p.attachMarkedBadge})</span>
+                        )}
+                        {canWrite && h !== consoleHost && !s.attached_hosts?.includes(h) && (
                             <ActionButton
                               icon={ACTION_ICONS.add}
                               variant="secondary"
@@ -874,6 +878,8 @@ export function ProductAdminPanel({
                             >
                               {p.attachHost}
                             </ActionButton>
+                        )}
+                        {canWrite && h !== consoleHost && s.attached_hosts?.includes(h) && (
                             <ActionButton
                               icon={ACTION_ICONS.delete}
                               variant="secondary"
@@ -888,7 +894,6 @@ export function ProductAdminPanel({
                             >
                               {p.detachHost}
                             </ActionButton>
-                          </>
                         )}
                         {canWrite && h !== consoleHost && (
                           <ActionButton
@@ -908,6 +913,9 @@ export function ProductAdminPanel({
                           </ActionButton>
                         )}
                       </span>
+                      {h !== consoleHost && s.attached_hosts?.includes(h) && answers[h] && answers[h] !== "checking" && !(answers[h] as HostAnswer).answers && (
+                        <span className="max-w-prose text-xs text-muted">{p.attachMarkedSilent}</span>
+                      )}
                     </li>
                   ))}
                 </ul>
