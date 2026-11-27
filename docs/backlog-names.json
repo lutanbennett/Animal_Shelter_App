@@ -85,5 +85,6 @@
   "gcln7": "Retire unused shelter sign-in client",
   "pltst": "Product test and UAT environments",
   "dvsit": "dev site_url points at production",
-  "rbkpi": "three release runbook fixes"
+  "rbkpi": "three release runbook fixes",
+  "fdsgn": "platform front door refuses sign-in"
 }
