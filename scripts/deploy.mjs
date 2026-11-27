@@ -83,7 +83,7 @@ import { buildReleaseMail } from "../src/lib/release-mail.ts";
 import { DEFAULT_SHELTER_NAMES } from "../src/lib/shelter-names-default.ts";
 import { SITE_HOST_VARS } from "../src/lib/site-hosts.ts";
 import { bail, runMain } from "./lib/exit.mjs";
-import { DNS_RETRY_DELAY_MS, DNS_RETRY_MAX, dnsRetryDecision } from "./lib/dns-retry.mjs";
+import { DNS_RETRY_MAX, dnsRetryDecision, dnsRetryDelayMs } from "./lib/dns-retry.mjs";
 
 async function main() {
 
@@ -255,12 +255,18 @@ function wrangler(args, opts = {}) {
         if (retriesDone) console.error(`deploy: DNS-RETRY: gave up after ${retriesDone} retr${retriesDone === 1 ? "y" : "ies"} (#dnsgp).`);
         bail(r.status ?? 1);
       }
+      const delay = dnsRetryDelayMs(retriesDone);
       console.warn(
         `\ndeploy: DNS-RETRY ${retriesDone + 1} of ${DNS_RETRY_MAX}: \`${cmd}\` exited with ${r.status} and the net trace saw ` +
           `getaddrinfo ENOTFOUND for ${d.hosts.join(", ")}: the machine-wide DNS blackout (#dnsgp). ` +
-          `Retrying in ${DNS_RETRY_DELAY_MS / 1000}s with the same build (no rebuild). Note it in the release record.`,
+          `Retrying in ${delay / 1000}s with the same build (no rebuild). Note it in the release record.`,
       );
-      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, DNS_RETRY_DELAY_MS);
+      // Visible waiting: a silent pause reads exactly like a hang, so say something every 5 s.
+      for (let left = delay; left > 0; left -= 5000) {
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, Math.min(5000, left));
+        if (left > 5000) console.warn(`deploy: DNS-RETRY waiting, ${(left - 5000) / 1000}s until retry ${retriesDone + 1} of ${DNS_RETRY_MAX}…`);
+      }
+      console.warn(`deploy: DNS-RETRY ${retriesDone + 1} of ${DNS_RETRY_MAX}: retrying now.`);
       // The 0.47.4 safeguard on every attempt: the build being re-uploaded still carries this key.
       const problem = builtKeyProblem(env[ACTIONS_KEY_VAR]);
       if (problem) {
