@@ -72,8 +72,10 @@ shelter user saw anything. This one publishes:
 - [x] `node scripts/check-dev-aal2-absent.mjs` on **production** and **uat** — exit 0 each, `the
   dev-only aal2 step-up is absent from every deployed path`
 - [x] `node scripts/gates.mjs` — `typecheck=0 lint=0 test=0 build=0`
-- [ ] CI green on the PR — pending: the PR does not exist at this commit. Read before merging, with
-  `headSha` confirmed equal to the pushed head
+- [x] CI green on the PR — **18 checks, every one SUCCESS** on #1905, with `headRefOid` read and
+  confirmed equal to the pushed head `69bf081ac` before merging. `audit` ran for real and passed (a
+  cut changes `package.json`, so `skipped` would have been wrong here). Merged `2026-11-27T00:08:23Z`
+  as `ef022e146`
 
 ## 3. Schema and data
 
@@ -92,8 +94,9 @@ per-file-transaction caveat of the kind `0442` produced last release.
 - [x] `--dry-run` against production — both files `ok`
 - [x] No backfill in either file, so the runbook's before-picture rule does not apply. `0444` creates
   a function and `0445` adds one nullable column
-- [ ] Apply plan stated — pending: stated in section 8 at apply time. **UAT first as the rehearsal,
-  then production**, and the apply happens **before** any Worker deploy
+- [x] Apply plan stated, and followed — **UAT first as the rehearsal, then production**, both `ok`,
+  both reading `444 applied, 2 pending` beforehand with zero drift, and `assert-schema.mjs` printing
+  `holds every migration this commit carries` for both **before the first Pi build started**
 - [x] **Tenancy catalogue baseline read BEFORE applying**, which is the only time it is available:
   **125 flagged (48 views, 77 functions, 0 tables missing `definer_all`), 16 allowed, 1 stale** —
   **identical on production and UAT**. Re-read after applying and record the delta
@@ -158,28 +161,29 @@ per-file-transaction caveat of the kind `0442` produced last release.
   `check-wrangler-var-steps.mjs` was added. **Read before being followed**, because a runbook that
   changed since the last release is exactly the one not to work from memory
 - [x] `docs/test-plan-template.md` and `docs/release-smoke-test.md` confirmed unchanged
-- [ ] Release record `docs/releases/2026-11-26-0-49-3.md` — pending: written after the deploy, as its
-  own PR
-- [ ] `docs/release-handover.md` rewritten — pending: rewritten with the record, in the same PR
+- [x] Release record `docs/releases/2026-11-26-0-49-3.md` — written after the deploy in its own PR,
+  `claude/record-0-49-3`, leading on the DNS-blackout measurement
+- [x] `docs/release-handover.md` rewritten — in the record's PR, 143 lines against the 150-line limit,
+  and `check-release-handover.mjs` now prints `Current: the handover names 0.49.3`
 
 ## 8. Pre-production gate
 
 - [x] **No `wrangler.jsonc` var changed**, so no guard is owed before the first Pi build. `0.49.2`'s
   fault cannot recur in this release, and that is measured rather than assumed
-- [ ] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — deferred: release manager
-- [ ] Deployed SHA matches the tested SHA, read from `deploy.mjs`'s own line — deferred: release manager
-- [ ] Deployed to test, smoke-tested on `test.lannacare.org` — deferred: release manager
-- [ ] Three Pi builds run **serial** (4 GiB Pi, `next build` peaks above 6 GB), box pre-flighted first — deferred: release manager
-- [ ] Worker deploys strictly test -> UAT -> production, production last — deferred: release manager
-- [ ] UAT deployed with `--no-mail` — deferred: release manager. **UAT can mail**: `RELEASE_MAIL_ENV="UAT"` with a live `RELEASE_MAIL` binding, and its database holds production's real people, so its silence is the strongest of the three mail proofs
-- [ ] `strip-baked-env: removed N env var(s)` seen in each deploy output — deferred: release manager (23 on `0.49.1` and `0.49.2`)
-- [ ] Any new secret or env var exists in production — deferred: release manager. **Neither migration needs one**, and no `wrangler.jsonc` var changed, so there is nothing new to push. Confirm nothing was lost rather than that something was added
-- [ ] Public pages re-checked after a cache purge — deferred: release manager. Purge **both** zones regardless; `cooperjaidee.org` is a third zone `purge-cache.mjs` does not cover
-- [ ] **A signed-out visitor still gets the construction page, and `robots.txt` still refuses crawlers** — deferred: release manager. **Lanna's own `public_site` is `locked` and the floor is already `open`**, so the site is held shut by the shelter's setting alone. Before-picture: `/` 200 at 24,468 bytes with construction wording, `/adopt`, `/our-work`, `/donate` 307 to `/login`, `robots.txt` `Disallow: /`
-- [ ] Timezone-sensitive behaviour on the deployed build — deferred: release manager. n/a by nature, re-confirmed by reading the entry's date back from `/api/releases/current`
-- [ ] Evidence pasted into this plan is the tool's actual output, unedited — deferred: release manager, for the deploy sections still to come. **Read from a file, never through `| tail`** — that fault has now cost `0.49.1` and `0.49.2` one each
-- [ ] Migration ordering: the apply happens **before** the deploy — deferred: release manager. `0444`'s consumer `src/app/platform/access-actions.ts` is already on `main`, so this is not optional
-- [ ] Tenancy catalogue re-read after applying, and the delta recorded — deferred: release manager. Baseline **125 / 16 / 1 stale**; the stale entry should clear
+- [x] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — `ef022e14633c423279bfb81e1eab143ed878c640`, the merge commit of #1905 and the tip of `main`; every Pi build printed `at ef022e146` and every deploy `built from ef022e14633c`
+- [x] Deployed SHA matches the tested SHA, read from `deploy.mjs`'s own line — `deploy: built from ef022e14633c` on all three Worker deploys, and `/api/version` returns `{"version":"0.49.3","sha":"ef022e14633c423279bfb81e1eab143ed878c640"}` on all four hosts
+- [x] Deployed to test, smoke-tested on `test.lannacare.org` — Worker Version ID `58127580-60c4-4c56-9f74-9ddd39cf4356`; `/api/version` `0.49.3 @ ef022e146`, `/api/releases/current` `0.49.3`, `x-lanna-served-by: pi`, and the asset check 96,086 bytes identical to the build (`CF MISS`). **Endpoints and assets only — no UI journey was clicked through on test**
+- [x] Three Pi builds run **serial** (4 GiB Pi, `next build` peaks above 6 GB), box pre-flighted first — pre-flight: uptime 14 days, load 0.00, 872 G free, `lanna-care` and `lanna-care-test` both active. Then test, UAT, production in that order, each one's closing lines read before the next started, each printing its own key (`ecc41837fc0b`, `cdeca9cbc4de`, `cbd55beae8d8`) and `serving 0.49.3 as expected`
+- [x] Worker deploys strictly test -> UAT -> production, production last — test first (one failed attempt, then `--skip-build`), then UAT, then Lutan's production deploy last. The UAT deploy ran alongside the **production Pi build**, which is the parallelism the runbook sanctions; no two Worker deploys overlapped
+- [x] UAT deployed with `--no-mail` — run as `node scripts/deploy.mjs --env uat --no-mail`, and it said so itself: `no major release new to uat (was 0.49.2), so no email`. All three environments said it independently. **UAT can mail**: `RELEASE_MAIL_ENV="UAT"` with a live `RELEASE_MAIL` binding, and its database holds production's real people, so its silence is the strongest of the three mail proofs
+- [x] `strip-baked-env: removed N env var(s)` seen in each deploy output — **23 on all three**, the same 23 as `0.49.1` and `0.49.2`, read from each deploy's own output
+- [x] Any new secret or env var exists in production — nothing new was needed, and **nothing was lost**: the production Worker holds **15 secrets**, the same 15 as `0.49.2`, `GOOGLE_DRIVE_ROOT_FOLDER_ID` among them, read by name only. Neither migration needs one and no `wrangler.jsonc` var changed
+- [x] Public pages re-checked after a cache purge — both zones purged, each proving itself with a `CF MISS` re-fetch whose byte count matched its own Pi build exactly: production 96,047, UAT 96,131, test 96,086. **`cooperjaidee.org` is a third zone `purge-cache.mjs` does not cover and was NOT purged** — filed as `#cjpzn`; its pages answer `CF-Cache-Status: DYNAMIC` and its chunks are content-hashed, so nothing stale was served
+- [x] **A signed-out visitor still gets the construction page, and `robots.txt` still refuses crawlers** — checked twice, after the production Pi build **and** after the Worker deploy. Both times identical to the before-picture: `/` **200 at 24,468 bytes**, `/adopt` 307, `/our-work` 307, `/donate` 307, `robots.txt` `Disallow: /`, `x-robots-tag: noindex, nofollow`. `cooperjaidee.org` closed too (`/` 307). The deploy's binding list confirms the floor is `open`, so **the shelter's own `locked` is the only thing holding it shut** — and it held
+- [x] Timezone-sensitive behaviour on the deployed build — n/a by nature, re-confirmed by reading `0.49.3` back from `/api/releases/current` on all four hosts
+- [x] Evidence pasted into this plan is the tool's actual output, unedited — every figure above was read from the command itself or from a redirected log file, never through `| tail`. **Two `| head` breaches happened on Pi log reads and are written up in the record**: both buffered, read nothing, and had to be re-run — they produced no figure that reached this plan
+- [x] Migration ordering: the apply happens **before** the deploy — `0444` and `0445` applied to UAT then production, both `ok`, and `assert-schema.mjs` printed `holds every migration this commit carries` for both **before the first Pi build started**. `0444`'s consumer `src/app/platform/access-actions.ts` was already on `main`, so this was not optional
+- [x] Tenancy catalogue re-read after applying, and the delta recorded — **125 / 16 / 1 stale** before, **125 / 17 / 0 stale** after, identical on production and UAT. The stale entry was `product_admin_access_elsewhere` and `0444` creates it, so **the prediction written here before the apply was correct** and there is no finding. Flagged total unmoved: 48 views, 77 functions, 0 tables missing `definer_all`
 
 ### Rollback
 
