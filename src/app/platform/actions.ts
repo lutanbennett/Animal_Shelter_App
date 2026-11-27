@@ -296,6 +296,36 @@ export async function checkShelterHost(host: string): Promise<ActionResult<HostA
 }
 
 /**
+ * The same probe for every shelter's website at once (#hsttk), so the landing cards and the setup checklist can say whether an
+ * address answers rather than ticking it off a row. ONE call from the browser after the page has drawn: one read of the shelter list,
+ * then every HEAD in parallel, each capped at 6 s. The page itself never waits on it (docs/decisions/2026-11-27-console-website-truth.md).
+ * Only hosts recorded for some shelter are fetched, as above; anything else is dropped, never fetched.
+ */
+export async function checkShelterHosts(hosts: string[]): Promise<ActionResult<{ results: Record<string, HostAnswer> }>> {
+  const { t } = await getT();
+  const e = t.admin.productAdmin.errors;
+  if (!(await isProductAdmin())) return { ok: false, error: e.notProductAdmin };
+  if (!(await hasTwoStep())) return { ok: false, error: e.needsTwoStep };
+  if (!Array.isArray(hosts)) return { ok: false, error: e.badHost };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("product_admin_shelters");
+  if (error) return { ok: false, error: e.badHost };
+  const known = new Set(((data ?? []) as { hosts: string[] | null }[]).flatMap((s) => s.hosts ?? []));
+  const wanted = [...new Set(hosts.map((h) => String(h).trim().toLowerCase()))].filter((h) => known.has(h)).slice(0, 200);
+  const pairs = await Promise.all(
+    wanted.map(async (h): Promise<[string, HostAnswer]> => {
+      try {
+        const res = await fetch(`https://${h}/`, { method: "HEAD", redirect: "manual", signal: AbortSignal.timeout(6_000), cache: "no-store" });
+        return [h, { answers: true, status: res.status }];
+      } catch {
+        return [h, { answers: false, status: null }];
+      }
+    }),
+  );
+  return { ok: true, results: Object.fromEntries(pairs) };
+}
+
+/**
  * Mark (or unmark) one of a shelter's addresses to be attached to this environment's Worker (#hstau step 3). This sets
  * shelter_hosts.attach_to_worker through product_admin_set_host_attach(p_shelter, p_host, p_attach) (0447; 0446's two-argument
  * form was dropped by 0447 because the restrictive per-shelter policy hid every row without the shelter). It changes NOTHING at

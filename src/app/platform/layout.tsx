@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SignOutButton } from "@/app/login/SignOutButton";
-import { CooperJaideeLockup } from "@/components/CooperJaideeLockup";
 import { getCurrentUser } from "@/lib/auth/current-user";
+import { ProductHomeLink } from "./ProductHomeLink";
 import { ProductLanguageLinks } from "./ProductLanguageLinks";
 import { getT } from "@/lib/i18n/get-t";
 
@@ -22,7 +22,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
   return (
     <div className="flex min-w-0 flex-1 flex-col">
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-surface px-6 py-3">
-        <CooperJaideeLockup label={t.admin.productAdmin.platformName} />
+        <ProductHomeLink name={t.admin.productAdmin.platformName} homeLabel={t.admin.productAdmin.platformHomeLink} />
         <span className="flex flex-wrap items-center gap-4">
         <ProductLanguageLinks />
         {user && (
