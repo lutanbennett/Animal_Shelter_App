@@ -19,11 +19,12 @@
 // entirely. See docs/decisions/2026-10-18-purge-from-the-deploy-machine.md.
 //
 // WHAT IT NEEDS. In `.env.deploy.<env>` (gitignored; for --env test, `.env.deploy.uat`, since test
-// and UAT are one zone), two values:
+// and UAT are one zone), these values:
 //   CLOUDFLARE_ZONE_ID      the lannacare.org zone, which serves test.lannacare.org and uat.lannacare.org
-//   CLOUDFLARE_ZONE_ID_LANNACAREFORANIMALS  production only (since the 2026-11-06 cutover): the
-//                           zone for lannacareforanimals.org, required for --env production
-//   CLOUDFLARE_PURGE_TOKEN  an API token scoped to Zone -> Cache Purge, that zone only (a production token must be allowed on the lannacareforanimals.org zone)
+//   CLOUDFLARE_ZONE_ID_LANNACAREFORANIMALS  production: lannacareforanimals.org and www. (its own zone since 2026-11-06)
+//   CLOUDFLARE_ZONE_ID_COOPERJAIDEE         production: cooperjaidee.org and www. (its own zone; #cjpzn)
+//   CLOUDFLARE_PURGE_TOKEN  an API token scoped to Zone -> Cache Purge on every zone that env purges
+// The zone list itself is scripts/lib/purge-zones.mjs. A zone whose id is absent is named NOT PURGED.
 // Nothing else in the repo reads CLOUDFLARE_PURGE_TOKEN, and it is never printed.
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -48,37 +49,65 @@ if (!["production", "uat", "test"].includes(envName)) {
   const env = loadEnv(credEnv); // stops, naming the file, if .env.deploy.uat is missing
   const file = envFile(credEnv);
 
-  // Since the 2026-11-06 cutover production is lannacareforanimals.org, which is its own zone
-  // (CLOUDFLARE_ZONE_ID_LANNACAREFORANIMALS); the lannacare.org zone serves test and UAT and keeps
-  // CLOUDFLARE_ZONE_ID. The token must be allowed to purge whichever zone it is used on.
+
+  // Production answers on FOUR hosts in TWO zones (lannacareforanimals.org + www., cooperjaidee.org +
+  // www.); test and UAT are one zone (lannacare.org). The zones and hosts are named in
+  // scripts/lib/purge-zones.mjs and checked there against wrangler.jsonc's routes, so a host bound to
+  // the Worker that no zone covers is reported here rather than going unpurged (#cjpzn, 2026-11-27).
   //
   // UAT's host is uat.lannacare.org since 2026-11-08 (docs/uat-finalisation.md, Part 6). It read
   // `lannacare.org` until then, and that address now 301s to production (Part 7), so purging it
   // would have purged a redirect and reported success while UAT's own cache stood.
-  const zoneVar = envName === "production" ? "CLOUDFLARE_ZONE_ID_LANNACAREFORANIMALS" : "CLOUDFLARE_ZONE_ID";
-  const zone = env[zoneVar];
+  //
+  // A ZONE WHOSE VARIABLE IS ABSENT IS SKIPPED LOUDLY: the others are still purged, the skipped one is
+  // named as NOT PURGED, and the run ends exit 1. It does not stop the release (nothing does on a purge
+  // result: the procedure's answer is "purge by hand and carry on"), but it cannot read as success.
+  // docs/decisions/2026-11-27-purge-missing-zone-fails-after-purging.md.
+  const { purgeTargets, unmappedHosts } = await import(pathToFileURL(join(root, "scripts/lib/purge-zones.mjs")).href);
+  const { readWranglerConfig, routeHosts } = await import(pathToFileURL(join(root, "scripts/lib/wrangler.mjs")).href);
   const token = env.CLOUDFLARE_PURGE_TOKEN;
-  const host = envName === "test" ? "test.lannacare.org" : envName === "uat" ? "uat.lannacare.org" : "lannacareforanimals.org";
-  const targets = [{ zone, host }];
-  // The purge is zone-wide, so a test or UAT purge clears both sites; re-check both, the named one first.
-  const checkHosts = envName === "production" ? [host] : [host, envName === "test" ? "uat.lannacare.org" : "test.lannacare.org"];
+  const targets = purgeTargets(envName, env);
+  const notPurged = [];
+
+  const stray = unmappedHosts(envName, routeHosts(readWranglerConfig(join(root, "wrangler.jsonc")), envName));
+  if (stray.length) {
+    console.error(`purge-cache: NOT PURGED — ${stray.join(", ")}: bound in wrangler.jsonc but in no zone in scripts/lib/purge-zones.mjs.`);
+    console.error("  Add the host (and its zone variable, if it is a new zone) there. Until then, purge it by hand.");
+    notPurged.push(...stray);
+  }
 
   // Refuse with instructions rather than a stack trace: whoever hits this is
   // mid-release and needs to know exactly what to add and with what scope.
-  const missing = [];
-  if (!zone) missing.push(zoneVar);
-  if (!token) missing.push("CLOUDFLARE_PURGE_TOKEN");
-  if (missing.length) {
-    console.error(`purge-cache: ${missing.join(" and ")} missing from ${file}.`);
+  const present = targets.filter((t) => t.zone);
+  if (!token || !present.length) {
+    const missing = [...(token ? [] : ["CLOUDFLARE_PURGE_TOKEN"]), ...targets.filter((t) => !t.zone).map((t) => t.zoneVar)];
+    console.error(`purge-cache: ${missing.join(" and ")} missing from ${file}. Nothing was purged.`);
     console.error("  Create an API token at Cloudflare -> My Profile -> API Tokens with");
     console.error("  Permissions: Zone -> Cache Purge -> Purge, and Zone Resources limited to");
-    console.error(`  the one zone serving ${host}. Put it in ${file} as`);
-    console.error(`  CLOUDFLARE_PURGE_TOKEN, with ${zoneVar} beside it.`);
+    console.error(`  the zone(s) serving ${targets.flatMap((t) => t.hosts).join(", ")}. Put it in ${file} as`);
+    console.error("  CLOUDFLARE_PURGE_TOKEN, with each zone's id beside it under the names above.");
     console.error("  Until then, purge by hand: Cloudflare -> Caching -> Configuration -> Purge Everything.");
     process.exitCode = 2;
-  } else for (const { zone, host } of targets) if (dryRun) {
-    console.log(`purge-cache: would purge everything for ${host} (zone ${zone.slice(0, 8)}…). Dry run, nothing sent.`);
   } else {
+    for (const t of targets) if (!t.zone) {
+      console.error(`purge-cache: NOT PURGED — ${t.hosts.join(" and ")}: ${t.zoneVar} is missing from ${file}.`);
+      console.error("  Add the zone id there (and make sure the purge token is allowed on that zone), or purge it by hand:");
+      console.error("  Cloudflare -> that zone -> Caching -> Configuration -> Purge Everything.");
+      notPurged.push(...t.hosts);
+    }
+    for (const { zone, hosts } of present) await purgeZone(zone, hosts);
+    if (notPurged.length) {
+      console.error(`purge-cache: finished, but NOT PURGED: ${notPurged.join(", ")}. Purge those by hand and carry on.`);
+      process.exitCode = 1;
+    }
+  }
+
+  async function purgeZone(zone, checkHosts) {
+  const host = checkHosts[0];
+  if (dryRun) {
+    console.log(`purge-cache: would purge everything for ${checkHosts.join(" and ")} (zone ${zone.slice(0, 8)}…). Dry run, nothing sent.`);
+    return;
+  }
     const res = await fetch(`https://api.cloudflare.com/client/v4/zones/${zone}/purge_cache`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
