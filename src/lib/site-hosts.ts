@@ -82,6 +82,23 @@ export function appUrl(path = "/", env: Record<string, string | undefined> = pro
   return h ? `https://${h}${path}` : null;
 }
 
+/**
+ * Where links in a scheduled job's output (alert mail, calendar events) point: APP_HOST's origin, else the request's.
+ * The cron runs its jobs on the platform host (STATUS_ALERT_SITE, #alrth), which serves no shelter page, so the
+ * request's own origin is only a fallback; a first calendar run also wrote https://undefined from it. Null if neither.
+ */
+export function jobLinkOrigin(requestUrl: string, env: Record<string, string | undefined> = process.env): string | null {
+  for (const candidate of [appUrl("/", env), requestUrl]) {
+    try {
+      const url = new URL(candidate ?? "");
+      if (url.hostname && url.hostname !== "undefined") return url.origin;
+    } catch {
+      // not a URL: try the next
+    }
+  }
+  return null;
+}
+
 /** `https://host/path` for the platform front door (PLATFORM_HOST), or null when it is not set. The platform's own paths use this, never appUrl(): the staff address is a shelter's and the platform must not depend on one (#plsso). */
 export function platformUrl(path = "/", env: Record<string, string | undefined> = process.env): string | null {
   const h = platformHost(env);

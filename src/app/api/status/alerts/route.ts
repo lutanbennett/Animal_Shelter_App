@@ -1,6 +1,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { checkShelterDriveTokens } from "@/lib/google/shelter-drive-tokens";
 import { processTestRequests, runStatusAlerts } from "@/lib/status/alerts";
+import { jobLinkOrigin } from "@/lib/site-hosts";
 
 /**
  * POST /api/status/alerts — one scheduled alert run (src/lib/status/alerts.ts).
@@ -28,7 +29,8 @@ export async function POST(request: Request) {
   if (!authorised(request)) {
     return Response.json({ error: "Not authorised." }, { status: 401, headers: { "cache-control": "no-store" } });
   }
-  const origin = new URL(request.url).origin;
+  // The links in the mail go to the staff app (APP_HOST); the run itself is on the platform host (#alrth).
+  const origin = jobLinkOrigin(request.url) ?? new URL(request.url).origin;
   const result = await runStatusAlerts("cron", origin);
   // Tests asked for from a Pi-drawn page (0226); after the run, so they can never delay it.
   const tests = await processTestRequests(origin);

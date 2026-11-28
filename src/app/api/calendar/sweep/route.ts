@@ -1,5 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
-import { appUrl } from "@/lib/site-hosts";
+import { jobLinkOrigin } from "@/lib/site-hosts";
 import { pollCalendarChanges } from "@/lib/clinics/calendar-poll";
 import { syncPendingVisits } from "@/lib/clinics/calendar-sync";
 
@@ -22,27 +22,11 @@ function authorised(request: Request): boolean {
   return timingSafeEqual(digest(token), digest(key));
 }
 
-/**
- * Where the links in an event point. APP_HOST (src/lib/site-hosts.ts) wins: the cron's own
- * request has no real host (a first test run wrote https://undefined into the links). With neither, no links.
- */
-function siteOrigin(request: Request): string | null {
-  for (const candidate of [appUrl(), request.url]) {
-    try {
-      const url = new URL(candidate ?? "");
-      if (url.hostname && url.hostname !== "undefined") return url.origin;
-    } catch {
-      // not a URL: try the next
-    }
-  }
-  return null;
-}
-
 export async function POST(request: Request) {
   if (!authorised(request)) {
     return Response.json({ error: "Not authorised." }, { status: 401, headers: { "cache-control": "no-store" } });
   }
-  const origin = siteOrigin(request);
+  const origin = jobLinkOrigin(request.url);
   // Poll first: a move or delete in the calendar is applied before the sweep rebuilds events from the app.
   const polled = await pollCalendarChanges(origin);
   const result = { ...(await syncPendingVisits(origin)), polled };

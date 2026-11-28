@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { hostRedirect, isPlatformHostname, platformRedirect, isSplit, requestHost, siteAllowedOrigins, SITE_HOST_VARS } from "./site-hosts.ts";
+import { hostRedirect, isPlatformHostname, jobLinkOrigin, platformRedirect, isSplit, requestHost, siteAllowedOrigins, SITE_HOST_VARS } from "./site-hosts.ts";
 import { isPublicPage } from "./public-paths.ts";
 
 const split = { APP_HOST: "app.example.org", PUBLIC_HOST: "site.example.net" };
@@ -104,4 +104,10 @@ test("every address variable is pinned into the Worker build (scripts/deploy.mjs
       `scripts/deploy.mjs assigns ${name} by name. Use the SITE_HOST_VARS loop so the next address cannot be forgotten.`,
     );
   }
+});
+
+test("job links go to the staff app, not the platform host the cron runs on (#alrth)", () => {
+  assert.equal(jobLinkOrigin("https://cooperjaidee.org/api/status/alerts", { APP_HOST: "app.example.org" }), "https://app.example.org");
+  assert.equal(jobLinkOrigin("https://cooperjaidee.org/api/status/alerts", {}), "https://cooperjaidee.org");
+  assert.equal(jobLinkOrigin("https://undefined/api/calendar/sweep", {}), null);
 });
