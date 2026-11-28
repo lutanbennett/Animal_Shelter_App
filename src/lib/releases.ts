@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "On the CooperJaidee product website, the feature pages are now in a Product menu at the top, with a line about each, and the sign-in links have moved from the bottom of the home page to the top right of every product page." },
   { text: "When you register a new animal, the name warning now also checks the other names an animal goes by, and no longer lists numbered animals like Tiger 2 and Tiger 3 as look-alikes of each other.", cards: ["residents"] },
   { text: "Product administrators can now sign in on the CooperJaidee product address itself. Before, it said the site wasn’t set up.", admin: true },
 ];
