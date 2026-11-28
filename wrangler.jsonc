@@ -67,7 +67,10 @@
         "ORIGIN_TIMEOUT_MS": "20000",
         "RELEASE_MAIL_ENV": "",
         "PUBLIC_SITE": "off",
-        "STATUS_ALERT_SITE": "https://test.lannacare.org",
+        // The host the cron's jobs are run on: the PLATFORM host, never a shelter's, so closing a shelter cannot
+        // stop every shelter's jobs (#alrth, docs/decisions/2026-11-28-scheduled-jobs-run-on-the-platform-host.md).
+        // Links in alert mail come from APP_HOST, not from this. scripts/check-alert-site.test.mjs holds it to PLATFORM_HOST.
+        "STATUS_ALERT_SITE": "https://cooperjaidee-test.lannacare.org",
         "STATUS_ALERT_FROM": "alerts@lannacare.org",
         // The puppy loader showcase pause on /adopt's first load
         // (docs/decisions.md, 2026-09-28). Clamped to 3000ms regardless.
@@ -170,8 +173,8 @@
         "RELEASE_MAIL_ENV": "Production",
         "RELEASE_MAIL_FROM": "releases@lannacareforanimals.org",
         "PUBLIC_SITE": "open",
-        // Status alerts, as on test, now on lannacareforanimals.org.
-        "STATUS_ALERT_SITE": "https://lannacareforanimals.org",
+        // The cron's jobs run on the PLATFORM host, as on test (#alrth); alert mail links still go to APP_HOST.
+        "STATUS_ALERT_SITE": "https://cooperjaidee.org",
         "STATUS_ALERT_FROM": "alerts@lannacareforanimals.org",
         // The puppy loader showcase pause on /adopt's first load — Lutan
         // chose to keep it live for real visitors too (docs/decisions.md,
