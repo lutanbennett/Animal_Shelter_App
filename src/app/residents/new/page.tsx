@@ -44,8 +44,8 @@ export default async function NewResidentPage(
       .returns<(DietTypeOption & { name_th: string | null })[]>(),
     supabase
       .from("resident_list_view")
-      .select("resident_code, name, thai_name, current_status")
-      .returns<{ resident_code: string | null; name: string; thai_name: string | null; current_status: string | null }[]>(),
+      .select("resident_code, name, thai_name, other_names, current_status")
+      .returns<{ resident_code: string | null; name: string; thai_name: string | null; other_names: string | null; current_status: string | null }[]>(),
   ]);
 
   const origins = originsResult.data ?? [];
@@ -85,6 +85,7 @@ export default async function NewResidentPage(
           code: r.resident_code,
           name: r.name,
           thaiName: r.thai_name,
+          otherNames: r.other_names,
           status: r.current_status,
         }))}
       />

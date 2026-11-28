@@ -402,11 +402,12 @@ async function run() {
 const [reference] = await query(`select json_build_object(
   'zones', coalesce((select json_agg(json_build_object('id', id, 'name', name)) from zones), '[]'::json),
   'enclosures', coalesce((select json_agg(json_build_object('id', e.id, 'name', e.name, 'zone', z.name)) from enclosures e join zones z on z.id = e.zone_id), '[]'::json),
-  'diets', coalesce((select json_agg(json_build_object('id', id, 'name', name, 'standard', is_standard)) from diet_types), '[]'::json),
+  'diets', coalesce((select json_agg(json_build_object('id', t.id, 'name', t.name, 'standard', exists (select 1 from diets d where d.name = t.name and d.is_standard))) from diet_types t), '[]'::json),
   'residents', coalesce((select json_agg(json_build_object(
     'code', r.resident_code,
     'name', r.name,
     'thaiName', r.thai_name,
+    'otherNames', r.other_names,
     'created', to_char(r.created_at, 'YYYY-MM-DD'),
     'place', (select coalesce(z.name || ' / ' || e.name, p.placement_type::text)
               from placement_history p
