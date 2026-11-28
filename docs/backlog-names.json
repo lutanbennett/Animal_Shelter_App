@@ -88,5 +88,7 @@
   "rbkpi": "three release runbook fixes",
   "fdsgn": "platform front door refuses sign-in",
   "dupnx": "Intake duplicate-name follow-ups",
-  "pmega": "Product site mega menu and header"
+  "pmega": "Product site mega menu and header",
+  "rtwrd": "Release runbook retry wording",
+  "alrth": "Worker jobs use a shelter host"
 }
