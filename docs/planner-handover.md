@@ -1,148 +1,161 @@
-# Planner handover — edition `774`, 2026-11-26
+# Planner handover — edition `775`, 2026-11-28
 
-**This is a DELTA against `773`.** It says what changed, corrects its predecessor, and reports what `773`
+**This is a DELTA against `774`.** It says what changed, corrects its predecessor, and reports what `774`
 left owed. Figures, batch composition and ports live in `.plan-day.md`.
 
 **It outranks nothing.** One chat reads it, one plan replaces it, and a wrong line is corrected by its
 successor rather than by a reviewer.
 
-**IT COVERS TWENTY-FOUR STREAMS, NOT NINE, ACROSS FOUR DAYS AND FIVE PLANS — AND EVERY ONE HAS A FIGURE.**
-`onboarding-runbook` (#1866), `product-console-build` (#1867), `product-pages-five` (#1868),
-`shelter-name-columns` (#1869), `drive-reconnect-guard` (#1870), `proof-line-run` (#1871),
-`platform-own-signin` (#1872), `console-shelter-access` (#1873), `console-host-live` (#1874),
-`proof-line-who` (#1875), `audit-outsider-change` (#1876), `website-lock-truth` (#1879),
-`tenancy-catalogue-seven` (#1880), `my-shelters-blank` (#1881), `migration-check-docs` (#1883),
-`product-site-language` (#1884), `product-content-schema` (#1885), `product-content-console` (#1886),
-`product-site-finish` (#1887), `platform-step-up` (#1888), `shelter-membership-schema` (#1889),
-`tenancy-catalogue-gate` (#1891), `instrument-accuracy` (#1892), `shelter-membership-console` (#1893).
+**IT COVERS TWENTY-FIVE STREAMS, ACROSS TWO DAYS AND TWO PLANS. TWENTY-TWO HAVE FIGURES; THREE ARE READ
+NEXT MORNING.** With figures: `dev-migration-0422` (#1896), `website-lock-order` (#1897),
+`wrangler-error-cause` (#1898), `host-attach-trial` (#1899), `deployed-hosts-google-client` (#1901),
+`host-attach-deploy` (#1902), `shelter-hosts-attach-flag` (#1903), `deploy-reasserts-hosts` (#1904),
+`console-host-attach-schema` (#1907), `release-prs-default-sha` (#1908), `host-attach-console` (#1909),
+`reset-error-wording` (#1910), `shelter-hosts-nullability` (#1911), `cooperjaidee-purge-zone` (#1912),
+`th-platform-chrome` (#1913), `consumer-header-contract` (#1914), `console-website-truth` (#1915),
+`deploy-dns-retry` (#1916), `shelter-sender-name` (#1917), `host-attach-readback` (#1918),
+`intake-duplicate-name` (#1919), `product-test-uat` (#1920). **Read next morning, because measurement is
+once a day and these merged after it:** `dns-retry-window` (#1923), `release-runbook-fixes` (#1924),
+`platform-front-door-signin` (#1925). **A missing figure here is not a lost one** — each sits on its own
+merged PR and `gh pr view <n> --json comments` still reads it.
 
-**WHY FIFTEEN OVERDUE, STATED PLAINLY RATHER THAN APOLOGISED FOR: Lutan was offered this edition three
-times and said no each time, while mid-release or mid-batch.** He asked for it on the fourth. **The rule
-is nine; the practice was his judgement, and his judgement cost nothing** — every figure survived on its
-PR, which is exactly what that mechanism is for. **Do not read the backlog of editions as lost data.**
-The counter resets to 0 when this PR merges.
+**Why sixteen overdue: he was offered this edition twice and said "Not now" and "Still not now", both
+times mid-batch.** On the third offer — made when the buildable backlog had just emptied, which is the
+natural moment rather than a round number — he said yes. **His judgement cost nothing again**, for the
+same reason as last time: every figure survives on its PR. The counter resets to 0 when this PR merges.
 
 ## FOR YOUR FIRST TURN
 
-1. **Read `.plan-day.md` first.** Gitignored, ~90 lines, the twenty-ninth plan. **All four of its streams
-   are set up; three merged, one (`dev-migration-0422`, port 3001) is live.** When it merges, the next
-   `/plan-day` re-plans from scratch — nothing is pending.
-2. **`gh pr list --state open` BEFORE you believe anything here.** On 2026-11-26 three streams went from
-   set up to merged in 72 minutes.
-3. **THREE MERGED WORKTREES NEED CLEARING** (`tenancy-catalogue-gate`, `instrument-accuracy`,
-   `shelter-membership-console`), all `HELD` by Lutan's own sessions — `done` refused all three, correctly.
-   **773's fourteen are gone.** Every figure is read and recorded. **Ask; do not force.**
-4. **`0.49.2` SHIPPED.** Production runs `0.49.2` @ `5344c037a`.
-5. **PRODUCTION'S SIGN-IN NOW RESOLVES ON `cooperjaidee.org`**, not on a shelter's domain. Read below
-   before telling anyone otherwise.
+1. **Read `.plan-day.md` first.** Gitignored, the thirty-third plan. **Its three streams all merged**, and
+   one more, `near-names-gaps` (port 3001), was set up afterwards and is live.
+2. **`gh pr list --state open` BEFORE you believe anything here.** On 2026-11-27 thirteen streams merged
+   in one day.
+3. **THE BUILDABLE BACKLOG IS ESSENTIALLY EMPTY, AND THAT IS THE HEADLINE FOR WHOEVER PLANS NEXT.** Of 31
+   open items, three read `buildable` and only one was real work: `#dupnx`, which `near-names-gaps` is
+   building. **Everything else is his, the Director's, waiting on an event, or parked by his own
+   decision.** **Do not pad a plan to nine out of this.** The honest plan on 2026-11-28 was three streams
+   and then one; both were presented as such and he agreed to both.
+4. **ONE WORKTREE IS STILL HELD and `done` refused it twice:** `console-host-attach-schema`. Windows will
+   not release it and the script could find no session in it; **the holder is a session titled "new
+   project: thai typing coach" whose `cwd` is that folder** — unrelated to the stream, whose PR (#1907)
+   merged two days ago. **`--force` is not the fix and the script says so. Ask; do not force.**
+5. **`0.50.0` SHIPPED**, and `check-release-handover.mjs` now reads current — **`774`'s "release handover
+   is STALE" is settled.**
 
-## THE BAND FINDING OF THESE FOUR DAYS, AND IT IS WORTH MORE THAN THE TABLE
+## THE BAND FINDING OF THESE TWO DAYS: A CLEAN SET, AND A HYPOTHESIS THAT STILL WILL NOT FIRE
 
-**`product-console-build` (#1867) was banded 300–370k and came in at 195k — 105k under, the largest miss
-ever recorded here. The cause is in its own PR body and it is not subtle: most of what the band priced
-had already shipped.** Half its deliverables read *"already on main (#1789); not redone"*. **The planner
-banded THE ITEM; the stream built THE GAP.**
+**2026-11-27's thirteen streams gave the first complete set with NO EXCLUSIONS AT ALL.** Every one
+reported `compacted=no rescoped=no finished=yes`, and every `model=`/`effort=` matched its brief's `band=`
+dials, so there was no "band does not apply" case and nothing to mark. **Twelve of thirteen landed inside
+band.** The one miss is `host-attach-readback` (#1918) at **2.7k over** a 150–185k band — 1.5%, on a
+stream that drove a live console readback, which is the same *live interaction does not discount* lesson
+#1899 and #1904 taught from opposite directions. **One 1.5% overrun is not a reason to widen a row.**
 
-**THE RULE THAT FALLS OUT OF IT, AND IT IS CHEAP TO OBEY: band what is MISSING, not what the item
-describes, and the one-minute check is `git log` / `ls` on the surface the item names.** `773` already
-recorded the mirror of this (*"check the SCHEMA before planning a schema stream"*, `#wbopn`); **this is
-the same fault on a UI surface and it cost 105k of forecast.** The brief's own step zero caught it, which
-is the system working — but a band that wrong makes every forecast built on it meaningless.
+**`774`'S HYPOTHESIS HAS NOW FAILED TO FIRE TWICE, AND THIS IS THE SECOND COMPLETE SET AGAINST IT.** `774`
+recorded, from 2026-11-25's nine: *a band whose paragraph NAMES an open design question carries +10–15k.*
+**Several of 2026-11-27's thirteen briefs named open design questions explicitly — `shelter-sender-name`
+named two unknowns in its own banding note — none carried the premium, and all of them landed inside.**
+Had the premium been applied, most of that set would read as under-run instead.
 
-### The spread, 22 usable readings of 24
+**So: the hypothesis is not supported by twenty-two readings across two sets. Do not apply it. Do not
+build it into the table.** It was written honestly from eight overs and it has not survived contact; **one
+more complete set and it should be retired by name rather than left to be rediscovered.** The reason to
+say that out loud is that the underlying instinct — *naming an unknown is not pricing it* — is still
+right, and is already in the skill as a question to ask. **What failed is the numeric premium, not the
+instinct.**
 
-**14 inside · 6 over · 2 under.** Not readings: **#1872 `platform-own-signin` (`finished=blocked`)** and
-**#1880 `tenancy-catalogue-seven` (`rescoped=yes`)**. Dials matched the brief on all 24.
+### The floor — thirteen readings, 88.4k to 91.5k
 
-**The six overs: `audit-outsider-change` +9k · `my-shelters-blank` +12k · `product-content-schema` +15k ·
-`product-site-finish` +2k · `shelter-membership-schema` +10k · `onboarding-runbook` +0.8k (marginal).**
-**The two unders: `product-console-build` -105k · `product-site-language` -0.7k (marginal).**
+**The tightest spread yet measured**, and inside both prior readings (88.3–91.6k on 11-27, 87.2–91.6k on
+11-21, 87.8–92.6k in `774`). **Repeats again in one set** — `88,450` (#1914, #1915, #1920) and `88,385`
+(#1909, #1919). **The repeat phenomenon is now recorded across four editions. Record it; offer no cause.**
+Re-derive from the next complete set. **Do not shift the scale rows to match the floor** — the `774`,
+`773` and `772` warning stands, and the arithmetic reason is in the skill.
 
-**A HYPOTHESIS WAS WRITTEN ON 2026-11-26 AND DID NOT FIRE THE SAME DAY. BOTH HALVES ARE RECORDED HERE
-BECAUSE HALF OF THEM WOULD BE A LIE.** From the nine-stream set of 2026-11-25 (4 inside, 4 over, none
-under) the planner wrote: *a band whose paragraph NAMES an open design question carries +10–15k, because
-naming an unknown is not pricing it.* **Every one of those four overs fitted it.** **Then the next three
-streams — two of them naming an open design question, none carrying the premium — all landed inside.**
-**So: keep it as a hypothesis, apply it to nothing yet, and look again after the next complete set.**
-Three streams is not a refutation of eight, and eight is not a law.
+## WHAT `774` LEFT OWED — AND TWO OF ITS SIX LINES WERE WRONG BY THE TIME THEY WERE READ
 
-### The floor — 24 readings, 87.8k to 92.6k
+1. **Clearing merged worktrees — DONE, beyond what `774` asked.** Its three are gone and so are seven
+   more. **Every one was checked for its `stream-usage:` comment before the folder was removed**, which is
+   the step that makes clearing safe. One remains, held (above).
+2. **`#rqv5c`'s production path for the Drive move script — `774` CALLED IT BUILDABLE AND IT IS NOT HIS
+   ITEM AT ALL.** The script refusal is real and unchanged: `scripts/drive-move-to-shelter-account.mjs:92`
+   still throws on `--env production` with no override. **But Lutan corrected the ownership on 2026-11-27:
+   the Drive press is the DIRECTOR'S, not his**, and the item is retagged `waiting:director`. **It was the
+   second item in one day tagged to him that belonged to her** (`#drvcl` was the first). **The rule that
+   came out of it, and it is in the item: before offering him an item whose action happens inside a Google
+   account or on a shelter's own Drive, ask whose account it is.** He can read a screen the Director must
+   act on, and those are not the same ownership.
+3. **`#plsso`'s UAT rehearsal — still open, and it has gained a second blocker nobody had checked.**
+   Neither test nor UAT has a product administrator who is a real person: `add-product-admin.mjs --env
+   test --list` returns three throwaway `dev-signin-*@example.invalid` logins, and `--env uat --list` says
+   the list is **empty**, so nobody can open Settings → Product admin on UAT at all. **Adding anyone is a
+   privilege grant and is his.** The rehearsal is `#plsso`'s last clause and **first on his Customer
+   priorities list**, so it is worth raising once he is not mid-anything.
+4. **`#rlprg`'s drivable proofs — the item now reads TICKED.** Its stream, `reels-multi-upload`, **never
+   started**: the worktree carried a brief, had **no PR ever**, and was cleared on his word. **Read the
+   item rather than the stream before concluding anything was lost.**
+5. **The release handover — CURRENT.** Names `0.50.0`.
+6. **His unanswered question of 2026-11-25** (whether he wants to use a shelter as ordinary staff would)
+   — **still unanswered, and `shelter-membership-console` (#1893) has merged since.** Read what it built
+   before putting it to him again. **Not raised on 2026-11-28, deliberately: he was mid-plan twice.**
 
-Unchanged in place from `773`'s 89.4–93.5k, a little wider at the bottom. **FOUR exact repeats in one
-set** — `89,422` (#1867, #1868), `88,522` (#1879, #1880), `90,886` (#1887, #1889), `91,048` (#1891,
-#1893) — **the repeat phenomenon still recurring; `773` recorded it on its fifth day. Record it; offer no cause.** Re-derive from the
-next complete set. **Do not shift the scale rows to match the floor** (the `773` and `772` warning
-stands).
+## THE TWO BIG THINGS THAT HAPPENED OUTSIDE ANY PLAN
 
-## WHAT `773` LEFT OWED — ALL FOUR SETTLED
+- **`#gidty` IS CLOSED: production's Google sign-in now runs on the platform's own OAuth client**
+  (`559913308840-topvkto4ac…`, CooperJaidee's project), and he proved it by signing in. **All three
+  environments are on it.** **The method is worth copying and is written into the item:** the redirect URI
+  was verified **before** the write with a control probe — a deliberately bogus URI returned
+  `redirect_uri_mismatch`, the real ones returned none — because `external_google_secret` reads back as a
+  **64-character digest, never the secret**, so a bad write to production's Google provider is a
+  shelter-wide lockout with no undo.
+- **HE NOW HAS A PASSWORD ON HIS PRODUCTION ACCOUNT — the first non-Google way into the app.** That is
+  what made the Google switch survivable. **It has a live consequence for code:**
+  `src/app/login/actions.ts` is now a real sign-in path, not a theoretical one, so a change to the
+  sign-in refusal that only touches `auth/callback/route.ts` is half a change. `#fdsgn` was briefed on
+  exactly that and found three sites, not one.
 
-1. **The `scheduled_writer_runs` read — RETIRED, 2026-11-26, after four editions.** `773` said *"file it
-   or write down why not"*. **Nobody across four editions has been able to say what it was for, which is
-   the answer.** It is not carried into `775`. **If it mattered, it will come back as a symptom; an
-   instruction nobody understands is not a safeguard.**
-2. **Clearing merged worktrees** — **DONE.** Fourteen cleared; three new ones now held (above).
-3. **`#rlprg`'s drivable proofs** — not advanced; still owed, now by whoever plans `#rlprg` next.
-4. **`#prvln`'s second half — BUILT, and `773` IS WRONG ON THIS PAGE.** `773` says it is *"PARKED — raise
-   it once, when he is not mid-release"*. He was asked once, said **"Yes, into batch 2"**, and
-   `proof-line-run` (#1871) shipped it the same afternoon. **A handover that tells you something is parked
-   is a statement with a date on it.**
+## THE SHAPE OF 2026-11-28, AND ITS ONE LINE WORTH NOT LOSING
 
-## THE GUIDED SESSION ON HIS OWN ITEMS — THREE ITEMS, AND TWO WERE NOT HIS
+**`#fdsgn` was found in a guided session, briefed, built and merged the same day** — the platform front
+door could not be signed in on, because the checklist seeds a front-door row with a null `shelter_id` and
+every sign-in path reads "no shelter" as "this site is not set up".
 
-**This is `773`'s lesson (*"the item is not the record"*) paying for itself, with the measurement run
-BEFORE he was asked each time.**
+**AND THE DANGEROUS HALF IS THE PART THAT STILL STANDS: production's product sign-in works ONLY because
+`0390` stamped its front-door rows with a shelter, which `0448`'s own header calls damage it deliberately
+did not undo.** **A migration that sets `cooperjaidee.org` and `www.cooperjaidee.org` back to null breaks
+sign-in on the live product site, and it would look exactly like a correction.** The brief made that a
+prohibition rather than a footnote, and whoever plans near `shelter_hosts` should do the same.
 
-- **`#plsso` — DONE, the part that was his.** He changed production's Supabase Site URL to
-  `https://cooperjaidee.org`; `check-deployed-hosts.mjs --env production` read it back live. **The risk
-  the item named was measured first:** not one of production's own mailer templates uses `{{ .SiteURL }}`,
-  so no shelter user's mail could be affected. **Still open: the UAT rehearsal with Lanna's host
-  unreachable.**
-- **`#rqv5c` — NOT HIS, AND THE ITEM WAS ASKING HIM FOR FINISHED WORK.** Its header listed a UAT rehearsal
-  as owed; **that rehearsal ran on 2026-11-23, 912/912 files**, and the item's own body said so. **Worse,
-  it never named the real blocker: `scripts/drive-move-to-shelter-account.mjs:92` REFUSES
-  `--env production` outright, with no override.** His "production run" is **unbuilt work**, not a press.
-- **`#hstau` — WAS HIS, IS NOW A STREAM'S.** He created the Cloudflare token; both UAT secrets
-  (`CLOUDFLARE_WORKERS_DOMAIN_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`) are set and read back. **Retagged
-  `buildable`.** **Half of what the item called missing was never missing** — `wrangler whoami` prints the
-  account id, and nobody need be asked for it.
+## THREE LESSONS EARNED
 
-**THE PATTERN ACROSS ALL THREE: an item that says a step is his is a CLAIM, and two of three were false.**
-`#prvln`'s proof lines exist precisely so this check is one command. **Run them. The cost of not running
-one is an interruption; the cost of running one is a minute.**
-
-## THREE LESSONS EARNED, EACH FROM A REAL COST
-
-- **TELLING HIM WHERE TO CLICK FROM MEMORY IS GUESSING. OPEN THE PAGE.** A set of written directions for
-  the Supabase dashboard drew *"your instructions are very poor, please be more precise"*. **Opening the
-  page in his Chrome and describing what is actually on it took under a minute and ended the problem.**
-  For any step of his that lives in a web page, **look at the page first and send him a picture of it.**
-- **A COMMAND HANDED TO HIM IS PART OF THE DELIVERABLE, AND `npx` IS NOT `npx.cmd` ON THIS MACHINE.**
-  PowerShell's execution policy refuses `npx`; the session memory already said so and the planner still
-  wrote `npx`. **Read the command you are about to hand over as if you were the one typing it.**
-- **A REFUSAL IS NOT ALWAYS A FAULT, AND SOMETIMES IT IS THE WHOLE FINDING.** `worktree.mjs done` refusing
-  three held folders is correct behaviour. So is `drive-move-to-shelter-account.mjs` refusing production.
-  **The second was mistaken for a waiting step for four days.**
-
-## ONE BRIEF WORTH COPYING, AND WHY
-
-**`dev-migration-0422` (live, port 3001) is briefed to DISAGREE with its own item.** `#d422o` says dev
-carries an un-reverted migration from an abandoned branch and prescribes a down-migration. **It is a
-renumbered file whose old row was left behind** — `0423_keep_an_admin_per_shelter.sql` is on `main` and
-commit `fb16692ed` says *"Renumber the last-Admin guard fix to 0423: #1746 took 0422"*. **Following the
-item would have dropped the last-Admin guard on dev and broken `dev-signin.mjs` for every other stream.**
-The brief hands that over **as evidence to test, not as an instruction**, and tells the stream to stop and
-say so if the database disagrees. **That framing is the point: a brief that asserts gets obeyed, including
-when it is wrong.**
+- **A TICKED ITEM IS A PLACE FINDINGS GO TO DIE.** `#1919` reported three gaps it had honestly not built;
+  they were written onto `#dupnm`, which is ticked. **Nobody re-reads a ticked item**, so they were filed
+  as `#dupnx` the next morning and are now being built. **Read every merged PR body for findings outside
+  its deliverable list — a stream can report, only the planner can file** — and when a stream writes its
+  findings onto the item it just closed, move them.
+- **A CLOSED HALF STILL TAGGED `buildable` GETS RE-PLANNED AS A STREAM.** `#dnsgp`'s window shipped and
+  the item still read buildable with a title demanding the widening. **Retag and retitle in the same turn
+  you read the PR**, or the next plan spends a stream proving the work is done.
+- **MEASURE THE CARD CATALOGUE BEFORE PRICING A PERMISSIONS GAP.** `#dupnx`'s third part needed a
+  security-definer function for a login holding `resident.register` without `resident.record`. **One grep
+  of `cards.ts` showed the only card granting register `includes: ["view_residents"]`, so that login
+  cannot be assembled** — a schema half removed from the plan by one command. **Card-shaped, so it stays
+  true after the assignments are rebuilt.**
 
 ## STILL OWED
 
-1. **Clearing three merged worktrees**, on his word.
-2. **`#rqv5c`'s production path for the Drive move script** — buildable, unbriefed, and it blocks the
-   Director's consent and his run.
-3. **`#plsso`'s UAT rehearsal** — his environment, and the item's last clause.
-4. **`#rlprg`'s two drivable proofs** and its phone clause.
-5. **The release handover is STALE** — `check-release-handover.mjs` says it does not name `0.49.2`. **The
-   release manager's, not the planner's.**
-6. **One question of his, unanswered since 2026-11-25:** whether he wants to use a shelter as ordinary
-   staff would, which today needs a separate login. **`shelter-membership-console` (#1893) has since
-   merged — read what it built before putting it to him again.**
+1. **Clearing `console-host-attach-schema`**, on his word, once its holding session is closed.
+2. **`#plsso`'s rehearsal**, and the product-administrator lists on test and UAT that block it.
+3. **`#cjpzn`'s two values** — production's purge token widened to the `cooperjaidee.org` zone, and
+   `CLOUDFLARE_ZONE_ID_COOPERJAIDEE` in `.env.deploy.production`. **Until then every release ends with a
+   manual purge he pays by hand.**
+4. **`#dnsgp`'s cause** — one look and one toggle (NordVPN off, or a DNS server on the NordLynx
+   interface). Two streams read the interface and correctly refused to change the machine other streams
+   were working on.
+5. **UAT and production `shelter_hosts.shelter_id` nullability**, still unread: the ad-hoc Management API
+   read of production is refused by the permission classifier, and **a bare allow rule would fix it.**
+6. **`#shfil`'s proof is not established either way** — the Pi answered over the mesh but
+   `/opt/lanna-care*/` listed nothing from this session, so it is named as his with its proof quoted and
+   **never reported as checked.**
+7. **`#pimir`** — `drive-mirror.service` read live as `failed` on both 11-27 and 11-28, sixteen failures,
+   the first on 11-13. He is home from **29 November** with the decrypt key.
