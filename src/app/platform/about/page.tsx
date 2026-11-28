@@ -41,7 +41,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-const link = "inline-block rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:text-primary";
 const cta = "inline-block rounded bg-primary px-6 py-3 text-base font-medium !text-white hover:opacity-90";
 
 export default async function AboutPage() {
