@@ -407,6 +407,7 @@ const [reference] = await query(`select json_build_object(
     'code', r.resident_code,
     'name', r.name,
     'thaiName', r.thai_name,
+    'otherNames', r.other_names,
     'created', to_char(r.created_at, 'YYYY-MM-DD'),
     'place', (select coalesce(z.name || ' / ' || e.name, p.placement_type::text)
               from placement_history p

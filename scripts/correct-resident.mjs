@@ -393,7 +393,10 @@ async function run() {
   const sameName = remove.name.trim().toLowerCase() === keep.name.trim().toLowerCase();
   const nameReason = sameName
     ? "the same name"
-    : nearMatchReason({ name: remove.name, thaiName: remove.thai_name }, { name: keep.name, thaiName: keep.thai_name });
+    : nearMatchReason(
+        { name: remove.name, thaiName: remove.thai_name, otherNames: remove.other_names },
+        { name: keep.name, thaiName: keep.thai_name, otherNames: keep.other_names },
+      );
   if (!nameReason && !forceNames) {
     refusals.push(`"${remove.name}" and "${keep.name}" do not look like the same animal. If they are, add --force-names.`);
   }

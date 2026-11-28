@@ -10,6 +10,7 @@ export type ExistingResident = {
   code: string | null;
   name: string;
   thaiName: string | null;
+  otherNames: string | null;
   status: string | null;
 };
 
@@ -33,15 +34,26 @@ export function NameField({
   const c = t.residents.new.nameCheck;
   const [name, setName] = useState("");
   const [thaiName, setThaiName] = useState("");
+  const [otherNames, setOtherNames] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // The Thai name box sits beside this one; follow it so rule 2 can fire.
+  // The Thai name and other names boxes sit beside this one; follow them so
+  // the Thai-name and other-name rules can fire.
   useEffect(() => {
-    const thai = inputRef.current?.form?.elements.namedItem("thaiName");
-    if (!(thai instanceof HTMLInputElement)) return;
-    const read = () => setThaiName(thai.value);
-    thai.addEventListener("input", read);
-    return () => thai.removeEventListener("input", read);
+    const form = inputRef.current?.form;
+    const follow = (id: string, set: (v: string) => void) => {
+      const box = form?.elements.namedItem(id);
+      if (!(box instanceof HTMLInputElement)) return () => {};
+      const read = () => set(box.value);
+      box.addEventListener("input", read);
+      return () => box.removeEventListener("input", read);
+    };
+    const stopThai = follow("thaiName", setThaiName);
+    const stopOther = follow("otherNames", setOtherNames);
+    return () => {
+      stopThai();
+      stopOther();
+    };
   }, []);
 
   const check = useMemo(() => {
@@ -51,7 +63,10 @@ export function NameField({
     const near = exact.length
       ? []
       : existing
-          .map((r) => ({ r, reason: nearMatchReason({ name: typed, thaiName }, { name: r.name, thaiName: r.thaiName }) }))
+          .map((r) => ({ r, reason: nearMatchReason(
+              { name: typed, thaiName, otherNames },
+              { name: r.name, thaiName: r.thaiName, otherNames: r.otherNames },
+            ) }))
           .filter((m): m is { r: ExistingResident; reason: string } => m.reason !== null);
     if (!exact.length && !near.length) return null;
     return {
@@ -59,13 +74,15 @@ export function NameField({
       near,
       suggestion: exact.length ? nextNumberedName(typed, existing.map((r) => r.name)) : null,
     };
-  }, [name, thaiName, existing]);
+  }, [name, thaiName, otherNames, existing]);
 
   const reasonText = (reason: string) => {
     if (reason.startsWith("the same name once")) return c.reasons.bracket;
     if (reason.startsWith("one name is")) return c.reasons.tag;
     if (reason.startsWith("the same Thai")) return c.reasons.thai;
     if (reason.startsWith("close spelling")) return c.reasons.spelling;
+    if (reason.startsWith("the same as another name")) return c.reasons.otherName;
+    if (reason.startsWith("the same name with a number")) return c.reasons.numbered;
     return reason;
   };
   const who = (r: ExistingResident) =>

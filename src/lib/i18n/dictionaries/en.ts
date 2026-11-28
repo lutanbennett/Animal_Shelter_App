@@ -7019,6 +7019,8 @@ const en = {
           tag: "one name is the other's bracket tag",
           thai: "the same Thai name",
           spelling: "close spelling",
+          otherName: "goes by the same other name",
+          numbered: "the same name with a number added",
         },
       },
     },
