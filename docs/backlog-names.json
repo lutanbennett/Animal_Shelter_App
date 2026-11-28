@@ -90,5 +90,8 @@
   "dupnx": "Intake duplicate-name follow-ups",
   "pmega": "Product site mega menu and header",
   "rtwrd": "Release runbook retry wording",
-  "alrth": "Worker jobs use a shelter host"
+  "alrth": "Worker jobs use a shelter host",
+  "dynhd": "Dynamic public pages unchecked",
+  "thvet": "Two Thai strings say doctor",
+  "thadr": "Thai contact address field"
 }
