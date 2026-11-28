@@ -25,11 +25,17 @@ export default async function PlatformLayout({ children }: { children: React.Rea
         <ProductHomeLink name={t.admin.productAdmin.platformName} homeLabel={t.admin.productAdmin.platformHomeLink} />
         <span className="flex flex-wrap items-center gap-4">
         <ProductLanguageLinks />
-        {user && (
+        {user ? (
           <span className="flex flex-wrap items-center gap-3 text-sm text-muted">
             <span className="break-all">{user.email}</span>
             <SignOutButton className="whitespace-nowrap rounded py-1 text-sm font-medium text-foreground hover:text-primary" />
           </span>
+        ) : (
+          <nav aria-label={t.admin.productAdmin.about.signInTitle} className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+            <a href="/login" className="font-medium text-foreground hover:text-primary">{t.admin.productAdmin.about.signInShelter}</a>
+            <a href="/login?next=%2Fplatform%2Fshelters" className="font-medium text-foreground hover:text-primary">{t.admin.productAdmin.about.signInChooser}</a>
+            <a href="/login?next=%2Fplatform" className="font-medium text-foreground hover:text-primary">{t.admin.productAdmin.about.signInAdmin}</a>
+          </nav>
         )}
         </span>
       </header>
