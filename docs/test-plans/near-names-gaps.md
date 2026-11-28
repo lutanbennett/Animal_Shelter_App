@@ -11,7 +11,7 @@
 | PR | opened from this branch |
 | Tested by / date | Claude, 2026-11-28 |
 | Carries a migration? | no |
-| Tested at SHA | SHA_HERE |
+| Tested at SHA | e17b77cf5 |
 
 ## 1. Scope and risk
 
@@ -28,7 +28,11 @@ One sentence: the intake wizard and the scripts' near-duplicate check now compar
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — **four gates, each `<N>` that gate's own exit code, and every `<N>` is `0`.**
 
 ```
-GATES_HERE
+=== gates: typecheck exited 0 after 15s
+=== gates: lint exited 0 after 149s
+=== gates: test exited 0 after 39s
+=== gates: build exited 0 after 57s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
