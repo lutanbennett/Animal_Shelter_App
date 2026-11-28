@@ -41,7 +41,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-const link = "inline-block rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:text-primary";
 const cta = "inline-block rounded bg-primary px-6 py-3 text-base font-medium !text-white hover:opacity-90";
 
 export default async function AboutPage() {
@@ -67,7 +66,7 @@ export default async function AboutPage() {
   return (
     <main className="flex flex-1 flex-col">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
-      <ProductNav bands={a.bands} homeLabel={a.navHome} navLabel={a.navLabel} current="home" th={locale === "th"} />
+      <ProductNav bands={a.bands} homeLabel={a.navHome} navLabel={a.navLabel} menuButton={a.menuButton} menuFeatures={a.menuFeatures} menuAbout={a.menuAbout} current="home" th={locale === "th"} />
       <section className="mx-auto grid w-full max-w-6xl items-center gap-10 px-6 py-12 lg:grid-cols-2 lg:py-20">
         <div>
           <p className="text-sm font-medium uppercase tracking-wide text-primary">{a.kicker}</p>
@@ -129,20 +128,6 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <footer className="mx-auto w-full max-w-6xl px-6 py-8">
-        <h2 className="text-sm font-semibold text-muted">{a.signInTitle}</h2>
-        <div className="mt-3 flex flex-wrap gap-3">
-          <a href="/login" className={link}>
-            {a.signInShelter}
-          </a>
-          <a href="/login?next=%2Fplatform%2Fshelters" className={link}>
-            {a.signInChooser}
-          </a>
-          <a href="/login?next=%2Fplatform" className={link}>
-            {a.signInAdmin}
-          </a>
-        </div>
-      </footer>
     </main>
   );
 }

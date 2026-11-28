@@ -60,7 +60,7 @@ export default async function CooperPage() {
   const homeHref = locale === "th" ? `/th${PRODUCT_HOME}` : PRODUCT_HOME;
   return (
     <main className="flex flex-1 flex-col">
-      <ProductNav bands={a.bands} homeLabel={a.navHome} navLabel={a.navLabel} current="cooper" th={locale === "th"} />
+      <ProductNav bands={a.bands} homeLabel={a.navHome} navLabel={a.navLabel} menuButton={a.menuButton} menuFeatures={a.menuFeatures} menuAbout={a.menuAbout} current="cooper" th={locale === "th"} />
       <section className="mx-auto w-full max-w-6xl px-6 pt-8">
         <a href={homeHref} className="text-sm font-medium text-foreground underline hover:text-primary">
           ← {a.backHome}
