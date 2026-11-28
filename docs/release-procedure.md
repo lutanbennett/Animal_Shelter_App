@@ -757,6 +757,32 @@ Deploying UAT **while the tree is still the released tree** removes that race en
 with UAT last, three feature PRs merged during the production build and UAT's Worker was shut out
 for a whole release.
 
+### `DNS-RETRY` lines during any Worker deploy — a long wait that is not a hang
+
+**Applies to all three Worker deploys (test, UAT, production).** This machine sometimes loses DNS
+altogether for tens of seconds (`#dnsgp`: about 23 s on `0.50.0`, and a plain `git push` hit it too).
+When that kills the upload after a finished build, `deploy.mjs` retries the upload by itself. What you
+will see, in order:
+
+- `deploy: DNS-RETRY 1 of 4: … the machine-wide DNS blackout (#dnsgp). Retrying in 5s with the same build (no rebuild).`
+- `deploy: DNS-RETRY waiting, …s until retry N of 4…` every 5 seconds while it waits, then `retrying now.`
+- On success: `deploy: DNS-RETRY: … succeeded on retry N of 4. Note it in the release record (#dnsgp).`
+- If it never clears: `deploy: DNS-RETRY: gave up after 4 retries (#dnsgp).`
+
+**How long it can last:** up to four retries, waiting 5, 10, 20 and 30 seconds before each — **65
+seconds of waiting in all, plus each upload attempt's own time** (`DNS_RETRY_DELAYS_MS` in
+`scripts/lib/dns-retry.mjs`). Leave it alone for that long; it is working.
+
+**It never rebuilds.** Each retry re-uploads the same `.open-next` output and re-checks the Server
+Actions key first, as `--skip-build` would. **Only one failure is retried:** a `getaddrinfo`
+`ENOTFOUND` that the net trace recorded inside that wrangler run. **Everything else still fails at
+once** — a bad or expired token, a deleted Worker, bad config, a DNS error of another kind
+(`EAI_AGAIN`), a timeout, or a build failure. If it gave up, the build is still good: re-run with the
+`--skip-build` check below rather than rebuilding.
+
+**A deploy that landed on a retry is worth one line in the release record** — the `DNS-RETRY` lines
+and which retry landed it. That record is what `#dnsgp` is still waiting for.
+
 ### Worker, production — Lutan runs this
 
 ```bash
@@ -784,11 +810,19 @@ deploy in the same checkout leaves one that would point production at the dev da
 
 **How to show it, in about two minutes** (moved here from the `0.50.0` handover, where it was first used on UAT's retry):
 
-```bash
-for ref in <this env's project ref> <dev's> <production's>; do printf "%-24s " "$ref"; grep -rl "$ref" .open-next | wc -l; done
-find .open-next -type f -printf '%TH:%TM %p
-' | sort -r | head -2
-```
+1. Count each environment's Supabase project ref in the bundle (the refs are in the Desktop notes, not here):
+
+   ```bash
+   for ref in <this env's project ref> <dev's> <production's>; do printf "%-24s " "$ref"; grep -rl "$ref" .open-next | wc -l; done
+   ```
+
+2. Check the bundle's newest files are from this environment's own build:
+
+   ```bash
+   find .open-next -type f -printf '%TH:%TM %p\n' | sort -r | head -2
+   ```
+
+3. Open at least one hit you did not expect (`grep -o ".\{60\}<ref>.\{60\}" <file>`) and read it in context.
 
 The env being deployed should have the hits and the other environment you could be confusing it with none, and the timestamps should be that env's own build. **The count is not the proof; reading a hit is.** On `0.50.0` it read 20 for UAT, 5 for dev and 0 for production, and **reading one dev hit in context showed a hard-coded comparison in the app's own code** (`"https://<uat>.supabase.co".startsWith("https://<dev>.")?"dev":…`), not a stale bundle. A count alone looks like contamination; open at least one unexpected hit before deciding. Also: the retry's log has **no `strip-baked-env` line**, because `--skip-build` skips that stage — take that figure from the failed attempt's log, which built completely, and do not record it as unread.
 
@@ -1045,7 +1079,8 @@ on the Pi is genuinely detached, but the SSH session that started it **stays ope
 finishes** (corrected 2026-11-28 after `0.50.0`: this said `… & sleep 20; tail` as if it returned in
 20 seconds, and it does not). Run in the foreground, the tool's 120-second timeout moves it to the
 background mid-build and **reads exactly like a hang** — one wasted call per build, three per release;
-the build itself is unaffected. So start it with the tool's run-in-background option:
+the build itself is unaffected. (A Worker deploy that seems stuck after its build is a different wait:
+see *`DNS-RETRY` lines during any Worker deploy* above.) So start it with the tool's run-in-background option:
 
 ```bash
 ssh lanna-pi-mesh 'cd ~/Animal_Shelter_App && rm -f ~/deploy-prod.log && setsid nohup ./scripts/pi/deploy-pi.sh > ~/deploy-prod.log 2>&1 < /dev/null'

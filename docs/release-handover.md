@@ -17,9 +17,10 @@ timeout, not Cloudflare) and the *duration* reading was wrong.
 - **#1916's `DNS-RETRY` works, and you will see it.** It fires, names itself, tells you
   to write it down, and does not rebuild. This release is its first live proof, which is
   what `deploy-dns-retry`'s plan was waiting for.
-- **Its window is sized for the old reading — 2 retries, 5 seconds apart, about ten
-  seconds of cover — so it gave up.** Expect to finish the job by hand. Filed; do not
-  widen it yourself mid-release.
+- **SUPERSEDED 2026-11-28 by #1923:** on `0.50.0` the window was 2 retries 5 s apart and
+  gave up. It is now 4 retries waiting 5, 10, 20, 30 s (65 s in all), sized for the 23 s
+  episode, so expect it to land unaided; finish by hand only if it prints `gave up`. See
+  the runbook's *`DNS-RETRY` lines during any Worker deploy*.
 
 **The duration is now unknown with 23 seconds as a floor.** Two episodes, two very
 different numbers. Do not write a third figure as though it settles it.
