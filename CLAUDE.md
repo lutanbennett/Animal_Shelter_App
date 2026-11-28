@@ -426,7 +426,14 @@ the app's switch would merge a PR nobody had read the checks on.
 
 What stays his, and is not negotiable by a later session: **major versus
 minor**, because it mails every admin and cannot be undone, and the
-**production Worker deploy**, by his instruction of 2026-10-02. The target
+**production Worker deploy**, by his instruction of 2026-10-02. **Test and
+UAT deploys are CLAUDE'S, decided 2026-11-28**
+(`docs/decisions/2026-11-28-test-and-uat-deploys-are-claudes.md`): a stream
+runs `deploy.mjs --env test` / `--env uat` itself, `--plan` first, and proves
+what it deployed by a real run or a readback rather than by reasoning. **It had
+never been settled**, and the cost was that any proof living on UAT got written
+up as waiting on him — `#pltst`'s own words were *"ask him rather than
+assume"*, and nobody had. **This changes nothing about production.** The target
 shape of a release is **two touches — one answer and one command.** If a
 release asks him for a third, that is a fault to write down in the record,
 the way any other avoidable cost is.
