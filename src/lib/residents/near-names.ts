@@ -14,10 +14,18 @@
 //   1. the same name once a bracket tag is dropped   "Noon" ~ "Noon (Daeng)"
 //      or one name is the other's bracket tag         "Daeng" ~ "Noon (Daeng)"
 //   2. the same Thai name                             (both filled in)
-//   3. close spelling, on the names without tags      "Lucky" ~ "Lucy"
+//   3. another name it goes by (other_names, #dupnx)  "Lucky" ~ "Bob" known as "Lucky"
+//      other_names is one text column, split on , ; / and new lines. Exact
+//      (normalised) only, never close spelling: every alias would multiply
+//      the noise. As strong as rule 1, but its reason says which field matched.
+//   4. a number added to the same name                "Tiger" ~ "Tiger 2"
+//   5. close spelling, on the names without tags      "Lucky" ~ "Lucy"
 //      one letter apart if both are 4+ letters, two if both are 8+.
 //      Shorter names are left out: "Max" and "Mia" are two letters apart and
 //      plainly different dogs, and a list full of those trains people to skip it.
+//      A TRAILING number is dropped first (#dupnx): "Tiger 2" and "Tiger 3"
+//      are siblings numbered on purpose (nextNumberedName) and no longer
+//      warn; a digit anywhere else still counts as a letter.
 
 /** Lower case, no accents, no punctuation, single spaces. Thai letters are kept. */
 export function normaliseName(text: unknown): string {
@@ -27,6 +35,22 @@ export function normaliseName(text: unknown): string {
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\p{M}]+/gu, " ")
     .trim();
+}
+
+/** other_names split into its names, normalised: "Bob, Bobby / ลัคกี้" → ["bob", "bobby", "ลัคกี้"] */
+export function otherNameList(text: unknown): string[] {
+  return String(text ?? "")
+    .split(/[,;/\n]/)
+    .map(normaliseName)
+    .filter(Boolean);
+}
+
+const TRAILING_NUMBER = /^(.*\D)\s(\d+)$/;
+
+/** "tiger 2" → { base: "tiger", number: "2" }; no trailing number → number null. */
+function splitNumber(core: string): { base: string; number: string | null } {
+  const m = core.match(TRAILING_NUMBER);
+  return m ? { base: m[1].trim(), number: m[2] } : { base: core, number: null };
 }
 
 const BRACKETS = /[([{]([^)\]}]*)[)\]}]/g;
@@ -60,7 +84,7 @@ function distance(a: string, b: string, limit: number): number {
 
 /**
  * Why `a` and `b` look like the same animal, or null if they don't. Each is
- * `{ name, thaiName }`. An exact (case-insensitive) name match also returns
+ * `{ name, thaiName, otherNames }`. An exact (case-insensitive) name match also returns
  * null: the loader refuses those on its own, and they need no second line.
  */
 export function nearMatchReason(a: NamedResident, b: NamedResident): string | null {
@@ -77,16 +101,31 @@ export function nearMatchReason(a: NamedResident, b: NamedResident): string | nu
   const tb = normaliseName(b.thaiName);
   if (ta && ta === tb) return "the same Thai name";
 
-  const shorter = Math.min(pa.core.length, pb.core.length);
+  const oa = otherNameList(a.otherNames);
+  const ob = otherNameList(b.otherNames);
+  const namesA = new Set([pa.core, ...oa].filter(Boolean));
+  const namesB = new Set([pb.core, ...ob].filter(Boolean));
+  const alias = oa.find((n) => namesB.has(n)) ?? ob.find((n) => namesA.has(n));
+  if (alias) return `the same as another name it goes by ("${alias}")`;
+
+  const na = splitNumber(pa.core);
+  const nb = splitNumber(pb.core);
+  if (na.base && na.base === nb.base) {
+    // One numbered, one bare: the whole point of the numbering, so say it.
+    // Both numbered, different numbers: siblings named on purpose, no warning.
+    return na.number === null || nb.number === null ? "the same name with a number added" : null;
+  }
+
+  const shorter = Math.min(na.base.length, nb.base.length);
   const limit = shorter >= 8 ? 2 : shorter >= 4 ? 1 : 0;
   if (limit) {
-    const d = distance(pa.core, pb.core, limit);
+    const d = distance(na.base, nb.base, limit);
     if (d <= limit) return `close spelling (${d} letter${d === 1 ? "" : "s"} different)`;
   }
   return null;
 }
 
-export type NamedResident = { name: unknown; thaiName?: unknown };
+export type NamedResident = { name: unknown; thaiName?: unknown; otherNames?: unknown };
 
 /** An exact clash, by the loader's own test: the same name once case, accents and punctuation go. */
 export function sameName(a: unknown, b: unknown): boolean {

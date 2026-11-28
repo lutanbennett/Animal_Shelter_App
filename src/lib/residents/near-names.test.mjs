@@ -42,3 +42,23 @@ test("next number: Tiger → Tiger 2, then one past the highest", () => {
   assert.equal(nextNumberedName("Tiger", ["Snowy", "Tigers 4"]), null);
   assert.equal(nextNumberedName("Tiger", ["Tiger 2"]), null);
 });
+
+const o = (name, otherNames) => ({ name, otherNames });
+
+test("rule 3 (#dupnx): another name it goes by, split on , ; / and exact only", () => {
+  assert.equal(nearMatchReason(o("Lucky"), o("Bob", "Bobby, Lucky")), 'the same as another name it goes by ("lucky")');
+  assert.equal(nearMatchReason(o("Rex", "Sunny / Sun"), o("Max", "Sun")), 'the same as another name it goes by ("sun")');
+  assert.equal(nearMatchReason(o("Lucy"), o("Bob", "Lucky")), null, "close spelling is not tried on other names");
+  assert.equal(nearMatchReason(o("Bob", ""), o("Snowy", null)), null);
+});
+
+test("numbered names (#dupnx): siblings stay quiet, a bare name against a numbered one still warns", () => {
+  assert.equal(nearMatchReason(r("Tiger 2"), r("Tiger 3")), null);
+  assert.equal(nearMatchReason(r("Tiger 2"), r("Tiger 10")), null);
+  assert.equal(nearMatchReason(r("Tiger 2"), r("Tiger")), "the same name with a number added");
+  assert.equal(nearMatchReason(r("Tiger"), r("Tiger 3")), "the same name with a number added");
+  assert.equal(nearMatchReason(r("Lucky 2"), r("Lucy")), "close spelling (1 letter different)");
+  assert.equal(nearMatchReason(r("R2D2"), r("R2D3")), "close spelling (1 letter different)", "a digit that is not a trailing counter still counts");
+  assert.equal(nearMatchReason(r("Agent 007"), r("Agent 008")), null);
+  assert.equal(nearMatchReason(r("Bunny1"), r("Bunny2")), "close spelling (1 letter different)", "no space: not a counter");
+});
