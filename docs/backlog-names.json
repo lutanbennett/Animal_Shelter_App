@@ -93,5 +93,6 @@
   "alrth": "Worker jobs use a shelter host",
   "dynhd": "Dynamic public pages unchecked",
   "thvet": "Two Thai strings say doctor",
-  "thadr": "Thai contact address field"
+  "thadr": "Thai contact address field",
+  "tstrm": "Test shelters off production"
 }
